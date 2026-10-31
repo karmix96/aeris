@@ -67,7 +67,7 @@ def test_unknown_airfoil_is_refused():
 
 @needs_db
 def test_vector_can_carry_its_own_airfoils():
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["cranked"]
     vec = params.mid_vector(spec) | {"airfoils": ["naca2415", "naca2412", "sc20412", "naca0012"]}
     _, st = build_stations(spec, vec)
     assert [s.airfoil.name for s in st] == ["naca2415", "naca2412", "sc20412", "naca0012"]
@@ -76,7 +76,7 @@ def test_vector_can_carry_its_own_airfoils():
 
 @needs_db
 def test_per_station_choices_are_sampled():
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["cranked"]
     choices = (("naca4415", "naca2415"), ("naca4415",), ("naca4412", "e387"), ("naca0012", "naca0009", "sc20410"))
     spec = params.TypeSpec(spec.name, spec.chord_law, spec.span_mode, tuple(c[0] for c in choices),
                            spec.ranges, spec.pinned, choices)
@@ -89,7 +89,7 @@ def test_per_station_choices_are_sampled():
 
 
 def test_as_is_needs_a_blunt_edge():
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["cranked"]
     vec = params.mid_vector(spec) | {"airfoils": ["mh91", "mh91", "mh91", "mh91"]}
     cfg = params.load_config()
     te = params.TERule(cfg.te.floor_m, cfg.te.chord_fraction, cfg.te.open_from_xc, "as_is")

@@ -15,7 +15,7 @@ CFG = params.load_config()
 
 def three_wings():
     bwb = CFG.types["bwb"]
-    conv = CFG.types["conventional"]
+    conv = CFG.types["cranked"]
     return {
         "bwb_mid": (bwb, params.mid_vector(bwb)),
         # biggest sweep change between panels the BWB ranges allow: 40 -> 15 -> 25 deg

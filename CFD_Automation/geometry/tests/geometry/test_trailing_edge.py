@@ -15,7 +15,7 @@ def _vectors(wing_type, n=100, seed=1):
         yield spec, params.from_unit(spec, dict(zip(spec.free_variables, rng.random(18))))
 
 
-@pytest.mark.parametrize("wing_type", ["bwb", "conventional"])
+@pytest.mark.parametrize("wing_type", ["bwb", "cranked"])
 def test_te_thickness_equals_rule_at_every_station(wing_type):
     for spec, vec in _vectors(wing_type):
         _, st = build_wing_sections(spec, vec, CFG.te)
@@ -24,7 +24,7 @@ def test_te_thickness_equals_rule_at_every_station(wing_type):
             assert abs(built - CFG.te.thickness_m(s.chord)) < 1e-6   # 1 micron
 
 
-@pytest.mark.parametrize("wing_type", ["bwb", "conventional"])
+@pytest.mark.parametrize("wing_type", ["bwb", "cranked"])
 def test_camber_line_does_not_move(wing_type):
     for spec, vec in _vectors(wing_type, n=20):
         _, closed = build_stations(spec, vec)
@@ -55,7 +55,7 @@ def test_already_thick_edge_is_thinned_to_rule():
 
 
 def test_switch_section_added_where_rule_changes():
-    spec = CFG.types["conventional"]
+    spec = CFG.types["cranked"]
     # root 0.4 m -> 0.2 m tip: the 0.25 m switch chord falls inside a panel
     vec = params.mid_vector(spec) | {"root_chord_m": 0.4, "c2_ratio": 1.0, "c3_ratio": 0.9, "c4_ratio": 0.5}
     _, st = build_wing_sections(spec, vec, CFG.te)

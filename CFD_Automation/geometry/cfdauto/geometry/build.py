@@ -1,7 +1,7 @@
 """One function: design vector -> wing folder.
 
     python -m cfdauto.geometry.build --type bwb --set training --index 7
-    python -m cfdauto.geometry.build --type conventional --vector my_wing.json --out somewhere/
+    python -m cfdauto.geometry.build --type cranked --vector my_wing.json --out somewhere/
     python -m cfdauto.geometry.build --all      # every training, corner and reference wing
 """
 

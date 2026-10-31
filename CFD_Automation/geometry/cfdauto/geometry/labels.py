@@ -79,20 +79,35 @@ def shape_values(m: dict) -> dict:
     }
 
 
-def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
-    """Labels and the values behind them.
-
-    Configuration label: 'bwb' when the measured planform has a centre body (rule below);
-    otherwise 'flying_wing' for a tailless type and 'conventional' for a type with a tail.
-    The tail is not part of the wing surface, so `tailless` comes from the wing type.
-    """
-    v = shape_values(m)
-    out = []
+def is_bwb(v: dict) -> bool:
+    """Centre body: a long root chord against the outer wing (thresholds in T)."""
     ratio = v["root_over_outer"]
-    bwb = v["root_chord_m"] >= T["bwb_root_over_semispan"] * v["semi_span_m"] and (
+    return v["root_chord_m"] >= T["bwb_root_over_semispan"] * v["semi_span_m"] and (
         ratio >= T["bwb_root_over_outer"]
         or (ratio >= T["bwb_root_over_outer_with_loss"] and v["root_loss"] >= T["bwb_root_loss"]))
-    out.append("bwb" if bwb else ("flying_wing" if tailless else "conventional"))
+
+
+def classify(v: dict, tailless: bool) -> tuple[str, str]:
+    """(family, type) of a measured wing.
+
+    The family is an input: tailless or conventional (with a horizontal tail). The tail is not part of
+    the wing surface, so it cannot be measured; it comes from the generator type or from the user.
+    Inside the family the type follows from our rules on the measured planform:
+      tailless:      'bwb' with a centre body (is_bwb), else 'flying_wing'
+      conventional:  'cranked' when the leading edge or the chord breaks (a kink), else 'tapered'
+    """
+    if tailless:
+        return "tailless", ("bwb" if is_bwb(v) else "flying_wing")
+    return "conventional", ("cranked" if v["kinks_at_span_fraction"] else "tapered")
+
+
+def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
+    """Labels and the values behind them: family, type (classify), then shape labels."""
+    v = shape_values(m)
+    family, wtype = classify(v, tailless)
+    v["family"], v["type"] = family, wtype
+    out = [family, wtype]
+    bwb = wtype == "bwb"
 
     sw = v["qc_sweep_outer_deg"]
     if sw >= T["sweep_deg"]:
@@ -107,7 +122,8 @@ def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
     if not bwb and straight and v["taper"] >= T["rect_taper"]:
         out.append("rectangular")
     if kinked:
-        out.append("cranked")
+        if "cranked" not in out:
+            out.append("cranked")
     elif not bwb and straight and v["taper"] < T["rect_taper"]:
         out.append("straight_tapered")
 

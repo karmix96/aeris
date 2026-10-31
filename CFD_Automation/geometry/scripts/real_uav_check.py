@@ -29,7 +29,7 @@ from cfdauto.geometry.planform import build_planform  # noqa: E402
 from cfdauto.geometry.sample import lhs  # noqa: E402
 
 DOCS = ROOT / "docs"
-FAMILY_TYPES = {"tailless": ("bwb", "flying_wing"), "tailed": ("conventional", "tapered")}
+FAMILY_TYPES = {"tailless": ("bwb", "flying_wing"), "conventional": ("cranked", "tapered")}
 N_SAMPLE = 2000
 TOL = 0.10
 
@@ -66,14 +66,14 @@ def span_covered(r: dict, gen: dict[str, np.ndarray]) -> bool:
     return bool(pts[:, 0].min() * (1 - TOL) <= r["span"] <= pts[:, 0].max() * (1 + TOL))
 
 
-TYPE_FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "conventional": "tailed", "tapered": "tailed"}
+TYPE_FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "cranked": "conventional", "tapered": "conventional"}
 
 
-def generated() -> dict[str, np.ndarray]:
-    """Columns: span, mean chord, area, aspect ratio, overall taper, root chord, tip chord."""
+def generated(space: str = "focus") -> dict[str, np.ndarray]:
+    """Columns: full span (tip to tip), mean chord, area, aspect ratio, overall taper, root chord, tip chord."""
     cfg = load_config()
     out = {}
-    for t, spec in cfg.types.items():
+    for t, spec in (cfg.types if space == "focus" else cfg.full).items():
         pts = []
         for v in lhs(spec, N_SAMPLE, 7):
             pf = build_planform(spec, v)
@@ -101,6 +101,7 @@ def reynolds_by_type(rows: list[dict], gen: dict[str, np.ndarray], air: dict) ->
 
 
 def covered(r: dict, gen: dict[str, np.ndarray]) -> bool:
+    """Some generated wing of the family within 10 % in full span and in mean chord."""
     pts = np.vstack([gen[t] for t in FAMILY_TYPES[r["family"]]])
     ok = (np.abs(pts[:, 0] / r["span"] - 1) <= TOL) & (np.abs(pts[:, 1] / r["mean_chord"] - 1) <= TOL)
     return bool(ok.any())
@@ -112,7 +113,7 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), dpi=110)
-    style = {"bwb": "#2E8B57", "flying_wing": "#9A6200", "conventional": "#0C5EA8", "tapered": "#6A9FD8"}
+    style = {"bwb": "#2E8B57", "flying_wing": "#9A6200", "cranked": "#0C5EA8", "tapered": "#6A9FD8"}
     for ax, (fam, types) in zip(axes, FAMILY_TYPES.items()):
         for t in types:
             ax.scatter(gen[t][:, 0], gen[t][:, 1], s=4, alpha=0.25, color=style[t], label=f"generated: {t}")
@@ -131,7 +132,7 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
                 ax.plot([r["span"]] * 2, [0.04, 0.075], color="#6A4BB0", lw=1.4, zorder=2,
                         transform=ax.get_xaxis_transform())
         ax.set_title({"tailless": "Tailless vs the bwb and flying-wing types",
-                      "tailed": "Wing + tail vs the conventional and tapered types"}[fam], fontsize=10)
+                      "conventional": "Wing + tail vs the conventional and tapered types"}[fam], fontsize=10)
         ax.set_xlabel("full span [m]")
         ax.set_ylabel("mean chord = area / span [m]")
         ax.set_ylim(bottom=0)
@@ -151,18 +152,23 @@ def fmt_re(x) -> str:
 def main() -> None:
     air, rows = real_wings()
     db = hcdi_wings()
-    gen = generated()
+    gen = generated("focus")
+    gen_full = generated("full")
     for r in rows:
         if r.get("mean_chord") and r["use"] == "ranges":
-            r["covered"] = covered(r, gen)
+            r["covered"] = covered(r, gen)                  # by the focus space (span cap)
+            r["covered_full"] = covered(r, gen_full)        # by the full space
         if r["use"] in ("ranges", "span"):
             r["span_covered"] = span_covered(r, gen)
+            r["span_covered_full"] = span_covered(r, gen_full)
     for r in db:
         if r["use"] == "span":
             r["span_covered"] = span_covered(r, gen)
+            r["span_covered_full"] = span_covered(r, gen_full)
     spans = [r for r in rows + db if "span_covered" in r]
     outside = sorted({(r.get("name") or r.get("model"), r["family"], r["class"], r["span"])
                       for r in spans if not r["span_covered"]}, key=lambda x: (x[1], x[3]))
+    outside_full = [r.get("name") or r.get("model") for r in spans if not r["span_covered_full"]]
     used = [r for r in rows if r["use"] == "ranges"]
     names = ("span_m", "mean_chord_m", "area_m2", "aspect_ratio", "taper", "root_chord_m", "tip_chord_m")
     envelope = {t: {n: [float(g[:, k].min()), float(g[:, k].max())] for k, n in enumerate(names)}
@@ -170,10 +176,14 @@ def main() -> None:
     summary = {
         "re_low_min": min(r["re_low"] for r in used if r.get("re_low")),
         "re_high_max": max(r["re_high"] for r in used if r.get("re_high")),
-        "all_covered": all(r["covered"] for r in used),
+        "all_covered": all(r["covered_full"] for r in used),
+        "focus_covered": sum(r["covered"] for r in used),
+        "not_in_focus": [r["name"] for r in used if not r["covered"]],
+        "n_ranges": len(used),
         "reynolds": reynolds_by_type(rows, gen, air),
         "spans_checked": len(spans),
         "spans_outside": [{"name": n, "family": f, "class": c, "span": s} for n, f, c, s in outside],
+        "spans_outside_full": outside_full,
         "envelope": envelope,
     }
     (DOCS / "real_uavs.json").write_text(json.dumps({"air": air, "summary": summary, "rows": rows, "hcdi_db": db},
@@ -181,13 +191,14 @@ def main() -> None:
     plot(rows, gen, DOCS / "real_uavs.png", db)
     for r in used:
         print(f"{r['name'][:30]:30s} span {r['span']:5.2f}  c {r['mean_chord']:.3f}  AR {r['aspect_ratio']:4.1f}  "
-              f"Re {fmt_re(r.get('re_low'))} - {fmt_re(r.get('re_high'))}  covered {r['covered']}")
+              f"Re {fmt_re(r.get('re_low'))} - {fmt_re(r.get('re_high'))}  focus {r['covered']}  full {r['covered_full']}")
     for t, e in envelope.items():
         print(f"{t:13s} span {e['span_m'][0]:.2f}-{e['span_m'][1]:.2f} m, mean chord "
               f"{e['mean_chord_m'][0]:.3f}-{e['mean_chord_m'][1]:.3f} m")
     print(f"Re of real wings: {summary['re_low_min']:.2e} to {summary['re_high_max']:.2e}; "
-          f"all covered: {summary['all_covered']}")
-    print(f"spans checked {len(spans)}; outside the generated span range:")
+          f"all covered by the full space: {summary['all_covered']}; by the focus space: "
+          f"{summary['focus_covered']} of {len(used)} (not: {', '.join(summary['not_in_focus'])})")
+    print(f"spans checked {len(spans)}; outside the full space: {outside_full}; outside the focus space:")
     for n, f, c, s in outside:
         print(f"   {f:8s} class {c:3s} {s:6.2f} m  {n}")
 

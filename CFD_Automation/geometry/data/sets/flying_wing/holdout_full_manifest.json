@@ -2,13 +2,13 @@
  "wing_type": "flying_wing",
  "set": "holdout_full",
  "code_version": "0.6.0",
- "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
+ "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
  "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "e6cdfd552cf9794201ba17a73ba8640ae63e785f93f31c7a023d733c6eb09777",
+   "input_hash": "eaaca944f7342c2ccb46f3d04dfb900ba57f0002f0fe3b8eeaea2b75f910fcee",
    "vector": {
     "root_chord_m": 0.4629288433833567,
     "c2_ratio": 0.9990088953942267,
@@ -39,7 +39,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "9008b9df1317c345bd77f478f5287c7d72c6972c6916ac1924265495bc70c660",
+   "input_hash": "dcd39a23f235eef04846b1d0005c49039422a9991202384192607da10329309b",
    "vector": {
     "root_chord_m": 1.0547040434965993,
     "c2_ratio": 0.9581778077386492,
@@ -70,7 +70,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "13ffdff3dcc2d301100576513bfe0525227d3313358801dc4dfd66592ec9474e",
+   "input_hash": "dc4fa15ef1e5d85f4e4e1c07494e6691beee0125cea7397852eccdff99a11009",
    "vector": {
     "root_chord_m": 0.34446075297017265,
     "c2_ratio": 0.8808844314594194,
@@ -101,7 +101,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "9f763f03b94809d8e8913e20ab3bdec9f3b932b342ad7813d71323495c27e02b",
+   "input_hash": "a394f20bf38f40daa2939654d532abb0ccdde151a97e1be68cd60f80c6ee3c67",
    "vector": {
     "root_chord_m": 0.578133261925294,
     "c2_ratio": 0.7331863941633621,
@@ -132,7 +132,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "f44ff59a098cb3530986193c30116884cecda8a44187143d3e5d75a496206115",
+   "input_hash": "eda96291823ce9d9ad60b4db8789024fd11525c316dd115819f87cef75fcbb12",
    "vector": {
     "root_chord_m": 0.8744017417803112,
     "c2_ratio": 0.8584677201902957,

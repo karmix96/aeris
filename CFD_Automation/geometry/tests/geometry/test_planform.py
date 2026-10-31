@@ -39,14 +39,14 @@ def test_panel_spans_follow_ratios():
 
 def test_root_chord_fraction_span_mode():
     import dataclasses
-    spec = dataclasses.replace(params.load_config().types["conventional"], span_mode="root_chord_fractions")
+    spec = dataclasses.replace(params.load_config().types["cranked"], span_mode="root_chord_fractions")
     vec = params.mid_vector(spec) | {"semi_span_m": 4.0}
     pf = build_planform(spec, vec)
     assert pf.semi_span == pytest.approx(vec["semi_span_m"] * vec["root_chord_m"])
 
 
 def test_forward_sweep_builds():
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["cranked"]
     vec = params.mid_vector(spec) | {"sweep1_deg": -10.0, "sweep2_deg": -10.0, "sweep3_deg": -10.0}
     pf = build_planform(spec, vec)
     assert np.all(np.diff(pf.x_le) < 0)
@@ -54,7 +54,7 @@ def test_forward_sweep_builds():
 
 def test_rectangle_area_mac_ar():
     import dataclasses
-    spec = dataclasses.replace(params.load_config().types["conventional"], span_mode="root_chord_fractions")
+    spec = dataclasses.replace(params.load_config().types["cranked"], span_mode="root_chord_fractions")
     vec = params.mid_vector(spec) | {
         "root_chord_m": 0.5, "c2_ratio": 1.0, "c3_ratio": 1.0, "c4_ratio": 1.0,
         "semi_span_m": 4.0, "sweep1_deg": 0.0, "sweep2_deg": 0.0, "sweep3_deg": 0.0,
@@ -86,7 +86,7 @@ def test_negative_chord_refused():
 
 
 def test_per_panel_never_wider_outboard():
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["cranked"]
     assert spec.chord_law == "per_panel"
     for vec in _random_vectors(spec, n=500, seed=3):
         c = build_planform(spec, vec).chord

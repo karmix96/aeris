@@ -6,7 +6,7 @@ from cfdauto.geometry import params
 
 def test_config_loads_both_types():
     cfg = params.load_config()
-    assert set(cfg.types) == set(params.WING_TYPES) == {"bwb", "conventional", "tapered", "flying_wing"}
+    assert set(cfg.types) == set(params.WING_TYPES) == {"bwb", "cranked", "tapered", "flying_wing"}
     for spec in cfg.types.values():
         assert set(spec.ranges) == set(params.VARIABLES)
         # everything varies by default, except what a law computes
@@ -15,12 +15,12 @@ def test_config_loads_both_types():
 
 def test_same_variable_list_for_every_type():
     cfg = params.load_config()
-    assert list(cfg.types["bwb"].ranges) == list(cfg.types["conventional"].ranges)
+    assert list(cfg.types["bwb"].ranges) == list(cfg.types["cranked"].ranges)
 
 
 def test_forward_sweep_allowed_by_ranges():
     cfg = params.load_config()
-    spec = cfg.types["conventional"]
+    spec = cfg.types["cranked"]
     assert spec.ranges["sweep2_deg"][0] < 0
     vec = params.from_unit(spec, {"sweep2_deg": 0.0})
     assert vec["sweep2_deg"] < 0
@@ -42,10 +42,10 @@ def _write(tmp_path, raw):
 
 def test_pinned_and_linear_taper(tmp_path):
     raw = yaml.safe_load(params.DEFAULT_CONFIG.read_text())
-    raw["types"]["conventional"]["pinned"] = {"dihedral_p1_deg": 2.0}
-    raw["types"]["conventional"]["chord_law"] = "linear_taper"
+    raw["types"]["cranked"]["pinned"] = {"dihedral_p1_deg": 2.0}
+    raw["types"]["cranked"]["chord_law"] = "linear_taper"
     cfg = params.load_config(_write(tmp_path, raw))
-    spec = cfg.types["conventional"]
+    spec = cfg.types["cranked"]
     assert "dihedral_p1_deg" not in spec.free_variables
     assert "c2_ratio" not in spec.free_variables
     vec = params.mid_vector(spec)

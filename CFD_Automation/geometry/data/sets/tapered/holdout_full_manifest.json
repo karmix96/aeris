@@ -2,13 +2,13 @@
  "wing_type": "tapered",
  "set": "holdout_full",
  "code_version": "0.6.0",
- "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
+ "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
  "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "fca75ae44e907e4de7d745007795b71b3110a30b031f5692a05080e6d1d97cba",
+   "input_hash": "ff0e9a2c07d2d3e299eb82d414bdc26b02a8179cbe8c779787b83c0e811a81e0",
    "vector": {
     "root_chord_m": 0.22774698805494592,
     "c2_ratio": 0.8838883066875539,
@@ -39,7 +39,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "d5f0f8eb2cbdd976937bc8f1c6795df74158bdb4fbb581923bf6771d3a795a41",
+   "input_hash": "1a559107f824a6daa211491602af73e08b734ff9d6708f1bb842927553a25ec9",
    "vector": {
     "root_chord_m": 0.27861703248894093,
     "c2_ratio": 0.869784908129251,
@@ -70,7 +70,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "46f98caac772b8c27e4c759609c9a41d87e97fc87fbc61423db7d70e6a7dddb3",
+   "input_hash": "8bc4a0d69ecaa2214c3a4cc05eaa65192c6d9de1337b342d6826d58d8e069126",
    "vector": {
     "root_chord_m": 0.9234743785359023,
     "c2_ratio": 0.968538203436802,
@@ -101,7 +101,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "8123d0fe4311f5c3339b0ffd2565f846dc76962b8054eda2ccbdc615efa8d9a5",
+   "input_hash": "eab530e1bd42b70813c06ec922b7c70d75a520b14005095b4dfa05456d1d0eee",
    "vector": {
     "root_chord_m": 0.534376946108859,
     "c2_ratio": 0.9484196201873333,
@@ -132,7 +132,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "ab16513eaf7abbe878a7c837cc827daa1abf3251e21a131eb2132d4f58f726cc",
+   "input_hash": "a8760f6160389d23231374a2e1b75aee76cc693536bfcf04754cfb6ea188c066",
    "vector": {
     "root_chord_m": 0.7126935911288593,
     "c2_ratio": 0.8259223103620592,

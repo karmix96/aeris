@@ -1,5 +1,7 @@
 """Smallest and largest wing of each type, in the focus and the full space; the Re and Mach they fly at.
 
+Span here is always the full span b (tip to tip); the focus space is capped at b = 7 m.
+
     python scripts/size_extremes.py     # writes docs/size_extremes.json and docs/size_extremes.gif
 
 Smallest / largest = least / most wing area. Area = AR * (c_root * K)^2, so the extremes sit at the
@@ -30,17 +32,25 @@ from cfdauto.geometry.planform import build_planform  # noqa: E402
 
 DOCS = ROOT / "docs"
 SIZE_VARS = ("root_chord_m", "aspect_ratio", "c2_ratio", "c3_ratio", "c4_ratio", "b3_ratio", "split_ratio")
-FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "conventional": "tailed", "tapered": "tailed"}
+FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "cranked": "conventional", "tapered": "conventional"}
 A_SL, A_3048 = 340.3, 328.6
-NAME = {"bwb": "BWB", "conventional": "Cranked", "tapered": "Tapered", "flying_wing": "Flying wing"}
+NAME = {"bwb": "BWB", "cranked": "Cranked", "tapered": "Tapered", "flying_wing": "Flying wing"}
 
 
 def corners(spec) -> list[dict]:
+    """Corners of the size inputs (others mid-range). With a full-span cap (focus space) the corners
+    beyond the cap are dropped and 3,000 capped Latin-hypercube wings are added, because the largest
+    wing then sits on the cap, not at a corner."""
+    from cfdauto.geometry.sample import lhs
     free = [v for v in SIZE_VARS if v in spec.free_variables]
+    vecs = [from_unit(spec, dict(zip(free, bits))) for bits in itertools.product((0.0, 1.0), repeat=len(free))]
+    if spec.max_full_span_m is not None:
+        vecs += lhs(spec, 3000, 99)
     out = []
-    for bits in itertools.product((0.0, 1.0), repeat=len(free)):
-        vec = from_unit(spec, dict(zip(free, bits)))
+    for vec in vecs:
         pf = build_planform(spec, vec)
+        if spec.max_full_span_m is not None and 2 * pf.semi_span > spec.max_full_span_m * (1 + 1e-9):
+            continue
         out.append({"vector": vec, "span_m": 2 * pf.semi_span, "area_m2": pf.area(),
                     "root_chord_m": float(pf.chord[0]), "tip_chord_m": float(pf.chord[-1]),
                     "mean_chord_m": pf.area() / (2 * pf.semi_span),
@@ -60,7 +70,7 @@ def outline(pf) -> list[list[float]]:
 def speeds() -> tuple[dict, dict]:
     d = yaml.safe_load((ROOT / "configs" / "real_uavs.yaml").read_text())
     air, out = d["air"], {}
-    for fam in ("tailless", "tailed"):
+    for fam in ("tailless", "conventional"):
         rows = [r for r in d["aircraft"] if r["family"] == fam and r["use"] in ("ranges", "span")]
         lo = min(r["cruise"] for r in rows if r.get("cruise"))
         hi = max((r["max"] or r["cruise"]) for r in rows if (r.get("max") or r.get("cruise")))
@@ -122,7 +132,7 @@ def gif(res: dict, path: Path) -> None:
     import matplotlib.pyplot as plt
     from PIL import Image
 
-    col = {"bwb": "#2E8B57", "conventional": "#0C5EA8", "tapered": "#6A9FD8", "flying_wing": "#B07000"}
+    col = {"bwb": "#2E8B57", "cranked": "#0C5EA8", "tapered": "#6A9FD8", "flying_wing": "#B07000"}
     big = max(res[f"{t}/full"]["largest"]["span_m"] for t in WING_TYPES) / 2 * 1.08
     deep_big = max(max(p[1] for p in res[k]["largest"]["outline"]) for k in res) * 1.08
     small_w = max(res[k]["smallest"]["span_m"] for k in res) / 2 * 1.15

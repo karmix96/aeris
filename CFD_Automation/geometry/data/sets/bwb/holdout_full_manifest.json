@@ -2,13 +2,13 @@
  "wing_type": "bwb",
  "set": "holdout_full",
  "code_version": "0.6.0",
- "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
+ "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
  "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "f0cb8a32daec5bc54d5e6db954889199338c40374b06d7b0d28982502de23a64",
+   "input_hash": "7c82aa9cd29c8335672d208598178c9e8a8c79addb0aedb75152c55e0fe3ef60",
    "vector": {
     "root_chord_m": 1.8315707287229837,
     "c2_ratio": 0.6891908609155779,
@@ -39,7 +39,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "b06f362cb56fa3a6633d0ea187e26149ef57df9c0942a0aa03cf95fdfd294fdf",
+   "input_hash": "dadadc439dd7f42f7769440addbc7f21aafe25b03614eea077059a9d5934eae2",
    "vector": {
     "root_chord_m": 0.5603630660852005,
     "c2_ratio": 0.7216121111821223,
@@ -70,7 +70,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "f13fbf8336ea5f773a0b1fb15cceaca2917e952c08c5e2c4f8f2654501488161",
+   "input_hash": "c12e0de5f8cb9bc3d0f216f764379046cabedd9e258ba37607722c7dd0850c6d",
    "vector": {
     "root_chord_m": 1.5621333327429572,
     "c2_ratio": 0.5334044809198027,
@@ -101,7 +101,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "5ef152268424fa73e147b5ba15d38bf46be8ba045540c84b946107d7ce6024b3",
+   "input_hash": "b94d44450d0de1ec0fc9189f350bfc285fc360c22dd88690d9fd446f6d4302ab",
    "vector": {
     "root_chord_m": 2.2418767372930906,
     "c2_ratio": 0.6089971284810842,
@@ -132,7 +132,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "e80fd661884f2bfbb628c0a36e2d58575dbe3ddac10b9f1a851c5d47542f3dd8",
+   "input_hash": "50f542fe39b0b38a3d56efb2de8939a7c2eef14d5cc1d89fde020984e68918ad",
    "vector": {
     "root_chord_m": 1.019422679940531,
     "c2_ratio": 0.8325128406213442,

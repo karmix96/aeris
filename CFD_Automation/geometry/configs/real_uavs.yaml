@@ -2,8 +2,8 @@
 #
 # Rule: a number is here only if a source states it. Empty (null) = not found.
 # Units: m, m2, kg, m/s. Conversions: 1 kt = 0.5144 m/s, 1 ft = 0.3048 m, 1 ft2 = 0.0929 m2.
-# family: tailless (flying wing / BWB, our 'bwb' type) or tailed (wing + tail, our
-#   'conventional' and 'tapered' types). family_src: S = a source says so; K = known from
+# family: tailless (flying wing / BWB: our 'bwb' and 'flying_wing' types) or conventional (wing + tail:
+#   our 'cranked' and 'tapered' types). family_src: S = a source says so; K = known from
 #   photos, not stated in a text source.
 # use: ranges = has a wing area, so a mean chord; span = span only; none = shown, not used (why in note).
 # stype (where the number comes from): manufacturer (datasheet, manual, brochure); paper (peer-reviewed);
@@ -50,107 +50,107 @@ aircraft:
      cruise: null, max: null, stype: secondary, use: span, note: "'blended' wing; no speeds published",
      source: "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/"}
   # --- tailed ---------------------------------------------------------------------------
-  - {name: Black Swift S0, class: I, family: tailed, family_src: S, span: 1.387, area: 0.188, mtow: 1.59,
+  - {name: Black Swift S0, class: I, family: conventional, family_src: S, span: 1.387, area: 0.188, mtow: 1.59,
      cruise: 17.0, max: null, stype: manufacturer, use: ranges, note: "54.6 in; 292 in2",
      source: "https://techpartnerships.noaa.gov/wp-content/uploads/2024/01/VTOL-S0-Data-Sheet.pdf"}
-  - {name: AV RQ-12A Wasp AE, class: I, family: tailed, family_src: K, span: 1.0, area: null, mtow: 1.3,
+  - {name: AV RQ-12A Wasp AE, class: I, family: conventional, family_src: K, span: 1.0, area: null, mtow: 1.3,
      cruise: 11.9, max: 23.1, stype: manufacturer, use: span, note: "",
      source: "https://www.avinc.com/images/uploads/product_docs/Wasp_Datasheet_07192021.pdf"}
-  - {name: AV RQ-11B Raven, class: I, family: tailed, family_src: K, span: 1.4, area: null, mtow: 1.9,
+  - {name: AV RQ-11B Raven, class: I, family: conventional, family_src: K, span: 1.4, area: null, mtow: 1.9,
      cruise: 8.9, max: 22.5, stype: manufacturer, use: none, note: "superseded by the NTNU row with AR; ",
      source: "https://www.avinc.com/images/uploads/product_docs/Raven_Datasheet_07122021.pdf"}
-  - {name: Quantum Trinity F90+, class: I, family: tailed, family_src: S, span: 2.394, area: null, mtow: 5.0,
+  - {name: Quantum Trinity F90+, class: I, family: conventional, family_src: S, span: 2.394, area: null, mtow: 5.0,
      cruise: 17.0, max: null, stype: manufacturer, use: span, note: "",
      source: "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf"}
-  - {name: AV RQ-20B Puma AE, class: I, family: tailed, family_src: K, span: 2.8, area: null, mtow: 6.3,
+  - {name: AV RQ-20B Puma AE, class: I, family: conventional, family_src: K, span: 2.8, area: null, mtow: 6.3,
      cruise: 10.3, max: 23.1, stype: manufacturer, use: none, note: "superseded by the NTNU row with AR; 37-83 km/h envelope",
      hcdi: {model: "Puma 3 AE", class: "I (Mini)", span: 2.8, mtow: null, payload: null}, 
      source: "https://www.avinc.com/images/uploads/product_docs/PumaAE_Datasheet_Web_v1.2.pdf"}
-  - {name: Penguin B, class: I, family: tailed, family_src: K, span: 3.3, area: 0.79, mtow: 21.5,
+  - {name: Penguin B, class: I, family: conventional, family_src: K, span: 3.3, area: 0.79, mtow: 21.5,
      cruise: 22.0, max: 36.0, stype: manufacturer, use: ranges, note: "datasheet prints '0.79 m' (m2)",
      source: "https://www.unmannedsystemstechnology.com/wp-content/uploads/2014/11/Penguin-B-Datasheet.pdf"}
-  - {name: Aerosonde (Beard & McLain model), class: I, family: tailed, family_src: K, span: 2.8956, area: 0.55, mtow: 11.0,
+  - {name: Aerosonde (Beard & McLain model), class: I, family: conventional, family_src: K, span: 2.8956, area: 0.55, mtow: 11.0,
      cruise: 25.0, max: null, stype: model, use: none, note: "textbook simulation model, not manufacturer data",
      source: "https://raw.githubusercontent.com/byu-magicc/mavsim_public/main/mavsim_python/parameters/aerosonde_parameters.py"}
-  - {name: Insitu RQ-21A Blackjack, class: I, family: tailed, family_src: K, span: 4.8, area: null, mtow: 61,
+  - {name: Insitu RQ-21A Blackjack, class: I, family: conventional, family_src: K, span: 4.8, area: null, mtow: 61,
      cruise: 30.9, max: 46.3, stype: manufacturer, use: span, note: "",
      hcdi: {model: "RQ-21A Blackjack", class: "I (Small)", span: 4.9, mtow: null, payload: 18.0}, 
      source: "https://c-853-20151211-www-insitu-com.i.icims.com/wp-content/uploads/2021/01/RQ-21A_Blackjack_ProductCard_DU011221.pdf"}
-  - {name: AAI RQ-7B Shadow, class: II, family: tailed, family_src: K, span: 4.27, area: null, mtow: 170,
+  - {name: AAI RQ-7B Shadow, class: II, family: conventional, family_src: K, span: 4.27, area: null, mtow: 170,
      cruise: 30.8, max: 53.9, stype: secondary, use: span, note: "",
      source: "https://designation-systems.net/dusrm/app2/q-7.html"}
-  - {name: AAI RQ-2A Pioneer, class: II, family: tailed, family_src: K, span: 5.15, area: 2.826, mtow: 190.5,
+  - {name: AAI RQ-2A Pioneer, class: II, family: conventional, family_src: K, span: 5.15, area: 2.826, mtow: 190.5,
      cruise: 33.3, max: 56.7, stype: thesis_report, use: ranges, note: "30.42 ft2, 16.9 ft, mean chord 1.80 ft (Bray 1991, NPS wind-tunnel thesis); speeds designation-systems",
      source: "https://de3mirror.flightgear.org/fgdata/fgdata_2020_3/Aircraft-uiuc/models/pioneer/linear.html"}
-  - {name: RUAG Ranger, class: II, family: tailed, family_src: K, span: 5.708, area: 3.41, mtow: 275,
+  - {name: RUAG Ranger, class: II, family: conventional, family_src: K, span: 5.708, area: 3.41, mtow: 275,
      cruise: 49.9, max: 66.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.11; 97 / 130 kt",
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: Shadow V2, class: II, family: tailed, family_src: K, span: 6.2, area: null, mtow: 212,
+  - {name: Shadow V2, class: II, family: conventional, family_src: K, span: 6.2, area: null, mtow: 212,
      cruise: null, max: null, stype: manufacturer, use: span, note: "",
      hcdi: {model: "RQ-7B Shadow v2 Block III", class: "II", span: null, mtow: 243.0, payload: 19.5}, 
      source: "https://www.textronsystems.com/sites/default/files/_documents/TS%20US%20Shadow%20V2%20Datasheet_061119.pdf"}
-  - {name: Aeronautics Aerostar, class: II, family: tailed, family_src: K, span: 8.7, area: null, mtow: 240,
+  - {name: Aeronautics Aerostar, class: II, family: conventional, family_src: K, span: 8.7, area: null, mtow: 240,
      cruise: null, max: 51.4, stype: manufacturer, use: span, note: "",
      hcdi: {model: "Aeronautics Aerostar", class: "II", span: null, mtow: 240.0, payload: 40.0}, 
      source: "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf"}
-  - {name: Elbit Hermes 450, class: II, family: tailed, family_src: K, span: 10.51, area: 6.90, mtow: 450,
+  - {name: Elbit Hermes 450, class: II, family: conventional, family_src: K, span: 10.51, area: 6.90, mtow: 450,
      cruise: 36.0, max: 48.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.17; constant chord 0.69 m printed (x span = 7.25 m2, not 6.90: inconsistent); 70 / 95 kt",
      hcdi: {model: "Hermes 450", class: "II", span: 10.0, mtow: null, payload: 50.0},
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: Thales Watchkeeper WK450, class: II, family: tailed, family_src: K, span: 10.9, area: null, mtow: 485,
+  - {name: Thales Watchkeeper WK450, class: II, family: conventional, family_src: K, span: 10.9, area: null, mtow: 485,
      cruise: 39.6, max: null, stype: government, use: span, note: "",
      source: "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper"}
   # --- Goetten et al. 2021, CEAS Aeronaut. J. 12:589-603, Table 2 (open access) ---------------
   # Anonymised in the paper. Geometry 'derived from drawings and images' and remodelled in OpenVSP;
   # stated accuracy of the wetted area about 10-15 %. Speeds are loiter speeds. Family not stated per
   # aircraft; the paper's database is about 88 % tail-boom or standard layout (Goetten et al. APISAT 2018).
-  - {name: Goetten UAV 1, class: I, family: tailed, family_src: K, span: 3.3, area: 1.0, mtow: 25,
+  - {name: Goetten UAV 1, class: I, family: conventional, family_src: K, span: 3.3, area: 1.0, mtow: 25,
      cruise: 22.2, max: null, stype: paper, use: ranges, note: "MTOM 25 kg, payload 5 kg, loiter 22.2 m/s, AR 10.9, paper Re 0.5e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 2, class: I, family: tailed, family_src: K, span: 3.6, area: 1.32, mtow: 50,
+  - {name: Goetten UAV 2, class: I, family: conventional, family_src: K, span: 3.6, area: 1.32, mtow: 50,
      cruise: 27.8, max: null, stype: paper, use: ranges, note: "MTOM 50 kg, payload 8-10 kg, loiter 27.8 m/s, AR 9.8, paper Re 0.6e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 3, class: I, family: tailed, family_src: K, span: 4.2, area: 2.34, mtow: 75,
+  - {name: Goetten UAV 3, class: I, family: conventional, family_src: K, span: 4.2, area: 2.34, mtow: 75,
      cruise: 36.1, max: null, stype: paper, use: ranges, note: "MTOM 75 kg, payload 15-20 kg, loiter 36.1 m/s, AR 7.5, paper Re 1.4e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 4, class: I, family: tailed, family_src: K, span: 6.0, area: 2.63, mtow: 130,
+  - {name: Goetten UAV 4, class: I, family: conventional, family_src: K, span: 6.0, area: 2.63, mtow: 130,
      cruise: 37.5, max: null, stype: paper, use: ranges, note: "MTOM 130 kg, payload 18 kg, loiter 37.5 m/s, AR 13.5, paper Re 1.1e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 5, class: II, family: tailed, family_src: K, span: 4.9, area: 3.04, mtow: 150,
+  - {name: Goetten UAV 5, class: II, family: conventional, family_src: K, span: 4.9, area: 3.04, mtow: 150,
      cruise: 34.7, max: null, stype: paper, use: ranges, note: "MTOM 150 kg, payload 30 kg, loiter 34.7 m/s, AR 7.9, paper Re 1.5e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 6, class: II, family: tailed, family_src: K, span: 4.3, area: 2.37, mtow: 170,
+  - {name: Goetten UAV 6, class: II, family: conventional, family_src: K, span: 4.3, area: 2.37, mtow: 170,
      cruise: 36.1, max: null, stype: paper, use: ranges, note: "MTOM 170 kg, payload 25 kg, loiter 36.1 m/s, AR 7.8, paper Re 1.2e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 7, class: II, family: tailed, family_src: K, span: 5.2, area: 3.13, mtow: 182,
+  - {name: Goetten UAV 7, class: II, family: conventional, family_src: K, span: 5.2, area: 3.13, mtow: 182,
      cruise: 34.7, max: null, stype: paper, use: ranges, note: "MTOM 182 kg, payload 40 kg, loiter 34.7 m/s, AR 8.6, paper Re 1.4e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 8, class: II, family: tailed, family_src: K, span: 5.1, area: 2.82, mtow: 205,
+  - {name: Goetten UAV 8, class: II, family: conventional, family_src: K, span: 5.1, area: 2.82, mtow: 205,
      cruise: 30.6, max: null, stype: paper, use: ranges, note: "MTOM 205 kg, payload 34 kg, loiter 30.6 m/s, AR 9.4, paper Re 1.1e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 9, class: II, family: tailed, family_src: K, span: 8.7, area: 4.74, mtow: 230,
+  - {name: Goetten UAV 9, class: II, family: conventional, family_src: K, span: 8.7, area: 4.74, mtow: 230,
      cruise: 33.3, max: null, stype: paper, use: ranges, note: "MTOM 230 kg, payload 50 kg, loiter 33.3 m/s, AR 16.0, paper Re 1.2e6",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
-  - {name: Goetten UAV 10, class: III, family: tailed, family_src: K, span: 12.0, area: 8.7, mtow: 630,
+  - {name: Goetten UAV 10, class: III, family: conventional, family_src: K, span: 12.0, area: 8.7, mtow: 630,
      cruise: 36.1, max: null, stype: paper, use: none, note: "MTOM 630 kg, payload 55 kg, loiter 36.1 m/s, AR 16.5, paper Re 1.8e6; 630 kg is above Class II",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
   # --- papers, theses, reports (29 Oct 2026) ---------------------------------------------------
-  - {name: Kentron Seeker, class: II, family: tailed, family_src: K, span: 7.00, area: 4.427, mtow: 240,
+  - {name: Kentron Seeker, class: II, family: conventional, family_src: K, span: 7.00, area: 4.427, mtow: 240,
      cruise: 33.4, max: 48.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.13; 65 / 95 kt",
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: AAI Shadow 600, class: II, family: tailed, family_src: K, span: 6.83, area: 3.754, mtow: 265,
+  - {name: AAI Shadow 600, class: II, family: conventional, family_src: K, span: 6.83, area: 3.754, mtow: 265,
      cruise: 38.6, max: 53.5, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.15; 75 / 104 kt",
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: KAI Doyosae, class: I, family: tailed, family_src: K, span: 4.80, area: 2.84, mtow: 130,
+  - {name: KAI Doyosae, class: I, family: conventional, family_src: K, span: 4.80, area: 2.84, mtow: 130,
      cruise: null, max: null, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.19; no speeds",
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: Yakovlev Pchela, class: I, family: tailed, family_src: K, span: 3.25, area: 1.83, mtow: 138,
+  - {name: Yakovlev Pchela, class: I, family: conventional, family_src: K, span: 3.25, area: 1.83, mtow: 138,
      cruise: 33.4, max: 49.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.16; area printed '1.83 m3 (19.7 sq ft)': unit typo; 65 / 97 kt",
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: GSE Vindicator, class: II, family: tailed, family_src: K, span: 7.04, area: 4.83, mtow: 476,
+  - {name: GSE Vindicator, class: II, family: conventional, family_src: K, span: 7.04, area: 4.83, mtow: 476,
      cruise: 43.7, max: 102.9, stype: thesis_report, use: none, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.18; target drone, top speed 200 kt is above Mach 0.3 (phase 1)",
      source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
-  - {name: Developmental Sciences R-4D Sky Eye, class: I, family: tailed, family_src: K, span: 3.71, area: 2.805, mtow: null,
+  - {name: Developmental Sciences R-4D Sky Eye, class: I, family: conventional, family_src: K, span: 3.71, area: 2.805, mtow: null,
      cruise: null, max: null, stype: thesis_report, use: ranges, note: "full-scale vehicle in the tunnel; mean aerodynamic chord 0.81 m; modified, armed",
      source: "https://ntrs.nasa.gov/api/citations/19790022980/downloads/19790022980.pdf"}
   # --- AUTh BWB UAVs (Panagiotou, Yakinthos et al.) -------------------------------------
@@ -169,7 +169,7 @@ aircraft:
   - {name: USMC Exdrone (BQM-147), class: I, family: delta, family_src: S, span: 2.489, area: 1.973, mtow: 29.5,
      cruise: null, max: null, stype: thesis_report, use: none, note: "delta wing: neither of our families; NASA TM-4200, figures furnished by the USMC; NACA 63(1)A012",
      source: "https://ntrs.nasa.gov/api/citations/19900014922/downloads/19900014922.pdf"}
-  - {name: IAI Scout, class: II, family: tailed, family_src: K, span: 4.0, area: null, mtow: 159,
+  - {name: IAI Scout, class: II, family: conventional, family_src: K, span: 4.0, area: null, mtow: 159,
      cruise: null, max: null, stype: paper, use: span, note: "final design span (first design 3.2 m), IAI authors; other sources give 3.6 or 4.96 m",
      source: "https://icas.org/ICAS_ARCHIVE/ICAS2004/PAPERS/519.PDF"}
   # --- NTNU UAV database (Hann et al., DataverseNO doi:10.18710/L41IGQ, CC0), added 31 Oct 2026 ----------
@@ -177,22 +177,22 @@ aircraft:
   - {name: Insitu ScanEagle (NTNU), class: I, family: tailless, family_src: K, span: 3.11, area: null, ar: 12.4, mtow: 20,
      cruise: 25, max: 41, stype: database, use: ranges, note: "NTNU: AR 12.4, est. chord 0.25 m; swept tailless wing with winglet rudders",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: AAI RQ-7A Shadow (NTNU), class: II, family: tailed, family_src: K, span: 3.9, area: null, ar: 7, mtow: 150,
+  - {name: AAI RQ-7A Shadow (NTNU), class: II, family: conventional, family_src: K, span: 3.9, area: null, ar: 7, mtow: 150,
      cruise: 58, max: null, stype: database, use: ranges, note: "NTNU: AR 7, est. chord 0.55 m, NACA 4415; cruise 58 m/s as listed (looks like a top speed)",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: AAI Aerosonde (NTNU), class: I, family: tailed, family_src: K, span: 2.95, area: null, ar: 15.3, mtow: 25,
+  - {name: AAI Aerosonde (NTNU), class: I, family: conventional, family_src: K, span: 2.95, area: null, ar: 15.3, mtow: 25,
      cruise: 31, max: 41, stype: database, use: ranges, note: "NTNU: AR 15.3, est. chord 0.20 m, NACA 4415",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: CTRM Aludra MK1 (NTNU), class: II, family: tailed, family_src: K, span: 6.1, area: null, ar: 8.23, mtow: 200,
+  - {name: CTRM Aludra MK1 (NTNU), class: II, family: conventional, family_src: K, span: 6.1, area: null, ar: 8.23, mtow: 200,
      cruise: 28.3, max: 61.1, stype: database, use: ranges, note: "NTNU: AR 8.23, NACA 4415; listed est. chord 0.60 m disagrees with span/AR = 0.74 m",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: EMT Aladin (NTNU), class: I, family: tailed, family_src: K, span: 1.46, area: null, ar: 8, mtow: 4,
+  - {name: EMT Aladin (NTNU), class: I, family: conventional, family_src: K, span: 1.46, area: null, ar: 8, mtow: 4,
      cruise: 12.5, max: 25, stype: database, use: ranges, note: "NTNU: AR 8, est. chord 0.18 m",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: AV RQ-20 Puma 3AE (NTNU), class: I, family: tailed, family_src: K, span: 2.8, area: null, ar: 7.4, mtow: 6.8,
+  - {name: AV RQ-20 Puma 3AE (NTNU), class: I, family: conventional, family_src: K, span: 2.8, area: null, ar: 7.4, mtow: 6.8,
      cruise: 18, max: 23, stype: database, use: ranges, note: "NTNU: AR 7.4, est. chord 0.38 m, SD7032",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: AV RQ-11B Raven (NTNU), class: I, family: tailed, family_src: K, span: 1.4, area: null, ar: 6, mtow: 1.9,
+  - {name: AV RQ-11B Raven (NTNU), class: I, family: conventional, family_src: K, span: 1.4, area: null, ar: 6, mtow: 1.9,
      cruise: 11.6, max: 22.5, stype: database, use: ranges, note: "NTNU: AR 6, est. chord 0.22 m",
      source: "https://doi.org/10.18710/L41IGQ"}
   - {name: Delair UX11, class: I, family: tailless, family_src: K, span: 1.1, area: null, mtow: 1.5,
@@ -207,128 +207,128 @@ aircraft:
   - {name: Aeronautics Orbiter 3, class: I, family: tailless, family_src: K, span: 4.4, area: null, mtow: 30,
      cruise: null, max: 36, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Aeromao Aeromapper Avem, class: I, family: tailed, family_src: K, span: 2.14, area: null, mtow: 2,
+  - {name: Aeromao Aeromapper Avem, class: I, family: conventional, family_src: K, span: 2.14, area: null, mtow: 2,
      cruise: 16.7, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Aeronautics Aerolight, class: I, family: tailed, family_src: K, span: 4, area: null, mtow: 40,
+  - {name: Aeronautics Aerolight, class: I, family: conventional, family_src: K, span: 4, area: null, mtow: 40,
      cruise: 25.6, max: 51.4, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Airbus Atlante, class: II, family: tailed, family_src: K, span: 8, area: null, mtow: 570,
+  - {name: Airbus Atlante, class: II, family: conventional, family_src: K, span: 8, area: null, mtow: 570,
      cruise: 37.5, max: 55.6, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Bayraktar Mini UAV, class: I, family: tailed, family_src: K, span: 2, area: null, mtow: 5,
+  - {name: Bayraktar Mini UAV, class: I, family: conventional, family_src: K, span: 2, area: null, mtow: 5,
      cruise: 30.9, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: BlueBird ThunderB, class: I, family: tailed, family_src: K, span: 4, area: null, mtow: 32,
+  - {name: BlueBird ThunderB, class: I, family: conventional, family_src: K, span: 4, area: null, mtow: 32,
      cruise: 21.6, max: 37, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Delair DT26M, class: I, family: tailed, family_src: K, span: 3.3, area: null, mtow: 15,
+  - {name: Delair DT26M, class: I, family: conventional, family_src: K, span: 3.3, area: null, mtow: 15,
      cruise: 15.8, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: DRDO Nishant, class: II, family: tailed, family_src: K, span: 6.57, area: null, mtow: 275,
+  - {name: DRDO Nishant, class: II, family: conventional, family_src: K, span: 6.57, area: null, mtow: 275,
      cruise: 34.7, max: 51.4, stype: database, use: span, note: "cruise 34.7-41.7 m/s (lowest)",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: EMT Luna, class: I, family: tailed, family_src: K, span: 4.17, area: null, mtow: 40,
+  - {name: EMT Luna, class: I, family: conventional, family_src: K, span: 4.17, area: null, mtow: 40,
      cruise: 19, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Hydra Ehecatl S4, class: I, family: tailed, family_src: K, span: 3.7, area: null, mtow: 55,
+  - {name: Hydra Ehecatl S4, class: I, family: conventional, family_src: K, span: 3.7, area: null, mtow: 55,
      cruise: 19.5, max: 46.3, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: IAI Searcher Mk III, class: II, family: tailed, family_src: K, span: 8.55, area: null, mtow: 450,
+  - {name: IAI Searcher Mk III, class: II, family: conventional, family_src: K, span: 8.55, area: null, mtow: 450,
      cruise: 31, max: 57, stype: database, use: span, note: "cruise 31-41 m/s (lowest)",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: PT DI Wulung, class: I, family: tailed, family_src: K, span: 6.34, area: null, mtow: 125,
+  - {name: PT DI Wulung, class: I, family: conventional, family_src: K, span: 6.34, area: null, mtow: 125,
      cruise: 30.9, max: 51.4, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Innocon Micro Falcon LE, class: I, family: tailed, family_src: K, span: 2, area: null, mtow: 10,
+  - {name: Innocon Micro Falcon LE, class: I, family: conventional, family_src: K, span: 2, area: null, mtow: 10,
      cruise: 18, max: null, stype: database, use: span, note: "cruise 18-33.4 m/s (lowest)",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Lipan M3, class: I, family: tailed, family_src: K, span: 4.6, area: null, mtow: 60,
+  - {name: Lipan M3, class: I, family: conventional, family_src: K, span: 4.6, area: null, mtow: 60,
      cruise: 41.7, max: 47.2, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Lockheed Martin Stalker XE, class: I, family: tailed, family_src: K, span: 3.7, area: null, mtow: 10.9,
+  - {name: Lockheed Martin Stalker XE, class: I, family: conventional, family_src: K, span: 3.7, area: null, mtow: 10.9,
      cruise: 15.6, max: 20.1, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Northrop Grumman Bat, class: II, family: tailed, family_src: K, span: 4.26, area: null, mtow: 159,
+  - {name: Northrop Grumman Bat, class: II, family: conventional, family_src: K, span: 4.26, area: null, mtow: 159,
      cruise: 33.4, max: 47.3, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Nostromo Yarara W, class: I, family: tailed, family_src: K, span: 4, area: null, mtow: 35,
+  - {name: Nostromo Yarara W, class: I, family: conventional, family_src: K, span: 4, area: null, mtow: 35,
      cruise: 32, max: 40.3, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Qods Mohajer-4, class: II, family: tailed, family_src: K, span: 5.3, area: null, mtow: 175,
+  - {name: Qods Mohajer-4, class: II, family: conventional, family_src: K, span: 5.3, area: null, mtow: 175,
      cruise: 50, max: 55.6, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Raytheon Coyote, class: I, family: tailed, family_src: K, span: 1.5, area: null, mtow: 5.9,
+  - {name: Raytheon Coyote, class: I, family: conventional, family_src: K, span: 1.5, area: null, mtow: 5.9,
      cruise: 28.3, max: 36, stype: database, use: span, note: "tube-launched, folding wing",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: ST Aerospace Skyblade III, class: I, family: tailed, family_src: K, span: 2.6, area: null, mtow: 5,
+  - {name: ST Aerospace Skyblade III, class: I, family: conventional, family_src: K, span: 2.6, area: null, mtow: 5,
      cruise: 12.9, max: 18, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Sunbirds SB4 Phoenix, class: I, family: tailed, family_src: K, span: 3.2, area: null, mtow: 3.5,
+  - {name: Sunbirds SB4 Phoenix, class: I, family: conventional, family_src: K, span: 3.2, area: null, mtow: 3.5,
      cruise: 11.1, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Tekever AR4 Evo, class: I, family: tailed, family_src: K, span: 2.1, area: null, mtow: 4,
+  - {name: Tekever AR4 Evo, class: I, family: conventional, family_src: K, span: 2.1, area: null, mtow: 4,
      cruise: 15, max: 15, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Tekever AR5, class: II, family: tailed, family_src: K, span: 7.3, area: null, mtow: 180,
+  - {name: Tekever AR5, class: II, family: conventional, family_src: K, span: 7.3, area: null, mtow: 180,
      cruise: 27.8, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Textron Aerosonde (fixed wing), class: I, family: tailed, family_src: K, span: 3.7, area: null, mtow: 45.5,
+  - {name: Textron Aerosonde (fixed wing), class: I, family: conventional, family_src: K, span: 3.7, area: null, mtow: 45.5,
      cruise: 23, max: null, stype: database, use: span, note: "cruise 23-33 m/s (lowest)",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Threod Eos C, class: I, family: tailed, family_src: K, span: 4.76, area: null, mtow: 13,
+  - {name: Threod Eos C, class: I, family: conventional, family_src: K, span: 4.76, area: null, mtow: 13,
      cruise: 14, max: 28, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Threod Stream C, class: I, family: tailed, family_src: K, span: 3.9, area: null, mtow: 40,
+  - {name: Threod Stream C, class: I, family: conventional, family_src: K, span: 3.9, area: null, mtow: 40,
      cruise: 22, max: 36, stype: database, use: span, note: "cruise 22-28 m/s (lowest)",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: Topcon Sirius Pro, class: I, family: tailed, family_src: K, span: 1.63, area: null, mtow: 2.7,
+  - {name: Topcon Sirius Pro, class: I, family: conventional, family_src: K, span: 1.63, area: null, mtow: 2.7,
      cruise: 18.1, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
-  - {name: GIDS Shahpar, class: II, family: tailed, family_src: K, span: 6.6, area: null, mtow: 480,
+  - {name: GIDS Shahpar, class: II, family: conventional, family_src: K, span: 6.6, area: null, mtow: 480,
      cruise: 41.7, max: null, stype: database, use: span, note: "NTNU database",
      source: "https://doi.org/10.18710/L41IGQ"}
   # --- CNAS / Bard College Drone Database (drones.cnas.org), added 31 Oct 2026: span, MTOW, max speed only ----
   - {name: Zala 421-08M, class: I, family: tailless, family_src: K, span: 0.8, area: null, mtow: 2.5,
      cruise: null, max: 36.1, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/zala-aero-group-zala-421-08m/"}
-  - {name: Martin UAV Super Bat DA-50, class: I, family: tailed, family_src: K, span: 2.6, area: null, mtow: 21,
+  - {name: Martin UAV Super Bat DA-50, class: I, family: conventional, family_src: K, span: 2.6, area: null, mtow: 21,
      cruise: null, max: 33.3, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/super-bat-da-50-uav/"}
-  - {name: L-3 Viking 400, class: II, family: tailed, family_src: K, span: 6, area: null, mtow: 245,
+  - {name: L-3 Viking 400, class: II, family: conventional, family_src: K, span: 6, area: null, mtow: 245,
      cruise: null, max: 46.4, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/viking-400/"}
-  - {name: L-3 Cutlass, class: I, family: tailed, family_src: K, span: 1.4, area: null, mtow: 6.8,
+  - {name: L-3 Cutlass, class: I, family: conventional, family_src: K, span: 1.4, area: null, mtow: 6.8,
      cruise: null, max: 43.6, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/cutlass/"}
-  - {name: Warrior Gull 68, class: II, family: tailed, family_src: K, span: 7.6, area: null, mtow: 250,
+  - {name: Warrior Gull 68, class: II, family: conventional, family_src: K, span: 7.6, area: null, mtow: 250,
      cruise: null, max: 51.4, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/gull-68/"}
-  - {name: BAE Systems Herti, class: II, family: tailed, family_src: K, span: 12, area: null, mtow: 450,
+  - {name: BAE Systems Herti, class: II, family: conventional, family_src: K, span: 12, area: null, mtow: 450,
      cruise: null, max: 64.2, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/herti/"}
-  - {name: Denel Seeker 400, class: II, family: tailed, family_src: K, span: 10, area: null, mtow: 450,
+  - {name: Denel Seeker 400, class: II, family: conventional, family_src: K, span: 10, area: null, mtow: 450,
      cruise: null, max: 61.7, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/seeker-400/"}
-  - {name: ST Aerospace Skyblade IV, class: I, family: tailed, family_src: K, span: 3.7, area: null, mtow: 70,
+  - {name: ST Aerospace Skyblade IV, class: I, family: conventional, family_src: K, span: 3.7, area: null, mtow: 70,
      cruise: null, max: 41.1, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/skyblade-iv/"}
-  - {name: ASN-209, class: II, family: tailed, family_src: K, span: 7.5, area: null, mtow: 320,
+  - {name: ASN-209, class: II, family: conventional, family_src: K, span: 7.5, area: null, mtow: 320,
      cruise: null, max: 50, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/asn-209/"}
-  - {name: ASN-206, class: II, family: tailed, family_src: K, span: 6, area: null, mtow: 222,
+  - {name: ASN-206, class: II, family: conventional, family_src: K, span: 6, area: null, mtow: 222,
      cruise: null, max: 58.3, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/asn-206/"}
-  - {name: FlyTronic FlyEye, class: I, family: tailed, family_src: K, span: 3.6, area: null, mtow: 11,
+  - {name: FlyTronic FlyEye, class: I, family: conventional, family_src: K, span: 3.6, area: null, mtow: 11,
      cruise: null, max: 33.3, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/flytronic-flyeye/"}
-  - {name: AAI Aerosonde Mk 4.7, class: I, family: tailed, family_src: K, span: 3.6, area: null, mtow: 36,
+  - {name: AAI Aerosonde Mk 4.7, class: I, family: conventional, family_src: K, span: 3.6, area: null, mtow: 36,
      cruise: null, max: 41.1, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/aerosonde-aerosonde-mark-4-7/"}
-  - {name: UAV Factory Penguin C, class: I, family: tailed, family_src: K, span: 3.3, area: null, mtow: 23,
+  - {name: UAV Factory Penguin C, class: I, family: conventional, family_src: K, span: 3.3, area: null, mtow: 23,
      cruise: null, max: 31.9, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/uav-fac/"}
-  - {name: Elbit Skylark I-LE, class: I, family: tailed, family_src: K, span: 2, area: null, mtow: 7.5,
+  - {name: Elbit Skylark I-LE, class: I, family: conventional, family_src: K, span: 2, area: null, mtow: 7.5,
      cruise: null, max: null, stype: database, use: span, note: "CNAS database; max speed converted from km/h",
      source: "https://drones.cnas.org/drones/elbit-skylark-micro/"}
   # --- outside both families --------------------------------------------------------------
@@ -358,18 +358,18 @@ hcdi_db:
      check: "top speed 380 km/h (106 m/s) is above Mach 0.3, outside phase 1"}
   - {model: XQ-58 Valkyrie, class: II, family: tailless, family_src: D, span: 8.229, mtow: null, payload: 272.2, role: ISR, use: none,
      check: "jet, top 1,050 km/h; listed as Class II but it is far heavier than 600 kg (Class III)"}
-  - {model: Puma LE, class: I, family: tailed, family_src: K, span: 4.6, mtow: null, payload: 2.5, role: ISR, use: span,
+  - {model: Puma LE, class: I, family: conventional, family_src: K, span: 4.6, mtow: null, payload: 2.5, role: ISR, use: span,
      check: "database says Flying Wing; the Puma family has a tail"}
-  - {model: V2U, class: I, family: tailed, family_src: D, span: 1.2, mtow: 15.0, payload: 3.5, role: Barrage Munition, use: span}
-  - {model: Shahed 107, class: I, family: tailed, family_src: D, span: 3.0, mtow: 26.0, payload: 20.0, role: ISR, use: span}
-  - {model: Orlan-10, class: I, family: tailed, family_src: D, span: 3.05, mtow: 18.0, payload: 5.5, role: ISR, use: span,
+  - {model: V2U, class: I, family: conventional, family_src: D, span: 1.2, mtow: 15.0, payload: 3.5, role: Barrage Munition, use: span}
+  - {model: Shahed 107, class: I, family: conventional, family_src: D, span: 3.0, mtow: 26.0, payload: 20.0, role: ISR, use: span}
+  - {model: Orlan-10, class: I, family: conventional, family_src: D, span: 3.05, mtow: 18.0, payload: 5.5, role: ISR, use: span,
      check: "database says Class II, but MTOW 18 kg is Class I"}
-  - {model: Orlan-30, class: I, family: tailed, family_src: D, span: 3.05, mtow: 30.0, payload: 12.0, role: ISTAR, use: span}
-  - {model: Granat-4, class: I, family: tailed, family_src: D, span: 3.35, mtow: 30.0, payload: 20.0, role: ISTAR, use: span}
-  - {model: Merlin-VR, class: I, family: tailed, family_src: D, span: 4.9, mtow: 20.0, payload: 7.0, role: ISTAR, use: span}
-  - {model: Corsair, class: II, family: tailed, family_src: K, span: 6.5, mtow: null, payload: 40.0, role: null, use: span}
-  - {model: Vestel Karayel, class: II, family: tailed, family_src: K, span: 8.0, mtow: null, payload: 50.0, role: null, use: span}
-  - {model: Ababil-3, class: II, family: tailed, family_src: K, span: 8.0, mtow: null, payload: 40.0, role: null, use: span}
-  - {model: Hamaseh, class: II, family: tailed, family_src: K, span: 9.0, mtow: null, payload: 50.0, role: null, use: span}
-  - {model: Mohajer-6, class: II, family: tailed, family_src: K, span: 10.0, mtow: null, payload: 150.0, role: null, use: span,
+  - {model: Orlan-30, class: I, family: conventional, family_src: D, span: 3.05, mtow: 30.0, payload: 12.0, role: ISTAR, use: span}
+  - {model: Granat-4, class: I, family: conventional, family_src: D, span: 3.35, mtow: 30.0, payload: 20.0, role: ISTAR, use: span}
+  - {model: Merlin-VR, class: I, family: conventional, family_src: D, span: 4.9, mtow: 20.0, payload: 7.0, role: ISTAR, use: span}
+  - {model: Corsair, class: II, family: conventional, family_src: K, span: 6.5, mtow: null, payload: 40.0, role: null, use: span}
+  - {model: Vestel Karayel, class: II, family: conventional, family_src: K, span: 8.0, mtow: null, payload: 50.0, role: null, use: span}
+  - {model: Ababil-3, class: II, family: conventional, family_src: K, span: 8.0, mtow: null, payload: 40.0, role: null, use: span}
+  - {model: Hamaseh, class: II, family: conventional, family_src: K, span: 9.0, mtow: null, payload: 50.0, role: null, use: span}
+  - {model: Mohajer-6, class: II, family: conventional, family_src: K, span: 10.0, mtow: null, payload: 150.0, role: null, use: span,
      check: "payload 150 kg; class to verify against MTOW"}

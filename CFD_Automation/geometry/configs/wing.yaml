@@ -5,6 +5,8 @@
 # inner = split_ratio * rest and middle = the remainder.
 # Sweep: leading edge, signed, positive = aft. Twist: positive = nose up, at each station.
 # Dihedral: one per straight panel (p1 inner, p2 middle, p3 outer), positive = tip up.
+# Span words: full span b = tip to tip (both halves); semi-span S = b / 2 = root to one tip (the half
+# wing we build, mesh and mirror at y = 0). semi_span_m is always the semi-span.
 # Every variable varies unless listed under `pinned` or computed by a law.
 #
 # What is sampled and what is derived (per type, from the laws below):
@@ -18,8 +20,10 @@
 # Sizes come from real Class I-II UAVs (configs/real_uavs.yaml, scripts/real_uav_check.py);
 # shapes from design guidance and published UAV geometry (geometry/decisions/shape_ranges.md).
 
-wing_type: mixed                      # bwb | conventional | tapered | flying_wing | mixed
-shares: {bwb: 0.25, conventional: 0.25, tapered: 0.25, flying_wing: 0.25}   # used only when wing_type = mixed
+wing_type: mixed                      # a type (bwb | flying_wing | cranked | tapered), a family (tailless | conventional), or mixed
+shares: {bwb: 0.25, cranked: 0.25, tapered: 0.25, flying_wing: 0.25}   # used only when wing_type = mixed
+focus:                                # the focus space ends here (all types); the full space has no cap
+  max_full_span_m: 7.0                # full span b = tip to tip (both halves), not the semi-span. Decided 31 Oct 2026
 wing_class: I                         # I | II  (sets the trailing-edge floor)
 
 trailing_edge:
@@ -81,7 +85,7 @@ types:
       dihedral_p2_deg: [-10.0, 10.0]
       dihedral_p3_deg: [-10.0, 10.0]
 
-  conventional:                       # cranked wing with a tail: constant-chord centre, tapered outer panels (e.g. Hermes 450, Heron; from photos)
+  cranked:                            # conventional family (with a tail): cranked wing: constant-chord centre, tapered outer panels (e.g. Hermes 450, Heron; from photos)
     chord_law: per_panel              # each panel's own taper, so no chord grows outboard
     sweep_law: panels
     span_mode: aspect_ratio
@@ -129,7 +133,7 @@ types:
       dihedral_p2_deg: [-10.0, 10.0]
       dihedral_p3_deg: [-10.0, 10.0]
 
-  tapered:                            # wing with a tail and straight edges root to tip (rectangular when c4 = 1)
+  tapered:                            # conventional family (with a tail): straight edges root to tip (rectangular when c4 = 1)
     chord_law: linear_taper
     sweep_law: one
     span_mode: aspect_ratio
@@ -212,7 +216,7 @@ types:
 sets:
   seeds:
     bwb:          {training: 1001, holdout: 2001, training_full: 1101, holdout_full: 2101}
-    conventional: {training: 1002, holdout: 2002, training_full: 1102, holdout_full: 2102}
+    cranked:      {training: 1002, holdout: 2002, training_full: 1102, holdout_full: 2102}
     tapered:      {training: 1003, holdout: 2003, training_full: 1103, holdout_full: 2103}
     flying_wing:  {training: 1004, holdout: 2004, training_full: 1104, holdout_full: 2104}
   training_size: 100                  # focus space (dense)

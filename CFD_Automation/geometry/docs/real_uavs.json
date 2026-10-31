@@ -8,6 +8,12 @@
   "re_low_min": 122046.87499999997,
   "re_high_max": 3102142.7703523687,
   "all_covered": true,
+  "focus_covered": 32,
+  "not_in_focus": [
+   "Elbit Hermes 450",
+   "Goetten UAV 9"
+  ],
+  "n_ranges": 34,
   "reynolds": {
    "bwb": {
     "speed_m_s": [
@@ -15,47 +21,15 @@
      44.4
     ],
     "mean_chord": [
-     99595.19163843179,
-     3214623.275332266
+     100266.34163805458,
+     3202488.093437074
     ],
     "tip": [
-     15442.488186412664,
-     1062670.716389855
+     14948.004621603799,
+     1069820.7315383328
     ],
-    "root_max": 5472777.909901915,
+    "root_max": 5470141.966059534,
     "mach_max": 0.13047311196003525
-   },
-   "conventional": {
-    "speed_m_s": [
-     11.1,
-     66.9
-    ],
-    "mean_chord": [
-     62123.575939668175,
-     3260040.8995695882
-    ],
-    "tip": [
-     33725.95821961998,
-     2747901.2387168803
-    ],
-    "root_max": 3435825.0416169823,
-    "mach_max": 0.19659124302086395
-   },
-   "tapered": {
-    "speed_m_s": [
-     11.1,
-     66.9
-    ],
-    "mean_chord": [
-     54284.99591118368,
-     3349556.0121668056
-    ],
-    "tip": [
-     31149.312673442437,
-     3349157.401324657
-    ],
-    "root_max": 3436568.5015337323,
-    "mach_max": 0.19659124302086395
    },
    "flying_wing": {
     "speed_m_s": [
@@ -63,138 +37,244 @@
      44.4
     ],
     "mean_chord": [
-     96848.07231163529,
-     2962610.2557625477
+     99108.67105738896,
+     2861480.7654278846
     ],
     "tip": [
-     44969.266808861954,
-     2806300.950910802
+     48744.6187078949,
+     2685508.126206879
     ],
-    "root_max": 3193111.187484406,
+    "root_max": 3192378.4680234324,
     "mach_max": 0.13047311196003525
+   },
+   "cranked": {
+    "speed_m_s": [
+     11.1,
+     66.9
+    ],
+    "mean_chord": [
+     62055.10861595047,
+     3295987.122367477
+    ],
+    "tip": [
+     31366.031517666706,
+     2814419.736059353
+    ],
+    "root_max": 3433431.212304666,
+    "mach_max": 0.19659124302086395
+   },
+   "tapered": {
+    "speed_m_s": [
+     11.1,
+     66.9
+    ],
+    "mean_chord": [
+     55612.39893800092,
+     3233103.1537943776
+    ],
+    "tip": [
+     33232.2358447866,
+     3198344.7321630334
+    ],
+    "root_max": 3435712.878284795,
+    "mach_max": 0.19659124302086395
    }
   },
   "spans_checked": 112,
-  "spans_outside": [],
+  "spans_outside": [
+   {
+    "name": "Vestel Karayel",
+    "family": "conventional",
+    "class": "II",
+    "span": 8.0
+   },
+   {
+    "name": "Ababil-3",
+    "family": "conventional",
+    "class": "II",
+    "span": 8.0
+   },
+   {
+    "name": "Airbus Atlante",
+    "family": "conventional",
+    "class": "II",
+    "span": 8
+   },
+   {
+    "name": "IAI Searcher Mk III",
+    "family": "conventional",
+    "class": "II",
+    "span": 8.55
+   },
+   {
+    "name": "Aeronautics Aerostar",
+    "family": "conventional",
+    "class": "II",
+    "span": 8.7
+   },
+   {
+    "name": "Goetten UAV 9",
+    "family": "conventional",
+    "class": "II",
+    "span": 8.7
+   },
+   {
+    "name": "Hamaseh",
+    "family": "conventional",
+    "class": "II",
+    "span": 9.0
+   },
+   {
+    "name": "Mohajer-6",
+    "family": "conventional",
+    "class": "II",
+    "span": 10.0
+   },
+   {
+    "name": "Denel Seeker 400",
+    "family": "conventional",
+    "class": "II",
+    "span": 10
+   },
+   {
+    "name": "Elbit Hermes 450",
+    "family": "conventional",
+    "class": "II",
+    "span": 10.51
+   },
+   {
+    "name": "Thales Watchkeeper WK450",
+    "family": "conventional",
+    "class": "II",
+    "span": 10.9
+   },
+   {
+    "name": "BAE Systems Herti",
+    "family": "conventional",
+    "class": "II",
+    "span": 12
+   }
+  ],
+  "spans_outside_full": [],
   "envelope": {
    "bwb": {
     "span_m": [
-     0.6033466963319103,
-     8.165334509602515
+     0.5555646038935378,
+     6.988994906968996
     ],
     "mean_chord_m": [
-     0.1677110240606749,
-     1.0569551112422786
+     0.16884119161076802,
+     1.0529651125919228
     ],
     "area_m2": [
-     0.10870393852188492,
-     7.430910265516475
+     0.10240266519662139,
+     6.718314075795353
     ],
     "aspect_ratio": [
-     3.0023384707756007,
-     8.999733995121023
+     3.0011951317255767,
+     8.991110759935884
     ],
     "taper": [
-     0.06003704610177581,
-     0.19996483363077913
+     0.06001684652991067,
+     0.1999740064766706
     ],
     "root_chord_m": [
-     0.40021285942061446,
-     1.799427207832549
+     0.40016234223523534,
+     1.798560520174766
     ],
     "tip_chord_m": [
-     0.026004021531384463,
-     0.34940182691847665
-    ]
-   },
-   "conventional": {
-    "span_m": [
-     0.5684280159484176,
-     10.456567801974053
-    ],
-    "mean_chord_m": [
-     0.10461156174062167,
-     0.7113877122559192
-    ],
-    "area_m2": [
-     0.06416785071696324,
-     6.982212220538367
-    ],
-    "aspect_ratio": [
-     4.5046769415512,
-     16.499467990242046
-    ],
-    "taper": [
-     0.38329391744332075,
-     0.836047996626472
-    ],
-    "root_chord_m": [
-     0.13009426631484355,
-     0.7497463348972717
-    ],
-    "tip_chord_m": [
-     0.05679204886691922,
-     0.5996314880509924
-    ]
-   },
-   "tapered": {
-    "span_m": [
-     0.4253728258245517,
-     11.023139240900871
-    ],
-    "mean_chord_m": [
-     0.09141196583511607,
-     0.730921194541762
-    ],
-    "area_m2": [
-     0.0388841662214607,
-     7.598640686417842
-    ],
-    "aspect_ratio": [
-     4.5025251713661865,
-     16.499825207400427
-    ],
-    "taper": [
-     0.4001539177640612,
-     0.9997589176324281
-    ],
-    "root_chord_m": [
-     0.13019267740628163,
-     0.749908568521212
-    ],
-    "tip_chord_m": [
-     0.052453166074669426,
-     0.7308342119351591
+     0.025171347346305967,
+     0.3517527229362572
     ]
    },
    "flying_wing": {
     "span_m": [
-     0.5100975605305618,
-     11.567721296762857
+     0.5806472303375751,
+     6.9899256206972735
     ],
     "mean_chord_m": [
-     0.1630850758805006,
-     0.9740942512535503
+     0.16689175895830421,
+     0.9408432844834237
     ],
     "area_m2": [
-     0.08318929936558492,
-     10.584735641554792
+     0.10318039394052952,
+     6.030896618739263
     ],
     "aspect_ratio": [
-     3.002104309471822,
-     12.999854339500352
+     3.0048540889749957,
+     12.971910826841823
     ],
     "taper": [
-     0.30015391776406114,
-     0.8997589176324283
+     0.3002558031525756,
+     0.8999800665349127
     ],
     "root_chord_m": [
-     0.25024861600810533,
-     1.0498820238983382
+     0.2506313031660283,
+     1.0496411087076454
     ],
     "tip_chord_m": [
-     0.07572495884290975,
-     0.9227003849907286
+     0.08208237552899705,
+     0.8829841935315575
+    ]
+   },
+   "cranked": {
+    "span_m": [
+     0.5031520120957724,
+     6.998086213546283
+    ],
+    "mean_chord_m": [
+     0.10449626777123933,
+     0.7192316939690958
+    ],
+    "area_m2": [
+     0.055907817016141656,
+     4.945284870014676
+    ],
+    "aspect_ratio": [
+     4.502390263451154,
+     16.482221519871768
+    ],
+    "taper": [
+     0.3929715765961547,
+     0.8337142749800706
+    ],
+    "root_chord_m": [
+     0.13007189441846134,
+     0.7492239669851868
+    ],
+    "tip_chord_m": [
+     0.05281810477000372,
+     0.6141467788417952
+    ]
+   },
+   "tapered": {
+    "span_m": [
+     0.4819786082466823,
+     6.997710133772223
+    ],
+    "mean_chord_m": [
+     0.09364721552243988,
+     0.7055095095183742
+    ],
+    "area_m2": [
+     0.04818464728921001,
+     4.519984138628611
+    ],
+    "aspect_ratio": [
+     4.505824906769996,
+     16.466292992210196
+    ],
+    "taper": [
+     0.40025580315257564,
+     0.9999800665349124
+    ],
+    "root_chord_m": [
+     0.13048925995367192,
+     0.749721859248425
+    ],
+    "tip_chord_m": [
+     0.05596065647012983,
+     0.69792472306701
     ]
    }
   }
@@ -219,7 +299,9 @@
    "re_low": 154648.4375,
    "re_high": 198007.8125,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Trimble UX5",
@@ -240,7 +322,9 @@
    "re_low": 403818.0,
    "re_high": 517038.0,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Gatewing X100",
@@ -261,7 +345,9 @@
    "re_low": 273171.0,
    "re_high": 349761.0,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Skywalker X8",
@@ -282,7 +368,9 @@
    "re_low": 343928.5714285714,
    "re_high": 440357.1428571429,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "DeltaQuad Pro",
@@ -303,7 +391,9 @@
    "re_low": 368808.5106382979,
    "re_high": 734553.1914893617,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "DeltaQuad Evo TAC",
@@ -324,7 +414,9 @@
    "re_low": 279496.7286245353,
    "re_high": 357860.2973977695,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "C-Astral Bramor C4EYE",
@@ -340,7 +432,8 @@
    "use": "span",
    "note": "manufacturer calls it a BWB",
    "source": "https://www.c-astral.com/en/unmanned-systems/bramor-c4eye",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Aerovision Fulmar",
@@ -356,7 +449,8 @@
    "use": "span",
    "note": "60-150 km/h range; paper gives no source",
    "source": "https://acta-avionica.tuke.sk/ojs/index.php/aavionica/article/download/591/589",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Lockheed Martin Fury",
@@ -372,12 +466,13 @@
    "use": "span",
    "note": "'blended' wing; no speeds published",
    "source": "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Black Swift S0",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "S",
    "span": 1.387,
    "area": 0.188,
@@ -393,12 +488,14 @@
    "re_low": 123277.57750540736,
    "re_high": 157841.38428262438,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AV RQ-12A Wasp AE",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.0,
    "area": null,
@@ -409,12 +506,13 @@
    "use": "span",
    "note": "",
    "source": "https://www.avinc.com/images/uploads/product_docs/Wasp_Datasheet_07192021.pdf",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AV RQ-11B Raven",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.4,
    "area": null,
@@ -429,7 +527,7 @@
   {
    "name": "Quantum Trinity F90+",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "S",
    "span": 2.394,
    "area": null,
@@ -440,12 +538,13 @@
    "use": "span",
    "note": "",
    "source": "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AV RQ-20B Puma AE",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.8,
    "area": null,
@@ -467,7 +566,7 @@
   {
    "name": "Penguin B",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.3,
    "area": 0.79,
@@ -483,12 +582,14 @@
    "re_low": 281766.6666666667,
    "re_high": 590345.4545454546,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Aerosonde (Beard & McLain model)",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.8956,
    "area": 0.55,
@@ -507,7 +608,7 @@
   {
    "name": "Insitu RQ-21A Blackjack",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.8,
    "area": null,
@@ -525,12 +626,13 @@
     "payload": 18.0
    },
    "source": "https://c-853-20151211-www-insitu-com.i.icims.com/wp-content/uploads/2021/01/RQ-21A_Blackjack_ProductCard_DU011221.pdf",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AAI RQ-7B Shadow",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.27,
    "area": null,
@@ -541,12 +643,13 @@
    "use": "span",
    "note": "",
    "source": "https://designation-systems.net/dusrm/app2/q-7.html",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AAI RQ-2A Pioneer",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 5.15,
    "area": 2.826,
@@ -562,12 +665,14 @@
    "re_low": 977603.9417475727,
    "re_high": 2131270.4271844663,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "RUAG Ranger",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 5.708,
    "area": 3.41,
@@ -583,12 +688,14 @@
    "re_low": 1594867.9922915206,
    "re_high": 2737707.866152768,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Shadow V2",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.2,
    "area": null,
@@ -606,12 +713,13 @@
     "payload": 19.5
    },
    "source": "https://www.textronsystems.com/sites/default/files/_documents/TS%20US%20Shadow%20V2%20Datasheet_061119.pdf",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Aeronautics Aerostar",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 8.7,
    "area": null,
@@ -629,12 +737,13 @@
     "payload": 40.0
    },
    "source": "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "Elbit Hermes 450",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 10.51,
    "area": 6.9,
@@ -656,13 +765,15 @@
    "aspect_ratio": 16.008710144927534,
    "re_low": 1264452.901998097,
    "re_high": 2199104.186489058,
-   "covered": true,
-   "span_covered": true
+   "covered": false,
+   "covered_full": true,
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "Thales Watchkeeper WK450",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 10.9,
    "area": null,
@@ -673,12 +784,13 @@
    "use": "span",
    "note": "",
    "source": "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 1",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.3,
    "area": 1.0,
@@ -694,12 +806,14 @@
    "re_low": 359909.09090909094,
    "re_high": 460818.1818181818,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 2",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.6,
    "area": 1.32,
@@ -715,12 +829,14 @@
    "re_low": 545343.3333333334,
    "re_high": 698243.3333333335,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 3",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.2,
    "area": 2.34,
@@ -736,12 +852,14 @@
    "re_low": 1076037.857142857,
    "re_high": 1377730.714285714,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 4",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.0,
    "area": 2.63,
@@ -757,12 +875,14 @@
    "re_low": 879406.25,
    "re_high": 1125968.75,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 5",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.9,
    "area": 3.04,
@@ -778,12 +898,14 @@
    "re_low": 1151756.7346938776,
    "re_high": 1474679.1836734693,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 6",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.3,
    "area": 2.37,
@@ -799,12 +921,14 @@
    "re_low": 1064488.2558139537,
    "re_high": 1362942.9069767443,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 7",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 5.2,
    "area": 3.13,
@@ -820,12 +944,14 @@
    "re_low": 1117440.0961538462,
    "re_high": 1430741.0576923077,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 8",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 5.1,
    "area": 2.82,
@@ -841,12 +967,14 @@
    "re_low": 905220.0000000001,
    "re_high": 1159020.0000000002,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 9",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 8.7,
    "area": 4.74,
@@ -861,13 +989,15 @@
    "aspect_ratio": 15.968354430379742,
    "re_low": 970637.5862068966,
    "re_high": 1242778.9655172413,
-   "covered": true,
-   "span_covered": true
+   "covered": false,
+   "covered_full": true,
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "Goetten UAV 10",
    "class": "III",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 12.0,
    "area": 8.7,
@@ -886,7 +1016,7 @@
   {
    "name": "Kentron Seeker",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 7.0,
    "area": 4.427,
@@ -902,12 +1032,14 @@
    "re_low": 1130086.6142857142,
    "re_high": 2118414.364285714,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AAI Shadow 600",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.83,
    "area": 3.754,
@@ -923,12 +1055,14 @@
    "re_low": 1135049.1068814055,
    "re_high": 2014271.083455344,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "KAI Doyosae",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.8,
    "area": 2.84,
@@ -944,12 +1078,14 @@
    "re_low": null,
    "re_high": null,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Yakovlev Pchela",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.25,
    "area": 1.83,
@@ -965,12 +1101,14 @@
    "re_low": 1006162.1538461539,
    "re_high": 1924681.3846153847,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "GSE Vindicator",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 7.04,
    "area": 4.83,
@@ -989,7 +1127,7 @@
   {
    "name": "Developmental Sciences R-4D Sky Eye",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.71,
    "area": 2.805,
@@ -1005,7 +1143,9 @@
    "re_low": null,
    "re_high": null,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AUTh RX-3 tactical BWB",
@@ -1026,7 +1166,9 @@
    "re_low": 1859338.658146965,
    "re_high": 2380648.56230032,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AUTh RX-3 1:3 subscale BWB",
@@ -1042,7 +1184,8 @@
    "use": "span",
    "note": "Kapsalis et al. 2026: span 2.4 m, 6 kg, 70 km/h",
    "source": "https://www.mdpi.com/2673-4591/133/1/95",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Lehmkuehler BWB UAV",
@@ -1058,7 +1201,8 @@
    "use": "span",
    "note": "ICAS2012-675: 16 kg, 3 m span, sweep limited to 15 deg",
    "source": "https://www.icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/675.PDF",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Lockheed MQM-105 Aquila",
@@ -1079,7 +1223,9 @@
    "re_low": null,
    "re_high": null,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "USMC Exdrone (BQM-147)",
@@ -1103,7 +1249,7 @@
   {
    "name": "IAI Scout",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.0,
    "area": null,
@@ -1114,7 +1260,8 @@
    "use": "span",
    "note": "final design span (first design 3.2 m), IAI authors; other sources give 3.6 or 4.96 m",
    "source": "https://icas.org/ICAS_ARCHIVE/ICAS2004/PAPERS/519.PDF",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Insitu ScanEagle (NTNU)",
@@ -1136,12 +1283,14 @@
    "re_low": 335453.62903225806,
    "re_high": 704389.9193548387,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AAI RQ-7A Shadow (NTNU)",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.9,
    "area": 2.1728571428571426,
@@ -1158,12 +1307,14 @@
    "re_low": 1728814.2857142854,
    "re_high": 2213528.571428571,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AAI Aerosonde (NTNU)",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.95,
    "area": 0.5687908496732026,
@@ -1180,12 +1331,14 @@
    "re_low": 319776.14379084966,
    "re_high": 541508.1699346405,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "CTRM Aludra MK1 (NTNU)",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.1,
    "area": 4.521263669501821,
@@ -1202,12 +1355,14 @@
    "re_low": 1122199.878493317,
    "re_high": 3102142.7703523687,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "EMT Aladin (NTNU)",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.46,
    "area": 0.26644999999999996,
@@ -1224,12 +1379,14 @@
    "re_low": 122046.87499999997,
    "re_high": 312531.24999999994,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AV RQ-20 Puma 3AE (NTNU)",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.8,
    "area": 1.0594594594594593,
@@ -1246,12 +1403,14 @@
    "re_low": 364378.37837837834,
    "re_high": 596135.135135135,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AV RQ-11B Raven (NTNU)",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.4,
    "area": 0.3266666666666666,
@@ -1268,7 +1427,9 @@
    "re_low": 144806.66666666663,
    "re_high": 359624.99999999994,
    "covered": true,
-   "span_covered": true
+   "covered_full": true,
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Delair UX11",
@@ -1284,7 +1445,8 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AgEagle RX-60",
@@ -1300,7 +1462,8 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "C-Astral Atlas C4EYE",
@@ -1316,7 +1479,8 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Aeronautics Orbiter 3",
@@ -1332,12 +1496,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Aeromao Aeromapper Avem",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.14,
    "area": null,
@@ -1348,12 +1513,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Aeronautics Aerolight",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4,
    "area": null,
@@ -1364,12 +1530,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Airbus Atlante",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 8,
    "area": null,
@@ -1380,12 +1547,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "Bayraktar Mini UAV",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2,
    "area": null,
@@ -1396,12 +1564,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "BlueBird ThunderB",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4,
    "area": null,
@@ -1412,12 +1581,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Delair DT26M",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.3,
    "area": null,
@@ -1428,12 +1598,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "DRDO Nishant",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.57,
    "area": null,
@@ -1444,12 +1615,13 @@
    "use": "span",
    "note": "cruise 34.7-41.7 m/s (lowest)",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "EMT Luna",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.17,
    "area": null,
@@ -1460,12 +1632,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Hydra Ehecatl S4",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.7,
    "area": null,
@@ -1476,12 +1649,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "IAI Searcher Mk III",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 8.55,
    "area": null,
@@ -1492,12 +1666,13 @@
    "use": "span",
    "note": "cruise 31-41 m/s (lowest)",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "PT DI Wulung",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.34,
    "area": null,
@@ -1508,12 +1683,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Innocon Micro Falcon LE",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2,
    "area": null,
@@ -1524,12 +1700,13 @@
    "use": "span",
    "note": "cruise 18-33.4 m/s (lowest)",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Lipan M3",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.6,
    "area": null,
@@ -1540,12 +1717,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Lockheed Martin Stalker XE",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.7,
    "area": null,
@@ -1556,12 +1734,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Northrop Grumman Bat",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.26,
    "area": null,
@@ -1572,12 +1751,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Nostromo Yarara W",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4,
    "area": null,
@@ -1588,12 +1768,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Qods Mohajer-4",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 5.3,
    "area": null,
@@ -1604,12 +1785,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Raytheon Coyote",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.5,
    "area": null,
@@ -1620,12 +1802,13 @@
    "use": "span",
    "note": "tube-launched, folding wing",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "ST Aerospace Skyblade III",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.6,
    "area": null,
@@ -1636,12 +1819,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Sunbirds SB4 Phoenix",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.2,
    "area": null,
@@ -1652,12 +1836,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Tekever AR4 Evo",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.1,
    "area": null,
@@ -1668,12 +1853,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Tekever AR5",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 7.3,
    "area": null,
@@ -1684,12 +1870,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Textron Aerosonde (fixed wing)",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.7,
    "area": null,
@@ -1700,12 +1887,13 @@
    "use": "span",
    "note": "cruise 23-33 m/s (lowest)",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Threod Eos C",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.76,
    "area": null,
@@ -1716,12 +1904,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Threod Stream C",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.9,
    "area": null,
@@ -1732,12 +1921,13 @@
    "use": "span",
    "note": "cruise 22-28 m/s (lowest)",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Topcon Sirius Pro",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.63,
    "area": null,
@@ -1748,12 +1938,13 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "GIDS Shahpar",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.6,
    "area": null,
@@ -1764,7 +1955,8 @@
    "use": "span",
    "note": "NTNU database",
    "source": "https://doi.org/10.18710/L41IGQ",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Zala 421-08M",
@@ -1780,12 +1972,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/zala-aero-group-zala-421-08m/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Martin UAV Super Bat DA-50",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2.6,
    "area": null,
@@ -1796,12 +1989,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/super-bat-da-50-uav/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "L-3 Viking 400",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6,
    "area": null,
@@ -1812,12 +2006,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/viking-400/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "L-3 Cutlass",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 1.4,
    "area": null,
@@ -1828,12 +2023,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/cutlass/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Warrior Gull 68",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 7.6,
    "area": null,
@@ -1844,12 +2040,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/gull-68/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "BAE Systems Herti",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 12,
    "area": null,
@@ -1860,12 +2057,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/herti/",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "Denel Seeker 400",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 10,
    "area": null,
@@ -1876,12 +2074,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/seeker-400/",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "name": "ST Aerospace Skyblade IV",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.7,
    "area": null,
@@ -1892,12 +2091,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/skyblade-iv/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "ASN-209",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 7.5,
    "area": null,
@@ -1908,12 +2108,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/asn-209/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "ASN-206",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6,
    "area": null,
@@ -1924,12 +2125,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/asn-206/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "FlyTronic FlyEye",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.6,
    "area": null,
@@ -1940,12 +2142,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/flytronic-flyeye/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "AAI Aerosonde Mk 4.7",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.6,
    "area": null,
@@ -1956,12 +2159,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/aerosonde-aerosonde-mark-4-7/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "UAV Factory Penguin C",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 3.3,
    "area": null,
@@ -1972,12 +2176,13 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/uav-fac/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Elbit Skylark I-LE",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 2,
    "area": null,
@@ -1988,7 +2193,8 @@
    "use": "span",
    "note": "CNAS database; max speed converted from km/h",
    "source": "https://drones.cnas.org/drones/elbit-skylark-micro/",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "name": "Sagem Sperwer",
@@ -2021,7 +2227,8 @@
    "payload": 1.0,
    "role": "Interceptor",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Zala Z-16",
@@ -2034,7 +2241,8 @@
    "role": "ISTAR",
    "use": "span",
    "check": "manufacturer field reads Nanjing Qinheng Microelectronics (WCH); ZALA Aero is the maker",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Supercam S350",
@@ -2046,7 +2254,8 @@
    "payload": 2.5,
    "role": "ISTAR",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "SKAT-350M",
@@ -2058,7 +2267,8 @@
    "payload": 2.5,
    "role": "ISTAR",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Gerbera",
@@ -2070,7 +2280,8 @@
    "payload": 4.6,
    "role": "Loitering Munition",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Shahed 197",
@@ -2083,7 +2294,8 @@
    "role": null,
    "use": "span",
    "check": "7 m span listed as Class I (Small) with no MTOW: class doubtful",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Albatroz",
@@ -2095,7 +2307,8 @@
    "payload": 30.0,
    "role": null,
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Shahed 191 (Saegheh)",
@@ -2107,7 +2320,8 @@
    "payload": 50.0,
    "role": null,
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "CPJ 100-LE",
@@ -2136,7 +2350,7 @@
   {
    "model": "Puma LE",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 4.6,
    "mtow": null,
@@ -2144,36 +2358,39 @@
    "role": "ISR",
    "use": "span",
    "check": "database says Flying Wing; the Puma family has a tail",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "V2U",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "D",
    "span": 1.2,
    "mtow": 15.0,
    "payload": 3.5,
    "role": "Barrage Munition",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Shahed 107",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "D",
    "span": 3.0,
    "mtow": 26.0,
    "payload": 20.0,
    "role": "ISR",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Orlan-10",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "D",
    "span": 3.05,
    "mtow": 18.0,
@@ -2181,96 +2398,104 @@
    "role": "ISR",
    "use": "span",
    "check": "database says Class II, but MTOW 18 kg is Class I",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Orlan-30",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "D",
    "span": 3.05,
    "mtow": 30.0,
    "payload": 12.0,
    "role": "ISTAR",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Granat-4",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "D",
    "span": 3.35,
    "mtow": 30.0,
    "payload": 20.0,
    "role": "ISTAR",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Merlin-VR",
    "class": "I",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "D",
    "span": 4.9,
    "mtow": 20.0,
    "payload": 7.0,
    "role": "ISTAR",
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Corsair",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 6.5,
    "mtow": null,
    "payload": 40.0,
    "role": null,
    "use": "span",
-   "span_covered": true
+   "span_covered": true,
+   "span_covered_full": true
   },
   {
    "model": "Vestel Karayel",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 8.0,
    "mtow": null,
    "payload": 50.0,
    "role": null,
    "use": "span",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "model": "Ababil-3",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 8.0,
    "mtow": null,
    "payload": 40.0,
    "role": null,
    "use": "span",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "model": "Hamaseh",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 9.0,
    "mtow": null,
    "payload": 50.0,
    "role": null,
    "use": "span",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   },
   {
    "model": "Mohajer-6",
    "class": "II",
-   "family": "tailed",
+   "family": "conventional",
    "family_src": "K",
    "span": 10.0,
    "mtow": null,
@@ -2278,7 +2503,8 @@
    "role": null,
    "use": "span",
    "check": "payload 150 kg; class to verify against MTOW",
-   "span_covered": true
+   "span_covered": false,
+   "span_covered_full": true
   }
  ]
 }

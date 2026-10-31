@@ -19,7 +19,7 @@ def test_hash_changes_with_vector_and_type():
     vec = params.mid_vector(CFG.types["bwb"])
     h = input_hash(CFG, "bwb", vec)
     assert h != input_hash(CFG, "bwb", vec | {"twist3_deg": vec["twist3_deg"] + 1e-6})
-    assert h != input_hash(CFG, "conventional", vec)
+    assert h != input_hash(CFG, "cranked", vec)
 
 
 def test_impossible_vector_refused_with_reason(tmp_path):
@@ -30,7 +30,7 @@ def test_impossible_vector_refused_with_reason(tmp_path):
 
 
 @pytest.mark.pygeo
-@pytest.mark.parametrize("wing_type", ["bwb", "conventional"])
+@pytest.mark.parametrize("wing_type", ["bwb", "cranked"])
 def test_build_writes_wing_folder(tmp_path, wing_type):
     pytest.importorskip("pygeo")
     vec = params.mid_vector(CFG.types[wing_type])

@@ -27,10 +27,13 @@ VARIABLES = (
     "twist0_deg", "twist1_deg", "twist2_deg", "twist3_deg",
     "dihedral_p1_deg", "dihedral_p2_deg", "dihedral_p3_deg",   # one dihedral per straight panel
 )
-WING_TYPES = ("bwb", "conventional", "tapered", "flying_wing")
-# Types designed without a horizontal tail. A tail is not part of the wing surface, so the
-# labeller cannot measure it; it takes the family from the type.
-TAILLESS_TYPES = ("bwb", "flying_wing")
+WING_TYPES = ("bwb", "flying_wing", "cranked", "tapered")
+# Two families, two types each (decided 30 Oct 2026). A wing is first tailless or conventional
+# (with a horizontal tail); inside a family our own rules tell the type apart (labels.py).
+# A tail is not part of the wing surface, so the family is an input (the type, or the user), never measured.
+FAMILIES = {"tailless": ("bwb", "flying_wing"), "conventional": ("cranked", "tapered")}
+TAILLESS_TYPES = FAMILIES["tailless"]
+FAMILY_OF = {t: f for f, ts in FAMILIES.items() for t in ts}
 # stations:     c2, c3, c4 are chords as fractions of the root chord.
 # per_panel:    c2 = c(b1)/c(b0), c3 = c(b2)/c(b1), c4 = c(b3)/c(b2): each panel's own taper,
 #               so with ratios <= 1 no chord is wider than the one inboard of it.
@@ -58,6 +61,8 @@ class TypeSpec:
     #: candidate sections per station; a station with more than one is drawn by the sampler
     airfoil_choices: tuple[tuple[str, ...], ...] = ()
     sweep_law: str = "panels"
+    #: sampling only: largest full span b = 2 S [m] a sampled wing may have (focus space); None = no cap
+    max_full_span_m: float | None = None
 
     @property
     def free_variables(self) -> tuple[str, ...]:
@@ -130,8 +135,8 @@ class Config:
 def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
     raw = yaml.safe_load(Path(path).read_text())
     wing_type = raw["wing_type"]
-    if wing_type not in (*WING_TYPES, "mixed"):
-        raise ValueError(f"wing_type must be one of {WING_TYPES} or mixed, got {wing_type!r}")
+    if wing_type not in (*WING_TYPES, *FAMILIES, "mixed"):
+        raise ValueError(f"wing_type must be a type {WING_TYPES}, a family {tuple(FAMILIES)} or mixed, got {wing_type!r}")
     shares = {k: float(v) for k, v in raw.get("shares", {}).items()}
     if wing_type == "mixed":
         if not set(shares) <= set(WING_TYPES) or not math.isclose(sum(shares.values()), 1.0):
@@ -154,6 +159,10 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
 
     types = {name: _read_type(name, raw["types"][name]) for name in WING_TYPES}
     full = {name: _read_full(types[name], raw["types"][name]) for name in WING_TYPES}
+    cap = (raw.get("focus") or {}).get("max_full_span_m")
+    if cap is not None:                     # the focus space ends at this full span (tip to tip)
+        import dataclasses
+        types = {n: dataclasses.replace(t, max_full_span_m=float(cap)) for n, t in types.items()}
     return Config(wing_type, shares, wing_class, te, types, raw.get("sets", {}), raw, full)
 
 

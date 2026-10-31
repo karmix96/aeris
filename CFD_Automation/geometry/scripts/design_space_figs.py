@@ -32,9 +32,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 DOCS = ROOT / "docs"
-NAME = {"bwb": "BWB", "conventional": "Cranked", "tapered": "Tapered", "flying_wing": "Flying wing"}
-COL = {"bwb": "#2E8B57", "conventional": "#0C5EA8", "tapered": "#5B8FD0", "flying_wing": "#B07000"}
-FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "conventional": "tailed", "tapered": "tailed"}
+NAME = {"bwb": "BWB", "cranked": "Cranked", "tapered": "Tapered", "flying_wing": "Flying wing"}
+COL = {"bwb": "#2E8B57", "cranked": "#0C5EA8", "tapered": "#5B8FD0", "flying_wing": "#B07000"}
+FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "cranked": "conventional", "tapered": "conventional"}
 INK, MUTED = "#1F2A33", "#6B7785"
 N = 1500
 plt.rcParams.update({"font.size": 9, "axes.edgecolor": "#B8C0C8", "axes.labelcolor": INK,

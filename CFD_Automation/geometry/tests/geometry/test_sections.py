@@ -43,7 +43,7 @@ def test_dihedral_is_three_panel_values_and_each_matters(wing_type):
 
 
 def test_root_section_stays_in_symmetry_plane_with_root_dihedral():
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["cranked"]
     vec = params.mid_vector(spec) | {"dihedral_p1_deg": 6.0}
     _, st = build_stations(spec, vec)
     assert st[0].y == 0.0 and st[0].z_le == 0.0

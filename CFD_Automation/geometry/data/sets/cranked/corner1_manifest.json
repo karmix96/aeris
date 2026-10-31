@@ -1,8 +1,8 @@
 {
- "wing_type": "conventional",
+ "wing_type": "cranked",
  "set": "corner1",
  "code_version": "0.6.0",
- "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
+ "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,10 +10,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fb7cb813bb68db8108e9427d9937a0e39386909247d3426a33229020d294719c",
+   "input_hash": "b02c3ed2ffb3375296e2757649b86f03c98b808eed1d398c0e5c4fc2a70e927b",
    "surface_hash": "3c3ba759d4a8ee925726f1bd9d73945f293957e6ff34c88a63d2f04bd0aa67db",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "high_aspect_ratio"
    ],
@@ -49,10 +50,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cf8354de975ee189d3c7e77d2481ed490048862a9dd8439285fccd68283986a0",
+   "input_hash": "6466d481e4cc7363a956275244dc7f89b8482e8bbd0fbd430ea48d13dc9c3dd6",
    "surface_hash": "15e62cf971ba17c39ba7f2fd9c1efe2d0d6162c43467fec2e7703d9efb7f1cb3",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -89,12 +91,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a525a738eadac532c79b804712563ac7380e72720c1fc295e40639c2119ccfbc",
+   "input_hash": "2980f861e3c99eb78b333a7f153b658f63273fa07e9acc9b0f66fa0099633a0f",
    "surface_hash": "45343e28e7921d271d6a62583f2ba936e34a50b6009836543c398c7e2786f72f",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -130,12 +132,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8be2d36e0901adf0bf17f09e18706b5368a93f6acaba7ab7eddcbe1506d1ef93",
+   "input_hash": "861d89980c94d0e778d35bcef8b1150ead1fe435d7a114895691893b62390693",
    "surface_hash": "86547280f6551fb95aab37d9a1178fa9f3bbb346ad3346af3377b0d65df6c0fd",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -171,12 +173,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "13b4361473034f1344d07d9a0199affe2dc106456f64fcda5fc245984ddb6dbc",
+   "input_hash": "1849ad612489b25dd715e0e282327b22ffea364f416cab18ec3228eb00f85c83",
    "surface_hash": "8a5ab8c5c5434de580b58d6641976d6617ebf83a7a3722478bcad54c59095e55",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -212,12 +214,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1ff1410643d7c6c886970411e867a3c3b11ce36d3e1e38ecc9017f24e9ddcad5",
+   "input_hash": "cbdbf6952910317ec66e584334508eac60b4c0de0248d989747d12cace029eb1",
    "surface_hash": "b34869356425d32aef7fb042549a3571b85a2cae8ea1df56e11d35d49f7dea49",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -253,12 +255,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d5d30d62bbac564fc08161b0f0d40a7c99b0af8fd1707a3679a97204806e160b",
+   "input_hash": "30e608a5109d3b3ccd1e8a4815602b14f71de3201c0f381a8a6355e6cd9e506b",
    "surface_hash": "cf1139e19db1e84dd9c308e4bb6e5737d0d2476413aead70247b5875571a3f74",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -294,12 +296,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "60e5f30a66a683d75591e7896ba5b605b2003b625516746fd4a506ebf633a32e",
+   "input_hash": "699085a21f24529f537d7a272af2314758e3047d2238a19bfe1fc2f1923b3933",
    "surface_hash": "ab08136ead24a35437f4184f94518d7eb30fc45b44e2d707155cec47f7bfb41f",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -335,10 +337,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5d17e3f5244af3dbfdb49bbd0c545bab1249047f1b66384bbd65ba6b86417dbd",
+   "input_hash": "462ca45302d345129cbcadbf985e85ea312d1d9c665ef4f7f1bfbea1d03b7855",
    "surface_hash": "d9dcf89c0844b5ce7a50ce94575ee723efdb37da89f410b3b563746105fb4fd0",
    "labels": [
     "conventional",
+    "tapered",
     "straight_tapered",
     "washout",
     "low_aspect_ratio"
@@ -375,10 +378,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a72f3d29f37dab170bdb9076f0067928fad380cc2f547e7d0fb2cb94aca8c97c",
+   "input_hash": "93de307801bc5c25e4fef4c9f987a40e7563c4e3d0ea2ef9321d7d1745f2b272",
    "surface_hash": "6f9a688c83e5b06b9b3997463a860b8171c3b56ffb8eda30113e5ba535bb8855",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -415,12 +419,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ca20bc55b62979701749f4486d75b856c9cad5171a0279e5aa323c624accfcce",
+   "input_hash": "67a13e440d7efa5885480c3e46f56d271fb123ddc1cb035e50574714660acc61",
    "surface_hash": "3c03de8f999477781ce2c2b3aa0f4101468bb82e0034771149426a4fd3ec7451",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -456,12 +460,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "790eff1e889d2e7a329e32338612b4f80d15bc8eb253a31fd7f2dd9a9a7c255a",
+   "input_hash": "b773ad5443410204a376584e826e7fb7762a3b6496fd515ee4e3ddd8a719b72d",
    "surface_hash": "2cdd6268e0c682c610355851a0112c4679dd838f176ca422213c9a251792354d",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -497,12 +501,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4ea4215304672002453f5a4ed13874991a9a6753f63cce51b92a81aca411d06b",
+   "input_hash": "16bb451c5521159bbf87311515b4d24e40114be6d07d6463e8b23e8a5bc61188",
    "surface_hash": "1841f77e8fb087449ce23bfa2436c2f0f866a97b3a6b82af95894d20aa505cf9",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -538,12 +542,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "93bc23a259b507924315a05cbe0dcad1b7a96888ea0310a01f350162ed50d253",
+   "input_hash": "f510ee5820a8b8e377b6270f2ad36810ec5651312b72e09305636492cab49fcd",
    "surface_hash": "38737c0ba2cf48463b991327b7aa2677ce78164262cab7131bcbdef0e0be11c8",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -579,12 +583,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7729c2f643cd49ed880ac1e74b1d6df742b044120023754c7c48fcc0a2e03a8f",
+   "input_hash": "19b352cd4ecbe66ed414dd4aded3afff5affd42736f95a3b9eb2fa35fa371185",
    "surface_hash": "f6fdc5fa6715a6d276334237ed58de359b28ab1a610ab54d4b6e78cb1dee9eb1",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -620,12 +624,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3936d73c76b3afef7d7e26c62cb451301a6132dc4f7a0c74281ff7f688773ffa",
+   "input_hash": "609873e24eeb2617ae5b76160357f9e880f371d7239136f1e2ae1e7d390d288d",
    "surface_hash": "9d01c4880c348d5beb8f8853332e0c6dda9af6ca27c56ce5855ec400c31475e9",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -661,7 +665,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "536c8d2266ef136abb87d527e0daea24dce57558bb3c11c01e0d9e300503b51d",
+   "input_hash": "2501b3ab7e1e51dae40fb902f96e3e86da36baee1c113dbba46168cdad720f67",
    "surface_hash": "fe0f8bf85f2daa6350fbed29134b87f9525422b231202994e6bde3212440bcf6",
    "labels": [
     "conventional",
@@ -701,12 +705,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "022f591ffe19fd0f59e6e6f4a14efc4588c12f72c046a7c2ce0825d1ec0191f6",
+   "input_hash": "d83e92074d17541aa370e69c74f73c9a642d54b1028217a2902d9810bbb83a5a",
    "surface_hash": "52095bcc7e4891f37f60fe266b0758c8f37a15f5094b4a1a7d0680d243ed374c",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -742,12 +746,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5f6a8a1af8a18250bd9e0718872dec13edf31375a81641a7c4023ac6e7efc19c",
+   "input_hash": "6f0ec8c87c1b498340f40708f38fd06c4188483f9cb6956b75df68ae52f40a5a",
    "surface_hash": "165b7f07db223140490f66b35bf8b515d0c6b631ace7eefbd561478e6e88cb2c",
    "labels": [
     "conventional",
-    "forward_swept",
     "cranked",
+    "forward_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -783,12 +787,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b64d0eab8af82132a67db60af42ec4813d79fd30c178fe3a86de56730a81b29e",
+   "input_hash": "11f342a81d6de84ac7c91c5ceb60f6633cce78cba71a25fd7605a3ef78629a54",
    "surface_hash": "2aadd69926a5e7992df70a68181506be0608dfd38141879caaae1b6f6b91b4ca",
    "labels": [
     "conventional",
-    "aft_swept",
     "cranked",
+    "aft_swept",
     "washout",
     "high_aspect_ratio"
    ],
@@ -824,10 +828,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9984e3acc8e7eed703c1e713e498ffcebe0a9a688e6b91f5b47b711f77fe7ec8",
+   "input_hash": "24ef0fdba8925a06308359bef261d6cbf339ade2e54d3a4bb9170d5284c15ba7",
    "surface_hash": "5acb876346e05cfd34ea17ba7df5ca38dfa64567c87dabadf2479be7356a5373",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "wash_in",
     "high_aspect_ratio"
@@ -864,10 +869,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b5e194c8c9d062df3dfe1b3bff591a143874b3c8feee4047bd3e6b78bfbe33a4",
+   "input_hash": "6e61ddef558f3bccda29503f2a29068fa098d677db856eaa0c48d50496c17e7c",
    "surface_hash": "76484fd61646c1b2cffb884b96a1ba852882113f56c5d9f455eca8a560e1a53f",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -904,10 +910,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "bcc39bc3fa59578e68983f6c1d1d3a4dfa434d62a8a51d980bb96ada9554b914",
+   "input_hash": "7f9755c7f250dd8afc5c7737d88f8947ad057007da31e59db0b15ea24206106d",
    "surface_hash": "3eaf025d466e94aab168edaf029ccfb1abe59beb51f14b559b2fe47d6e5c3691",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -944,10 +951,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "696c3d5016fdd8e1c9082614234bbfd9d0f0173e7385c968bac137d7a018cb5b",
+   "input_hash": "170a6bf355e039701ef48c0adbe2bead8e9eebd73238e98c347ae10da8ab3ea2",
    "surface_hash": "4eb6deeb5fc8452b15183ffb22d52d6861b21fadde347ba4913d712f6e3f44dc",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -984,10 +992,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "97816be2ef8c3542fe2b8d62176b7a890b63d0d43b1d6ab6b18e7ceeb1e3404b",
+   "input_hash": "0d6c72f8be4acc7f9fb2a35b3654e2b7e3963a864ce0c563720bd6547464af4d",
    "surface_hash": "8aa3c800c7924c8e6f164825f28a6190dc8c989235100f6ac69b179411f95f33",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -1024,10 +1033,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "788ad6b4589d93cbccabe9f3b1d2e70a649371633b0fb21c8b8c68fd30944b0b",
+   "input_hash": "78311db0c5eecf89f44d774ae3551b481732a33426d1535486fdb4bee447f5c7",
    "surface_hash": "de8c223f3320aea9543669160718be6364558709d11da403edab3d377dc46582",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -1064,10 +1074,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cb249c8f8438af3c7bc94170cea7786a5faa7bf59e838fe60e563b13773f4d79",
+   "input_hash": "be0df915d7da9bdc7511e823346092ede2a44aa80a6a7e31b8d5de95eac49d66",
    "surface_hash": "362bab2a4e1ad1932134368d91743453a81f9da2a5fa51838aa04b09f949815d",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "high_aspect_ratio"
@@ -1104,10 +1115,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7bff7aeae0d9d41eb367f12eef6c3e5d355be7455a3239eadc5f13fa4b4ed570",
+   "input_hash": "ef37c235d8edd4dbfa1a8605b7d287e4ffb24eaef4a4171c012aa4d3aa50c2c0",
    "surface_hash": "eab0705d680e754684766ba51f0899df39190a219f8fbc1a9a1f7ced81685978",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "wash_in",
     "high_aspect_ratio"
@@ -1144,10 +1156,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "716c86971527699c04fef3d1ab6d45dfc711e12a29c2e088cfb1986949d11834",
+   "input_hash": "6eba1a13dbd74d8db2a208f098208ea1c279d6e97281f3b4a06082515ac5e8e6",
    "surface_hash": "fafd73f0a9d7370e1dc9fcea305f41a55016a34ae11cb1024d680afb4bf13bcf",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "anhedral",
@@ -1186,10 +1199,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4c262fdc1ee095fcc6e4cf5f65eecbf00402a7b583a5c6e64cd3b10e40ef43c0",
+   "input_hash": "486479626edd021c0e090be28406fec7383b877fdeb0b67fe305a89c962e9f9a",
    "surface_hash": "224f7f4c6c66a85127f731ae26e7a925c5dbee8f09f10f2a66e2d5bec9df063c",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "dihedral",
@@ -1228,10 +1242,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d2a2c6df802b64329485e1408d6ec34d4226855625c91d008bb07b35f77d6826",
+   "input_hash": "e4bbf507205f4d454f7d27aeeab78a41646993b50aaadc4f732a226ed1c90e2b",
    "surface_hash": "39510826e42e5c0e2b1af8fe25a1db7cabe7f2c9f0a322e2a4717b05858267ef",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "anhedral",
@@ -1270,10 +1285,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f584b0996fc1aea3bc55ac0a58bac13b379820dafabb28426b76ea934ec5b302",
+   "input_hash": "5d9c650cd96137cd5efdc20021b92bfbe4c4905012b9c7ff775021cdaa17be1b",
    "surface_hash": "ef34c82d7173acabda620e0edd270801b70ddbb182634af3a79b531f0b41e263",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "dihedral",
@@ -1312,10 +1328,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "59a18b8ad79ff0215eba124a828b9676f4f7b45ed5ef6600ca56e5e15c947027",
+   "input_hash": "eba546a11cd623c9def8b7a8adc54602f5420153a46a0caf59dbb81b46eba1c7",
    "surface_hash": "62af65065803b94c79bbc52fd9bbe0646cf1983d61123c79c502b74fb67fa164",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "anhedral",
@@ -1354,10 +1371,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d1ed0242e1c85f917b58230576bd81e1bf7be7edc48d739ee9c7b0a6f867b716",
+   "input_hash": "ec938ddb85b9fe63b6a41e7d8bc36f32768c669d6e97991f8be9afe0e868b19b",
    "surface_hash": "1de616a7684e7f629037ca6a5081ebe7a1eb603d3df99de91529b3fa415bebca",
    "labels": [
     "conventional",
+    "tapered",
     "aft_swept",
     "washout",
     "dihedral",

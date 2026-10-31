@@ -67,7 +67,8 @@ def test_measured_matches_planform(wing_type):
 def test_every_wing_has_exactly_one_type_label():
     for name in HAND["wings"]:
         got, _ = label(exact_measure(*hand_wing(name)[:2])[0], tailless=base_type(name) in params.TAILLESS_TYPES)
-        assert sum(t in got for t in ("bwb", "flying_wing", "conventional")) == 1
+        assert got[0] in params.FAMILIES and got[1] in params.FAMILIES[got[0]]
+        assert sum(t in got for t in ("tailless", "conventional")) == 1
 
 
 @pytest.mark.pygeo
@@ -79,7 +80,8 @@ def test_hand_labelled_on_the_loft():
         spec, vec, want = hand_wing(name)
         m_exact, st = exact_measure(spec, vec)
         m_loft = measure(table_from_loft(build_loft(st)), st)
-        assert set(label(m_loft)[0]) == set(want), name
+        tl = base_type(name) in params.TAILLESS_TYPES
+        assert set(label(m_loft, tailless=tl)[0]) == set(want), name
         assert m_loft["area_m2"] == pytest.approx(m_exact["area_m2"], rel=1e-9)
         assert m_loft["max_thickness_c"] == pytest.approx(m_exact["max_thickness_c"], rel=2e-3)
 
@@ -87,7 +89,17 @@ def test_hand_labelled_on_the_loft():
 def test_tailless_without_centre_body_is_a_flying_wing():
     spec = CFG.types["flying_wing"]
     got, _ = label(exact_measure(spec, params.mid_vector(spec))[0], tailless=True)
-    assert got[0] == "flying_wing"
-    # the same planform on a type with a tail is 'conventional'
+    assert got[:2] == ["tailless", "flying_wing"]
+    # the same planform with a tail is conventional; straight edges make it 'tapered'
     got, _ = label(exact_measure(spec, params.mid_vector(spec))[0], tailless=False)
-    assert got[0] == "conventional"
+    assert got[:2] == ["conventional", "tapered"]
+
+
+def test_type_rules_inside_each_family():
+    """Every training wing of a type is classified back to its own type, except where noted."""
+    from cfdauto.geometry.sample import lhs
+    for t in params.WING_TYPES:
+        spec = CFG.types[t]
+        got = [label(exact_measure(spec, v)[0], tailless=t in params.TAILLESS_TYPES)[0][1] for v in lhs(spec, 40, 7)]
+        share = got.count(t) / len(got)
+        assert share >= (0.75 if t in ("bwb", "flying_wing") else 0.95), (t, share)

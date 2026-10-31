@@ -1,0 +1,212 @@
+{
+ "wing_type": "cranked",
+ "set": "reference",
+ "code_version": "0.6.0",
+ "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
+ "loft_backend": "numpy",
+ "wings": [
+  {
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "8243cd66a4192fa8aee252ee00731410ddef2add1a3b668d07dfe17d2f068bff",
+   "surface_hash": "77d7faf5cfbfc8aac180aab3cf2b841780f21dbbf63efa1d922f514fb061b083",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "vector": {
+    "root_chord_m": 0.44,
+    "c2_ratio": 0.975,
+    "c3_ratio": 0.9,
+    "c4_ratio": 0.675,
+    "semi_span_m": 2.0308825725471493,
+    "aspect_ratio": 10.5,
+    "b3_ratio": 0.35,
+    "split_ratio": 0.5,
+    "sweep1_deg": 0.0,
+    "sweep2_deg": 2.5,
+    "sweep3_deg": 7.5,
+    "twist0_deg": 1.0,
+    "twist1_deg": 0.5,
+    "twist2_deg": -0.5,
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5,
+    "airfoils": [
+     "naca4415",
+     "naca4415",
+     "naca4412",
+     "naca4412"
+    ]
+   }
+  },
+  {
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0e79d6ae80995c2359578777ab126c3ffc6257a144a23890122039ca7a8ff308",
+   "surface_hash": "126c510d2ee9fe646ffefa3a6fcd8951e02350aad766cd38d83b89e8f6a0d191",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral"
+   ],
+   "vector": {
+    "root_chord_m": 0.14478727677660738,
+    "c2_ratio": 0.9938364148921984,
+    "c3_ratio": 0.8716463300548503,
+    "c4_ratio": 0.7828554299868647,
+    "semi_span_m": 0.46209956648085915,
+    "aspect_ratio": 7.2211041096314705,
+    "b3_ratio": 0.4094455628101956,
+    "split_ratio": 0.47100745881218153,
+    "sweep1_deg": 2.0490648463156846,
+    "sweep2_deg": 7.829654685524879,
+    "sweep3_deg": 5.879366538681095,
+    "twist0_deg": 1.3365373758394838,
+    "twist1_deg": -0.27020067529181613,
+    "twist2_deg": 0.18500068809119474,
+    "twist3_deg": -2.357441496302945,
+    "dihedral_p1_deg": 1.0284778580727565,
+    "dihedral_p2_deg": 2.234826827002243,
+    "dihedral_p3_deg": 1.030006602944638,
+    "airfoils": [
+     "naca4415",
+     "naca4415",
+     "naca4412",
+     "naca4412"
+    ]
+   }
+  },
+  {
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "34f4db8ed69c602413643e4fc2b95686fd3061548c084f80a7b8e0e41f5ed641",
+   "surface_hash": "b684202b068d8cd4291ae2651081380c21148a95f91e83cf85c54875ce702bb6",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "vector": {
+    "root_chord_m": 0.7143644466658062,
+    "c2_ratio": 0.989495666001822,
+    "c3_ratio": 0.9839738475183474,
+    "c4_ratio": 0.6007337237188655,
+    "semi_span_m": 3.2623187768910618,
+    "aspect_ratio": 9.889298862948461,
+    "b3_ratio": 0.3046303407372027,
+    "split_ratio": 0.3983246084694749,
+    "sweep1_deg": 2.824380278871147,
+    "sweep2_deg": -3.237061517215773,
+    "sweep3_deg": 0.6255063787347991,
+    "twist0_deg": 0.9381065215280674,
+    "twist1_deg": -0.47644823773204636,
+    "twist2_deg": -0.94067503882914,
+    "twist3_deg": -1.57648003477723,
+    "dihedral_p1_deg": 1.2809147374353413,
+    "dihedral_p2_deg": 1.8202304219640275,
+    "dihedral_p3_deg": 0.712176585358813,
+    "airfoils": [
+     "naca4415",
+     "naca4415",
+     "naca4412",
+     "naca4412"
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "2c6d2d48f0aad96f4363115fdd7fda0d691ba2de85250947df6e60b0b71eb2ee",
+   "surface_hash": "744b522dc9b0046c7745d92065bf19ae616ef1fef73962622acaed782ca49c69",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "washout"
+   ],
+   "vector": {
+    "root_chord_m": 0.18090681622544058,
+    "c2_ratio": 0.9588724464437478,
+    "c3_ratio": 0.9223702567723697,
+    "c4_ratio": 0.5489779389650594,
+    "semi_span_m": 0.5576370325743012,
+    "aspect_ratio": 7.181384198955268,
+    "b3_ratio": 0.3621748086648384,
+    "split_ratio": 0.613253527561965,
+    "sweep1_deg": 0.8391162301050827,
+    "sweep2_deg": 1.8140203752705295,
+    "sweep3_deg": 12.173498606813437,
+    "twist0_deg": 0.17504021843005543,
+    "twist1_deg": 1.5647867851358264,
+    "twist2_deg": 0.3803273886215246,
+    "twist3_deg": -2.716684587447089,
+    "dihedral_p1_deg": 0.5004655594269116,
+    "dihedral_p2_deg": 0.7531515592853616,
+    "dihedral_p3_deg": 1.2499035435732229,
+    "airfoils": [
+     "naca4415",
+     "naca4415",
+     "naca4412",
+     "naca4412"
+    ]
+   }
+  },
+  {
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "e7bc08653de53f3653b13d9d6d39c70d582cf6bb57196bca3735e70e749d508a",
+   "surface_hash": "d120f0e61db8e3b3c0a99d4534c9a08936651cdf9801cc6cbd2b57827f443e8d",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "vector": {
+    "root_chord_m": 0.4077528716553983,
+    "c2_ratio": 0.9965825227946543,
+    "c3_ratio": 0.8296755616435748,
+    "c4_ratio": 0.731717629647888,
+    "semi_span_m": 1.0948605520798342,
+    "aspect_ratio": 6.11618963902273,
+    "b3_ratio": 0.2707415524565435,
+    "split_ratio": 0.30735293365321914,
+    "sweep1_deg": -0.75442479843759,
+    "sweep2_deg": 0.10641631128625839,
+    "sweep3_deg": 10.542170791541189,
+    "twist0_deg": 1.9402291390644482,
+    "twist1_deg": 1.9998130438664465,
+    "twist2_deg": 0.528556825664209,
+    "twist3_deg": -2.7607999099693528,
+    "dihedral_p1_deg": 4.813870624681468,
+    "dihedral_p2_deg": 2.15311607109802,
+    "dihedral_p3_deg": 3.530279795818769,
+    "airfoils": [
+     "naca4415",
+     "naca4415",
+     "naca4412",
+     "naca4412"
+    ]
+   }
+  }
+ ]
+}

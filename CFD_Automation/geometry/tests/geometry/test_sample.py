@@ -28,15 +28,25 @@ def test_pair_check_catches_a_repeated_column():
 
 
 def test_lhs_one_point_per_slice():
-    spec = CFG.types["bwb"]
+    spec = CFG.full["bwb"]           # no span cap: an exact Latin hypercube
     vecs = sample.lhs(spec, 100, 1001)
     u = np.array([params.to_unit(spec, v) for v in vecs])
     for j in range(u.shape[1]):
         assert sorted(np.floor(u[:, j] * 100).astype(int)) == list(range(100))
 
 
+@pytest.mark.parametrize("wing_type", params.WING_TYPES)
+def test_focus_respects_the_full_span_cap(wing_type):
+    from cfdauto.geometry.planform import build_planform
+    spec = CFG.types[wing_type]
+    assert spec.max_full_span_m == 7.0 and CFG.full[wing_type].max_full_span_m is None
+    vecs = sample.lhs(spec, 100, 1001)
+    assert len(vecs) == 100
+    assert max(2 * build_planform(spec, v).semi_span for v in vecs) <= 7.0 + 1e-9
+
+
 def test_lhs_fixed_seed_and_holdout_differs():
-    spec = CFG.types["conventional"]
+    spec = CFG.types["cranked"]
     a = sample.lhs(spec, 10, 2002)
     assert a == sample.lhs(spec, 10, 2002)
     train = sample.lhs(spec, 100, 1002)
@@ -64,7 +74,8 @@ def test_sets_and_reference_rules():
     assert len(set(idx)) == 4
     tr = sets["training"]["vectors"]
     wash = [v["twist3_deg"] - v["twist0_deg"] for v in tr]
-    assert ref["training_index"][4] == int(np.argmin(wash))
+    rest = [i for i in range(len(tr)) if i not in ref["training_index"][1:4]]
+    assert ref["training_index"][4] == min(rest, key=lambda i: wash[i])
     assert ref["coverage"]["passed"]
 
 

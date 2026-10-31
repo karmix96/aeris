@@ -1,5 +1,5 @@
 {
- "wing_type": "conventional",
+ "wing_type": "cranked",
  "space": "full",
  "variables": [
   "root_chord_m",

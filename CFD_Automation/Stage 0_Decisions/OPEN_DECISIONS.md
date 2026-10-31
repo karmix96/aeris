@@ -138,3 +138,7 @@
     and aircraft whose layout we could not tell from photos. Result: ScanEagle (tailless, AR 12.4) was
     outside, so the flying-wing focus AR is now 3–13 (full 2.5–14); real Re now 1.2 × 10⁵ – 3.1 × 10⁶
     (Aludra MK1 at its listed top speed). All 34 range wings covered, all 112 spans inside.
+50. **Families and the focus cap (decided 31 Oct 2026).** Families tailless (bwb, flying_wing) and
+    conventional (cranked, tapered); the type is set by our rules inside the family. Span words:
+    full span b (tip to tip), semi-span S = b/2. Focus space capped at b = 7 m.
+    See `geometry/decisions/families_and_span.md`. Open: cap the full space too?

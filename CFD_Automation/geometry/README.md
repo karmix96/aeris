@@ -46,7 +46,7 @@ A wing folder: `vector.json`, `stations.json`, `sections/*.dat`, `measured.json`
 `gates.json`, `span_table.csv`, `summary.json`, and `wing.igs` for single builds. A refused wing
 has only `refusal.json`. The hold-out set is never built here.
 
-Decision notes: `decisions/` (trailing_edge, loft, root_section, conventional_ranges).
+Decision notes: `decisions/` (trailing_edge, loft, root_section, conventional_ranges, shape_ranges, families_and_span). Types: bwb, flying_wing (family tailless); cranked, tapered (family conventional).
 Open decisions: `../Stage 0_Decisions/OPEN_DECISIONS.md`.
 
 ## Airfoils

@@ -61,10 +61,14 @@ MEANING = {
 
 DECISIONS = [
     ("Inputs", [
-        ("One generator, one YAML", "<code>wing_type: bwb | conventional | tapered | flying_wing | mixed</code>; <code>mixed</code> draws the types with stated shares, now equal (1/4 each).",
+        ("One generator, one YAML", "<code>wing_type</code>: a type (<code>bwb | flying_wing | cranked | tapered</code>), a family (<code>tailless | conventional</code>: its two types) or <code>mixed</code> (all four); shares equal (1/4 each).",
          "One design space and one contract. Equal shares keep a mixed set from leaning to one type (decided 29 Oct 2026).", "req", ""),
-        ("Four wing types", "<code>bwb</code> (tailless, big root chord, strong taper, cranked); <code>conventional</code> (cranked, with a tail); <code>tapered</code> (with a tail, straight edges, rectangular at taper 1); <code>flying_wing</code> (tailless, straight edges, moderate taper, swept).",
-         "Drawn freely, a straight taper had zero chance (100 of 100 wings cranked). The Aquila (taper 0.58, sweep 28°) fitted no type, and plain swept flying wings are the most common small tailless UAVs. Decided 29 Oct 2026.", "req", ""),
+        ("Two families, two types each", "Every wing is first <strong>tailless</strong> or <strong>conventional</strong> (with a horizontal tail). Tailless: <code>bwb</code> (centre body, strong taper, cranked) or <code>flying_wing</code> (straight edges, moderate taper, swept). Conventional: <code>cranked</code> (constant-chord centre, tapered outer panels) or <code>tapered</code> (straight edges, rectangular at taper 1).",
+         "Your rule (31 Oct 2026). The family is an input: the tail is not part of the wing, so it cannot be measured. Inside a family our rules decide the type: tailless → bwb when the root chord is at least 2.2 × the outer-half mean chord (and at least half the semi-span), else flying_wing; conventional → cranked when the leading edge or the chord breaks (a kink), else tapered. On the focus training sets the rules return the drawn type for 100 % of flying-wing, cranked and tapered wings and 86 % of BWB wings (14 slim BWBs read as flying wings).", "req", ""),
+        ("Span words", "<strong>Full span b</strong> = tip to tip, both halves. <strong>Semi-span S = b / 2</strong> = root to one tip: the half wing we build, mesh and mirror at y = 0. <code>semi_span_m</code> is always S. Every table and figure says which one.",
+         "Your rule (31 Oct 2026): never write 'span' without saying which.", "req", ""),
+        ("Focus ends at b = 7 m", "<code>focus: max_full_span_m: 7.0</code> for every type. The focus sets are drawn as a Latin hypercube and only wings with full span ≤ 7 m are kept (in draw order). The full space has no cap.",
+         "Your rule (31 Oct 2026). Effect: 32 of 34 real wings with an area are in the focus space; Hermes 450 (10.5 m) and Götten UAV 9 (8.7 m) are only in the full space, as are the span-only Class II wings above 7.7 m (Searcher, Aerostar, Seeker 400, Watchkeeper, Herti and others). Cost: near the cap the hypercube strata are no longer exactly balanced.", "req", ""),
         ("Same 18 variables for every type", "Each type samples some and derives the rest (see <a href='#inputs'>Inputs and derived</a>).",
          "One vector shape for sampling, hashing and ML.", "own", ""),
         ("Everything varies", "A value is fixed only through <code>pinned:</code>.", "A study may pin; the default never does.", "req", ""),
@@ -139,7 +143,7 @@ DECISIONS = [
     ("Measure, label, hash", [
         ("Measured on the loft", "Chord, twist, LE position, sweep, dihedral, area, span, MAC, AR, thickness, trailing-edge thickness → <code>measured.json</code>. The gate checks chords, sweeps, twists, panel dihedrals and the aspect ratio against the vector.",
          "Later stages and any ML model use the measured wing; the vector is only its label.", "req", ""),
-        ("Labels by rule", "Configuration: <code>bwb</code> (measured centre body), else <code>flying_wing</code> for a tailless type or <code>conventional</code> for a type with a tail. Then swept, cranked, rectangular, washout, dihedral, aspect ratio. BWB threshold 2.2.",
+        ("Labels by rule", "First the family (from the input) and the type (by the rules above), then shape labels: swept, cranked, rectangular, straight-tapered, washout, dihedral, aspect ratio. BWB threshold 2.2.", 
          "A tail is not part of the wing surface, so it cannot be measured; the family comes from the type. Before 29 Oct 2026 every tailless wing without a centre body was called 'conventional'. Checked on 20 hand-labelled wings and a flying-wing test.", "req", ""),
         ("Hash from the code itself", "sha256 of the vector (with its four section names), the type's laws and pinned values (not its ranges), the trailing-edge rule, the airfoil coordinates and the content of every geometry source file.",
          "Any code change now changes every input hash, so stored meshes and results are never reused for a wing the code builds differently. A version string set by hand could be forgotten. Fixed 29 Oct 2026.", "req", ""),
@@ -169,8 +173,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
     ("Study plan (Stage 0)", "Turbulence-model source", "Crivellini 2014 is weak support. Find a better source or call it our choice.", "decide"),
     ("Study plan (Stage 0)", "Stage 0 D5", "The Grand Roadmap lists a D5 (prior work, transition route, tunnel, cloud budget). Add it?", "decide"),
-    ("Geometry", "Full-space edges", "The full space reaches 20 m span (beyond Class II) and Re 7.6 × 10⁶ on the largest BWB root (above the top level). Keep, or cap the span?", "decide"),
-    ("Geometry", "BWB focus top size", "With root up to 1.80 m and AR up to 9 the focus BWB reaches 10.3 m span and 11.8 m²; the largest real BWB (RX-3) has 6–7 m and 4.9 m². Lower the top root chord or AR?", "decide"),
+    ("Geometry", "Full-space edges", "The full space reaches a full span of 20 m (beyond Class II) and Re 7.6 × 10⁶ on the largest BWB root (above the top level). Keep, or cap it too (e.g. 12 m, the largest real Class II in our tables)?", "decide"),
     ("Geometry", "Trailing-edge floor", "Confirm 0.5 mm (Class I) / 1.0 mm (Class II) with a builder; run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works.", "decide"),
     ("Geometry", "Airfoil search order", "Project folder → AERIS database → NACA formula; 22 database files are refused. Keep?", "decide"),
     ("Geometry", "pyGeo run", "Run the 11 pyGeo tests and <code>build --all</code> on your machine; manifests must then say pygeo.", "act"),
@@ -254,7 +257,7 @@ def manifests() -> list[dict]:
     return rows
 
 
-TYPE_NAME = {"bwb": "BWB", "conventional": "Cranked", "tapered": "Tapered", "flying_wing": "Flying wing"}
+TYPE_NAME = {"bwb": "BWB", "cranked": "Cranked", "tapered": "Tapered", "flying_wing": "Flying wing"}
 SET_NAME = {"training": "training (focus)", "training_full": "training (full)", "corner1": "corner 1 (full)",
             "corner2": "corner 2 (full)", "reference": "reference (focus)", "holdout": "hold-out (focus)",
             "holdout_full": "hold-out (full)"}
@@ -271,7 +274,7 @@ def sets_table(rows: list[dict]) -> str:
             ok = sum(1 for x in w if x.get("passed"))
             bad = Counter(x.get("gate") for x in w if x.get("passed") is False)
             res = f"{ok} built, {n - ok} refused" + (f" ({', '.join(f'{k} {v}' for k, v in bad.items())})" if bad else "")
-            lab = Counter(l for x in w for l in (x.get("labels") or []) if l not in ("bwb", "conventional"))
+            lab = Counter(l for x in w for l in (x.get("labels") or [])[1:2])   # the type the rules give
             labels = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in lab.most_common(5))
         stale = ("" if r["set"].startswith("holdout") else
                  f" <span class='flag open'>{r['backend']} loft</span>" if r["backend"] != "pygeo" else "")
@@ -297,7 +300,7 @@ def verification_table() -> str:
 def real_table() -> tuple[str, dict]:
     """Rows of the real-UAV table and its summary, from docs/real_uavs.json."""
     d = json.loads((DOCS / "real_uavs.json").read_text())
-    fam = {"tailless": "Tailless", "tailed": "With tail", "delta": "Delta + tail"}
+    fam = {"tailless": "Tailless", "conventional": "With tail", "delta": "Delta + tail"}
     use = {"ranges": "<span class='flag ok'>sets range</span>", "span": "<span class='muted'>span only</span>",
            "none": "<span class='flag open'>not used</span>"}
     out = []
@@ -328,7 +331,9 @@ def stype_counts(rows: list[dict]) -> str:
 def cover_text() -> str:
     rows = [r for r in json.loads((DOCS / "real_uavs.json").read_text())["rows"] if r["use"] == "ranges"]
     miss = [r["name"] for r in rows if not r.get("covered")]
-    return f"{len(rows) - len(miss)} of {len(rows)} real wings" + (f" (not: {', '.join(miss)})" if miss else "")
+    full = sum(1 for r in rows if r.get("covered_full"))
+    return (f"focus {len(rows) - len(miss)} of {len(rows)}, full {full} of {len(rows)} real wings"
+            + (f" (only in the full space: {', '.join(miss)})" if miss else ""))
 
 
 def hcdi_cell(h: dict | None) -> str:
@@ -341,7 +346,7 @@ def hcdi_cell(h: dict | None) -> str:
 
 
 def hcdi_table(d: dict) -> str:
-    fam = {"tailless": "Tailless", "tailed": "With tail"}
+    fam = {"tailless": "Tailless", "conventional": "With tail"}
     out = []
     for r in sorted(d["hcdi_db"], key=lambda r: (r["family"], r["span"])):
         inside = ("<span class='flag ok'>inside</span>" if r.get("span_covered")
@@ -409,14 +414,14 @@ PHENOMENA = [
 
 
 SUMMARY_TEXT = {
-    "what": {"bwb": "Tailless; long centre body, strong taper, cranked", "conventional": "With a tail; constant-chord centre, tapered outer panels",
+    "what": {"bwb": "Tailless; long centre body, strong taper, cranked", "cranked": "With a tail; constant-chord centre, tapered outer panels",
              "tapered": "With a tail; straight edges root to tip (rectangular at taper 1)", "flying_wing": "Tailless; straight edges, moderate taper, swept"},
     "flow": {"bwb": "Two regimes on one wing (centre body ~10× the tip Re); spanwise flow and tip stall from sweep; kinks at b1, b2; thick 15 % centre body",
-             "conventional": "Kinks at the breaks (suction peaks, loading jump); low sweep; small wings fly almost wholly below 10⁵",
+             "cranked": "Kinks at the breaks (suction peaks, loading jump); low sweep; small wings fly almost wholly below 10⁵",
              "tapered": "Smooth loading; low sweep; tips at lower Re as taper grows; strong tip vortex at high AR",
              "flying_wing": "Trim by sweep and washout with reflexed sections; spanwise flow; tip stalls first at high angle"},
     "mesh": {"bwb": "LE and TE everywhere; a station on each kink; tip; wake and tip vortex; fine first cell at the centre-body Re",
-             "conventional": "LE and TE; a station on each break; tip vortex; wake",
+             "cranked": "LE and TE; a station on each break; tip vortex; wake",
              "tapered": "LE and TE; tip vortex; wake",
              "flying_wing": "LE and TE; tip (stall, vortex); wake behind a swept TE"},
 }
@@ -463,7 +468,7 @@ def summary_html() -> str:
 
     rows = [
         ("Shape", [SUMMARY_TEXT["what"][t] for t in WING_TYPES]),
-        ("Span", both(span)),
+        ("Full span b (tip to tip)", both(span)),
         ("Root chord", both(lambda sp, s_: r(*sp.ranges["root_chord_m"], " m"))),
         ("Aspect ratio", both(lambda sp, s_: r(*sp.ranges["aspect_ratio"]))),
         ("Overall taper (tip / root)", both(taper)),
@@ -480,7 +485,8 @@ def summary_html() -> str:
     ]
     head = "".join(f"<th><span class='tag {t}'>{TYPE_NAME[t]}</span></th>" for t in WING_TYPES)
     body = "".join(f"<tr><td class='what'>{a}</td>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>" for a, cells in rows)
-    return f"<thead><tr><th></th>{head}</tr></thead><tbody>{body}</tbody>"
+    fam = "<tr><th></th><th colspan='2'>Tailless</th><th colspan='2'>Conventional (with a tail)</th></tr>"
+    return f"<thead>{fam}<tr><th></th>{head}</tr></thead><tbody>{body}</tbody>"
 
 
 def xfoil_note() -> str:
@@ -633,7 +639,7 @@ def fig_re_map() -> str:
         y = 52 + 36 * k / max(len(used) - 1, 1)
         out.append(f'<line class="real" x1="{X(r["re_low"]):.1f}" y1="{y:.1f}" x2="{X(r["re_high"]):.1f}" y2="{y:.1f}"/>')
     # types: mean chord (thick) and tip (thin, below)
-    for (name, y), t in zip(rows[1:], ("bwb", "conventional", "tapered", "flying_wing")):
+    for (name, y), t in zip(rows[1:], ("bwb", "cranked", "tapered", "flying_wing")):
         m, tip = rey[t]["mean_chord"], rey[t]["tip"]
         cls = {"bwb": "bwb", "flying_wing": "fw"}.get(t, "conv")
         out.append(f'<rect class="bar {cls}" x="{X(m[0]):.1f}" y="{y - 7}" width="{X(m[1]) - X(m[0]):.1f}" height="14" rx="2"/>')
@@ -1150,7 +1156,7 @@ table.summ td { font-size: 13px; vertical-align: top; } table.summ td.what { whi
 table.inp td.what { min-width: 120px; }
 .muted { color: var(--muted); font-size: 13px; }
 .tag, .basis, .flag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500; }
-.tag.conventional, .tag.tapered { color: var(--accent); } .tag.bwb { color: var(--bwb); } .tag.flying_wing { color: var(--amber); }
+.tag.cranked, .tag.tapered { color: var(--accent); } .tag.bwb { color: var(--bwb); } .tag.flying_wing { color: var(--amber); }
 .basis.req { color: var(--violet); } .basis.src { color: var(--accent); } .basis.meas { color: var(--bwb); } .basis.own { color: var(--amber); }
 .flag.fix { color: var(--warn); } .flag.open { color: var(--amber); } .flag.ok { color: var(--bwb); }
 .legend { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
@@ -1209,6 +1215,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 
 <section id="glance">
   <h2>At a glance</h2>
+  <div class="weak" style="margin-bottom:14px"><strong>Words used on this page.</strong> <strong>Full span b</strong>: tip to tip, both halves. <strong>Semi-span S = b / 2</strong>: root to one tip, the half wing we build and mesh (mirrored at y = 0). <strong>Families</strong>: tailless (types BWB, flying wing) and conventional, i.e. with a tail (types cranked, tapered). <strong>Focus space</strong>: realistic wings, full span ≤ 7 m, sampled densely. <strong>Full space</strong>: everything supported, sampled sparsely.</div>
   <div class="three">
     <div class="box"><h3>In</h3><div class="big">18 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: chords, spans, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, cranked, tapered, flying wing.</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
@@ -1234,7 +1241,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <section id="pairs">
   <h2>Key pairs</h2>
   <p>The same three layers in two dimensions, one panel per type. Faint dots: full space. Strong dots: focus space. Black diamonds: real or published wings that give both values.</p>
-  <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size</strong>: span against mean chord. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; with a tail: cranked and tapered).</figcaption></figure>
+  <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size</strong>: full span b (tip to tip) against mean chord. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; with a tail: cranked and tapered).</figcaption></figure>
   <figure class="fig card">__PNG_PAIR_PLANFORM__<figcaption><strong>Planform</strong>: aspect ratio against overall taper. The BWB lives at very low taper (big centre body), the others at 0.3–1.</figcaption></figure>
   <figure class="fig card">__PNG_PAIR_SWEEP__<figcaption><strong>Sweep</strong>: aspect ratio against inner-panel leading-edge sweep. Published sweeps given at the quarter chord (marked c/4 in the sources) sit a few degrees below their leading-edge value.</figcaption></figure>
   <figure class="fig card">__PNG_PAIR_TWIST__<figcaption><strong>Trim</strong>: sweep against washout. Tailless wings trim with sweep and washout together; the published tailless wings sit inside the focus space.</figcaption></figure>
@@ -1259,7 +1266,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   </div>
   <h2 style="font-size:22px">Inputs (sampled), by wing type</h2>
   <div class="tbl"><table class="wide inp">
-    <thead><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th><th>Why this range (focus)</th></tr></thead>
+    <thead><tr><th></th><th></th><th colspan="2">Tailless</th><th colspan="2">Conventional (with a tail)</th><th></th></tr><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Flying wing</th><th>Cranked</th><th>Tapered</th><th>Why this range (focus)</th></tr></thead>
     <tbody>
 __INPUTS__
     </tbody>
@@ -1280,7 +1287,7 @@ __DERIVED__
   <p>The input ranges are in <a href="#inputs">Parameters</a>. This is what they produce.</p>
   <figure class="fig">__GIF_SIZES__<figcaption>Smallest and largest wing (least and most area) of each type, true scale. Solid: focus space. Dashed: full space. Left view 0.6 m wide, right view 22 m wide; same scale in every frame.</figcaption></figure>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Type</th><th>Space</th><th>Span</th><th>Wing area</th><th>Mean chord</th><th>Root chord</th><th>Tip chord</th></tr></thead>
+    <thead><tr><th>Type</th><th>Space</th><th>Full span b (tip to tip)</th><th>Wing area</th><th>Mean chord</th><th>Root chord</th><th>Tip chord</th></tr></thead>
     <tbody>__EXTREMES__</tbody>
   </table></div>
   <p class="muted">Smallest and largest over all corners of the size inputs (other inputs mid-range). <code>python scripts/size_extremes.py</code>.</p>
@@ -1384,7 +1391,7 @@ __DECISIONS__
   <div class="three">
     <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: EMT Aladin and Black Swift S0 cruising at 3,048 m. Highest: CTRM Aludra MK1 at its listed top speed, sea level (NTNU; 3.1 × 10⁶, at the top study level). Mean chord = wing area / span.</p></div>
     <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 3 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer (a delta) and the Vindicator (a target drone above Mach 0.3) do. Levels now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (3 × 10⁶ was the RUAG Ranger's 2.74 × 10⁶ rounded up; the NTNU Aludra MK1 row since reaches 3.1 × 10⁶).</p></div>
-    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. Every Class I span is inside too (sourced and HCDI database). BWB __ENV_BWB__; conventional __ENV_CONV__.</p></div>
+    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. Every Class I span is inside too (sourced and HCDI database). Focus space: BWB __ENV_BWB__; cranked __ENV_CONV__.</p></div>
     <div class="box"><h3>Class II</h3><div class="big">Chords 0.55–0.66 m</div><p>Nine Class II wings with an area: Götten et al. 2021 (from images and three-views, about 10–15 %) and Essari 2015 (Jane's-style: Hermes 450, Ranger, Seeker, Shadow 600). AR 7.8–16. At top speed, Re 2.1–2.7 × 10⁶. Gap: tailless Class II has no area.</p></div>
   </div>
   <div class="card">__PNG_REAL__</div>
@@ -1418,7 +1425,7 @@ __HCDI__
   <p class="muted">A wing that fails any gate is not written; its row keeps the gate and the reason. The fifth check, mesh on the loft within 1e-9 m, belongs to Stage 2.</p>
   <h2 style="font-size:22px">Sample sets</h2>
   <div class="tbl"><table class="mid">
-    <thead><tr><th>Type</th><th>Set</th><th>Wings</th><th>Result</th><th>Main labels</th></tr></thead>
+    <thead><tr><th>Type</th><th>Set</th><th>Wings</th><th>Result</th><th>Type by the rules</th></tr></thead>
     <tbody>
 __SETS__
     </tbody>
@@ -1540,8 +1547,8 @@ def main() -> None:
                 .replace("__RE_LO__", f"{real['re_low_min']:.1e}".replace("e+0", " × 10^").replace(" × 10^5", " × 10⁵"))
                 .replace("__RE_HI__", f"{real['re_high_max']:.1e}".replace("e+0", " × 10^").replace(" × 10^6", " × 10⁶"))
                 .replace("__COVER__", cover_text())
-                .replace("__ENV_BWB__", f"span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
-                .replace("__ENV_CONV__", f"span {env['conventional']['span_m'][0]:.1f}–{env['conventional']['span_m'][1]:.1f} m, mean chord {env['conventional']['mean_chord_m'][0]:.2f}–{env['conventional']['mean_chord_m'][1]:.2f} m")
+                .replace("__ENV_BWB__", f"full span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
+                .replace("__ENV_CONV__", f"full span {env['cranked']['span_m'][0]:.1f}–{env['cranked']['span_m'][1]:.1f} m, mean chord {env['cranked']['mean_chord_m'][0]:.2f}–{env['cranked']['mean_chord_m'][1]:.2f} m")
                 .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
                 .replace("__PNG_LOCALRE__", img("local_re.png", "Local chord Reynolds number along the span of the smallest and largest wing of each type"))
                 .replace("__PNG_XFCF__", img("xfoil_cf.png", "XFOIL upper-surface skin friction, free transition vs tripped, at the four study Re levels"))
@@ -1552,7 +1559,7 @@ def main() -> None:
                 .replace("__PNG_PAIR_SWEEP__", img("pair_sweep.png", "Aspect ratio against sweep per type"))
                 .replace("__PNG_PAIR_TWIST__", img("pair_twist.png", "Sweep against washout per type"))
                 .replace("__PNG_FAM_BWB__", img("family_bwb.png", "BWB family: one variable group at a time"))
-                .replace("__PNG_FAM_CONV__", img("family_conventional.png", "Cranked family: one variable group at a time"))
+                .replace("__PNG_FAM_CONV__", img("family_cranked.png", "Cranked family: one variable group at a time"))
                 .replace("__PNG_FAM_TAP__", img("family_tapered.png", "Tapered family: one variable group at a time"))
                 .replace("__PNG_FAM_FW__", img("family_flying_wing.png", "Flying-wing family: one variable group at a time"))
                 .replace("__GIF_SIZES__", img("size_extremes.gif", "Smallest and largest wing of each type, focus and full space, true scale"))

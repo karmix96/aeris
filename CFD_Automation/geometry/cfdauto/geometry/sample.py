@@ -13,18 +13,41 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import qmc
 
-from .params import WING_TYPES, Config, TypeSpec, from_unit, load_config, mid_vector, to_unit
+from .params import FAMILIES, WING_TYPES, Config, TypeSpec, from_unit, load_config, mid_vector, to_unit
 from .planform import build_planform
 
 SETS_DIR = Path(__file__).resolve().parents[2] / "data" / "sets"
 
 
 def lhs(spec: TypeSpec, n: int, seed: int) -> list[dict]:
-    # Section choices (if any) get their own hypercube columns, so each candidate
-    # is used about equally often. Without choices the draw is unchanged.
+    """n wings by Latin hypercube over the type's box.
+
+    Section choices (if any) get their own hypercube columns, so each candidate is used about
+    equally often. With a span cap (focus space, `max_full_span_m`), the hypercube is drawn larger
+    and only the wings within the cap are kept, in draw order, until n are found: still space-filling,
+    but the strata are no longer exactly balanced where the cap cuts the box."""
     names = spec.free_variables + spec.choice_variables
-    unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(n)
-    return [from_unit(spec, dict(zip(names, row))) for row in unit]
+    if spec.max_full_span_m is None:
+        unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(n)
+        return [from_unit(spec, dict(zip(names, row))) for row in unit]
+    m = max(2 * n, 8)
+    while True:
+        unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(m)
+        out = []
+        for row in unit:
+            v = from_unit(spec, dict(zip(names, row)))
+            if 2.0 * build_planform(spec, v).semi_span <= spec.max_full_span_m * (1 + 1e-12):
+                out.append(v)
+                if len(out) == n:
+                    return out
+        m *= 2
+        if m > 4096 * max(n, 1):
+            raise ValueError(f"{spec.name}: the span cap {spec.max_full_span_m} m leaves almost no wings in the box")
+
+
+def within_cap(spec: TypeSpec, vec: dict) -> bool:
+    """True when the wing's full span (tip to tip) is within the type's cap (or there is none)."""
+    return spec.max_full_span_m is None or 2.0 * build_planform(spec, vec).semi_span <= spec.max_full_span_m * (1 + 1e-12)
 
 
 def corner1(spec: TypeSpec) -> list[dict]:
@@ -116,9 +139,11 @@ def coverage_check(spec: TypeSpec, ref: list[dict], training: list[dict], n_rand
 
 
 def draw_mixed(cfg: Config, n: int, seed: int) -> list[tuple[str, dict]]:
-    """For wing_type = mixed: n wings split between the types by the shares."""
-    types = [t for t in WING_TYPES if cfg.shares.get(t, 0.0) > 0]
-    exact = [n * cfg.shares[t] for t in types]
+    """For wing_type = mixed (all types) or a family name (its two types): n wings split by the shares."""
+    pool = FAMILIES.get(cfg.wing_type, WING_TYPES)       # a family draws only its own two types
+    types = [t for t in pool if cfg.shares.get(t, 0.0) > 0]
+    total = sum(cfg.shares[t] for t in types)
+    exact = [n * cfg.shares[t] / total for t in types]
     counts = [math.floor(x) for x in exact]
     # largest remainder: the wings left over go to the types with the biggest fractions
     for k in sorted(range(len(types)), key=lambda k: exact[k] - counts[k], reverse=True)[: n - sum(counts)]:

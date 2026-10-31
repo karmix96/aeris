@@ -40,6 +40,9 @@ def real_wings() -> tuple[dict, list[dict]]:
     rows = []
     for a in d["aircraft"]:
         r = dict(a)
+        if not a["area"] and a.get("ar"):          # database rows: area from the listed aspect ratio
+            a = dict(a, area=a["span"] ** 2 / a["ar"])
+            r["area"] = a["area"]
         if a["area"]:
             c = a["area"] / a["span"]
             r["mean_chord"] = c
@@ -120,15 +123,13 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
                 ax.scatter(r["span"], r["mean_chord"], s=60, color="#B02A20", zorder=3, edgecolor="white")
                 ax.annotate(r["name"], (r["span"], r["mean_chord"]), fontsize=7.5, xytext=(4, 4),
                             textcoords="offset points")
-            elif r["use"] == "span":
-                ax.axvline(r["span"], color="#9A6200", lw=0.8, ls=":", zorder=1)
-                ax.annotate(r["name"], (r["span"], ax.get_ylim()[1] if False else 0), fontsize=6.5, rotation=90,
-                            xytext=(2, 4), textcoords="offset points", color="#9A6200", va="bottom")
+            elif r["use"] == "span":       # span only: a tick on the span axis (chord unknown)
+                ax.plot([r["span"]] * 2, [0, 0.035], color="#9A6200", lw=1.4, zorder=2,
+                        transform=ax.get_xaxis_transform())
         for r in db:
             if r["family"] == fam and r["use"] == "span":
-                ax.axvline(r["span"], color="#6A4BB0", lw=0.9, ls="--", alpha=0.7, zorder=1)
-                ax.annotate(r["model"], (r["span"], 0), fontsize=6.5, rotation=90, xytext=(2, 60),
-                            textcoords="offset points", color="#6A4BB0", va="bottom")
+                ax.plot([r["span"]] * 2, [0.04, 0.075], color="#6A4BB0", lw=1.4, zorder=2,
+                        transform=ax.get_xaxis_transform())
         ax.set_title({"tailless": "Tailless vs the bwb and flying-wing types",
                       "tailed": "Wing + tail vs the conventional and tapered types"}[fam], fontsize=10)
         ax.set_xlabel("full span [m]")
@@ -136,8 +137,8 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
         ax.set_ylim(bottom=0)
         ax.grid(alpha=0.25)
         ax.legend(fontsize=7.5, loc="upper left", markerscale=3)
-    fig.text(0.01, 0.01, "Red dots: real wings with a published wing area. Brown dotted: sourced span only. "
-             "Violet dashed: span from the HCDI UAS database. Chord unknown for both line kinds.", fontsize=8, color="#566573")
+    fig.text(0.01, 0.01, "Red dots: real wings with a published wing area or aspect ratio. Ticks on the span axis: span only "
+             "(brown: sources and the NTNU / CNAS databases; violet: HCDI UAS database); chord unknown.", fontsize=8, color="#566573")
     fig.tight_layout(rect=(0, 0.04, 1, 1))
     fig.savefig(path)
     plt.close(fig)

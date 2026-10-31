@@ -74,8 +74,8 @@ DECISIONS = [
          "Before, 46 of 100 conventional wings got wider toward the tip. With per-panel ratios no chord grows outboard, and the Latin hypercube stays intact.", "req", ""),
         ("Sweep law", "<code>panels</code>: one sweep per panel. <code>one</code>: sweep2 = sweep3 = sweep1 (tapered, flying wing).",
          "Straight leading edge for straight-edged wings. Variables a law computes need no range.", "req", ""),
-        ("Size ranges from real wings", "Root chord: BWB 0.40–1.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m. AR: tailless 3–9; with a tail 4.5–16.5.",
-         "All 27 real wings with a published area (makers, papers, theses; Class II from Götten et al. 2021, Essari 2015 and the AUTh RX-3 BWB) have a generated wing within 10 % in span and mean chord, and all 62 real spans are inside (see <a href='#real'>Real wings</a>). BWB root raised from 0.80 to 1.80 m on 30 Oct 2026: the old range was sized on small flying wings and missed real BWBs (RX-3: 4.9 m², 260 kg; Wang &amp; Zhou: root 1.80 m).", "meas", ""),
+        ("Size ranges from real wings", "Root chord: BWB 0.40–1.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m. AR: BWB 3–9; flying wing 3–13; with a tail 4.5–16.5.",
+         "All 34 real wings with a published area or aspect ratio (makers, papers, theses, the NTNU database; Class II from Götten et al. 2021, Essari 2015, the AUTh RX-3 BWB and the NTNU Shadow and Aludra rows) have a generated wing within 10 % in span and mean chord, and all 112 real spans are inside (CNAS and NTNU databases added 31 Oct 2026; flying-wing AR raised to 13 for the ScanEagle, AR 12.4) (see <a href='#real'>Real wings</a>). BWB root raised from 0.80 to 1.80 m on 30 Oct 2026: the old range was sized on small flying wings and missed real BWBs (RX-3: 4.9 m², 260 kg; Wang &amp; Zhou: root 1.80 m).", "meas", ""),
         ("Cranked differs from tapered", "Cranked focus = constant-chord centre and tapered outer panels: inner chord 0.95–1, middle 0.80–1, outer 0.50–0.85 of the chord inboard; sweep −3–3° inner, −5–10° middle, 0–15° outer. Full space unchanged.",
          "Your remark (30 Oct 2026): the two types looked alike, because the old per-panel ratios (0.85/0.75/0.65–1) made mostly straight-tapered wings with faint breaks. The layout follows Class II UAVs like Hermes 450 and Heron (from photos; no published chord table), so it is our choice.", "own", ""),
         ("Shape ranges from sources", "Every range has its basis in the <a href='#inputs'>Why this range</a> column and in <code>decisions/shape_ranges.md</code>. Changed on 29 Oct 2026: tailed sweep −5° to +15° (was −10° to +20°); tailed washout at most 5° (was 7°); dihedral 0–5° for every type (Raymer); flying-wing taper 0.3–0.9 and sweep 10–40°; BWB tip down to 0.06, first sweep from 15°.",
@@ -177,7 +177,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Sources", "Second-hand values", "Raymer's taper 0.4, washout 3° and 0° c/4 sweep come from a course page; PUL-10 and the flying-wing MAV were read by the agent only. Check in print.", "act"),
     ("Sources", "AUTh BWB papers", "Airfoils and station chords of their BWBs are in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Patras library or the authors.", "act"),
     ("Sources", "Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas cite unread Jane's-style data; the Hermes 450 entry is inconsistent. Confirm with Jane's.", "act"),
-    ("Sources", "NTNU UAV database", "93 UAVs (span, AR, chord), blocked from the cloud: attach 02_Database.csv.", "act"),
+    ("Sources", "Database rows (NTNU, CNAS)", "Added 31 Oct 2026: 7 NTNU rows with an aspect ratio (set ranges) and 45 span-only rows. Configurations (tailless or with a tail) are from photos; aspect ratios and speeds are as the databases list them. Some look wrong (RQ-7A cruise 58 m/s; Aludra MK1 chord). Check the rows you will quote.", "act"),
     ("Sources", "Tailless Class II areas", "Fury, Albatroz, Shahed 191 have spans only; the RX-3 is the one tailless Class II with an area.", "act"),
     ("Published wings", "BlendedNet twist and dihedral", "Set to zero because neither paper states them. Accept?", "decide"),
     ("Published wings", "Which published wing first", "RIBES is the only in-regime case; M6 and CRM are transonic.", "decide"),
@@ -316,7 +316,7 @@ def real_table() -> tuple[str, dict]:
 
 
 STYPE = {"manufacturer": "maker", "paper": "paper", "thesis_report": "thesis / report", "government": "government",
-         "secondary": "secondary", "model": "model", "measured_drawing": "drawing", "hcdi_db": "HCDI db"}
+         "secondary": "secondary", "model": "model", "measured_drawing": "drawing", "hcdi_db": "HCDI db", "database": "UAV database (NTNU, CNAS)"}
 
 
 def stype_counts(rows: list[dict]) -> str:
@@ -902,7 +902,7 @@ RANGE_BASIS = {
     'root_chord_m':
         "Real Class I–II wings with a published area (<a href='#real'>Real wings</a>). BWB up to 1.80 m: root of <a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>; covers the AUTh RX-3 (S 4.9 m², AR 8, 260 kg, <a href='https://www.mdpi.com/2673-4591/90/1/18'>Antoniou et al. 2025</a>). Full space: design-space bounds of <a href='https://www.mdpi.com/2673-4591/90/1/52'>Pliakos et al. 2025</a> (twist ±5° / ±7°, dihedral ±10°, c/4 sweep 0–60°). <span class='flag ok'>checked</span>",
     'aspect_ratio':
-        "Real wings: tailless 2.9–8.6, with a tail 4.9–16.0 (<a href='#real'>Real wings</a>); flying wing 4.29 (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić 2024</a>). <span class='flag ok'>checked</span> Panknin's example has AR 10 (a model glider), just above.",
+        "Real wings: tailless 2.9–8.6 and the ScanEagle 12.4 (NTNU; flying wing only), with a tail 4.9–16.0 (<a href='#real'>Real wings</a>); flying wing 4.29 (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić 2024</a>). <span class='flag ok'>checked</span> Panknin's example has AR 10 (a model glider), just above.",
     'b3_ratio':
         "Our choice: breaks anywhere in 25–80 % of the span. BWB: outer panel 0.50 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>). <span class='flag ok'>checked</span>",
     'split_ratio':
@@ -1382,8 +1382,8 @@ __DECISIONS__
   <h2>Real wings and the Reynolds number</h2>
   <p>Your rule (29 Oct 2026): take the sizes from real Class I and II UAVs, compute the Re they fly at, and if it does not reach 5 × 10⁶, lower the top Re level instead of stretching the wings. Data and links: <code>configs/real_uavs.yaml</code>; check: <code>scripts/real_uav_check.py</code>.</p>
   <div class="three">
-    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: Black Swift S0 cruising at 3,048 m. Highest: RUAG Ranger at top speed, sea level. Mean chord = wing area / span.</p></div>
-    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 3 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer (a delta) and the Vindicator (a target drone above Mach 0.3) do. Levels now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (the highest real value, 2.74 × 10⁶ for the RUAG Ranger at top speed, rounded up).</p></div>
+    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: EMT Aladin and Black Swift S0 cruising at 3,048 m. Highest: CTRM Aludra MK1 at its listed top speed, sea level (NTNU; 3.1 × 10⁶, at the top study level). Mean chord = wing area / span.</p></div>
+    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 3 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer (a delta) and the Vindicator (a target drone above Mach 0.3) do. Levels now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (3 × 10⁶ was the RUAG Ranger's 2.74 × 10⁶ rounded up; the NTNU Aludra MK1 row since reaches 3.1 × 10⁶).</p></div>
     <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. Every Class I span is inside too (sourced and HCDI database). BWB __ENV_BWB__; conventional __ENV_CONV__.</p></div>
     <div class="box"><h3>Class II</h3><div class="big">Chords 0.55–0.66 m</div><p>Nine Class II wings with an area: Götten et al. 2021 (from images and three-views, about 10–15 %) and Essari 2015 (Jane's-style: Hermes 450, Ranger, Seeker, Shadow 600). AR 7.8–16. At top speed, Re 2.1–2.7 × 10⁶. Gap: tailless Class II has no area.</p></div>
   </div>

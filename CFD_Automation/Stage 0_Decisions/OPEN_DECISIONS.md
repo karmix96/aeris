@@ -131,3 +131,10 @@
 48. **Re level 1 × 10⁵ (decided 30 Oct 2026).** Added below 3 × 10⁵ for mini Class I wings and outer
     panels. Open: the transition check (SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵)
     and the stricter mesh it needs (y+ ≤ 1, finer chordwise cells over the bubble).
+49. **NTNU and CNAS databases added (31 Oct 2026).** NTNU (Hann et al., DataverseNO doi:10.18710/L41IGQ, CC0;
+    file attached by Mike): 7 rows with an aspect ratio set ranges (area = span²/AR), 31 span-only rows.
+    CNAS / Bard College Drone Database (drones.cnas.org): 14 span-only rows (no wing area there).
+    Excluded: rotorcraft and tail-sitters, MTOW > 600 kg, jets and targets, munitions, parafoils, HAPS,
+    and aircraft whose layout we could not tell from photos. Result: ScanEagle (tailless, AR 12.4) was
+    outside, so the flying-wing focus AR is now 3–13 (full 2.5–14); real Re now 1.2 × 10⁵ – 3.1 × 10⁶
+    (Aludra MK1 at its listed top speed). All 34 range wings covered, all 112 spans inside.

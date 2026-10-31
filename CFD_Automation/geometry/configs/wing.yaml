@@ -85,7 +85,7 @@ types:
       dihedral_p2_deg: [-10.0, 10.0]
       dihedral_p3_deg: [-10.0, 10.0]
 
-  cranked:                            # conventional family (with a tail): cranked wing: constant-chord centre, tapered outer panels (e.g. Hermes 450, Heron; from photos)
+  cranked:                            # conventional family: cranked wing: constant-chord centre, tapered outer panels (e.g. Hermes 450, Heron; from photos)
     chord_law: per_panel              # each panel's own taper, so no chord grows outboard
     sweep_law: panels
     span_mode: aspect_ratio
@@ -133,7 +133,7 @@ types:
       dihedral_p2_deg: [-10.0, 10.0]
       dihedral_p3_deg: [-10.0, 10.0]
 
-  tapered:                            # conventional family (with a tail): straight edges root to tip (rectangular when c4 = 1)
+  tapered:                            # conventional family: straight edges root to tip (rectangular when c4 = 1)
     chord_law: linear_taper
     sweep_law: one
     span_mode: aspect_ratio

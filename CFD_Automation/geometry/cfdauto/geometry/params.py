@@ -28,9 +28,9 @@ VARIABLES = (
     "dihedral_p1_deg", "dihedral_p2_deg", "dihedral_p3_deg",   # one dihedral per straight panel
 )
 WING_TYPES = ("bwb", "flying_wing", "cranked", "tapered")
-# Two families, two types each (decided 30 Oct 2026). A wing is first tailless or conventional
-# (with a horizontal tail); inside a family our own rules tell the type apart (labels.py).
-# A tail is not part of the wing surface, so the family is an input (the type, or the user), never measured.
+# Two families, two types each (decided 31 Oct 2026). A wing is first tailless (it must trim itself)
+# or conventional (the aircraft trims it elsewhere); inside a family our own rules tell the type apart
+# (labels.py). The family is a property of the aircraft, so it is an input (the type, or the user).
 FAMILIES = {"tailless": ("bwb", "flying_wing"), "conventional": ("cranked", "tapered")}
 TAILLESS_TYPES = FAMILIES["tailless"]
 FAMILY_OF = {t: f for f, ts in FAMILIES.items() for t in ts}

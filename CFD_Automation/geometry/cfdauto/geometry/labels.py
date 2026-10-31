@@ -90,8 +90,9 @@ def is_bwb(v: dict) -> bool:
 def classify(v: dict, tailless: bool) -> tuple[str, str]:
     """(family, type) of a measured wing.
 
-    The family is an input: tailless or conventional (with a horizontal tail). The tail is not part of
-    the wing surface, so it cannot be measured; it comes from the generator type or from the user.
+    The family is an input: tailless (the wing must trim itself) or conventional (the aircraft trims
+    it elsewhere). It is a property of the aircraft, not of the wing surface, so it comes from the
+    generator type or from the user.
     Inside the family the type follows from our rules on the measured planform:
       tailless:      'bwb' with a centre body (is_bwb), else 'flying_wing'
       conventional:  'cranked' when the leading edge or the chord breaks (a kink), else 'tapered'

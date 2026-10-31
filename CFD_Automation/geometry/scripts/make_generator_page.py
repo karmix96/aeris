@@ -63,8 +63,8 @@ DECISIONS = [
     ("Inputs", [
         ("One generator, one YAML", "<code>wing_type</code>: a type (<code>bwb | flying_wing | cranked | tapered</code>), a family (<code>tailless | conventional</code>: its two types) or <code>mixed</code> (all four); shares equal (1/4 each).",
          "One design space and one contract. Equal shares keep a mixed set from leaning to one type (decided 29 Oct 2026).", "req", ""),
-        ("Two families, two types each", "Every wing is first <strong>tailless</strong> or <strong>conventional</strong> (with a horizontal tail). Tailless: <code>bwb</code> (centre body, strong taper, cranked) or <code>flying_wing</code> (straight edges, moderate taper, swept). Conventional: <code>cranked</code> (constant-chord centre, tapered outer panels) or <code>tapered</code> (straight edges, rectangular at taper 1).",
-         "Your rule (31 Oct 2026). The family is an input: the tail is not part of the wing, so it cannot be measured. Inside a family our rules decide the type: tailless → bwb when the root chord is at least 2.2 × the outer-half mean chord (and at least half the semi-span), else flying_wing; conventional → cranked when the leading edge or the chord breaks (a kink), else tapered. On the focus training sets the rules return the drawn type for 100 % of flying-wing, cranked and tapered wings and 86 % of BWB wings (14 slim BWBs read as flying wings).", "req", ""),
+        ("Two families, two types each", "Every wing is first <strong>tailless</strong> or <strong>conventional</strong>. A tailless wing must trim itself (reflexed sections, sweep with washout); a conventional wing does not, because the aircraft trims it elsewhere. Tailless: <code>bwb</code> (centre body, strong taper, cranked) or <code>flying_wing</code> (straight edges, moderate taper, swept). Conventional: <code>cranked</code> (constant-chord centre, tapered outer panels) or <code>tapered</code> (straight edges, rectangular at taper 1).",
+         "Your rule (31 Oct 2026). The family is an input (from the type or the user): whether the wing must trim itself is a property of the aircraft, so it cannot be measured on the wing. Inside a family our rules decide the type: tailless → bwb when the root chord is at least 2.2 × the outer-half mean chord (and at least half the semi-span), else flying_wing; conventional → cranked when the leading edge or the chord breaks (a kink), else tapered. On the focus training sets the rules return the drawn type for 100 % of flying-wing, cranked and tapered wings and 86 % of BWB wings (14 slim BWBs read as flying wings).", "req", ""),
         ("Span words", "<strong>Full span b</strong> = tip to tip, both halves. <strong>Semi-span S = b / 2</strong> = root to one tip: the half wing we build, mesh and mirror at y = 0. <code>semi_span_m</code> is always S. Every table and figure says which one.",
          "Your rule (31 Oct 2026): never write 'span' without saying which.", "req", ""),
         ("Focus ends at b = 7 m", "<code>focus: max_full_span_m: 7.0</code> for every type. The focus sets are drawn as a Latin hypercube and only wings with full span ≤ 7 m are kept (in draw order). The full space has no cap.",
@@ -173,6 +173,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
     ("Study plan (Stage 0)", "Turbulence-model source", "Crivellini 2014 is weak support. Find a better source or call it our choice.", "decide"),
     ("Study plan (Stage 0)", "Stage 0 D5", "The Grand Roadmap lists a D5 (prior work, transition route, tunnel, cloud budget). Add it?", "decide"),
+    ("Geometry", "Size by similarity", "At Mach ≤ 0.3 a wing's size enters the flow only through Re (and the trailing-edge thickness over chord). Proposal: build and mesh every wing at unit mean chord, drop the root chord from the shape vector, and give each CFD case its Re (1 × 10⁵ – 3.5 × 10⁶) and TE/c instead. One mesh family per shape then serves every size; the 7 m cap becomes an Re cap. BlendedNet++ does the same (all runs at C₁ = 1 m, other sizes by flow similarity). Adopt?", "decide"),
     ("Geometry", "Full-space edges", "The full space reaches a full span of 20 m (beyond Class II) and Re 7.6 × 10⁶ on the largest BWB root (above the top level). Keep, or cap it too (e.g. 12 m, the largest real Class II in our tables)?", "decide"),
     ("Geometry", "Trailing-edge floor", "Confirm 0.5 mm (Class I) / 1.0 mm (Class II) with a builder; run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works.", "decide"),
     ("Geometry", "Airfoil search order", "Project folder → AERIS database → NACA formula; 22 database files are refused. Keep?", "decide"),
@@ -180,13 +181,14 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Sources", "Second-hand values", "Raymer's taper 0.4, washout 3° and 0° c/4 sweep come from a course page; PUL-10 and the flying-wing MAV were read by the agent only. Check in print.", "act"),
     ("Sources", "AUTh BWB papers", "Airfoils and station chords of their BWBs are in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Patras library or the authors.", "act"),
     ("Sources", "Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas cite unread Jane's-style data; the Hermes 450 entry is inconsistent. Confirm with Jane's.", "act"),
-    ("Sources", "Database rows (NTNU, CNAS)", "Added 31 Oct 2026: 7 NTNU rows with an aspect ratio (set ranges) and 45 span-only rows. Configurations (tailless or with a tail) are from photos; aspect ratios and speeds are as the databases list them. Some look wrong (RQ-7A cruise 58 m/s; Aludra MK1 chord). Check the rows you will quote.", "act"),
+    ("Sources", "Database rows (NTNU, CNAS)", "Added 31 Oct 2026: 7 NTNU rows with an aspect ratio (set ranges) and 45 span-only rows. Families (tailless or conventional) are from photos; aspect ratios and speeds are as the databases list them. Some look wrong (RQ-7A cruise 58 m/s; Aludra MK1 chord). Check the rows you will quote.", "act"),
     ("Sources", "Tailless Class II areas", "Fury, Albatroz, Shahed 191 have spans only; the RX-3 is the one tailless Class II with an area.", "act"),
     ("Published wings", "BlendedNet twist and dihedral", "Set to zero because neither paper states them. Accept?", "decide"),
     ("Published wings", "Which published wing first", "RIBES is the only in-regime case; M6 and CRM are transonic.", "decide"),
     ("Published wings", "NASA CRM", "Four stations and stand-in sections: a shape check only, or add a many-station mode?", "decide"),
     ("Published wings", "RIBES trailing edge", "Fitted section 0.26 %, model 0.38–0.66 %. Rebuild before any drag comparison?", "decide"),
     ("Published wings", "Outside proof", "Only the M6 is checked against its own CAD. BlendedNet, CRM, RIBES need their surface files; NACA 25118 edge needs a BlendedNet STEP.", "act"),
+    ("Study plan (Stage 0)", "Code-to-code checks", "BlendedNet / BlendedNet++ (FUN3D, SA, fully turbulent, Group 3 BWB, mesh error up to 5 % CL / 8 % CD) and SHIFT-Wing (transonic, CRM-based) are surrogate datasets, not verification data. Use BlendedNet++ only for a few same-model (SA) code-to-code points inside our full space; verify our own meshes by grid convergence (GCI) and NASA TMR cases.", "act"),
     ("Paper", "Closest prior work", "Pliakos et al. 2025 (AUTh) automate OpenVSP → ANSA → Fluent for UAV wings (2 panels, M6 only, no transition). State what we add: 4 stations / 3 panels, full and focus spaces, refusing gates, Re bands with a transition check, open tools.", "decide"),
 ]
 
@@ -414,8 +416,8 @@ PHENOMENA = [
 
 
 SUMMARY_TEXT = {
-    "what": {"bwb": "Tailless; long centre body, strong taper, cranked", "cranked": "With a tail; constant-chord centre, tapered outer panels",
-             "tapered": "With a tail; straight edges root to tip (rectangular at taper 1)", "flying_wing": "Tailless; straight edges, moderate taper, swept"},
+    "what": {"bwb": "Long centre body, strong taper, cranked", "cranked": "Constant-chord centre, tapered outer panels",
+             "tapered": "Straight edges root to tip (rectangular at taper 1)", "flying_wing": "Straight edges, moderate taper, swept"},
     "flow": {"bwb": "Two regimes on one wing (centre body ~10× the tip Re); spanwise flow and tip stall from sweep; kinks at b1, b2; thick 15 % centre body",
              "cranked": "Kinks at the breaks (suction peaks, loading jump); low sweep; small wings fly almost wholly below 10⁵",
              "tapered": "Smooth loading; low sweep; tips at lower Re as taper grows; strong tip vortex at high AR",
@@ -485,7 +487,7 @@ def summary_html() -> str:
     ]
     head = "".join(f"<th><span class='tag {t}'>{TYPE_NAME[t]}</span></th>" for t in WING_TYPES)
     body = "".join(f"<tr><td class='what'>{a}</td>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>" for a, cells in rows)
-    fam = "<tr><th></th><th colspan='2'>Tailless</th><th colspan='2'>Conventional (with a tail)</th></tr>"
+    fam = "<tr><th></th><th colspan='2'>Tailless</th><th colspan='2'>Conventional</th></tr>"
     return f"<thead>{fam}<tr><th></th>{head}</tr></thead><tbody>{body}</tbody>"
 
 
@@ -908,7 +910,7 @@ RANGE_BASIS = {
     'root_chord_m':
         "Real Class I–II wings with a published area (<a href='#real'>Real wings</a>). BWB up to 1.80 m: root of <a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>; covers the AUTh RX-3 (S 4.9 m², AR 8, 260 kg, <a href='https://www.mdpi.com/2673-4591/90/1/18'>Antoniou et al. 2025</a>). Full space: design-space bounds of <a href='https://www.mdpi.com/2673-4591/90/1/52'>Pliakos et al. 2025</a> (twist ±5° / ±7°, dihedral ±10°, c/4 sweep 0–60°). <span class='flag ok'>checked</span>",
     'aspect_ratio':
-        "Real wings: tailless 2.9–8.6 and the ScanEagle 12.4 (NTNU; flying wing only), with a tail 4.9–16.0 (<a href='#real'>Real wings</a>); flying wing 4.29 (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić 2024</a>). <span class='flag ok'>checked</span> Panknin's example has AR 10 (a model glider), just above.",
+        "Real wings: tailless 2.9–8.6 and the ScanEagle 12.4 (NTNU; flying wing only), conventional 4.9–16.0 (<a href='#real'>Real wings</a>); flying wing 4.29 (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić 2024</a>). <span class='flag ok'>checked</span> Panknin's example has AR 10 (a model glider), just above.",
     'b3_ratio':
         "Our choice: breaks anywhere in 25–80 % of the span. BWB: outer panel 0.50 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>). <span class='flag ok'>checked</span>",
     'split_ratio':
@@ -1215,7 +1217,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 
 <section id="glance">
   <h2>At a glance</h2>
-  <div class="weak" style="margin-bottom:14px"><strong>Words used on this page.</strong> <strong>Full span b</strong>: tip to tip, both halves. <strong>Semi-span S = b / 2</strong>: root to one tip, the half wing we build and mesh (mirrored at y = 0). <strong>Families</strong>: tailless (types BWB, flying wing) and conventional, i.e. with a tail (types cranked, tapered). <strong>Focus space</strong>: realistic wings, full span ≤ 7 m, sampled densely. <strong>Full space</strong>: everything supported, sampled sparsely.</div>
+  <div class="weak" style="margin-bottom:14px"><strong>Words used on this page.</strong> <strong>Full span b</strong>: tip to tip, both halves. <strong>Semi-span S = b / 2</strong>: root to one tip, the half wing we build and mesh (mirrored at y = 0). <strong>Families</strong>: tailless (types BWB, flying wing) and conventional (types cranked, tapered). <strong>Focus space</strong>: realistic wings, full span ≤ 7 m, sampled densely. <strong>Full space</strong>: everything supported, sampled sparsely.</div>
   <div class="three">
     <div class="box"><h3>In</h3><div class="big">18 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: chords, spans, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, cranked, tapered, flying wing.</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
@@ -1235,13 +1237,13 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>Design space: what we support, where real wings are, where we focus</h2>
   <p>One row per variable, one lane per wing type. <strong>Light bar</strong>: the full space (everything the generator supports; 40 wings + 5 hold-out per type, both corner sets at its edges). <strong>Dark bar</strong>: the focus space (where real wings are; 100 wings + 5 reference + 10 hold-out per type). <strong>Black marks</strong>: real wings and published designs. Rows marked "derived" are computed from the inputs.</p>
   <figure class="fig card">__PNG_DESIGN__<figcaption>Read a row left to right: if the black marks sit inside the dark bar, the focus space covers the real wings; the light bar shows how far beyond them we still promise to work. Root twist only sets the incidence; washout is what changes the wing. Sources: <code>configs/shape_evidence.yaml</code>, <code>configs/real_uavs.yaml</code>.</figcaption></figure>
-  <div class="weak amber"><strong>What the figure shows honestly.</strong> Shape evidence is thin for wings with a tail (Raymer rules, partly second-hand) and for the layout shares (one BWB paper). Sizes are well covered. The full space is our choice, set to the widest value in any source; nothing real sits at its far edges.</div>
+  <div class="weak amber"><strong>What the figure shows honestly.</strong> Shape evidence is thin for conventional wings (Raymer rules, partly second-hand) and for the layout shares (one BWB paper). Sizes are well covered. The full space is our choice, set to the widest value in any source; nothing real sits at its far edges.</div>
 </section>
 
 <section id="pairs">
   <h2>Key pairs</h2>
   <p>The same three layers in two dimensions, one panel per type. Faint dots: full space. Strong dots: focus space. Black diamonds: real or published wings that give both values.</p>
-  <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size</strong>: full span b (tip to tip) against mean chord. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; with a tail: cranked and tapered).</figcaption></figure>
+  <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size</strong>: full span b (tip to tip) against mean chord. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; conventional: cranked and tapered).</figcaption></figure>
   <figure class="fig card">__PNG_PAIR_PLANFORM__<figcaption><strong>Planform</strong>: aspect ratio against overall taper. The BWB lives at very low taper (big centre body), the others at 0.3–1.</figcaption></figure>
   <figure class="fig card">__PNG_PAIR_SWEEP__<figcaption><strong>Sweep</strong>: aspect ratio against inner-panel leading-edge sweep. Published sweeps given at the quarter chord (marked c/4 in the sources) sit a few degrees below their leading-edge value.</figcaption></figure>
   <figure class="fig card">__PNG_PAIR_TWIST__<figcaption><strong>Trim</strong>: sweep against washout. Tailless wings trim with sweep and washout together; the published tailless wings sit inside the focus space.</figcaption></figure>
@@ -1266,7 +1268,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   </div>
   <h2 style="font-size:22px">Inputs (sampled), by wing type</h2>
   <div class="tbl"><table class="wide inp">
-    <thead><tr><th></th><th></th><th colspan="2">Tailless</th><th colspan="2">Conventional (with a tail)</th><th></th></tr><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Flying wing</th><th>Cranked</th><th>Tapered</th><th>Why this range (focus)</th></tr></thead>
+    <thead><tr><th></th><th></th><th colspan="2">Tailless</th><th colspan="2">Conventional</th><th></th></tr><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Flying wing</th><th>Cranked</th><th>Tapered</th><th>Why this range (focus)</th></tr></thead>
     <tbody>
 __INPUTS__
     </tbody>
@@ -1404,7 +1406,7 @@ __REAL__
   </table></div>
   <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges; they rest on: __STYPES__. HCDI database column: the same aircraft in your UAS dashboard, where listed.</p>
   <h2 style="font-size:22px">Spans from the HCDI UAS database (v13)</h2>
-  <p>794 entries; 76 fixed-wing Class I–II; 18 give a span; <strong>none gives a wing area</strong>, so these rows test the span range only. Four Class I flying wings (3.1–3.5 m) were longer than the old BWB range; the BWB span now reaches 3.5 m. Every wing with a tail is inside; tailless Class II wings (5–7.3 m) stay outside until their areas are found.</p>
+  <p>794 entries; 76 fixed-wing Class I–II; 18 give a span; <strong>none gives a wing area</strong>, so these rows test the span range only. Four Class I flying wings (3.1–3.5 m) were longer than the old BWB range; the BWB span now reaches 3.5 m. Every conventional wing is inside; tailless Class II wings (5–7.3 m) stay outside until their areas are found.</p>
   <div class="weak amber"><strong>Database weak points.</strong> No source per row. 28 rows share cruise 35 m/s, endurance 6 h and range 100 km (look like defaults); on 8 rows cruise is above top speed. Orlan-10 is listed as Class II at 18 kg, Puma LE as a flying wing, XQ-58 Valkyrie (a jet) as Class II; Zala Z-16's maker field names a microchip company. Only span, class, MTOW and payload are used here.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>MTOW kg</th><th>Payload kg</th><th>Role</th><th>Span vs generator</th><th>Check</th></tr></thead>

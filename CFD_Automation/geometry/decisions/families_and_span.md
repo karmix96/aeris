@@ -7,10 +7,12 @@ Decided 31 Oct 2026 (Mike).
 | family | types | told apart by (our rules, `labels.classify`) |
 |---|---|---|
 | tailless | `bwb`, `flying_wing` | `bwb` when root chord ≥ 2.2 × the outer-half mean chord and ≥ 0.5 × the semi-span (or ≥ 2.0 with a 25 % chord loss in the inner 30 %); else `flying_wing` |
-| conventional (with a horizontal tail) | `cranked`, `tapered` | `cranked` when the leading edge or the chord breaks (a kink: sweep change ≥ 5°, or chord slope × 1.5 across a point); else `tapered` |
+| conventional | `cranked`, `tapered` | `cranked` when the leading edge or the chord breaks (a kink: sweep change ≥ 5°, or chord slope × 1.5 across a point); else `tapered` |
 
-- The family is an input (the generator type, or the user for a given wing): a tail is not part of the
-  wing surface, so it cannot be measured.
+- The family is an input (the generator type, or the user for a given wing). A tailless wing must trim
+  itself (reflexed sections, sweep with washout); a conventional wing does not, because the aircraft
+  trims it elsewhere. That is a property of the aircraft, so it cannot be measured on the wing.
+  (Mike, 31 Oct 2026: do not describe conventional wings by a tail; the tail belongs to the aircraft.)
 - `wing_type` in `wing.yaml` may be a type, a family (draws its two types) or `mixed` (all four).
 - The type formerly called `conventional` is now `cranked`; `conventional` is the family name.
   In `real_uavs.yaml` the family `tailed` is now `conventional`.

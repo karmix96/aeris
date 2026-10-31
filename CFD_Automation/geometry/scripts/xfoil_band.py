@@ -147,34 +147,74 @@ def plots(res: dict) -> None:
     fig.savefig(DOCS / "xfoil_cf.png")
     plt.close(fig)
 
-    # 2. drag increase when tripped, and transition position, vs Re
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(12.5, 3.9), dpi=110)
-    for name in SECTIONS:
-        for al, mk in ((0, "o"), (4, "s"), (8, "^")):
-            inc, xt = [], []
-            for re_ in RE:
-                f = res[f"{name}|{re_:.0e}|free"]["polar"].get(str(al))
-                t = res[f"{name}|{re_:.0e}|trip"]["polar"].get(str(al))
-                inc.append(100 * (t["cd"] / f["cd"] - 1) if f and t else np.nan)
-                xt.append(f["xtr_top"] if f else np.nan)
-            a1.plot(RE, inc, marker=mk, color=col[name], lw=1.2, ms=5, label=f"{SECTIONS[name].split(' (')[0]}, {al}°")
-            a2.plot(RE, xt, marker=mk, color=col[name], lw=1.2, ms=5)
-    for a in (a1, a2):
-        a.set_xscale("log")
-        a.set_xlabel("Reynolds number (chord)")
-        a.grid(alpha=0.25, which="both")
-        for lv in RE:
-            a.axvline(lv, color="#C0392B", lw=0.6, ls="--", alpha=0.5)
-        for s in ("top", "right"):
-            a.spines[s].set_visible(False)
-    a1.set_ylabel("profile drag: tripped vs free  [%]")
-    a1.set_title("How much 'turbulent from the nose' adds to the drag", fontsize=10, loc="left")
-    a2.set_ylabel("upper-surface transition x / c")
-    a2.set_title("Where the free flow turns turbulent (upper surface)", fontsize=10, loc="left")
-    a2.set_ylim(0, 1.02)
-    a1.legend(fontsize=7, ncol=2, frameon=False)
-    fig.tight_layout()
+    # 2. plain drag comparison: real (free transition) vs fully turbulent, one panel per Re, alpha about 2 deg
+    names = list(SECTIONS)
+    short = {k: SECTIONS[k].split(" (")[0] for k in names}
+
+    def pick(pol: dict) -> tuple[str, dict] | tuple[None, None]:
+        for al in ("2", "0", "4"):
+            if al in pol:
+                return al, pol[al]
+        return None, None
+
+    fig, axes = plt.subplots(1, 4, figsize=(13.5, 3.9), dpi=110, sharey=True)
+    for ax, re_ in zip(axes, RE):
+        k = f"{re_:.0e}"
+        ys = np.arange(len(names))
+        for i, name in enumerate(names):
+            af, f = pick(res[f"{name}|{k}|free"]["polar"])
+            at, t = pick(res[f"{name}|{k}|trip"]["polar"])
+            if not f or not t:
+                continue
+            ax.barh(i + 0.18, f["cd"] * 1e4, height=0.34, color=col[name], alpha=0.45)
+            ax.barh(i - 0.18, t["cd"] * 1e4, height=0.34, color=col[name])
+            pct = 100 * (t["cd"] / f["cd"] - 1)
+            ax.text(t["cd"] * 1e4 + 3, i - 0.18, f"{pct:+.0f} %", va="center", fontsize=8.5, color=ink, fontweight="bold")
+        ax.set_yticks(ys)
+        ax.set_yticklabels([short[n] for n in names], fontsize=9)
+        ax.invert_yaxis()
+        ax.set_title(f"Re = {re_label(re_)}", fontsize=10)
+        ax.set_xlabel("profile drag [counts]")
+        ax.set_xlim(0, 290)
+        ax.grid(axis="x", alpha=0.25)
+        for s_ in ("top", "right"):
+            ax.spines[s_].set_visible(False)
+    from matplotlib.patches import Patch
+    fig.legend(handles=[Patch(color="#7A8794", alpha=0.45, label="real air: laminar at the nose, turns turbulent by itself (free transition)"),
+                        Patch(color="#7A8794", label="what fully turbulent CFD assumes (turbulent from the nose)")],
+               loc="lower center", ncol=2, fontsize=8.5, frameon=False)
+    fig.suptitle("Drag of one airfoil section at about 2°: real flow vs fully turbulent CFD. The % is how much too high the CFD would be.",
+                 x=0.01, ha="left", fontsize=10.5, color=ink)
+    fig.tight_layout(rect=(0, 0.08, 1, 0.94))
     fig.savefig(DOCS / "xfoil_band.png")
+    plt.close(fig)
+
+    # 3. where the real flow turns turbulent (upper surface): a strip along the chord per section
+    fig, axes = plt.subplots(1, 4, figsize=(13.5, 3.3), dpi=110, sharey=True)
+    for ax, re_ in zip(axes, RE):
+        for i, name in enumerate(names):
+            p = pick(res[f"{name}|{re_:.0e}|free"]["polar"])[1]
+            if not p:
+                continue
+            xt = 100 * p["xtr_top"]
+            ax.barh(i, xt, left=0, height=0.55, color=col[name], alpha=0.30)
+            ax.barh(i, 100 - xt, left=xt, height=0.55, color=col[name])
+            ax.text(xt - 1.5, i, f"{xt:.0f} %", ha="right", va="center", fontsize=8, color=ink)
+        ax.set_yticks(range(len(names)))
+        ax.set_yticklabels([short[n] for n in names], fontsize=9)
+        ax.invert_yaxis()
+        ax.set_xlim(0, 100)
+        ax.set_xlabel("% of chord (nose → trailing edge)")
+        ax.set_title(f"Re = {re_label(re_)}", fontsize=10)
+        for s_ in ("top", "right", "left"):
+            ax.spines[s_].set_visible(False)
+    fig.legend(handles=[Patch(color="#7A8794", alpha=0.30, label="laminar (smooth): low friction"),
+                        Patch(color="#7A8794", label="turbulent: high friction")],
+               loc="lower center", ncol=2, fontsize=8.5, frameon=False)
+    fig.suptitle("Upper surface at about 2°: where the real flow turns turbulent. Higher Re → it turns turbulent earlier.",
+                 x=0.01, ha="left", fontsize=10.5, color=ink)
+    fig.tight_layout(rect=(0, 0.1, 1, 0.93))
+    fig.savefig(DOCS / "xfoil_transition.png")
     plt.close(fig)
 
 

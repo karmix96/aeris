@@ -491,6 +491,57 @@ def summary_html() -> str:
     return f"<thead>{fam}<tr><th></th>{head}</tr></thead><tbody>{body}</tbody>"
 
 
+def fig_pipeline() -> str:
+    """The plan in five steps: full space -> what we can make -> focus -> flow maps -> the tool."""
+    steps = [
+        ("1  Full design space", ["18 inputs, 4 types", "full span to 14–20 m", "every sourced section", "sparse: 40 + 5 per type"], "acc"),
+        ("2  What we can make", ["straight panels (≤ 3)", "vertical sections", "any database section", "730 of 730 built wings pass"], "acc"),
+        ("3  Focus (Class I–II)", ["full span ≤ 7 m", "sourced shape ranges", "dense: 100 + 5 + 10 per type", "32 of 34 real wings inside"], "bwbc"),
+        ("4  Flow maps", ["local Re along the span", "transition and bubbles", "effect of the sections", "phenomena per family"], "amber"),
+        ("5  The tool", ["wing in", "family and type by rule", "flow map at V, altitude, α", "proposed turbulence model"], "warn"),
+    ]
+    w, gap, h = 176, 22, 150
+    o = [f'<svg class="dg" viewBox="0 0 {5 * w + 4 * gap + 20} {h + 70}" role="img" aria-label="Five steps: full design space, what the parametrization can make, the focus space, flow maps, and the tool that takes a wing and returns its flow map and a proposed model">']
+    for k, (title, lines, cls) in enumerate(steps):
+        x = 10 + k * (w + gap)
+        o.append(f'<rect x="{x}" y="20" width="{w}" height="{h}" rx="8" class="stepbox"/>')
+        o.append(f'<text class="lab head {cls}" x="{x + 12}" y="46" style="font-size:14px">{title}</text>')
+        for j, ln in enumerate(lines):
+            o.append(f'<text class="lab" x="{x + 12}" y="{74 + 22 * j}" style="font-size:12px">{ln}</text>')
+        if k < 4:
+            ax = x + w + 2
+            o.append(f'<line class="stroke" x1="{ax}" y1="{20 + h / 2}" x2="{ax + gap - 6}" y2="{20 + h / 2}"/>'
+                     f'<polygon class="arrowhead" points="{ax + gap - 4},{20 + h / 2} {ax + gap - 11},{16 + h / 2} {ax + gap - 11},{24 + h / 2}"/>')
+    o.append(f'<text class="lab muted" x="10" y="{h + 50}">Each step narrows or reads the one before it. Steps 1–3: geometry (this module). Steps 4–5: flow maps, here as a first version (XFOIL strips).</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
+def flowmap_table() -> str:
+    f = DOCS / "focus_flowmaps.json"
+    if not f.is_file():
+        return "<tr><td colspan='6'>Run scripts/focus_flowmaps.py</td></tr>"
+    d = json.loads(f.read_text())
+    out = []
+    for t in WING_TYPES:
+        sets = list(dict.fromkeys(m["set"] for m in d.get(t, [])))
+        for k, sname in enumerate(sets):
+            cells = []
+            for cond in ("slow", "fast"):
+                m = next(x for x in d[t] if x["set"] == sname and x["condition"] == cond)["map"]
+                rows = m["strips"]
+                xt = [r["xtr_upper"] for r in rows if r.get("xtr_upper") is not None]
+                bub = [b for r in rows for b in r.get("bubbles_upper") or []]
+                bias = m["model"]["sa_drag_bias"]
+                cells.append(f"<td class='num'>{sci(min(r['re'] for r in rows))} – {sci(max(r['re'] for r in rows))}</td>"
+                             f"<td class='num'>{(f'{100 * min(xt):.0f}–{100 * max(xt):.0f} %' if xt else '—')}"
+                             f"{(f'<br><span class=muted>bubble {100 * min(b[0] for b in bub):.0f}–{100 * max(b[1] for b in bub):.0f} %</span>' if bub else '')}</td>"
+                             f"<td class='num'><strong>{(f'{100 * bias:+.0f} %' if bias is not None else '—')}</strong></td>")
+            tag = f"<span class='tag {t}'>{TYPE_NAME[t]}</span>" if k == 0 else ""
+            out.append(f"<tr><td>{tag}</td><td>{html.escape(sname)}</td>{''.join(cells)}</tr>")
+    return "\n".join(out)
+
+
 def xfoil_note() -> str:
     f = DOCS / "xfoil_band.json"
     if not f.is_file():
@@ -1178,6 +1229,7 @@ svg.dg .zone-low { fill: var(--amber); opacity: .10; } svg.dg .zone-mid { fill: 
 svg.dg .bar.bwb { fill: var(--bwb); } svg.dg .bar.conv { fill: var(--accent); } svg.dg .bar.fw { fill: var(--amber); } svg.dg .bar.tipbar { opacity: .5; }
 svg.dg .real { stroke: var(--ink); stroke-width: 1.4; opacity: .55; }
 svg.dg .level { stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 4; }
+svg.dg .stepbox { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; } svg.dg .arrowhead { fill: currentColor; }
 svg.dg .axis, svg.dg .stroke { stroke: currentColor; stroke-width: 1.4; fill: none; }
 svg.dg .fillc { fill: currentColor; }
 svg.dg .dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
@@ -1212,7 +1264,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#pipeline">The plan</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -1224,6 +1276,19 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, focus and full space, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified. Tests: __TESTS__.</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after the pyGeo run</div><p>Fixes 1 and 2 done (panel dihedrals, code hash). Left: run the pyGeo tests and rebuild the sets with pyGeo on your machine; fix 3 belongs to the mesher. Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
   </div>
+</section>
+
+<section id="pipeline">
+  <h2>The plan in five steps</h2>
+  <p>From everything the generator can draw, down to the wings we study, to what the flow does on them, to a tool that does this for any wing.</p>
+  <figure class="fig"><div class="svgwrap">__FIG_PIPE__</div></figure>
+  <ol class="steps">
+    <li><strong>Full design space</strong> (<a href="#design">Design space</a>): every input range we support, light bars.</li>
+    <li><strong>What we can make</strong> (<a href="#limits">What it cannot make</a>, <a href="#checks">Checks</a>): straight panels, vertical sections, any database section; no curved edges, winglets or fuselage.</li>
+    <li><strong>Focus</strong> (<a href="#summary">Final ranges and flows</a>): Class I–II, full span ≤ 7 m, sourced shapes; dark bars.</li>
+    <li><strong>Flow maps</strong> (<a href="#flowmaps">Flow maps</a>): local Re along the span, where the flow turns turbulent, bubbles, and how the sections change them, per family.</li>
+    <li><strong>The tool</strong> (<code>python -m cfdauto.flowmap</code>): give it a wing, a speed, an altitude and an angle; it names the family and type, draws the flow map and proposes the turbulence model.</li>
+  </ol>
 </section>
 
 <section id="summary">
@@ -1339,12 +1404,32 @@ __DERIVED__
   <figure class="fig card">__PNG_XFCF__
     <figcaption class="cap">Upper surface at 4°. At 10⁵ and 3 × 10⁵ the free flow runs laminar to mid-chord, separates (shaded, Cf &lt; 0) and turns turbulent on the bubble. At 1.5–3 × 10⁶ transition moves forward to 30–45 % chord with no bubble. Tripped: turbulent from the nose, with much higher friction everywhere.</figcaption></figure>
   <figure class="fig card">__PNG_XFBAND__
-    <figcaption class="cap">__XF_NOTE__</figcaption></figure>
+    <figcaption class="cap">Light bar: the drag of the section in real air (laminar at the nose, turning turbulent by itself). Dark bar: the drag fully turbulent CFD would give. The % is how much too high the CFD would be. At Re 10⁵ the two are close because the real flow separates in a long bubble, which is draggy too. __XF_NOTE__</figcaption></figure>
+  <figure class="fig card">__PNG_XFTR__
+    <figcaption class="cap">Where the real flow turns turbulent on the upper surface. Light: laminar (low friction); dark: turbulent. Higher Re moves the change toward the nose; the BWB centre-body section (MH 104) turns turbulent earliest.</figcaption></figure>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
     <tbody>__PHEN__</tbody>
   </table></div>
   <div class="weak"><strong>The biggest one.</strong> Most of these wings fly where transition and laminar bubbles set the drag, and the planned model cannot see them. Mesh error can be made small; this model error cannot. Every drag number needs its model band, and differences between wings are safer than absolute drag.</div>
+</section>
+
+<section id="flowmaps">
+  <h2>Flow maps</h2>
+  <p>What the tool returns for one wing: the half wing coloured by local Re, the line where the upper surface turns turbulent, laminar bubbles, the phenomena list and the proposed model. First version: XFOIL on 2-D strips along the span (limits in the panel).</p>
+  <figure class="fig card">__PNG_FMEX__<figcaption>BWB mid wing at 25 m/s, 1,000 m, 3°. The centre body runs at about 7 × the tip Re; transition moves aft toward the tip as Re falls; bubbles sit just ahead of transition everywhere.</figcaption></figure>
+  <h2 style="font-size:22px">The focus space, per type: slow and fast, three section sets</h2>
+  <p>Mid wing of each type. Slow: the family's lowest cruise speed at 3,048 m, 5°. Fast: its highest top speed at sea level, 1°. Sets: the suggested one and two sourced alternatives (SD7032 flies on the Puma 3AE, LA2573A on the Dragon Eye: NTNU database).</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Sections</th><th>Slow: Re</th><th>Slow: transition (upper)</th><th>Slow: SA drag</th><th>Fast: Re</th><th>Fast: transition (upper)</th><th>Fast: SA drag</th></tr></thead>
+    <tbody>__FMTABLE__</tbody>
+  </table></div>
+  <p class="muted">"SA drag": how much fully turbulent SA would raise the wing's profile drag (chord-weighted XFOIL strips). Every case gets the same proposal: a transition model (γ-Reθ with SST, SU2) for drag, SA for mesh studies and as a bound. Negative: the real flow has a long bubble that costs more than early turbulence (LA2573A, slow).</p>
+  <figure class="fig card">__PNG_FM_BWB__</figure>
+  <figure class="fig card">__PNG_FM_FW__</figure>
+  <figure class="fig card">__PNG_FM_CR__</figure>
+  <figure class="fig card">__PNG_FM_TA__</figure>
+  <div class="weak amber"><strong>What these maps cannot tell.</strong> Strips are 2-D: no induced angle (the outer strips see too high an angle), no crossflow transition on swept leading edges, no 3-D relief of bubbles. The angle (5° slow, 1° fast) is our choice, not trimmed. Use them to know where to look and which model to pick, not for numbers.</div>
 </section>
 
 <section id="refine">
@@ -1488,6 +1573,14 @@ python -m cfdauto.geometry.published_wings --build all               # M6, RIBES
 python scripts/verify_geometry.py                                    # is the surface the intended wing?
 python -m pytest -m "not pygeo"                                      # tests without pyGeo
 python scripts/make_generator_visuals.py                             # the GIFs and pictures
+python scripts/verify_sets.py                                        # loft vs design on every built wing
+python scripts/real_uav_check.py                                     # real wings against focus and full space
+python scripts/size_extremes.py                                      # smallest / largest wings, Re and Mach
+python scripts/design_space_figs.py                                  # design space, key pairs, families
+python scripts/xfoil_band.py                                         # 2-D free vs tripped (needs xfoil)
+python scripts/focus_flowmaps.py                                     # flow maps of the focus space (needs xfoil)
+python -m cfdauto.flowmap --type bwb --set reference --index 0 --speed 25 --altitude 1000 --alpha 3
+                                                                     # the tool: one wing's flow map and model
 python scripts/make_generator_page.py                                # this page</pre>
 </section>
 
@@ -1496,7 +1589,7 @@ python scripts/make_generator_page.py                                # this page
 """
 
 
-SECTION_ORDER = ("glance", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "refine",
+SECTION_ORDER = ("glance", "pipeline", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "flowmaps", "refine",
                  "open", "decisions", "fix", "real", "checks", "limits", "published", "commands")
 
 
@@ -1536,7 +1629,7 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__SUMMARY__": summary_html(),
+    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
                                 "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
                                 "__VSETS__": verification_sets_html()} | params_tables_html()
     page = PAGE
@@ -1554,6 +1647,12 @@ def main() -> None:
                 .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
                 .replace("__PNG_LOCALRE__", img("local_re.png", "Local chord Reynolds number along the span of the smallest and largest wing of each type"))
                 .replace("__PNG_XFCF__", img("xfoil_cf.png", "XFOIL upper-surface skin friction, free transition vs tripped, at the four study Re levels"))
+                .replace("__PNG_XFTR__", img("xfoil_transition.png", "Where the real flow turns turbulent, per section and Re"))
+                .replace("__PNG_FMEX__", img("flowmap_example.png", "Flow map of the BWB mid wing: local Re, transition line, bubbles, phenomena and proposed model"))
+                .replace("__PNG_FM_BWB__", img("flowmap_bwb.png", "BWB mid wing flow maps: three section sets, slow and fast"))
+                .replace("__PNG_FM_FW__", img("flowmap_flying_wing.png", "Flying-wing mid wing flow maps"))
+                .replace("__PNG_FM_CR__", img("flowmap_cranked.png", "Cranked mid wing flow maps"))
+                .replace("__PNG_FM_TA__", img("flowmap_tapered.png", "Tapered mid wing flow maps"))
                 .replace("__PNG_XFBAND__", img("xfoil_band.png", "XFOIL profile-drag increase when tripped, and transition position, against Re"))
                 .replace("__PNG_DESIGN__", img("design_space.png", "Every variable: full range, focus range and published values per wing type"))
                 .replace("__PNG_PAIR_SIZE__", img("pair_size.png", "Span against mean chord per type"))

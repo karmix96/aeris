@@ -1,0 +1,364 @@
+{
+ "family": "tailless",
+ "type": "bwb",
+ "labels": [
+  "tailless",
+  "bwb",
+  "aft_swept",
+  "cranked",
+  "washout",
+  "dihedral"
+ ],
+ "conditions": {
+  "speed_m_s": 25.0,
+  "altitude_m": 1000.0,
+  "alpha_deg": 3.0,
+  "mach": 0.07430915750721233,
+  "rho_over_mu": 63316.27296587927
+ },
+ "geometry": {
+  "full_span_m": 3.2736062579126752,
+  "semi_span_m": 1.6368031289563376,
+  "root_chord_m": 1.1,
+  "tip_chord_m": 0.14300000000000002,
+  "y": [
+   0.0,
+   0.4296608213510386,
+   0.8593216427020772,
+   1.6368031289563376
+  ],
+  "x_le": [
+   0.0,
+   0.22366726650835092,
+   0.42402139791350696,
+   0.632346934285485
+  ],
+  "chord": [
+   1.1,
+   0.7425000000000002,
+   0.4675000000000001,
+   0.14300000000000002
+  ],
+  "sweep_le_deg": [
+   27.5,
+   25.0,
+   15.0
+  ],
+  "airfoils": [
+   "mh104",
+   "mh104",
+   "mh61",
+   "mh61"
+  ],
+  "aspect_ratio": 6.0
+ },
+ "strips": [
+  {
+   "y": 0.0,
+   "chord": 1.1,
+   "x_le": 0.0,
+   "twist": 0.0,
+   "sweep": 27.5,
+   "section": "mh104",
+   "y_over_S": 0.0,
+   "re": 1741197.50656168,
+   "re_normal": 1544461.051023118,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 3.0,
+   "cl": 0.4137,
+   "cd_free": 0.00576,
+   "xtr_upper": 0.3694,
+   "xtr_lower": 0.8557,
+   "bubbles_upper": [
+    [
+     0.34185,
+     0.37187
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01112
+  },
+  {
+   "y": 0.143220273784,
+   "chord": 0.9808333333330668,
+   "x_le": 0.07455575550295047,
+   "twist": -0.5000000000011189,
+   "sweep": 27.5,
+   "section": "mh104\u2192mh104 0.33",
+   "y_over_S": 0.0875000000001958,
+   "re": 1552567.7766837424,
+   "re_normal": 1377144.4371619057,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 2.499999999998881,
+   "cl": 0.3584,
+   "cd_free": 0.00592,
+   "xtr_upper": 0.3813,
+   "xtr_lower": 0.8203,
+   "bubbles_upper": [
+    [
+     0.34185,
+     0.38709
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01121
+  },
+  {
+   "y": 0.286440547567,
+   "chord": 0.8616666666669656,
+   "x_le": 0.14911151100538036,
+   "twist": -0.9999999999987464,
+   "sweep": 27.5,
+   "section": "mh104\u2192mh104 0.67",
+   "y_over_S": 0.1749999999997806,
+   "re": 1363938.0468071222,
+   "re_normal": 1209827.8233018618,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 2.0000000000012537,
+   "cl": 0.3032,
+   "cd_free": 0.00617,
+   "xtr_upper": 0.3919,
+   "xtr_lower": 0.7815,
+   "bubbles_upper": [
+    [
+     0.34185,
+     0.40251
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01135
+  },
+  {
+   "y": 0.429660821351,
+   "chord": 0.7425000000000324,
+   "x_le": 0.2236672665083308,
+   "twist": -1.499999999999865,
+   "sweep": 27.5,
+   "section": "mh104",
+   "y_over_S": 0.26249999999997636,
+   "re": 1175308.316929185,
+   "re_normal": 1042511.20944065,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 1.500000000000135,
+   "cl": 0.2476,
+   "cd_free": 0.00646,
+   "xtr_upper": 0.4035,
+   "xtr_lower": 0.7475,
+   "bubbles_upper": [
+    [
+     0.35686,
+     0.41788
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01156
+  },
+  {
+   "y": 0.572881095135,
+   "chord": 0.6508333333331531,
+   "x_le": 0.2904519769768677,
+   "twist": -2.000000000000984,
+   "sweep": 25.0,
+   "section": "mh104\u2192mh61 0.33",
+   "y_over_S": 0.3500000000001722,
+   "re": 1030208.5247153752,
+   "re_normal": 933686.0082210836,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 0.9999999999990159,
+   "cl": 0.1721,
+   "cd_free": 0.00603,
+   "xtr_upper": 0.4561,
+   "xtr_lower": 0.778,
+   "bubbles_upper": [
+    [
+     0.39773,
+     0.45737
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01129
+  },
+  {
+   "y": 0.716101368918,
+   "chord": 0.5591666666669213,
+   "x_le": 0.3572366874449362,
+   "twist": -2.4999999999986118,
+   "sweep": 25.0,
+   "section": "mh104\u2192mh61 0.67",
+   "y_over_S": 0.437499999999757,
+   "re": 885108.7325025902,
+   "re_normal": 802180.9366412367,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 0.5000000000013882,
+   "cl": 0.0952,
+   "cd_free": 0.00551,
+   "xtr_upper": 0.5506,
+   "xtr_lower": 0.8158,
+   "bubbles_upper": [
+    [
+     0.49764,
+     0.55475
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01112
+  },
+  {
+   "y": 0.859321642702,
+   "chord": 0.46750000000004954,
+   "x_le": 0.42402139791347093,
+   "twist": -2.99999999999973,
+   "sweep": 25.0,
+   "section": "mh61",
+   "y_over_S": 0.5249999999999527,
+   "re": 740008.9402887924,
+   "re_normal": 670675.8650604718,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": 2.7000623958883807e-13,
+   "cl": 0.0167,
+   "cd_free": 0.00521,
+   "xtr_upper": 0.6555,
+   "xtr_lower": 0.8641,
+   "bubbles_upper": [
+    [
+     0.57155,
+     0.66725
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01107
+  },
+  {
+   "y": 1.11848213812,
+   "chord": 0.3593333333334018,
+   "x_le": 0.49346324337078906,
+   "twist": -3.666666666666245,
+   "sweep": 15.0,
+   "section": "mh61\u2192mh61 0.33",
+   "y_over_S": 0.6833333333332332,
+   "re": 568791.1854769237,
+   "re_normal": 549410.0958177362,
+   "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
+   "alpha_local": -0.6666666666662451,
+   "cl": -0.0531,
+   "cd_free": 0.00609,
+   "xtr_upper": 0.6899,
+   "xtr_lower": 0.774,
+   "bubbles_upper": [
+    [
+     0.58519,
+     0.70834
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01169
+  },
+  {
+   "y": 1.377642633538,
+   "chord": 0.25116666666677134,
+   "x_le": 0.5629050888280919,
+   "twist": -4.333333333332688,
+   "sweep": 15.0,
+   "section": "mh61\u2192mh61 0.67",
+   "y_over_S": 0.8416666666665135,
+   "re": 397573.4306650826,
+   "re_normal": 384026.44452574954,
+   "band": "10\u2075 \u2013 5 \u00d7 10\u2075",
+   "alpha_local": -1.3333333333326882,
+   "cl": -0.1206,
+   "cd_free": 0.00736,
+   "xtr_upper": 0.7328,
+   "xtr_lower": 0.7177,
+   "bubbles_upper": [
+    [
+     0.58519,
+     0.7495
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.0127
+  },
+  {
+   "y": 1.587699035088,
+   "chord": 0.16349473684195814,
+   "x_le": 0.619189531988402,
+   "twist": -4.873684210527223,
+   "sweep": 15.0,
+   "section": "mh61\u2192mh61 0.94",
+   "y_over_S": 0.9700000000002154,
+   "re": 258796.93465925046,
+   "re_normal": 249978.64295181452,
+   "band": "10\u2075 \u2013 5 \u00d7 10\u2075",
+   "alpha_local": -1.8736842105272231,
+   "cl": -0.1678,
+   "cd_free": 0.00914,
+   "xtr_upper": 0.7806,
+   "xtr_lower": 0.7044,
+   "bubbles_upper": [
+    [
+     0.58519,
+     0.818
+    ]
+   ],
+   "bubbles_lower": [],
+   "te_separation": false,
+   "cd_tripped": 0.01413
+  }
+ ],
+ "limits": "2-D XFOIL strips (e^N, N_crit 9): no induced angle (local angle too high toward the tip), no crossflow transition on swept wings, no 3-D relief of bubbles. Where to look, not the 3-D answer.",
+ "phenomena": [
+  {
+   "what": "Reynolds number along the span",
+   "where": "root \u2192 tip",
+   "detail": "2.6e+05 at the tip to 1.7e+06 at the root (\u00d76.7)"
+  },
+  {
+   "what": "Laminar run, then transition",
+   "where": "upper surface, every strip",
+   "detail": "turns turbulent at 37\u201378 % chord"
+  },
+  {
+   "what": "Laminar separation bubble",
+   "where": "0\u201397 % of the semi-span",
+   "detail": "upper surface, 34\u201382 % chord"
+  },
+  {
+   "what": "Spanwise flow (sweep)",
+   "where": "swept panels",
+   "detail": "leading-edge sweep up to 28\u00b0: the boundary layer drifts outboard; the tip stalls first at high angle"
+  },
+  {
+   "what": "Crossflow transition possible",
+   "where": "swept leading edge",
+   "detail": "\u039b > 25\u00b0 and Re normal to the edge > 10\u2076; XFOIL and LM without a crossflow term miss it"
+  },
+  {
+   "what": "Kinks (panel breaks)",
+   "where": "26 %, 52 % of the semi-span",
+   "detail": "local suction peak and a jump in the span loading"
+  },
+  {
+   "what": "Tip vortex and wake",
+   "where": "tip; behind the whole trailing edge",
+   "detail": "strongest at low aspect ratio (here 6.0)"
+  }
+ ],
+ "model": {
+  "model": "Transition model: Langtry\u2013Menter \u03b3-Re\u03b8 with SST (SU2) for drag; SA fully turbulent (ADflow) for mesh studies and as a bound",
+  "why": "laminar flow reaches 78 % of chord, so where it turns turbulent sets the drag; fully turbulent SA would raise the profile drag by about +88 % (XFOIL strips)",
+  "sa_drag_bias": 0.8838676171320248,
+  "notes": [
+   "Laminar bubbles at 34\u201382 % chord: cluster chordwise cells there (a transition model needs about 2 \u00d7 the chordwise cells of fully turbulent RANS) and keep y+ \u2264 1.",
+   "Swept leading edge: add a crossflow-sensitive transition option, or treat the inboard transition as uncertain."
+  ]
+ }
+}

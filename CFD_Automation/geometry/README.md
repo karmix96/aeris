@@ -14,6 +14,7 @@ python -m cfdauto.geometry.published_wings --build all              # M6, RIBES,
 python scripts/plot_reference_wings.py                              # figures/reference_wings.png
 python scripts/make_generator_visuals.py                            # docs/*.gif, docs/*.png (no pyGeo)
 python scripts/make_generator_page.py                               # docs/GEOMETRY_GENERATOR.html
+python scripts/summary_figs.py                                      # docs/summary_*.png (executive summary figures)
 python scripts/loft_kspan_study.py                                  # data/studies/loft_kspan.json
 python -m pytest                                                    # all tests
 python -m pytest -m "not pygeo"                                     # without pyGeo

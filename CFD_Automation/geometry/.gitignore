@@ -3,3 +3,5 @@ __pycache__/
 data/wings/
 data/xfoil_cache/
 data/flowmaps/
+data/section_cache/
+data/flowdata/

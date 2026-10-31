@@ -18,6 +18,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -30,7 +32,7 @@ from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
 SETS = ROOT / "data" / "sets"
-TESTS_LINE = "140 pass without pyGeo, 11 more need pyGeo (run 30 Oct 2026)"
+TESTS_LINE = "171 pass without pyGeo, 11 more need pyGeo (run 31 Oct 2026)"
 
 # --------------------------------------------------------------------------------------
 # Content written by hand. Keep it short and plain.
@@ -167,7 +169,11 @@ FIXES = [
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
     ("Study plan (Stage 0)", "Middle Re level", "Levels are now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Keep 1.5 × 10⁶, or move it to 1 × 10⁶ (log-middle of 3 × 10⁵ and 3 × 10⁶)?", "decide"),
-    ("Study plan (Stage 0)", "Transition check", "ADflow has no transition model (SA is its only differentiated, tested model). In 2-D, tripped vs free transition changes profile drag by +37–128 % (median 76 %) at Re ≥ 3 × 10⁵ (XFOIL, <a href='#phenomena'>Flow phenomena</a>): tens of counts, far above the 3-count mesh budget. Run SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵ on a y+ ≤ 1 mesh? Needs a transition-ready mesh option.", "decide"),
+    ("Study plan (Stage 0)", "Transition model in the pipeline", "ADflow has no transition model (SA is its only differentiated, tested model). The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Add SU2 γ-Reθ (with a transition-ready mesh: y+ ≤ 1, fine chordwise cells over the bubbles) for drag on the reference wings, and keep ADflow SA for mesh studies?", "decide"),
+    ("Flow maps", "The SA rule", "The tool proposes SA when fully turbulent SA changes the profile drag by under 10 %, the upper surface turns turbulent near the nose (mean laminar run under 20 % chord; a small drag error with a long laminar run is a coincidence of two different flows) and no strip is below Re 10⁵. Both thresholds are our choice. Tie the first to the drag budget instead (the error in counts)?", "decide"),
+    ("Flow maps", "N<sub>crit</sub> of the tool", "Default 9 (quiet air, as in flight at altitude). Low-level flight in gusty air is nearer 5–7; the check shows N<sub>crit</sub> 5 changes the SA error by __FD_N5__ points. Keep 9 and show 5 as a band?", "decide"),
+    ("Flow maps", "Level-flight band", "A grid point counts as level flight when its wing loading is within × / ÷ 2 of the fit to 37 real wings (35 of them are). Keep, or narrow it per class?", "decide"),
+    ("Flow maps", "Check against a 3-D answer", "The strips have no induced angle, no crossflow and no 3-D bubble relief. Compare the tool with a vortex-lattice + strip method (e.g. AVL with XFOIL polars) or a few SU2 γ-Reθ runs on reference wings before quoting numbers in the paper.", "act"),
     ("Study plan (Stage 0)", "Grid share 65 %", "Of the 3-count drag budget, 65 % goes to the mesh. Keep?", "decide"),
     ("Study plan (Stage 0)", "Iterative error", "≤ 10 % of the budget is loose; Eça &amp; Hoekstra ask 0.1–1 %. Tighten to 1 %?", "decide"),
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
@@ -214,6 +220,32 @@ def img(name: str, alt: str) -> str:
     data = base64.b64encode((DOCS / name).read_bytes()).decode()
     mime = "image/gif" if name.endswith(".gif") else "image/png"
     return f'<img src="data:{mime};base64,{data}" alt="{html.escape(alt)}">'
+
+
+def fmex_caption() -> str:
+    f = DOCS / "flowmap_example.json"
+    if not f.is_file():
+        return "BWB mid wing at 25 m/s, 1,000 m, 3°."
+    fm = json.loads(f.read_text())
+    re_ = [r["re"] for r in fm["strips"]]
+    xt = [r["xtr_upper"] for r in fm["strips"] if r.get("xtr_upper") is not None]
+    b = fm["model"]["sa_drag_bias"]
+    lf = fm.get("level_flight") or {}
+    return (f"BWB mid wing at {fm['conditions']['speed_m_s']:.0f} m/s, {fm['conditions']['altitude_m']:,.0f} m, "
+            f"{fm['conditions']['alpha_deg']:g}°. The root runs at {max(re_) / min(re_):.1f} × the tip Re; the upper surface turns "
+            f"turbulent at {100 * min(xt):.0f}–{100 * max(xt):.0f} % chord, later toward the tip as Re falls. Fully turbulent SA would "
+            f"raise the profile drag by {100 * b:+.0f} %: the tool proposes {fm['model']['category']}. "
+            + (f"Level flight here carries {lf['wing_loading_n_m2']:.0f} N/m² ({'within' if lf['ok'] else 'outside'} the real band "
+               f"{lf['real_band_n_m2'][0]:.0f}–{lf['real_band_n_m2'][1]:.0f} N/m² for its span)." if lf else ""))
+
+
+def img_opt(name: str, alt: str) -> str:
+    return img(name, alt) if (DOCS / name).is_file() else f"<p class='muted'>({name} not built yet)</p>"
+
+
+def fd_rows() -> str:
+    f = DOCS / "flow_analysis.json"
+    return f"{json.loads(f.read_text())['rows']:,}" if f.is_file() else "about 200,000"
 
 
 def fmt(lo: float, hi: float) -> str:
@@ -512,7 +544,7 @@ def fig_pipeline() -> str:
             ax = x + w + 2
             o.append(f'<line class="stroke" x1="{ax}" y1="{20 + h / 2}" x2="{ax + gap - 6}" y2="{20 + h / 2}"/>'
                      f'<polygon class="arrowhead" points="{ax + gap - 4},{20 + h / 2} {ax + gap - 11},{16 + h / 2} {ax + gap - 11},{24 + h / 2}"/>')
-    o.append(f'<text class="lab muted" x="10" y="{h + 50}">Each step narrows or reads the one before it. Steps 1–3: geometry (this module). Steps 4–5: flow maps, here as a first version (XFOIL strips).</text>')
+    o.append(f'<text class="lab muted" x="10" y="{h + 50}">Each step narrows or reads the one before it. Steps 1–3: geometry (this module). Steps 4–5: flow maps and the flow dataset (XFOIL strips via section tables).</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -540,6 +572,215 @@ def flowmap_table() -> str:
             tag = f"<span class='tag {t}'>{TYPE_NAME[t]}</span>" if k == 0 else ""
             out.append(f"<tr><td>{tag}</td><td>{html.escape(sname)}</td>{''.join(cells)}</tr>")
     return "\n".join(out)
+
+
+# --------------------------------------------------------------------------------------
+# Flow dataset and sensitivity (docs/flow_analysis.json from python -m cfdauto.flowmap.analysis)
+# --------------------------------------------------------------------------------------
+def _pc(x: float | None, sign: bool = True) -> str:
+    """Percent with a true minus sign; anything that rounds to zero is plain 0 %."""
+    if x is None or x != x:
+        return "—"
+    v = round(100 * x)
+    if v == 0:
+        return "0 %"
+    return (f"{v:+d} %" if sign else f"{v:d} %").replace("-", "−")
+
+
+def _pt(x: float, nd: int = 1) -> str:
+    """Signed points with a true minus sign (no "−0.0")."""
+    v = round(100 * x, nd)
+    return "0" if v == 0 else f"{v:+.{nd}f}".replace("-", "−")
+
+
+def flowdata_html() -> dict:
+    f = DOCS / "flow_analysis.json"
+    if not f.is_file():
+        return {k: "<p>Run <code>python -m cfdauto.flowmap.dataset</code> and <code>python -m cfdauto.flowmap.analysis</code>.</p>"
+                for k in ("__FD_INTRO__", "__FD_KPI__", "__FD_CONCL__", "__FD_STATS__", "__FD_CHECKS__", "__FD_DRIVERS__",
+                          "__FD_TOTAL__", "__FD_LEVEL__", "__FD_STATS_NOTE__")}
+    a = json.loads(f.read_text())
+    fc = yaml.safe_load((ROOT / "configs" / "flowmap.yaml").read_text())
+    ds = fc["dataset"]
+    out = {}
+    out["__FD_INTRO__"] = (
+        f"{a['rows']:,} rows: {a['wings']} focus wings (100 per type, full span ≤ 7 m) × 4 section sets × "
+        f"{len(ds['mach'])} Mach ({min(ds['mach']):g}–{max(ds['mach']):g}) × {len(ds['alpha_deg'])} root angles "
+        f"({min(ds['alpha_deg']):g}–{max(ds['alpha_deg']):g}°) × {len(ds['altitude_m'])} altitudes (0, 1,524, 3,048 m). "
+        f"Each row is one wing at one condition with 10 strips along the half wing, each strip a 2-D section answer from the "
+        f"section tables (XFOIL, free and tripped). {a['rows_realistic']:,} rows fly at speeds real wings of the family fly; the "
+        f"statistics below use those, unless marked.")
+    ba, lf = a["bias_all"], a["level_flight"]
+    low = sum(a["low_re_share_by_type"].values()) / 4
+    out["__FD_KPI__"] = "\n".join([
+        f"<div class='box'><h3>Rows</h3><div class='big'>{a['rows']:,}</div><p>{a['wings']} wings × 4 section sets × "
+        f"{a['conditions']} conditions. Built in about two minutes from the section tables.</p></div>",
+        f"<div class='box verdict'><h3>SA drag error, median</h3><div class='big'>{_pc(ba['median'])}</div><p>Fully turbulent "
+        f"SA against free transition, profile drag. 10–90 %: {_pc(ba['q10'])} to {_pc(ba['q90'])}. Within ±10 % in "
+        f"{_pc(ba['share_sa_ok'], False)} of rows.</p></div>",
+        f"<div class='box'><h3>In level flight</h3><div class='big'>{_pc(lf['bias_all']['median'])}</div><p>Median in the "
+        f"{_pc(lf['share_rows'], False)} of rows that carry a real wing loading for their size. Within ±10 %: "
+        f"{_pc(lf['bias_all']['share_sa_ok'], False)}.</p></div>",
+        f"<div class='box'><h3>Below Re 10⁵ somewhere</h3><div class='big'>{_pc(low, False)}</div><p>Share of rows with part of "
+        f"the half wing below 10⁵, mean of the four types (BWB {_pc(a['low_re_share_by_type']['bwb'], False)}, flying wing "
+        f"{_pc(a['low_re_share_by_type']['flying_wing'], False)}, cranked {_pc(a['low_re_share_by_type']['cranked'], False)}, "
+        f"tapered {_pc(a['low_re_share_by_type']['tapered'], False)}).</p></div>"])
+    rows = []
+    for t in WING_TYPES:
+        keys = [k for k in a["bias"] if k.startswith(t + "|")]
+        for i, k in enumerate(keys):
+            b, st = a["bias"][k], a["by_set"][k]
+            tag = f"<span class='tag {t}'>{TYPE_NAME[t]}</span>" if i == 0 else ""
+            rows.append(f"<tr><td>{tag}</td><td>{html.escape(b['label'])}</td><td class='num'><strong>{_pc(b['median'])}</strong></td>"
+                        f"<td class='num'>{_pc(b['q10'])} to {_pc(b['q90'])}</td><td class='num'>{_pc(b['share_sa_ok'], False)}</td>"
+                        f"<td class='num'>{_pc(st['lam_upper_median'], False)}</td><td class='num'>{_pc(st['bubble_span_mean'], False)}</td>"
+                        f"<td class='num'>{_pc(st['te_sep_span_mean'], False)}</td><td class='num'>{_pc(st['conv_span_mean'], False)}</td></tr>")
+    out["__FD_STATS__"] = "\n".join(rows)
+    ci = a.get("median_ci", {})
+    half = max((v["hi"] - v["lo"]) / 2 for v in ci.values()) if ci else None
+    out["__FD_STATS_NOTE__"] = (
+        "Realistic speeds only (tailless Mach ≤ 0.14, conventional ≤ 0.20), all angles 0–10° and altitudes. Means and medians over "
+        "rows; each wing counts once per condition."
+        + (f" Precision: resampling the 100 wings of a type moves its median SA error by at most ±{100 * half:.1f} points (95 %)."
+           if half is not None else ""))
+    ck = a["checks"]
+    lab = {"ncrit_5": "N<sub>crit</sub> 5 instead of 9 (air turbulence 0.37 % instead of 0.07 %)",
+           "ncrit_11": "N<sub>crit</sub> 11 instead of 9 (0.03 %: very quiet air)",
+           "mach0": "No compressibility in 2-D (Mach 0, same Re)", "strips1": "7 strips instead of 10",
+           "strips5": "19 strips instead of 10", "induced": "Induced angle subtracted (uniform, CL / π AR)"}
+    rows = []
+    for k, name in lab.items():
+        c = ck[k]
+        rows.append(f"<tr><td>{name}</td><td class='num'>{_pt(c['sa_bias']['median'])}</td>"
+                    f"<td class='num'>{_pt(c['sa_bias']['q05'])} to {_pt(c['sa_bias']['q95'])}</td>"
+                    f"<td class='num'>{_pt(c['lam_upper']['median'])}</td><td class='num'>{100 * c['bubble_span']['mean_abs']:.1f}</td>"
+                    f"<td class='num'>{100 * c['te_sep_span']['mean_abs']:.1f}</td><td class='num'>{c['n']:,}</td></tr>")
+    tv = a["tables_vs_direct"]
+    rows.append(f"<tr><td>Section tables instead of direct XFOIL ({tv['n']} random points)</td>"
+                f"<td class='num' colspan='2'>CD error, median {100 * tv['free']['cd_rel_median']:.1f} % (free), "
+                f"{100 * tv['trip']['cd_rel_median']:.1f} % (tripped); 90 % below {100 * tv['free']['cd_rel_q90']:.0f} %</td>"
+                f"<td class='num'>{100 * tv['free']['xtr_abs_median']:.1f}</td><td class='num' colspan='2'>bubble yes/no agrees "
+                f"{100 * tv['free']['bubble_agree']:.0f} %</td><td class='num'>{tv['n']}</td></tr>")
+    bl = a["blend_rule"]
+    med = sorted(v["cd_rel_median"] for v in bl.values())
+    rows.append(f"<tr><td>Blend rule (average of the two parents) instead of the blended section, 3 pairs</td>"
+                f"<td class='num' colspan='2'>CD error, median {100 * min(med):.1f}–{100 * max(med):.1f} % by pair</td>"
+                f"<td class='num'>{100 * max(v['xtr_abs_median'] for v in bl.values()):.1f}</td><td class='num' colspan='2'></td>"
+                f"<td class='num'>{sum(v['n'] for v in bl.values()):,}</td></tr>")
+    out["__FD_CHECKS__"] = "\n".join(rows)
+    gname = {"wing shape": "wing shape", "sections": "sections", "flight condition": "flight condition"}
+    oname = {"sa_bias": "SA drag error", "lam_upper": "laminar run (upper)", "bubble_span": "span with a bubble",
+             "te_sep_span": "span with TE separation", "span_re_lt_1e5": "span below Re 10⁵"}
+    iname = {"mean_chord_m": "size (mean chord)", "aspect_ratio": "aspect ratio", "taper": "taper", "max_sweep_deg": "sweep",
+             "washout_deg": "washout", "twist0_deg": "root twist", "dihedral_p1_deg": "dihedral", "b3_ratio": "outer-panel share",
+             "split_ratio": "panel split", "set": "section set", "mach": "Mach", "alpha_deg": "angle", "altitude_m": "altitude"}
+    rows = []
+    for fam in ("tailless", "conventional"):
+        for i, (o, on) in enumerate(oname.items()):
+            gf, gt = a["groups_first"][fam][o], a["groups_total"][fam][o]
+            top = a["top_inputs"][fam][o]
+            sp = a["spearman"][fam][o]
+            tops = ", ".join(f"{iname[k]} {100 * v:.0f} %" + ("" if k == "set" or sp.get(k) is None or sp[k] != sp[k] else
+                                                         (" ↑" if sp[k] > 0.05 else (" ↓" if sp[k] < -0.05 else "")))
+                             for v, k in top if v >= 0.03)
+            ftag = f"<strong>{fam}</strong>" if i == 0 else ""
+            rows.append(f"<tr><td>{ftag}</td><td>{on}</td>" + "".join(
+                f"<td class='num'>{100 * gf[g]:.0f} <span class='muted'>/ {100 * gt[g]:.0f}</span></td>" for g in gname)
+                + f"<td class='num'>{100 * a['r2'][fam][o]:.0f} %</td><td>{tops}</td></tr>")
+    out["__FD_DRIVERS__"] = "\n".join(rows)
+    td = ck["total_drag"]
+    out["__FD_TOTAL__"] = (
+        "As a share of the whole drag (profile + an elliptic induced drag, CL from the induced-angle run, 20 wings per type): "
+        + ", ".join(f"{TYPE_NAME[t]} {_pc(td[t]['total_bias_median'])} (profile only {_pc(td[t]['profile_bias_median'])})"
+                    for t in WING_TYPES) + ". By root angle: " + ", ".join(f"{k}° {_pc(v)}" for k, v in td["by_alpha"].items()) + ".")
+    lt = lf["bias"]
+    out["__FD_LEVEL__"] = "\n".join(
+        f"<tr><td><span class='tag {t}'>{TYPE_NAME[t]}</span></td><td class='num'>{_pc(lf['share_by_type'][t], False)}</td>"
+        f"<td class='num'><strong>{_pc(lt[t]['median'])}</strong></td><td class='num'>{_pc(lt[t]['q10'])} to {_pc(lt[t]['q90'])}</td>"
+        f"<td class='num'>{_pc(lt[t]['share_sa_ok'], False)}</td><td class='num'>{_pc(lt[t]['lam_upper_median'], False)}</td>"
+        f"<td class='num'>{_pc(lt[t]['bubble_span_mean'], False)}</td><td class='num'>{_pc(lt[t]['te_sep_span_mean'], False)}</td>"
+        f"<td class='num'>{_pc(lt[t]['low_re_share'], False)}</td></tr>" for t in WING_TYPES)
+    out["__FD_CONCL__"] = flowdata_conclusions(a)
+    return out
+
+
+def flowdata_conclusions(a: dict) -> str:
+    """Plain-word conclusions with the numbers of docs/flow_analysis.json."""
+    ba, lf, ck = a["bias_all"], a["level_flight"], a["checks"]
+    by_a = {float(k): v for k, v in a["bias_by_alpha"].items()}
+    by_m = {float(k): v for k, v in a["bias_by_mach"].items()}
+    a_peak = max(by_a, key=by_a.get)
+    bub_a = {float(k): v for k, v in a["bubble_span_by_alpha"].items()}
+    te_a = {float(k): v for k, v in a["te_sep_by_alpha"].items()}
+    lam_m = {float(k): v for k, v in a["lam_by_mach"].items()}
+    gf = {fam: a["groups_first"][fam]["sa_bias"] for fam in ("tailless", "conventional")}
+    gt = {fam: a["groups_total"][fam]["sa_bias"] for fam in ("tailless", "conventional")}
+
+    def share(fam, g):
+        return f"{100 * gf[fam][g]:.0f} %"
+    sets = sorted(((v["median"], v["label"].replace(" (suggested)", ""), k.split("|")[0]) for k, v in a["bias"].items()
+                   if k.split("|")[0] in ("cranked", "tapered")))
+    lo_set, hi_set = sets[0], sets[-1]
+    cat = a["categories"]
+    tm = cat.get("transition model", 0) + cat.get("transition model; part below 10⁵", 0)
+    n5, n11 = ck["ncrit_5"]["sa_bias"]["median"], ck["ncrit_11"]["sa_bias"]["median"]
+    ind = ck["induced"]["sa_bias"]
+    st = max(abs(ck["strips1"]["sa_bias"]["median"]), abs(ck["strips5"]["sa_bias"]["median"]))
+    m0 = ck["mach0"]["sa_bias"]
+    tv = a["tables_vs_direct"]
+    td = ck["total_drag"]
+    tot = sorted(td[t]["total_bias_median"] for t in WING_TYPES)
+    low = a["low_re_share_by_type"]
+    lr = a["low_re_rows"]
+    xf = a["crossflow_share"]
+    ws = a["wing_spread"]
+    conv_alone, conv_total = gf["conventional"]["sections"], gt["conventional"]["sections"]
+    items = [
+        f"<strong>Fully turbulent SA overestimates the profile drag on almost every wing and condition.</strong> Median "
+        f"{_pc(ba['median'])} (10–90 %: {_pc(ba['q10'])} to {_pc(ba['q90'])}); within ±10 % in only {_pc(ba['share_sa_ok'], False)} "
+        f"of rows. In level flight at real wing loadings: {_pc(lf['bias_all']['median'])}, within ±10 % in "
+        f"{_pc(lf['bias_all']['share_sa_ok'], False)}. So the tool proposes a transition model for {_pc(tm, False)} of rows.",
+        f"<strong>How the wing flies sets the error more than what it looks like.</strong> Speed, angle and altitude explain "
+        f"{share('tailless', 'flight condition')} of its spread alone on tailless wings ({100 * gt['tailless']['flight condition']:.0f} % "
+        f"with interactions), {share('conventional', 'flight condition')} on conventional ones ({100 * gt['conventional']['flight condition']:.0f} %). "
+        f"The wing shape explains {share('tailless', 'wing shape')} and {share('conventional', 'wing shape')} alone. Wings differ by about "
+        f"±10 points: the middle 80 % of BWB wings have a median error of {_pc(ws['bwb']['q10'])} to {_pc(ws['bwb']['q90'])}.",
+        f"<strong>The angle is the strongest single input.</strong> The error peaks at {a_peak:g}° ({_pc(by_a[a_peak])}) and falls to "
+        f"{_pc(by_a[max(by_a)])} at {max(by_a):g}°: at high angle the real flow turns turbulent near the nose by itself, so fully "
+        f"turbulent CFD comes closer. Trailing-edge separation appears at {max(te_a):g}° ({_pc(te_a[max(te_a)], False)} of the half "
+        f"wing on average).",
+        f"<strong>On conventional wings the section changes how the angle acts.</strong> The section set alone explains "
+        f"{100 * conv_alone:.0f} % of the spread, but {100 * conv_total:.0f} % with its interactions: on LA2573A the error grows with the "
+        f"angle, on NACA 44xx, SD7032 and E387 it falls. Lowest median: {html.escape(lo_set[1])} ({_pc(lo_set[0])}, its bubbles already cost "
+        f"drag in the real flow); highest: {html.escape(hi_set[1])} ({_pc(hi_set[0])}).",
+        f"<strong>Faster flight makes SA worse, then flat.</strong> {_pc(by_m[min(by_m)])} at Mach {min(by_m):g}, "
+        f"{_pc(by_m[max(by_m)])} at Mach {max(by_m):g}. Faster means higher Re: the laminar run shortens ({_pc(lam_m[min(lam_m)], False)} → "
+        f"{_pc(lam_m[max(lam_m)], False)} of chord) and bubbles shrink, but the laminar part stays long enough to matter.",
+        f"<strong>Below Re 10⁵ the sign flips.</strong> Where most of the half wing is below 10⁵ ({lr['n']:,} rows), the median error is "
+        f"{_pc(lr['bias_median'])} and {_pc(lr['share_negative'], False)} are negative: long laminar bubbles give the real flow more drag than "
+        f"fully turbulent CFD. Part of the half wing is below 10⁵ in {_pc(low['bwb'], False)} of BWB rows, {_pc(low['flying_wing'], False)} "
+        f"flying wing, {_pc(low['cranked'], False)} cranked, {_pc(low['tapered'], False)} tapered. There no RANS model is reliable.",
+        f"<strong>Laminar bubbles are the normal case.</strong> On average {_pc(min(bub_a.values()), False)}–{_pc(max(bub_a.values()), False)} "
+        f"of the half wing has an upper-surface bubble, depending on the angle; most at slow speed. A mesh for a transition model "
+        f"must resolve them (fine chordwise cells over the bubble, y+ ≤ 1).",
+        f"<strong>Size matters through Re; the other shape inputs barely do.</strong> The mean chord is the only strong shape input "
+        f"(larger chord, higher Re, larger SA error up to about Re 10⁶). Taper, sweep, washout and aspect ratio move the median by a few "
+        f"points. Dihedral cannot change a strip answer and scores zero: a built-in placebo for the method.",
+        f"<strong>Swept tailless wings may see crossflow transition.</strong> {_pc(xf['bwb'], False)} of BWB rows and "
+        f"{_pc(xf['flying_wing'], False)} of flying-wing rows have a leading edge swept over 25° with Re normal to it above 10⁶. "
+        f"Neither XFOIL nor γ-Reθ without a crossflow term sees it; there the transition position is less certain.",
+        f"<strong>Our assumptions move the numbers, not the conclusion.</strong> More turbulent air (N<sub>crit</sub> 5) changes the "
+        f"error by {_pt(n5, 0)} points, quieter air (11) by {_pt(n11, 0)}; the induced angle by {_pt(ind['median'], 0)} "
+        f"(5–95 %: {_pt(ind['q05'], 0)} to {_pt(ind['q95'], 0)}); compressibility by {_pt(m0['median'])}; the strip count by "
+        f"under {max(100 * st, 0.1):.1f}. The tables reproduce direct XFOIL to a median {100 * tv['free']['cd_rel_median']:.1f} % in drag.",
+        f"<strong>In the whole drag the error is smaller, but still large.</strong> With an elliptic induced drag added, fully turbulent "
+        f"SA overestimates the total drag by a median {_pc(tot[0])} to {_pc(tot[-1])} by type: far above the 3-count mesh budget.",
+        "<strong>What this means for the CFD.</strong> Use SA (ADflow) for mesh studies, where the model does not matter, and as an "
+        "upper bound for drag. For drag numbers, run a transition model (SU2 γ-Reθ) on reference wings, or report every SA drag with "
+        "its band from these tables. Below Re 10⁵, neither is enough. The tool gives the band, the bubble positions and the model for "
+        "any wing in milliseconds.",
+    ]
+    return "\n".join(f"<li>{x}</li>" for x in items)
 
 
 def xfoil_note() -> str:
@@ -1256,6 +1497,8 @@ svg.dg .outboard { fill: var(--amber); opacity: .18; stroke: var(--amber); strok
 svg.dg .tube { fill: var(--accent); opacity: .30; stroke: var(--accent); stroke-width: 1.2; }
 svg.dg .station { stroke: var(--muted); stroke-width: .9; }
 svg.dg .station.brk { stroke: var(--amber); stroke-width: 2.4; }
+ol.concl { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; max-width: 80ch; }
+ol.concl li strong { color: var(--ink); }
 footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .card img[src^="data:image/gif"] { animation: none; } }
 </style>
@@ -1264,7 +1507,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#pipeline">The plan</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#pipeline">The plan</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#flowdata">Flow dataset</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -1286,8 +1529,8 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li><strong>Full design space</strong> (<a href="#design">Design space</a>): every input range we support, light bars.</li>
     <li><strong>What we can make</strong> (<a href="#limits">What it cannot make</a>, <a href="#checks">Checks</a>): straight panels, vertical sections, any database section; no curved edges, winglets or fuselage.</li>
     <li><strong>Focus</strong> (<a href="#summary">Final ranges and flows</a>): Class I–II, full span ≤ 7 m, sourced shapes; dark bars.</li>
-    <li><strong>Flow maps</strong> (<a href="#flowmaps">Flow maps</a>): local Re along the span, where the flow turns turbulent, bubbles, and how the sections change them, per family.</li>
-    <li><strong>The tool</strong> (<code>python -m cfdauto.flowmap</code>): give it a wing, a speed, an altitude and an angle; it names the family and type, draws the flow map and proposes the turbulence model.</li>
+    <li><strong>Flow maps</strong> (<a href="#flowmaps">Flow maps</a>, <a href="#flowdata">Flow dataset</a>): local Re along the span, where the flow turns turbulent, bubbles, and how the sections change them, per family; then every focus wing × 4 section sets × 126 conditions, with trends, sensitivity and checks.</li>
+    <li><strong>The tool</strong> (<code>python -m cfdauto.flowmap</code>): give it a wing, a speed (or Mach), an altitude and an angle; it names the family and type, draws the flow map, proposes the turbulence model with the size of the SA error, says whether the condition is level flight at a real wing loading, and where the wing sits in the dataset. <code>--sheet</code> adds the whole Mach × angle picture.</li>
   </ol>
 </section>
 
@@ -1416,8 +1659,9 @@ __DERIVED__
 
 <section id="flowmaps">
   <h2>Flow maps</h2>
-  <p>What the tool returns for one wing: the half wing coloured by local Re, the line where the upper surface turns turbulent, laminar bubbles, the phenomena list and the proposed model. First version: XFOIL on 2-D strips along the span (limits in the panel).</p>
-  <figure class="fig card">__PNG_FMEX__<figcaption>BWB mid wing at 25 m/s, 1,000 m, 3°. The centre body runs at about 7 × the tip Re; transition moves aft toward the tip as Re falls; bubbles sit just ahead of transition everywhere.</figcaption></figure>
+  <p>What the tool returns for one wing: the half wing coloured by local Re, the line where the upper surface turns turbulent, laminar bubbles, trailing-edge separation, the phenomena, the proposed model with the size of the SA error, whether the condition is level flight at a real wing loading, where the wing sits in the flow dataset, and the other section sets at the same condition. The 2-D answers come from the section tables (the same engine as the <a href="#flowdata">flow dataset</a>; direct XFOIL for sections without a table).</p>
+  <figure class="fig card">__PNG_FMEX__<figcaption>__FMEX_CAP__</figcaption></figure>
+  <figure class="fig card">__PNG_FMEX_SHEET__<figcaption>The same wing over Mach × root angle (<code>--sheet</code>): SA error, laminar run, bubble span and trailing-edge separation per condition. Faded: not level flight at a real wing loading for its span.</figcaption></figure>
   <h2 style="font-size:22px">The focus space, per type: slow and fast, three section sets</h2>
   <p>Mid wing of each type. Slow: the family's lowest cruise speed at 3,048 m, 5°. Fast: its highest top speed at sea level, 1°. Sets: the suggested one and two sourced alternatives (SD7032 flies on the Puma 3AE, LA2573A on the Dragon Eye: NTNU database).</p>
   <div class="tbl"><table class="wide">
@@ -1430,6 +1674,87 @@ __DERIVED__
   <figure class="fig card">__PNG_FM_CR__</figure>
   <figure class="fig card">__PNG_FM_TA__</figure>
   <div class="weak amber"><strong>What these maps cannot tell.</strong> Strips are 2-D: no induced angle (the outer strips see too high an angle), no crossflow transition on swept leading edges, no 3-D relief of bubbles. The angle (5° slow, 1° fast) is our choice, not trimmed. Use them to know where to look and which model to pick, not for numbers.</div>
+</section>
+
+<section id="flowdata">
+  <h2>Flow dataset: every focus wing, four section sets, every speed and angle</h2>
+  <p>__FD_INTRO__</p>
+  <div class="three">
+__FD_KPI__
+  </div>
+  <div class="weak amber"><strong>Same assumptions as the flow maps.</strong> 2-D strips along the half wing; local angle = root angle + twist (no induced angle); XFOIL e<sup>N</sup> with N<sub>crit</sub> 9 (quiet air) for free transition, tripped at 1 % chord for fully turbulent (what SA does); Stage 0 air. "SA drag error" = profile drag tripped / free − 1, chord-weighted along the span. A grid point is "level flight" when the lift it makes (3-D estimate) carries the wing loading real wings of the same span carry (fit to 37 real wings, within × / ÷ 2).</div>
+  <h2 style="font-size:22px">What we found, under these assumptions</h2>
+  <ol class="concl">
+__FD_CONCL__
+  </ol>
+
+  <h2 style="font-size:22px">1. The 2-D building blocks</h2>
+  <p>Every section, free and tripped, on a grid of 14 Re (1.5 × 10⁴ – 6 × 10⁶) × 3 Mach × 49 angles: 2,408 XFOIL sweeps, made robust (a failing angle is skipped, never hangs). A wing is then evaluated in milliseconds by interpolation.</p>
+  <figure class="fig card">__PNG_FD_SXTR__<figcaption class="cap">Where the free flow turns turbulent on the upper surface (fraction of chord). Bright: long laminar run. It falls with Re and with angle. Grey: no converged 2-D answer (stall).</figcaption></figure>
+  <figure class="fig card">__PNG_FD_SBUB__<figcaption class="cap">Laminar separation bubble on the upper surface (red: yes). Bubbles cover most of the low-Re half of every map at small and moderate angles; they move forward and vanish as Re grows.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_SBIAS__<figcaption class="cap">How much more drag a fully turbulent section has (tripped / free − 1). Red: fully turbulent SA gives too much drag, most at Re 3 × 10⁵ – 3 × 10⁶ and small angles; white near stall, where the real flow turns turbulent early anyway. Blue, below about Re 10⁵: the real flow has more drag than fully turbulent CFD (long laminar bubbles).</figcaption></figure>
+
+  <h2 style="font-size:22px">2. Where the wings fly in Re</h2>
+  <figure class="fig card">__PNG_FD_BANDS__<figcaption class="cap">Share of the half wing in each Re band, by flight Mach (all focus wings, sets, altitudes). Slow flight puts most of the small tailless wings below 10⁵.</figcaption></figure>
+
+  <h2 style="font-size:22px">3. How wrong is fully turbulent SA?</h2>
+  <figure class="fig card">__PNG_FD_VIOL__<figcaption class="cap">The SA drag error over all rows at realistic speeds, per type and section set. The green band is ±10 % ("SA adequate").</figcaption></figure>
+  <figure class="fig card">__PNG_FD_BRE__<figcaption class="cap">The same error against the wing's mean Re, one line per root angle. This is the main trend: the error is largest between 2 × 10⁵ and 2 × 10⁶ at low angles, and shrinks at high angle (the free flow turns turbulent near the nose by itself).</figcaption></figure>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Section set</th><th>SA drag error, median</th><th>10–90 %</th><th>Within ±10 %</th><th>Laminar run, upper</th><th>Span with a bubble</th><th>Span with TE separation</th><th>Span with a 2-D answer</th></tr></thead>
+    <tbody>__FD_STATS__</tbody>
+  </table></div>
+  <p class="muted">__FD_STATS_NOTE__</p>
+  <h2 style="font-size:22px">In level flight only</h2>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Rows in level flight</th><th>SA drag error, median</th><th>10–90 %</th><th>Within ±10 %</th><th>Laminar run, upper</th><th>Span with a bubble</th><th>Span with TE separation</th><th>Rows with part below Re 10⁵</th></tr></thead>
+    <tbody>__FD_LEVEL__</tbody>
+  </table></div>
+  <p class="muted">__FD_TOTAL__</p>
+
+  <h2 style="font-size:22px">4. Trends</h2>
+  <figure class="fig card">__PNG_FD_TMACH__<figcaption class="cap">Faster flight raises Re: the laminar run shortens, bubbles disappear, and the SA error changes with them. Lines: section sets.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_TALPHA__<figcaption class="cap">A higher angle moves transition forward on the upper surface and shrinks the SA error, except on LA2573A, where it grows: at low angles its long laminar bubble makes the real flow draggy as well, so the gap is small. Bubbles first grow, then shrink.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_PART__<figcaption class="cap">The SA error against single wing inputs. Size (mean chord) acts through Re; the shape inputs barely matter once size is fixed. Dihedral is a check: it should do nothing here, and it does nothing.</figcaption></figure>
+
+  <h2 style="font-size:22px">5. Which model, where</h2>
+  <figure class="fig card">__PNG_FD_CAT__<figcaption class="cap">The tool's proposal per condition (suggested sections), with the median SA error in each cell. Outlined: where at least half the wings are in level flight at a real wing loading.</figcaption></figure>
+
+  <h2 style="font-size:22px">6. What drives the flow: sensitivity</h2>
+  <p>The dataset crosses wings, section sets and conditions in full, so the three groups are independent and their shares can be read apart. A gradient-boosted model (test R² in the table) gives each group's share alone and with its interactions (total).</p>
+  <figure class="fig card">__PNG_FD_GROUPS__<figcaption class="cap">What sets each output: the wing shape, the sections, or how the wing flies (speed, angle, altitude).</figcaption></figure>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Family</th><th>Output</th><th>Wing shape alone / total</th><th>Sections alone / total</th><th>Flight alone / total</th><th>Model R²</th><th>Strongest inputs (share of importance; ↑ grows with it, ↓ falls)</th></tr></thead>
+    <tbody>__FD_DRIVERS__</tbody>
+  </table></div>
+  <figure class="fig card">__PNG_FD_PERM__<figcaption class="cap">Each input's importance (permutation of a gradient-boosted model; sums to 1 per output). Sign: direction of the rank correlation.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_ETA__<figcaption class="cap">The same with a model-free measure: the share of variance one input explains alone (η², binned). Inputs that move together (size and taper, for example) share credit. For wing inputs, values up to about 0.05 are noise (200 wings per family): dihedral, which cannot change a strip answer, shows that level.</figcaption></figure>
+
+  <h2 style="font-size:22px">7. How much do our assumptions change the answer?</h2>
+  <p>Each check reruns 20 wings per type with one assumption changed, and compares the same wing, sections and condition (percentage points of the SA drag error, laminar run, bubble span and TE-separation span).</p>
+  <figure class="fig card">__PNG_FD_CHECKS__<figcaption class="cap">Left: change of the SA drag error. Middle and right: section tables against direct XFOIL runs at random points.</figcaption></figure>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Changed</th><th>SA error, median change [points]</th><th>5–95 %</th><th>Laminar run, median change [points]</th><th>Bubble span, mean size of change [points]</th><th>TE-separation span, mean size of change [points]</th><th>Pairs</th></tr></thead>
+    <tbody>__FD_CHECKS__</tbody>
+  </table></div>
+
+  <div class="weak"><strong>Limits of this approach.</strong>
+    <ul>
+      <li><strong>2-D strips, not a 3-D flow.</strong> No crossflow transition on swept edges, no spanwise boundary-layer drift, no 3-D relief of bubbles, no tip vortex. The induced angle is left out (its effect is in the checks).</li>
+      <li><strong>XFOIL is a model too.</strong> e<sup>N</sup> with one N<sub>crit</sub> for the whole wing; it is least reliable below Re 5 × 10⁴, in long bubbles and near stall. "Beyond 2-D stall" means no answer, not a measured stall.</li>
+      <li><strong>The grid is a box, not a flight envelope.</strong> Speeds and angles are crossed in full; the level-flight subset uses a wing-loading fit (37 real wings) and a lift estimate, both rough.</li>
+      <li><strong>Statistics describe our ranges.</strong> 100 wings per type, drawn evenly in the focus box, four section sets each. Shares and medians depend on those choices; they are not shares of real aircraft.</li>
+      <li><strong>The error measure is a proxy.</strong> Tripped vs free 2-D profile drag is the part of the SA error that comes from transition. Real 3-D RANS adds its own errors, and a transition model has its own too.</li>
+    </ul></div>
+  <h2 style="font-size:22px">The tool, updated</h2>
+<pre>python -m cfdauto.flowmap.tables --build                 # section tables (XFOIL, about 40 min on 2 cores; resumable)
+python -m cfdauto.flowmap.dataset                        # the flow dataset (__FD_ROWS__ rows, about 2 min)
+python -m cfdauto.flowmap.analysis                       # figures, sensitivity, checks: docs/flow_*.png, docs/flow_analysis.json
+python -m cfdauto.flowmap --type bwb --set reference --index 0 --mach 0.08 --alpha 4
+                                                         # one wing: flow map, model, level flight, where it sits in the dataset
+python -m cfdauto.flowmap --type bwb --set reference --index 0 --mach 0.08 --sheet
+                                                         # + a Mach × angle sheet for that wing
+python -m cfdauto.flowmap ... --method xfoil | --ncrit 5 | --induced | --strips 5   # direct XFOIL, assumption checks</pre>
 </section>
 
 <section id="refine">
@@ -1579,8 +1904,11 @@ python scripts/size_extremes.py                                      # smallest 
 python scripts/design_space_figs.py                                  # design space, key pairs, families
 python scripts/xfoil_band.py                                         # 2-D free vs tripped (needs xfoil)
 python scripts/focus_flowmaps.py                                     # flow maps of the focus space (needs xfoil)
-python -m cfdauto.flowmap --type bwb --set reference --index 0 --speed 25 --altitude 1000 --alpha 3
-                                                                     # the tool: one wing's flow map and model
+python -m cfdauto.flowmap.tables --build                             # section tables: XFOIL on a Re x Mach x angle grid (resumable)
+python -m cfdauto.flowmap.dataset                                    # the flow dataset (201,600 rows, about 2 min)
+python -m cfdauto.flowmap.analysis                                   # trends, sensitivity, checks: docs/flow_*.png, flow_analysis.json
+python -m cfdauto.flowmap --type bwb --set reference --index 0 --speed 30 --altitude 1000 --alpha 6 --sheet
+                                                                     # the tool: one wing's flow map, model, level flight, Mach x angle sheet
 python scripts/make_generator_page.py                                # this page</pre>
 </section>
 
@@ -1589,22 +1917,28 @@ python scripts/make_generator_page.py                                # this page
 """
 
 
-SECTION_ORDER = ("glance", "pipeline", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "flowmaps", "refine",
+SECTION_ORDER = ("glance", "pipeline", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "flowmaps", "flowdata", "refine",
                  "open", "decisions", "fix", "real", "checks", "limits", "published", "commands")
 
 
 def open_html() -> str:
-    out, last = [], None
-    for g, t, q, k in OPEN:
-        if g != last:
-            if last is not None:
-                out.append("</ul>")
-            n_dec = sum(1 for x in OPEN if x[0] == g and x[3] == "decide")
-            out.append(f"<h3>{g} <span class='muted'>({n_dec} to decide)</span></h3><ul>")
-            last = g
-        flag = "<span class='flag open'>decide</span>" if k == "decide" else "<span class='flag ok'>act</span>"
-        out.append(f"<li>{flag} <strong>{t}.</strong> {q}</li>")
-    out.append("</ul>")
+    f = DOCS / "flow_analysis.json"
+    fd = json.loads(f.read_text()) if f.is_file() else None
+    rep = {"__FD_MED__": _pc(fd["bias_all"]["median"]) if fd else "(run the analysis)",
+           "__FD_LF__": _pc(fd["level_flight"]["bias_all"]["median"]) if fd else "—",
+           "__FD_OK__": _pc(fd["bias_all"]["share_sa_ok"], False) if fd else "—",
+           "__FD_N5__": _pt(fd['checks']['ncrit_5']['sa_bias']['median'], 0) if fd else "—"}
+    out = []
+    for g in dict.fromkeys(x[0] for x in OPEN):          # groups in order of first appearance
+        items = [x for x in OPEN if x[0] == g]
+        n_dec = sum(1 for x in items if x[3] == "decide")
+        out.append(f"<h3>{g} <span class='muted'>({n_dec} to decide)</span></h3><ul>")
+        for _, t, q, k in items:
+            for a_, b_ in rep.items():
+                q = q.replace(a_, b_)
+            flag = "<span class='flag open'>decide</span>" if k == "decide" else "<span class='flag ok'>act</span>"
+            out.append(f"<li>{flag} <strong>{t}.</strong> {q}</li>")
+        out.append("</ul>")
     return "\n".join(out)
 
 
@@ -1631,7 +1965,7 @@ def main() -> None:
     env = real["envelope"]
     fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
                                 "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
-                                "__VSETS__": verification_sets_html()} | params_tables_html()
+                                "__VSETS__": verification_sets_html()} | params_tables_html() | flowdata_html()
     page = PAGE
     for k, v in fr.items():
         page = page.replace(k, v)
@@ -1649,10 +1983,27 @@ def main() -> None:
                 .replace("__PNG_XFCF__", img("xfoil_cf.png", "XFOIL upper-surface skin friction, free transition vs tripped, at the four study Re levels"))
                 .replace("__PNG_XFTR__", img("xfoil_transition.png", "Where the real flow turns turbulent, per section and Re"))
                 .replace("__PNG_FMEX__", img("flowmap_example.png", "Flow map of the BWB mid wing: local Re, transition line, bubbles, phenomena and proposed model"))
+                .replace("__PNG_FMEX_SHEET__", img_opt("flowmap_example_sheet.png", "Mach by angle sheet of the BWB mid wing"))
+                .replace("__FMEX_CAP__", fmex_caption())
                 .replace("__PNG_FM_BWB__", img("flowmap_bwb.png", "BWB mid wing flow maps: three section sets, slow and fast"))
                 .replace("__PNG_FM_FW__", img("flowmap_flying_wing.png", "Flying-wing mid wing flow maps"))
                 .replace("__PNG_FM_CR__", img("flowmap_cranked.png", "Cranked mid wing flow maps"))
                 .replace("__PNG_FM_TA__", img("flowmap_tapered.png", "Tapered mid wing flow maps"))
+                .replace("__PNG_FD_SXTR__", img_opt("flow_sections_xtr.png", "Transition maps of the ten sections"))
+                .replace("__PNG_FD_SBUB__", img_opt("flow_sections_bub.png", "Laminar bubble maps of the ten sections"))
+                .replace("__PNG_FD_SBIAS__", img_opt("flow_sections_bias.png", "Drag ratio tripped over free for the ten sections"))
+                .replace("__PNG_FD_BANDS__", img_opt("flow_re_bands.png", "Share of the half wing in each Re band against Mach"))
+                .replace("__PNG_FD_VIOL__", img_opt("flow_bias_violins.png", "Distribution of the SA drag error per type and section set"))
+                .replace("__PNG_FD_BRE__", img_opt("flow_bias_vs_re.png", "SA drag error against wing mean Re per root angle"))
+                .replace("__PNG_FD_TMACH__", img_opt("flow_trends_mach.png", "Trends with flight Mach"))
+                .replace("__PNG_FD_TALPHA__", img_opt("flow_trends_alpha.png", "Trends with root angle"))
+                .replace("__PNG_FD_PART__", img_opt("flow_partial.png", "SA drag error against single wing inputs"))
+                .replace("__PNG_FD_CAT__", img_opt("flow_categories.png", "Proposed model per Mach and angle"))
+                .replace("__PNG_FD_GROUPS__", img_opt("flow_groups.png", "Variance shares of wing shape, sections and flight condition"))
+                .replace("__PNG_FD_PERM__", img_opt("flow_sensitivity_perm.png", "Permutation importance per input and output"))
+                .replace("__PNG_FD_ETA__", img_opt("flow_sensitivity_eta2.png", "First-order variance share per input and output"))
+                .replace("__PNG_FD_CHECKS__", img_opt("flow_checks.png", "Assumption checks and table verification"))
+                .replace("__FD_ROWS__", fd_rows())
                 .replace("__PNG_XFBAND__", img("xfoil_band.png", "XFOIL profile-drag increase when tripped, and transition position, against Re"))
                 .replace("__PNG_DESIGN__", img("design_space.png", "Every variable: full range, focus range and published values per wing type"))
                 .replace("__PNG_PAIR_SIZE__", img("pair_size.png", "Span against mean chord per type"))

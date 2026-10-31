@@ -142,3 +142,13 @@
     conventional (cranked, tapered); the type is set by our rules inside the family. Span words:
     full span b (tip to tip), semi-span S = b/2. Focus space capped at b = 7 m.
     See `geometry/decisions/families_and_span.md`. Open: cap the full space too?
+51. **Flow dataset and the model rule (31 Oct 2026).** `geometry/cfdauto/flowmap`: XFOIL section tables
+    (10 sections, free N_crit 9 and tripped, 14 Re × 3 Mach × 49 angles, 2,408 robust sweeps), one engine
+    for the tool and the dataset, the dataset (400 focus wings × 4 section sets × 126 conditions = 201,600
+    rows) and its analysis (trends, sensitivity, checks). Fully turbulent SA overestimates the profile drag
+    by a median +55 % (10–90 %: +8 to +90 %), within ±10 % in 10 % of rows; in
+    level flight +65 %. Below Re 1e5 the sign flips. The angle and speed set most of it;
+    N_crit, induced angle, compressibility and strip count move the numbers, not the conclusion. See
+    `geometry/decisions/flow_maps.md`. Open: transition model in the pipeline (SU2 γ-Reθ for drag, ADflow
+    SA for mesh studies); the SA rule (|error| < 10 % and laminar run < 20 % chord, our choice); the tool's
+    default N_crit; the level-flight band; a 3-D check of the strips before quoting numbers in the paper.

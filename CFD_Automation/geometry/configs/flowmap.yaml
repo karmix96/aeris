@@ -1,0 +1,52 @@
+# Flow maps and the flow dataset (cfdauto/flowmap). Same assumptions as the first flow maps:
+# 2-D XFOIL strips (via the section tables), local angle = root angle + twist (no induced angle),
+# free transition e^N with N_crit 9, fully turbulent = tripped at 1 % chord, Stage 0 air.
+
+# Section sets tried on each type: the suggested one first, then sourced alternatives.
+section_sets:
+  bwb:
+    - {id: A, label: "MH 104 / MH 61 (suggested)", sections: [mh104, mh104, mh61, mh61], source: "Suewatanakul et al. 2022"}
+    - {id: B, label: "S5010", sections: [s5010, s5010, s5010, s5010], source: "Lehmkuehler et al. 2012 (BWB wing section)"}
+    - {id: C, label: "MH 60 / MH 45", sections: [mh60, mh60, mh45, mh45], source: "Hepperle tailless sections"}
+    - {id: D, label: "NACA 4415 / 4412 (not reflexed)", sections: [naca4415, naca4415, naca4412, naca4412], source: "contrast: a conventional-wing section"}
+  flying_wing:
+    - {id: A, label: "MH 60 / MH 45 (suggested)", sections: [mh60, mh60, mh45, mh45], source: "Hepperle; Milenkovic-Babic et al. 2024"}
+    - {id: B, label: "S5010", sections: [s5010, s5010, s5010, s5010], source: "Lehmkuehler et al. 2012"}
+    - {id: C, label: "MH 104 / MH 61", sections: [mh104, mh104, mh61, mh61], source: "Suewatanakul et al. 2022"}
+    - {id: D, label: "NACA 4415 / 4412 (not reflexed)", sections: [naca4415, naca4415, naca4412, naca4412], source: "contrast"}
+  cranked:
+    - {id: A, label: "NACA 4415 / 4412 (suggested)", sections: [naca4415, naca4415, naca4412, naca4412], source: "Lednicer: Pioneer, Shadow 200"}
+    - {id: B, label: "SD7032", sections: [sd7032, sd7032, sd7032, sd7032], source: "NTNU database: Puma 3AE"}
+    - {id: C, label: "LA2573A", sections: [la2573a, la2573a, la2573a, la2573a], source: "NTNU database: Dragon Eye"}
+    - {id: D, label: "E387 (low-Re benchmark)", sections: [e387, e387, e387, e387], source: "measured low-Re section (McGhee et al. 1988; UIUC); not a UAV choice"}
+  tapered:
+    - {id: A, label: "NACA 4415 / 4412 (suggested)", sections: [naca4415, naca4415, naca4412, naca4412], source: "Lednicer: Pioneer, Shadow 200"}
+    - {id: B, label: "SD7032", sections: [sd7032, sd7032, sd7032, sd7032], source: "NTNU database: Puma 3AE"}
+    - {id: C, label: "LA2573A", sections: [la2573a, la2573a, la2573a, la2573a], source: "NTNU database: Dragon Eye"}
+    - {id: D, label: "E387 (low-Re benchmark)", sections: [e387, e387, e387, e387], source: "measured low-Re section; not a UAV choice"}
+
+dataset:
+  wings: focus training sets (100 per type, full span <= 7 m)
+  mach: [0.03, 0.05, 0.08, 0.11, 0.14, 0.17, 0.20]      # sea level 10 - 68 m/s
+  alpha_deg: [0, 2, 4, 6, 8, 10]                         # root angle; local = root + twist
+  altitude_m: [0, 1524, 3048]
+  strips_per_panel: 2                                    # 10 strips per half wing
+  realistic_mach:                                        # speeds of the real wings of each family
+    tailless: [0.03, 0.14]                               # eBee 11.1 m/s .. RX-3 44.4 m/s
+    conventional: [0.03, 0.20]                           # 11.1 .. RUAG Ranger 66.9 m/s
+
+# Level flight: is the grid point flyable? The wing loading a condition carries, W/S = CL_3D q, with
+# CL_3D = CL_2D(strips) x a/2pi (Helmbold/DATCOM lift-slope ratio, mean LE sweep), against the wing
+# loading of real wings of the same full span: log10(W/S) = a + offset(family) + k log10(b), fitted to the
+# 37 real wings with mass, area and span in configs/real_uavs.yaml (residual sd 0.21 dex). A row is level
+# flight when its W/S is within a factor `factor` of the fit (35 of the 37 real wings are).
+level_flight:
+  a: 1.869
+  k: 1.127
+  offset: {tailless: -0.164, conventional: 0.0}
+  factor: 2.0
+  source: "least-squares fit to configs/real_uavs.yaml (mtow, area, span), 31 Oct 2026"
+
+thresholds:
+  sa_adequate_bias: 0.10      # |profile-drag bias of fully turbulent SA| below this: SA adequate (our choice)
+  low_re: 1.0e5

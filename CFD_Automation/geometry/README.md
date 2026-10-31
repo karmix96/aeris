@@ -64,6 +64,33 @@ approximate NASA CRM wing, and BlendedNet designs (any BlendedNet or BlendedNet+
 `published_wings.blendednet(...)`). They keep their own blunt trailing edge
 (`trailing_edge: as_is`). Read each wing's `fidelity` before using it for validation.
 
+## Flow maps and the flow dataset (`cfdauto/flowmap`)
+
+What the flow will do on a wing, where, and which turbulence model to use, from 2-D strips
+(XFOIL, free transition N_crit 9 and tripped at 1 % chord). Needs `xfoil` only to build the tables.
+
+```
+python -m cfdauto.flowmap.tables --build     # section tables: 10 sections x 14 Re x 3 Mach x 49 angles (resumable)
+python -m cfdauto.flowmap.dataset            # data/flowdata/dataset.csv.gz: 400 focus wings x 4 section sets x 126 conditions
+python -m cfdauto.flowmap.analysis           # docs/flow_*.png, docs/flow_analysis.json, docs/flow_summary.json
+python -m cfdauto.flowmap --type bwb --set reference --index 0 --mach 0.08 --alpha 4 [--sheet]
+```
+
+```
+cfdauto/flowmap/
+  xfoil.py      robust XFOIL sweeps (a failing angle is skipped, never hangs); features: transition, bubbles, TE separation
+  tables.py     section tables and their NaN-aware interpolation; the blend rule for strips between two sections
+  engine.py     wing strips x conditions -> strip answers and wing metrics (vectorized; tool and dataset share it)
+  dataset.py    the flow dataset; level flight against real wing loadings (configs/flowmap.yaml)
+  analysis.py   trends, statistics, sensitivity (eta^2, gradient-boosting importance, grouped variance), checks
+  core.py       one wing: flow map, phenomena, proposed model, level flight, place in the dataset, Mach x angle sheet
+configs/flowmap.yaml   section sets per type, condition grid, realistic speeds, level-flight fit, thresholds
+data/section_tables/   the tables (tracked); data/section_cache/, data/flowdata/, data/flowmaps/ are not
+```
+
+The tool and the dataset use the same engine, so a wing gives the same numbers in both (test
+`test_tool_equals_dataset`). Assumptions and limits: `decisions/flow_maps.md`.
+
 ## Is the surface the intended wing? (verification)
 
 Pictures are not proof. `python scripts/verify_geometry.py` measures every published wing and

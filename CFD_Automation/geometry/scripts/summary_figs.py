@@ -252,13 +252,120 @@ def fig_runs() -> None:
     fig_page_svg("runs", "summary_runs.png")
 
 
+def fig_mesh_zones() -> None:
+    """Where the mesh must be fine and why: numbered zones on the BWB reference wing (top view) and on one
+    section (side view). Schematic; the reasons and rules are in the summary's table."""
+    from matplotlib.patches import Circle, Ellipse, FancyBboxPatch
+    from cfdauto.geometry.sections import load_airfoil
+    cfg = load_config()
+    spec = cfg.types["bwb"]
+    vec = resolve(spec, load_set("bwb", "reference")["vectors"][0])
+    pf = build_planform(spec, vec)
+    y, xl, c = pf.y, pf.x_le, pf.chord
+    S = pf.semi_span
+    RED, AMB, BLU, VIO, LBL = "#C0392B", "#B07000", "#0C5EA8", "#6B4FA0", "#5B8FD0"
+    fig = plt.figure(figsize=(15, 8.0), dpi=130)
+    ax = fig.add_axes((0.01, 0.33, 0.47, 0.62))
+    bx = fig.add_axes((0.50, 0.40, 0.49, 0.50))
+
+    def yy(frac):                       # spanwise interpolation of LE and chord
+        yv = frac * S
+        return yv, np.interp(yv, y, xl), np.interp(yv, y, c)
+
+    def band(f0, f1, a0=0.0, a1=1.0, n=60):
+        fr = np.linspace(a0, a1, n)
+        pts = [yy(f) for f in fr]
+        top = [(p[0], -(p[1] + f0 * p[2])) for p in pts]
+        bot = [(p[0], -(p[1] + f1 * p[2])) for p in pts][::-1]
+        return top + bot
+
+    def num(axx, x, yv, k, col):
+        axx.text(x, yv, str(k), ha="center", va="center", fontsize=11, fontweight="bold", color=col, zorder=7,
+                 bbox=dict(boxstyle="circle,pad=0.28", fc="white", ec=col, lw=2.0))
+
+    # ---- top view
+    te_max = float(np.max(xl + c))
+    wake_end = -te_max - 0.65 * c[0]
+    te_pts = [(a, -(b + cc)) for a, b, cc in zip(y, xl, c)]
+    ax.add_patch(Polygon(te_pts + [(S, wake_end), (0, wake_end)], closed=True, fc="#DCE8F5", ec="none", zorder=0))  # wake
+    tip_te = -(xl[3] + c[3])
+    ax.add_patch(FancyBboxPatch((S * 0.95, wake_end), 0.06 * S, tip_te - wake_end,
+                                boxstyle="round,pad=0,rounding_size=0.02", fc="#A9C4E6", ec="none", zorder=1))  # vortex tube
+    poly = [(a, -b) for a, b in zip(y, xl)] + [(a, -(b + cc)) for a, b, cc in zip(y[::-1], xl[::-1], c[::-1])]
+    ax.add_patch(Polygon(poly, closed=True, fc="#EEF2F5", ec=INK, lw=1.6, zorder=2))
+    ax.add_patch(Polygon(band(0.10, 0.85), closed=True, fc="#F6E7C8", ec=AMB, lw=0.0, hatch="///", zorder=3, alpha=0.9))
+    ax.add_patch(Polygon(band(0.0, 0.05), closed=True, fc=RED, ec="none", alpha=0.45, zorder=4))
+    ax.add_patch(Polygon(band(0.95, 1.0), closed=True, fc=RED, ec="none", alpha=0.45, zorder=4))
+    ax.add_patch(Polygon(band(0.0, 1.0, 0.86, 1.0), closed=True, fc=BLU, ec="none", alpha=0.18, zorder=4))
+    for k in (1, 2):
+        ax.plot([y[k], y[k]], [-xl[k], -(xl[k] + c[k])], color=AMB, lw=3.2, solid_capstyle="butt", zorder=5)
+    ax.plot([0, 0], [-xl[0], -(xl[0] + c[0])], color=VIO, lw=4.5, solid_capstyle="butt", zorder=5)
+    ax.plot([y[3], y[3]], [-xl[3], -(xl[3] + c[3])], color=BLU, lw=3.2, solid_capstyle="butt", zorder=5)
+    # markers
+    num(ax, -0.06 * S, -(xl[0] + 0.5 * c[0]), 1, VIO)
+    yv, xv, cv = yy(0.68); num(ax, yv, -(xv) + 0.07 * S, 2, RED)
+    yv, xv, cv = yy(0.45); num(ax, yv, -(xv + 0.5 * cv), 3, AMB)
+    num(ax, y[1], -xl[1] + 0.07 * S, 4, AMB); num(ax, y[2], -xl[2] + 0.07 * S, 4, AMB)
+    yv, xv, cv = yy(0.93); num(ax, yv, -(xv + 0.5 * cv), 5, BLU)
+    yv, xv, cv = yy(0.62); num(ax, yv, -(xv + cv) - 0.065 * S, 6, RED)
+    num(ax, 0.45 * S, 0.5 * (wake_end - te_max), 7, LBL)
+    ax.text(0.0, 0.12 * S, "Top view: half of the BWB reference wing (root at left), flow downward", fontsize=10.5,
+            color=INK, va="bottom")
+    ax.set_xlim(-0.12 * S, 1.08 * S); ax.set_ylim(wake_end - 0.03 * S, 0.2 * S)
+    ax.set_aspect("equal"); ax.axis("off")
+
+    # ---- side view of one section
+    af = load_airfoil("mh104")
+    pts = af.selig()
+    xs, ys = pts[:, 0], pts[:, 1]
+    bx.add_patch(Polygon([(1.0, 0.012), (2.05, 0.10), (2.05, -0.16), (1.0, -0.012)], closed=True, fc="#DCE8F5", ec="none"))
+    d = np.gradient(pts, axis=0); nrm = np.column_stack([d[:, 1], -d[:, 0]]); nrm /= np.linalg.norm(nrm, axis=1)[:, None]
+    for off in (0.012, 0.024, 0.036):
+        o = pts + off * nrm
+        bx.plot(o[:, 0], o[:, 1], color=VIO, lw=0.8, alpha=0.75)
+    bx.fill(xs, ys, fc="#EEF2F5", ec=INK, lw=1.6, zorder=3)
+    half = np.arange(len(pts)) < len(pts) // 2
+    up = half & (pts[:, 0] >= 0.10) & (pts[:, 0] <= 0.85)
+    lo = ~half & (pts[:, 0] >= 0.60)
+    bx.plot(xs[up], ys[up] + 0.004, color=AMB, lw=5, solid_capstyle="butt", zorder=4)
+    bx.plot(xs[lo], ys[lo] - 0.004, color=AMB, lw=5, solid_capstyle="butt", zorder=4)
+    xb = np.linspace(0.42, 0.62, 40); yb = np.interp(xb, xs[up][::-1], ys[up][::-1]) + 0.004 + 0.022 * np.sin(np.pi * (xb - 0.42) / 0.20)
+    bx.plot(xb, yb, color=AMB, lw=1.4, ls=(0, (3, 2)), zorder=4)
+    bx.add_patch(Circle((0.0, 0.0), 0.045, fc=RED, ec="none", alpha=0.45, zorder=4))
+    bx.add_patch(Circle((1.0, 0.0), 0.045, fc=RED, ec="none", alpha=0.45, zorder=4))
+    num(bx, -0.10, 0.09, 2, RED); num(bx, 0.52, 0.17, 3, AMB); num(bx, 1.02, 0.10, 6, RED)
+    num(bx, 0.25, -0.13, 1, VIO); num(bx, 1.55, -0.14, 7, LBL)
+    bx.text(0.40, -0.135, "wall layers", fontsize=9, color=VIO, va="center")
+    bx.text(0.52, 0.225, "bubble", fontsize=9, color=AMB, ha="center")
+    bx.text(-0.2, 0.33, "Side view: one section (MH 104, BWB root)", fontsize=10.5, color=INK, va="bottom")
+    bx.set_xlim(-0.2, 2.05); bx.set_ylim(-0.25, 0.33); bx.set_aspect("equal"); bx.axis("off")
+
+    # ---- key
+    rows = [(1, VIO, "Wall layers, all over: first cell from y⁺ ≤ 1 at each station's own Re (root and tip differ up to 17 × in Re)"),
+            (2, RED, "Leading edge: suction peak; at high angle the flow turns turbulent at the nose"),
+            (3, AMB, "Transition band: upper surface 10–85 % chord, lower surface 60–100 % (laminar run ends, bubbles; for a transition model)"),
+            (4, AMB, "Breaks b1, b2: kinks in the surface, jump in the span loading: a mesh station exactly on each"),
+            (5, BLU, "Tip: smallest chord and Re (below 10⁵ on small wings), tip vortex, first to stall on swept wings"),
+            (6, RED, "Trailing edge and blunt base: base flow and the start of the wake; separation there only near stall"),
+            (7, LBL, "Wake and tip vortex: downwash and induced drag; fine to about 2 chords behind the wing")]
+    kx = fig.add_axes((0.02, 0.01, 0.96, 0.30)); kx.axis("off"); kx.set_xlim(0, 1); kx.set_ylim(0, 1)
+    for i, (k, col, txt) in enumerate(rows):
+        yk = 0.93 - i * 0.14
+        kx.text(0.012, yk, str(k), ha="center", va="center", fontsize=10, fontweight="bold", color=col,
+                bbox=dict(boxstyle="circle,pad=0.28", fc="white", ec=col, lw=2.0))
+        kx.text(0.034, yk, txt, ha="left", va="center", fontsize=10.5, color=INK)
+    fig.savefig(DOCS / "summary_mesh_zones.png", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
 def main() -> None:
     fig_vector()
     fig_types()
     fig_spaces()
     fig_pipeline()
     fig_runs()
-    print("written: docs/summary_vector.png, summary_types.png, summary_spaces.png, summary_pipeline.png, summary_runs.png")
+    fig_mesh_zones()
+    print("written: docs/summary_vector.png, summary_types.png, summary_spaces.png, summary_pipeline.png, summary_runs.png, summary_mesh_zones.png")
 
 
 if __name__ == "__main__":

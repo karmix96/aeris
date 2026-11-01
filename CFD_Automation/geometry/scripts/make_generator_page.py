@@ -169,7 +169,8 @@ FIXES = [
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
     ("Study plan (Stage 0)", "Middle Re level", "Levels are now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Keep 1.5 × 10⁶, or move it to 1 × 10⁶ (log-middle of 3 × 10⁵ and 3 × 10⁶)?", "decide"),
-    ("Study plan (Stage 0)", "Transition model in the pipeline", "ADflow has no transition model (SA is its only differentiated, tested model). The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Add SU2 γ-Reθ (with a transition-ready mesh: y+ ≤ 1, fine chordwise cells over the bubbles) for drag on the reference wings, and keep ADflow SA for mesh studies?", "decide"),
+    ("Study plan (Stage 0)", "Transition model in the pipeline", "ADflow has no transition model (SA is its only differentiated, tested model). The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Add SU2 γ-Reθ (with a transition-ready mesh: y+ ≤ 1, fine chordwise cells over the bubbles) for drag on the reference wings, and keep ADflow SA for mesh studies? Logic check (1 Nov 2026): what a mesh must resolve depends on the model, so an SA mesh study alone does not qualify the mesh for γ-Reθ: build the mesh transition-ready from the start and repeat a reduced mesh study with γ-Reθ on 2–3 reference wings. Fix the SA inflow eddy viscosity (ν̃/ν about 3, Spalart &amp; Rumsey 2007); with a low value SA shows an uncontrolled apparent transition (Crivellini &amp; D'Alessandro 2014).", "decide"),
+    ("Flow maps", "Sweep and aspect ratio stay in every set", "The 2-D strips do not use sweep or aspect ratio, so the sensitivity study cannot rank them; their low scores mean 'not modelled'. Keep both fully sampled in every CFD and ML set, and justify similarity scaling by dimensional analysis, not by the sensitivity result.", "act"),
     ("Flow maps", "The SA rule", "The tool proposes SA when fully turbulent SA changes the profile drag by under 10 %, the upper surface turns turbulent near the nose (mean laminar run under 20 % chord; a small drag error with a long laminar run is a coincidence of two different flows) and no strip is below Re 10⁵. Both thresholds are our choice. Tie the first to the drag budget instead (the error in counts)?", "decide"),
     ("Flow maps", "N<sub>crit</sub> of the tool", "Default 9 (quiet air, as in flight at altitude). Low-level flight in gusty air is nearer 5–7; the check shows N<sub>crit</sub> 5 changes the SA error by __FD_N5__ points. Keep 9 and show 5 as a band?", "decide"),
     ("Flow maps", "Level-flight band", "A grid point counts as level flight when its wing loading is within × / ÷ 2 of the fit to 37 real wings (35 of them are). Keep, or narrow it per class?", "decide"),
@@ -805,15 +806,17 @@ def flowdata_conclusions(a: dict) -> str:
         f"{_pc(ba['median'])} (10–90 %: {_pc(ba['q10'])} to {_pc(ba['q90'])}); within ±10 % in only {_pc(ba['share_sa_ok'], False)} "
         f"of rows. In level flight at real wing loadings: {_pc(lf['bias_all']['median'])}, within ±10 % in "
         f"{_pc(lf['bias_all']['share_sa_ok'], False)}. So the tool proposes a transition model for {_pc(tm, False)} of rows.",
-        f"<strong>How the wing flies sets the error more than what it looks like.</strong> Speed, angle and altitude explain "
+        f"<strong>In this 2-D model, how the wing flies sets the error more than what it looks like.</strong> Speed, angle and altitude explain "
         f"{share('tailless', 'flight condition')} of its spread alone on tailless wings ({100 * gt['tailless']['flight condition']:.0f} % "
         f"with interactions), {share('conventional', 'flight condition')} on conventional ones ({100 * gt['conventional']['flight condition']:.0f} %). "
         f"The wing shape explains {share('tailless', 'wing shape')} and {share('conventional', 'wing shape')} alone. Wings differ by about "
-        f"±10 points: the middle 80 % of BWB wings have a median error of {_pc(ws['bwb']['q10'])} to {_pc(ws['bwb']['q90'])}.",
+        f"±10 points: the middle 80 % of BWB wings have a median error of {_pc(ws['bwb']['q10'])} to {_pc(ws['bwb']['q90'])}. "
+        f"Two cautions: the strips see the shape only through chord and twist, and the shares depend on our grid, which crosses every "
+        f"angle with every speed (in level flight the angle follows the speed).",
         f"<strong>The angle is the strongest single input.</strong> The error peaks at {a_peak:g}° ({_pc(by_a[a_peak])}) and falls to "
         f"{_pc(by_a[max(by_a)])} at {max(by_a):g}°: at high angle the real flow turns turbulent near the nose by itself, so fully "
         f"turbulent CFD comes closer. Trailing-edge separation appears at {max(te_a):g}° ({_pc(te_a[max(te_a)], False)} of the half "
-        f"wing on average).",
+        f"wing on average). Both high-angle numbers are exaggerated by the missing induced angle (logic check above).",
         f"<strong>On conventional wings the section changes how the angle acts.</strong> The section set alone explains "
         f"{100 * conv_alone:.0f} % of the spread, but {100 * conv_total:.0f} % with its interactions: on LA2573A the error grows with the "
         f"angle, on NACA 44xx, SD7032 and E387 it falls. Lowest median: {html.escape(lo_set[1])} ({_pc(lo_set[0])}, its bubbles already cost "
@@ -824,13 +827,15 @@ def flowdata_conclusions(a: dict) -> str:
         f"<strong>Below Re 10⁵ the sign flips.</strong> Where most of the half wing is below 10⁵ ({lr['n']:,} rows), the median error is "
         f"{_pc(lr['bias_median'])} and {_pc(lr['share_negative'], False)} are negative: long laminar bubbles give the real flow more drag than "
         f"fully turbulent CFD. Part of the half wing is below 10⁵ in {_pc(low['bwb'], False)} of BWB rows, {_pc(low['flying_wing'], False)} "
-        f"flying wing, {_pc(low['cranked'], False)} cranked, {_pc(low['tapered'], False)} tapered. There no RANS model is reliable.",
+        f"flying wing, {_pc(low['cranked'], False)} cranked, {_pc(low['tapered'], False)} tapered. There SA is wrong in sign, XFOIL itself is "
+        f"least reliable, and a transition model must be checked against experiments before it is trusted.",
         f"<strong>Laminar bubbles are the normal case.</strong> On average {_pc(min(bub_a.values()), False)}–{_pc(max(bub_a.values()), False)} "
         f"of the half wing has an upper-surface bubble, depending on the angle; most at slow speed. A mesh for a transition model "
         f"must resolve them (fine chordwise cells over the bubble, y+ ≤ 1).",
-        f"<strong>Size matters through Re; the other shape inputs barely do.</strong> The mean chord is the only strong shape input "
-        f"(larger chord, higher Re, larger SA error up to about Re 10⁶). Taper, sweep, washout and aspect ratio move the median by a few "
-        f"points. Dihedral cannot change a strip answer and scores zero: a built-in placebo for the method.",
+        f"<strong>Size acts through Re; sweep and aspect ratio cannot act in this model.</strong> The mean chord is the only strong shape "
+        f"input (larger chord, higher Re, larger SA error up to about Re 10⁶). Washout and taper act only through the local angle and chord. "
+        f"Sweep and aspect ratio do not enter the 2-D strips, so their low scores mean 'not modelled', like dihedral (a built-in placebo), "
+        f"not 'unimportant': in 3-D, sweep drives spanwise flow, crossflow and tip stall, and aspect ratio sets the induced angle.",
         f"<strong>Swept tailless wings may see crossflow transition.</strong> {_pc(xf['bwb'], False)} of BWB rows and "
         f"{_pc(xf['flying_wing'], False)} of flying-wing rows have a leading edge swept over 25° with Re normal to it above 10⁶. "
         f"Neither XFOIL nor γ-Reθ without a crossflow term sees it; there the transition position is less certain.",
@@ -840,10 +845,11 @@ def flowdata_conclusions(a: dict) -> str:
         f"under {max(100 * st, 0.1):.1f}. The tables reproduce direct XFOIL to a median {100 * tv['free']['cd_rel_median']:.1f} % in drag.",
         f"<strong>In the whole drag the error is smaller, but still large.</strong> With an elliptic induced drag added, fully turbulent "
         f"SA overestimates the total drag by a median {_pc(tot[0])} to {_pc(tot[-1])} by type: far above the 3-count mesh budget.",
-        "<strong>What this means for the CFD.</strong> Use SA (ADflow) for mesh studies, where the model does not matter, and as an "
-        "upper bound for drag. For drag numbers, run a transition model (SU2 γ-Reθ) on reference wings, or report every SA drag with "
-        "its band from these tables. Below Re 10⁵, neither is enough. The tool gives the band, the bubble positions and the model for "
-        "any wing in milliseconds.",
+        "<strong>What this means for the CFD.</strong> Start the mesh studies with SA (ADflow) and use SA as an upper bound for drag, "
+        "but make the mesh transition-ready (y⁺ ≤ 1 at each station's Re, fine cells over 30–70 % of the chord) and repeat a reduced "
+        "mesh study with the transition model: what a mesh must resolve depends on the model. For drag numbers, run a transition "
+        "model (SU2 γ-Reθ) on reference wings, or report every SA drag with its band from these tables. Below Re 10⁵, neither is "
+        "enough. The tool gives the band, the bubble positions and the model for any wing in milliseconds.",
     ]
     return "\n".join(f"<li>{x}</li>" for x in items)
 
@@ -1183,8 +1189,8 @@ REFINE = [
     ("Leading edge (nose)", "Suction peak, start of the laminar run, stall at 12°",
      "Chordwise spacing solved so no cell turns the surface by more than 10° (ladder 12 / 10 / 8 / 6°); nose cells of neighbouring stations differ by at most 15 %",
      "chordwise 35 %", "Roadmap R-S.5, R-S.6 (laws 1, 2)", "In place"),
-    ("Upper surface, about 30–60 % chord", "Laminar separation bubble and transition",
-     "Only with a transition model: fine chordwise cells over the bubble and a cap on growth along the ring (≤ 1.25). With fully turbulent SA there is no bubble to resolve",
+    ("Transition band: upper surface 10–85 % chord, lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 15 % to 80 % of the chord), and the lower surface turns turbulent near the trailing edge",
+     "Only with a transition model: fine chordwise cells over the band and a cap on growth along the ring (≤ 1.25). With fully turbulent SA there is no bubble to resolve",
      "chordwise 35 %", "Our choice; depends on the transition route (Stage 0 D5)", "Not done"),
     ("Trailing edge and blunt base", "Base drag, base flow, start of the wake",
      "Chordwise spacing 0.1 % of local chord at the edge; 8 cells (9 points) across the base at the coarse level",
@@ -1256,7 +1262,7 @@ def fig_refine_side() -> str:
     o.append(f'<line class="leader" x1="{X0 - 12}" y1="{YC - 8}" x2="{X0 - 60}" y2="{YC + 70}"/><text class="lab" x="{X0 - 110}" y="{YC + 88}">nose: ≤ 10° turning per cell</text>')
     o.append(f'<line class="leader" x1="{te + 6}" y1="{YC + 10}" x2="{te + 40}" y2="{YC + 80}"/><text class="lab" x="{te + 20}" y="{YC + 98}">edge 0.1 % c · 8 cells across the base</text>')
     o.append(f'<line class="leader" x1="{X0 + 0.5 * C}" y1="{YC - 30}" x2="{X0 + 0.45 * C}" y2="{YC - 70}"/><text class="lab" x="{X0 + 0.1 * C:.0f}" y="{YC - 76}">wall layers: y⁺ ≤ 1, growth ≤ 1.25, ≥ 30 cells</text>')
-    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">bubble zone 30–60 % c (with a transition model)</text>')
+    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">transition band: upper 10–85 % c, lower 60–100 % c (transition model)</text>')
     o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed)</text>')
     o.append("</svg>")
     return "\n".join(o)
@@ -1854,6 +1860,7 @@ __FD_KPI__
   </div>
   <div class="weak amber"><strong>Same assumptions as the flow maps.</strong> 2-D strips along the half wing; local angle = root angle + twist (no induced angle); XFOIL e<sup>N</sup> with N<sub>crit</sub> 9 (quiet air) for free transition, tripped at 1 % chord for fully turbulent (what SA does); Stage 0 air. "SA drag error" = profile drag tripped / free − 1, chord-weighted along the span. A grid point is "level flight" when the lift it makes (3-D estimate) carries the wing loading real wings of the same span carry (fit to 37 real wings, within × / ÷ 2).</div>
   <div class="weak" style="border-left-color: var(--bwb)"><strong>Four words used in every figure below.</strong> <strong>SA drag error</strong>: how much more profile drag fully turbulent CFD (SA) gives than the real flow; +60 % means 1.6 times the real value, 0 means right. <strong>Laminar run</strong>: how far from the nose the flow on the upper surface stays laminar, in % of the chord. <strong>Bubble span</strong>: the share of the half wing with a laminar separation bubble. <strong>Level flight</strong>: the wing makes the lift that real wings of its span carry. Every figure has a <em>How to read</em> line and a conclusion box under it.</div>
+  <div class="weak"><strong>Logic check (1 Nov 2026): read this first.</strong> This dataset leaves out the induced angle, so at high angle the strips sit too close to stall. A re-run with the engine's induced-angle option (all 400 wings) gives: median SA drag error +62 % (not +55 %); level flight +68 %, within ±10 % in 3 % of cases (not 7 %); the error at 10° root angle +40 % (not +20 %); trailing-edge separation at 10° on 2 % of the half wing (not 20 %); SA adequate in 2 % of cases (not 7 %), and never for flying wings at 10°. So the high-angle findings below (the fall of the error at 10°, trailing-edge separation at 10°, SA adequate at 10°) are artefacts. Also: "beyond 2-D stall" means XFOIL gave no answer, mostly not stall; in level flight the error rises with speed from +24 % (Mach 0.03) to +78 % (0.11–0.14); and between similar wings SA's error on the drag difference is 4–5 counts (median), above the 2-count target in 70 % of pairs. The next re-run makes the induced angle the baseline. All items: executive summary, section 6.</div>
   <h2 style="font-size:22px">What we found, under these assumptions</h2>
   <ol class="concl">
 __FD_CONCL__
@@ -1861,7 +1868,7 @@ __FD_CONCL__
 
   <h2 style="font-size:22px">1. The 2-D building blocks</h2>
   <p>Every section, free and tripped, on a grid of 14 Re (1.5 × 10⁴ – 6 × 10⁶) × 3 Mach × 49 angles: 2,408 XFOIL sweeps, made robust (a failing angle is skipped, never hangs). A wing is then evaluated in milliseconds by interpolation.</p>
-  <figure class="fig card">__PNG_FD_SXTR__<figcaption class="cap"><span class="howto">How to read.</span> Ten small maps, one per airfoil (2-D XFOIL, free transition, Mach 0.1). In each map, left to right is the angle the airfoil sees (−6° to 14°) and bottom to top is its Re (4 = 10⁴, 5 = 10⁵, 6 = 10⁶). The colour shows where the flow on the upper surface turns turbulent: yellow = near the trailing edge (long laminar run), dark purple = near the nose. Grey: XFOIL gave no answer (stall). Dashed lines: the four study Re levels.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_SXTR__<figcaption class="cap"><span class="howto">How to read.</span> Ten small maps, one per airfoil (2-D XFOIL, free transition, Mach 0.1). In each map, left to right is the angle the airfoil sees (−6° to 14°) and bottom to top is its Re (4 = 10⁴, 5 = 10⁵, 6 = 10⁶). The colour shows where the flow on the upper surface turns turbulent: yellow = near the trailing edge (long laminar run), dark purple = near the nose. Grey: XFOIL gave no answer (near stall, but also at some small angles). Dashed lines: the four study Re levels.</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>On every airfoil the laminar run is long at low Re and small angles, and shrinks as Re or the angle grows. Our wings fly mostly at small angles and Re 10⁵ – 3 × 10⁶, where the run is long; fully turbulent CFD throws it away.</div>
   <figure class="fig card">__PNG_FD_SBUB__<figcaption class="cap"><span class="howto">How to read.</span> Same ten maps and axes. Red: XFOIL finds a laminar separation bubble on the upper surface (the laminar flow lifts off, turns turbulent and lands again). White: no bubble. Grey: no answer.</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>Every airfoil has bubbles over a wide band, from about Re 6 × 10⁴ to 2 × 10⁶ at small and moderate angles. They change drag and lift, and fully turbulent CFD cannot see them.</div>
@@ -1876,7 +1883,7 @@ __FD_CONCL__
   <figure class="fig card">__PNG_FD_VIOL__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type; one violin per section set (* = suggested). A violin is wide where many cases have that SA drag error. Dot and bar: the median and the middle 80 % of cases. White diamond: the median in level flight. Green band: ±10 %, where SA would be good enough. Cases: all focus wings at realistic speeds, all angles and altitudes.</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>For every type and section set the median error is +38 to +64 %. Few cases fall in the green band: 0–10 % with the suggested sections, at most 33 % (E387). Changing the airfoil does not make SA right.</div>
   <figure class="fig card">__PNG_FD_BRE__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type (suggested sections). Left to right: the wing's mean Re (log scale: 5 = 10⁵, 6 = 10⁶). Bottom to top: SA drag error. Each coloured line is the median for one root angle (dark purple 0° to yellow 10°); the grey cloud is all cases. Green band: ±10 %. Dotted red line: Re 10⁵.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>The error is largest near Re 10⁶ at small angles (2–4°), up to about +95 %. It is smaller at 10°, where the real flow turns turbulent near the nose by itself (on flying wings it even falls inside ±10 %). On conventional wings it falls toward zero near Re 10⁵ and turns negative below it (bubbles).</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The error is largest near Re 10⁶ at small angles (2–4°), up to about +95 %. It looks much smaller at 10°, but that end is exaggerated by the missing induced angle (with it: about +40 % at 10°, never inside ±10 % on flying wings). On conventional wings it falls toward zero near Re 10⁵ and turns negative below it (bubbles).</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Section set</th><th>SA drag error, median</th><th>10–90 %</th><th>Within ±10 %</th><th>Laminar run, upper</th><th>Span with a bubble</th><th>Span with TE separation</th><th>Span with a 2-D answer</th></tr></thead>
     <tbody>__FD_STATS__</tbody>
@@ -1889,38 +1896,38 @@ __FD_CONCL__
     <tbody>__FD_LEVEL__</tbody>
   </table></div>
   <p class="muted">__FD_TOTAL__</p>
-  <div class="cbox"><span class="ctag">Conclusion</span>In level flight (27 % of cases) the error is even larger: median +60 to +69 % by type, within ±10 % in at most 11 % of cases. Counted on the whole drag (profile + induced), fully turbulent CFD is about +18 to +26 % too high.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>In level flight (27 % of cases) the error is even larger: median +60 to +69 % by type, within ±10 % in at most 11 % of cases; with the induced angle +62 to +74 %, within ±10 % in at most 6 %. Counted on the whole drag (profile + induced), fully turbulent CFD is about +18 to +26 % too high.</div>
 
   <h2 style="font-size:22px">4. Trends</h2>
   <figure class="fig card">__PNG_FD_TMACH__<figcaption class="cap"><span class="howto">How to read.</span> Four columns, one per type. Three rows: SA drag error; laminar run on the upper surface (% of chord); share of the span with a bubble. Left to right: flight Mach. Line: median; shaded band: the middle half of the cases; one colour per section set. Grey zone: faster than any real wing of that family.</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>Flying faster (higher Re) shortens the laminar run (about 49 → 35 % of chord) and removes bubbles (from 88 % to 41 % of the span). The SA error grows from about +40 % at Mach 0.03 to about +62 % at Mach 0.1, then stays flat.</div>
   <figure class="fig card">__PNG_FD_TALPHA__<figcaption class="cap"><span class="howto">How to read.</span> Same layout as above, but left to right is the root angle (0–10°).</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>A higher angle moves transition toward the nose (laminar run about 62 → 12 % of chord), so the SA error falls: about +76 % at 2°, +20 % at 10°. LA2573A is the exception: its error grows with the angle. Trailing-edge separation shows up mainly at 10° (22 % of the span).</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>A higher angle moves transition toward the nose and the SA error falls after about 2–4°. This baseline has no induced angle, so the high-angle end is exaggerated: with it, the laminar run goes from 64 % (0°) to 26 % (10°) of the chord, the error is +80 % at 4° and still +40 % at 10°, and trailing-edge separation stays at 1–3 % of the span (not 20 % at 10°). LA2573A is the exception: its error grows with the angle.</div>
   <figure class="fig card">__PNG_FD_PART__<figcaption class="cap"><span class="howto">How to read.</span> Six panels, one wing input each: mean chord (size), aspect ratio, washout, sweep, taper, dihedral. Left to right: the input value; bottom to top: SA drag error. Line: median; band: the middle half; one colour per type. Suggested sections, realistic speeds.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>Only size matters: bigger wings (larger mean chord, so higher Re) have about 15 points more error. Aspect ratio, taper and sweep move it by less than 4 points; more washout lowers it on flying wings (about −10 points). Dihedral does nothing, as it should (it is the check).</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Size acts through Re: bigger wings (larger mean chord) have about 15 points more error. Washout and taper act only through the local angle and chord; more washout lowers the error on flying wings (about −10 points). Sweep and aspect ratio do not enter the 2-D strips at all, so their flat lines mean "not modelled", like dihedral, not "unimportant": in 3-D, sweep drives spanwise flow, crossflow and tip stall, and aspect ratio sets the induced angle (+4 points median, up to +35, when added).</div>
 
   <h2 style="font-size:22px">5. Which model, where</h2>
   <figure class="fig card">__PNG_FD_CAT__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type (suggested sections). Left to right: flight Mach; bottom to top: root angle. Each cell is one flight condition. Colour: the model the tool proposes for most wings there (green: SA is enough; orange: transition model; red: transition model, part of the span below Re 10⁵; grey: beyond 2-D stall). Number: the median SA drag error in %. Black frame: half or more of the wings fly level there at a real wing loading.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>Almost every cell is orange: these wings need a transition model for drag. SA is enough only on flying wings at 10° root angle; the BWB is red at the slowest speed (part of its span below Re 10⁵). In the framed level-flight cells the answer is orange, except two flying-wing cells at 10°.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Almost every cell is orange: these wings need a transition model for drag. The green flying-wing row at 10° is an artefact of the missing induced angle: with it, SA is adequate in 0.1 % of flying-wing cases at 10° (error about +30 %). The BWB is red at the slowest speed (part of its span below Re 10⁵).</div>
 
   <h2 style="font-size:22px">6. What drives the flow: sensitivity</h2>
   <p>The dataset crosses wings, section sets and conditions in full, so the three groups are independent and their shares can be read apart. A gradient-boosted model (test R² in the table) gives each group's share alone and with its interactions (total).</p>
   <figure class="fig card">__PNG_FD_GROUPS__<figcaption class="cap"><span class="howto">How to read.</span> Two panels: tailless and conventional wings. One bar per output (SA drag error, laminar run, bubbles and so on). Each bar splits how much that output varies into what each group explains on its own: blue = wing shape, brown = sections, green = how it flies (speed, angle, altitude); grey = only when the groups act together. On the right, 'total' is each group's share including what it does together with the others.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>How the wing flies sets the SA error: 68 % on its own for tailless wings (92 % in total). On conventional wings the sections matter too, but only together with the angle (5 % alone, 60 % in total). The wing shape alone explains little (2–4 %); it acts through size and Re.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>In this 2-D model, how the wing flies sets the SA error: 68 % on its own for tailless wings (92 % in total). On conventional wings the sections matter too, but only together with the angle (5 % alone, 60 % in total), so SA would rank airfoils wrongly. The wing shape alone explains little (2–4 %), partly because the strips see shape only through chord and twist. The shares also depend on our grid, which crosses every angle with every speed; in level flight the angle follows the speed.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Family</th><th>Output</th><th>Wing shape alone / total</th><th>Sections alone / total</th><th>Flight alone / total</th><th>Model R²</th><th>Strongest inputs (share of importance; ↑ grows with it, ↓ falls)</th></tr></thead>
     <tbody>__FD_DRIVERS__</tbody>
   </table></div>
   <div class="cbox"><span class="ctag">Conclusion</span>The root angle is the strongest single input for the SA error (43–66 % of the importance), then Mach and, on conventional wings, the section set (34 %). The share of the span below Re 10⁵ depends mostly on speed and size.</div>
   <figure class="fig card">__PNG_FD_PERM__<figcaption class="cap"><span class="howto">How to read.</span> Two panels (tailless, conventional). Rows: inputs; columns: outputs. A darker cell means that input matters more for that output: it measures how much worse a fitted model predicts when that input is shuffled (each column adds up to 1). + / −: the output grows / falls as the input grows.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>Angle, Mach, size and the section set carry almost all of the importance. The other planform inputs carry little, except taper for the low-Re tips of tailless wings and washout for where they stall.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Angle, Mach, size and the section set carry almost all of the importance. The other planform inputs carry little, except taper for the low-Re tips of tailless wings and washout for where they stall. Sweep and aspect ratio cannot score here: the strips do not use them.</div>
   <figure class="fig card">__PNG_FD_ETA__<figcaption class="cap"><span class="howto">How to read.</span> Same layout, with a simpler measure that needs no model: the share of the variation one input explains on its own (η²). For wing inputs, values up to about 0.05 are noise: dihedral, which cannot change a strip answer, shows that level.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>The simple measure agrees with the model: angle and Mach dominate, size comes next, and the other wing inputs are near noise level.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The simple measure agrees with the model: angle and Mach dominate, size comes next, and the other wing inputs are near noise level, as expected for inputs the 2-D strips barely use.</div>
 
   <h2 style="font-size:22px">7. How much do our assumptions change the answer?</h2>
   <p>Each check reruns 20 wings per type with one assumption changed, and compares the same wing, sections and condition (percentage points of the SA drag error, laminar run, bubble span and TE-separation span).</p>
   <figure class="fig card">__PNG_FD_CHECKS__<figcaption class="cap"><span class="howto">How to read.</span> Left: one box per changed assumption, on the same wings, sections and conditions; it shows how many points the SA drag error moves (line: median; box: the middle half; 0 = no change). Middle: profile drag from the section tables (up) against a direct XFOIL run (across) at 320 random points; dots on the diagonal agree. Right: the same for where the flow turns turbulent.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>Only the turbulence level of the air (N<sub>crit</sub>) moves the answer much: N<sub>crit</sub> 5 lowers the error by 9 points (median). The induced angle raises it by 4; more or fewer strips and compressibility change almost nothing. The tables match direct XFOIL (median drag difference 0.7 %). The main finding, SA gives too much drag, holds in every check.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Only the turbulence level of the air (N<sub>crit</sub>) moves the headline much: N<sub>crit</sub> 5 lowers the error by 9 points (median). The induced angle raises the median by 4–8 points and, more important, removes the high-angle trends (logic check above). More or fewer strips and compressibility change almost nothing. The tables match direct XFOIL (median drag difference 0.7 %). The main finding, SA gives too much drag, holds in every check.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Changed</th><th>SA error, median change [points]</th><th>5–95 %</th><th>Laminar run, median change [points]</th><th>Bubble span, mean size of change [points]</th><th>TE-separation span, mean size of change [points]</th><th>Pairs</th></tr></thead>
     <tbody>__FD_CHECKS__</tbody>

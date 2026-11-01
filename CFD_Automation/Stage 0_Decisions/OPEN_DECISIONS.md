@@ -152,3 +152,15 @@
     `geometry/decisions/flow_maps.md`. Open: transition model in the pipeline (SU2 γ-Reθ for drag, ADflow
     SA for mesh studies); the SA rule (|error| < 10 % and laminar run < 20 % chord, our choice); the tool's
     default N_crit; the level-flight band; a 3-D check of the strips before quoting numbers in the paper.
+52. **Logic check of the geometry and flow work (1 Nov 2026).** Decide before the mesh module: (a) the model plan.
+    What a mesh must resolve depends on the turbulence model, so "SA for mesh studies, the model does not matter"
+    was wrong: start with SA (ADflow) on a transition-ready mesh (y+ <= 1 per station, fine chordwise cells over
+    30–70 % chord) and repeat a reduced mesh study with the transition model on 2–3 reference wings. (b) The SA
+    inflow eddy viscosity (nu~/nu about 3), so SA is really fully turbulent. Also: sweep and aspect ratio do not
+    enter the 2-D strips, so keep them fully sampled; the SA error is an upper bound for real (rough, gusty,
+    propeller-washed) wings; SA mis-ranks airfoils. See `geometry/decisions/flow_maps.md`, "Logic check". Independent review
+    (same day) added: (c) make the induced angle the baseline of the flow tool and re-run (the baseline's high-angle
+    trends, TE separation at 10 deg and "SA adequate at 10 deg" were artefacts); (d) D1 (2 counts) is a numerical
+    target only: SA's error on drag differences between similar wings is 4-5 counts median, so a drag dataset meant to
+    rank wings needs transition-model results at least on a calibration subset; (e) the mesh transition band is upper
+    10-85 % c and lower 60-100 % c, not 30-70 %.

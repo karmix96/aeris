@@ -345,9 +345,9 @@ def draw_view(ax, spec, vec, view, color, dashed) -> None:
 
 
 BANDS = [(0, 1e5, "#C0392B", "below 10⁵: laminar separation, RANS poor"),
-         (1e5, 5e5, "#E0A030", "10⁵ – 5 × 10⁵: laminar bubbles, RANS biased"),
-         (5e5, 3e6, "#5B8FD0", "5 × 10⁵ – 3 × 10⁶: transitional to turbulent, RANS good"),
-         (3e6, 1e9, "#1F3F7A", "above 3 × 10⁶: turbulent")]
+         (1e5, 5e5, "#E0A030", "10⁵ – 5 × 10⁵: laminar bubbles; SA drag too high"),
+         (5e5, 3e6, "#5B8FD0", "5 × 10⁵ – 3 × 10⁶: long laminar run; largest SA drag error"),
+         (3e6, 1e9, "#1F3F7A", "above 3 × 10⁶: shorter laminar run; SA still too high")]
 
 
 def fig_local_re(cfg) -> None:

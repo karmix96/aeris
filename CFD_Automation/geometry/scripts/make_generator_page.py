@@ -1670,12 +1670,12 @@ __DERIVED__
     <thead><tr><th>Re (on the local chord)</th><th>Flow</th><th>Who is there</th><th>RANS (SA, fully turbulent)</th></tr></thead>
     <tbody>
       <tr><td class="num">below 10⁵</td><td>Laminar; separation without reattachment is likely; strong hysteresis</td><td>Tips of small wings; full-space micro wings</td><td><span class="flag fix">poor</span> no transition model, results only indicative</td></tr>
-      <tr><td class="num">10⁵ – 5 × 10⁵</td><td>Laminar separation bubbles, transition on the bubble</td><td>Most Class I wings; outer panels of BWBs</td><td><span class="flag open">biased</span> drag too high, bubble missed</td></tr>
-      <tr><td class="num">5 × 10⁵ – 3 × 10⁶</td><td>Transition ahead of mid-chord; mostly attached turbulent flow</td><td>Class II wings; BWB centre bodies</td><td><span class="flag ok">good</span> small bias from the laminar run</td></tr>
-      <tr><td class="num">above 3 × 10⁶</td><td>Turbulent over most of the chord</td><td>Largest full-space roots only</td><td><span class="flag ok">good</span> above the top study level</td></tr>
+      <tr><td class="num">10⁵ – 5 × 10⁵</td><td>Laminar separation bubbles, transition on the bubble</td><td>Most Class I wings; outer panels of BWBs</td><td><span class="flag open">drag too high</span> bubble missed; SA drag error −1 to +77 % (2-D, 2°)</td></tr>
+      <tr><td class="num">5 × 10⁵ – 3 × 10⁶</td><td>Laminar to 30–60 % of chord, then turbulent; attached</td><td>Class II wings; BWB centre bodies</td><td><span class="flag open">drag too high</span> the laminar run is missed: the largest SA drag error, +70 to +130 % (2-D, 2°)</td></tr>
+      <tr><td class="num">above 3 × 10⁶</td><td>Shorter laminar run in quiet air</td><td>Largest roots only</td><td><span class="flag open">drag too high</span> still +70 to +120 % at 3 × 10⁶ in quiet air (2-D); closer in gusty air or on a rough surface</td></tr>
     </tbody>
   </table></div>
-  <p class="muted">Bands are approximate (Carmichael 1981; Lissaman 1983; Mueller &amp; DeLaurier 2003), see <a href="#phenomena">Flow phenomena</a>.</p>
+  <p class="muted">Bands are approximate (Carmichael 1981; Lissaman 1983; Mueller &amp; DeLaurier 2003). "SA drag error" = profile drag of fully turbulent CFD ÷ profile drag of the real flow − 1, from XFOIL (see <a href="#phenomena">Flow phenomena</a> and <a href="#flowdata">Flow dataset</a>). Corrected 1 Nov 2026: this table had called SA "good" above 5 × 10⁵; the 2-D runs show the opposite in quiet air.</p>
 </section>
 
 <section id="phenomena">

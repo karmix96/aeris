@@ -38,7 +38,7 @@ INPUTS = {  # column -> label (sensitivity inputs)
     "max_sweep_deg": "LE sweep (max)", "washout_deg": "washout", "twist0_deg": "root twist",
     "dihedral_p1_deg": "dihedral", "b3_ratio": "outer-panel share", "split_ratio": "inner/middle split",
     "set": "section set", "mach": "Mach", "alpha_deg": "angle of attack", "altitude_m": "altitude"}
-OUTPUTS = {"sa_bias": "SA profile-drag bias", "lam_upper": "laminar run, upper (x_tr / c)",
+OUTPUTS = {"sa_bias": "SA drag error", "lam_upper": "laminar run, upper (x_tr / c)",
            "bubble_span": "span with a bubble", "te_sep_span": "span with TE separation",
            "span_re_lt_1e5": "span below Re 10⁵", "conv_span": "span with a 2-D answer"}
 CATEGORICAL = {"set", "mach", "alpha_deg", "altitude_m"}
@@ -269,7 +269,7 @@ def fig_section_maps() -> None:
             ("xtr", "Where the free flow turns turbulent on the upper surface (x_tr / c), Mach 0.1", "viridis", None, "x_tr / c"),
             ("bub", "Laminar separation bubble on the upper surface (1 = yes), Mach 0.1", "Reds", None, "bubble"),
             ("bias", "Profile drag, fully turbulent / free transition − 1, Mach 0.1 (red: SA too high; blue: free flow draggier, "
-                     "a long bubble)", "RdBu_r", TwoSlopeNorm(vmin=-0.6, vcenter=0.0, vmax=1.5), "SA bias")):
+                     "a long bubble)", "RdBu_r", TwoSlopeNorm(vmin=-0.6, vcenter=0.0, vmax=1.5), "SA drag error")):
         fig, axes = plt.subplots(2, 5, figsize=(15, 6.2), dpi=105, sharex=True, sharey=True)
         for ax, s in zip(axes.flat, secs):
             f, t = tables.load(s, "free"), tables.load(s, "trip")
@@ -324,7 +324,7 @@ def fig_distributions(df: pd.DataFrame) -> None:
         ax.set_xticks(range(1, len(sets) + 1)); ax.set_xticklabels(labels, fontsize=8)
         ax.set_title(NAME[t], color=COL[t], fontweight="bold"); _clean(ax)
     for ax in axes[::2]:
-        ax.set_ylabel("SA profile-drag bias [%]")
+        ax.set_ylabel("SA drag error [%]")
     fig.suptitle("How far fully turbulent SA is from the free-transition drag (all focus wings, realistic speeds, angles, altitudes)\n"
                  "dot and bar: median and 10–90 %; diamond: median in level flight; green band: ±10 %; * suggested sections",
                  x=0.01, ha="left", fontsize=10.5)
@@ -342,7 +342,7 @@ def fig_trends(df: pd.DataFrame) -> None:
         for c, t in enumerate(WING_TYPES):
             dd = df[(df["type"] == t)]
             handles = []
-            for r, (ycol, ylab, scale) in enumerate((("sa_bias", "SA drag bias [%]", 100), ("lam_upper", "laminar run, upper [% chord]", 100),
+            for r, (ycol, ylab, scale) in enumerate((("sa_bias", "SA drag error [%]", 100), ("lam_upper", "laminar run, upper [% chord]", 100),
                                                      ("bubble_span", "span with a bubble, mean [%]", 100))):
                 ax = axes[r, c]
                 for s in sorted(dd["set"].unique()):
@@ -437,7 +437,7 @@ def fig_categories(df: pd.DataFrame) -> None:
     h = [Patch(color=c, label=l) for c, l in zip(cols, engine.CATEGORIES)]
     h.append(Patch(fc="none", ec="#111111", lw=1.8, label="half or more of the wings in level flight here"))
     fig.legend(handles=h, loc="lower center", ncol=3, fontsize=8.5, frameon=False)
-    fig.suptitle("Proposed model, most common answer per condition; numbers: median SA profile-drag bias [%]",
+    fig.suptitle("Proposed model, most common answer per condition; numbers: median SA drag error [%]",
                  x=0.01, ha="left", fontsize=10.5)
     fig.tight_layout(rect=(0, 0.07, 1, 0.95))
     fig.savefig(DOCS / "flow_categories.png")
@@ -489,9 +489,9 @@ def fig_partial(df: pd.DataFrame) -> None:
             ax.fill_between(g["x"], 100 * g["lo"], 100 * g["hi"], color=COL[t], alpha=0.1)
         ax.set_xlabel(lab); _clean(ax)
     for ax in axes[:, 0]:
-        ax.set_ylabel("SA drag bias [%]")
+        ax.set_ylabel("SA drag error [%]")
     axes[0, 0].legend(fontsize=8, frameon=False)
-    fig.suptitle("SA drag bias against single wing inputs (suggested sections, realistic speeds; median and middle half over "
+    fig.suptitle("SA drag error against single wing inputs (suggested sections, realistic speeds; median and middle half over "
                  "all other inputs)", x=0.01, ha="left", fontsize=10.5)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     fig.savefig(DOCS / "flow_partial.png")
@@ -508,7 +508,7 @@ def fig_checks(chk: dict, tab: dict, bl: dict) -> None:
     data = [100 * np.array(chk[k]["delta_bias"]) for k in keys]
     ax.boxplot(data, orientation="horizontal", showfliers=False, widths=0.6)
     ax.set_yticks(range(1, len(keys) + 1)); ax.set_yticklabels([short[k] for k in keys], fontsize=8)
-    ax.axvline(0, color=MUTED, lw=0.8); ax.set_xlabel("change of the SA drag bias [percentage points]")
+    ax.axvline(0, color=MUTED, lw=0.8); ax.set_xlabel("change of the SA drag error [percentage points]")
     ax.set_title("Same wings and conditions, one assumption changed", fontsize=9.5); _clean(ax)
     d = pd.DataFrame(tab["rows"])
     for ax, (col, lab) in zip(axes[1:], (("cd", "profile drag CD"), ("xtr", "upper transition x_tr / c"))):
@@ -533,7 +533,7 @@ def fig_checks(chk: dict, tab: dict, bl: dict) -> None:
 
 
 def fig_bias_vs_re(df: pd.DataFrame) -> None:
-    """The main trend: SA drag bias against the wing's mean Re, one line per root angle (suggested sections)."""
+    """The main trend: SA drag error against the wing's mean Re, one line per root angle (suggested sections)."""
     plt = _plt()
     fig, axes = plt.subplots(2, 2, figsize=(12, 7.8), dpi=105, sharey=True, sharex=True)
     axes = axes.ravel()
@@ -558,7 +558,7 @@ def fig_bias_vs_re(df: pd.DataFrame) -> None:
     for ax in axes[2:]:
         ax.set_xlabel("log₁₀ mean Re of the wing")
     for ax in axes[::2]:
-        ax.set_ylabel("SA drag bias [%]")
+        ax.set_ylabel("SA drag error [%]")
     axes[1].legend(title="root angle", fontsize=8, title_fontsize=8, frameon=False, loc="upper right", ncol=2)
     fig.suptitle("Fully turbulent SA against free transition, by the wing's mean Re (suggested sections)\n"
                  "line: median per root angle; grey: all rows; green band: ±10 %; dotted: Re 10⁵", x=0.01, ha="left", fontsize=10.5)

@@ -442,11 +442,14 @@ def plot(fm: dict, path, title: str | None = None) -> None:
     dp = fm.get("dataset_position")
     if dp and "sa_bias" in dp:
         lines += [""] + textwrap.wrap(
-            f"Among {fm['generator_type']} wings of the flow dataset: SA drag bias at percentile {dp['sa_bias']['percentile']:.0f} "
+            "SA drag error = profile drag of fully turbulent CFD (SA) ÷ profile drag of the real flow (free transition) − 1, "
+            "from 2-D XFOIL strips: + means SA gives too much drag.", 78)
+        lines += textwrap.wrap(
+            f"Among {fm['generator_type']} wings of the flow dataset: SA drag error at percentile {dp['sa_bias']['percentile']:.0f} "
             f"(median {100 * dp['sa_bias']['median']:+.0f} %)"
             + (f", laminar run at percentile {dp['lam_upper']['percentile']:.0f}" if "lam_upper" in dp else ""), 78)
     if fm.get("section_sets"):
-        lines += ["", "Other section sets, same condition (SA bias / bubble span):"]
+        lines += ["", "Other section sets, same condition (SA drag error / bubble span):"]
         for s in fm["section_sets"]:
             b = "–" if s["sa_bias"] is None else f"{100 * s['sa_bias']:+.0f} %"
             lines.append(f"  {s['id']}  {s['label']}: {b} / {100 * (s['bubble_span'] or 0):.0f} %")
@@ -457,7 +460,7 @@ def plot(fm: dict, path, title: str | None = None) -> None:
 
 
 def plot_sheet(sh: dict, path, title: str = "") -> None:
-    """Four maps over Mach x root angle: SA drag bias with the model category, laminar run, bubble
+    """Four maps over Mach x root angle: SA drag error with the model category, laminar run, bubble
     span and trailing-edge separation span."""
     import logging
     import matplotlib
@@ -466,7 +469,7 @@ def plot_sheet(sh: dict, path, title: str = "") -> None:
     import matplotlib.pyplot as plt
     M, A = np.array(sh["machs"]), np.array(sh["alphas"])
     fig, axes = plt.subplots(1, 4, figsize=(15, 3.9), dpi=110, sharey=True)
-    for ax, (k, lab, cmap, lo, hi) in zip(axes, (("sa_bias", "SA drag bias [%]", "magma_r", 0, 120),
+    for ax, (k, lab, cmap, lo, hi) in zip(axes, (("sa_bias", "SA drag error [%]", "magma_r", 0, 120),
                                                   ("lam_upper", "laminar run, upper [% chord]", "viridis", 0, 100),
                                                   ("bubble_span", "span with a bubble [%]", "Reds", 0, 100),
                                                   ("te_sep_span", "span with TE separation [%]", "Purples", 0, 100))):

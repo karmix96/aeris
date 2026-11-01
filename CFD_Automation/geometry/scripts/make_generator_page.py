@@ -784,28 +784,28 @@ def flowdata_conclusions(a: dict) -> str:
 
 
 def xfoil_note() -> str:
+    """Per Re, the range of tripped / free - 1 over the four sections at exactly 2 deg (the same runs as the bars)."""
+    from cfdauto.flowmap import xfoil
+    from cfdauto.geometry.sections import load_airfoil
     f = DOCS / "xfoil_band.json"
     if not f.is_file():
         return "Run scripts/xfoil_band.py."
     d = json.loads(f.read_text())
-    runs, re_of = d["runs"], {f"{r:.0e}": r for r in d["re"]}   # keys were written with one digit
-    by_re = {}
-    for k, v in runs.items():
-        name, re_, mode = k.split("|")
-        if mode != "free":
-            continue
-        t = runs[f"{name}|{re_}|trip"]["polar"]
-        for al in ("0", "2", "4"):
-            if al in v["polar"] and al in t:
-                by_re.setdefault(re_of[re_], []).append(100 * (t[al]["cd"] / v["polar"][al]["cd"] - 1))
-    parts = [f"{sci(r)}: {min(x):+.0f} to {max(x):+.0f} %" for r, x in sorted(by_re.items())]
-    hi = [y for r, x in by_re.items() if r >= 2.9e5 for y in x]
-    import statistics
-    return ("Profile drag, tripped against free transition, at 0–4° for the four suggested sections — "
-            + "; ".join(parts) + f". From 3 × 10⁵ up, turbulent-from-the-nose raises 2-D profile drag by {min(hi):.0f}–{max(hi):.0f} % "
-            f"(median {statistics.median(hi):.0f} %): 30–60 drag counts, ten times the 3-count mesh budget. So the model band, "
-            "not the mesh, sets the error on absolute drag. At 10⁵ the two stay close, because the free flow separates in a long bubble "
-            "and is draggy too. Left: drag increase; right: where the free upper surface turns turbulent.")
+    parts, missing = [], []
+    for r in d["re"]:
+        vals = []
+        for name in d["sections"]:
+            pts = load_airfoil(name).selig()
+            a, b = xfoil.run(pts, r, 2.0, False, 0.0), xfoil.run(pts, r, 2.0, True, 0.0)
+            if a and b:
+                vals.append(100 * (b["cd"] / a["cd"] - 1))
+            else:
+                missing.append(f"{name.upper().replace('MH', 'MH ')} at {sci(r)}")
+        parts.append(f"{sci(r)}: {min(vals):+.0f} to {max(vals):+.0f} %".replace("-", "−"))
+    return ("At 2°, by Re: " + "; ".join(parts) + ". Nothing is hidden: "
+            + (", ".join(missing) + " has no light bar because XFOIL found no converged free-transition answer at 2° there "
+               "(an earlier version silently showed 0° for it). " if missing else "")
+            + "Every angle (−10° to 14°) and Re is in the Flow dataset section.")
 
 
 def sci(x: float) -> str:
@@ -1647,7 +1647,7 @@ __DERIVED__
   <figure class="fig card">__PNG_XFCF__
     <figcaption class="cap">Upper surface at 4°. At 10⁵ and 3 × 10⁵ the free flow runs laminar to mid-chord, separates (shaded, Cf &lt; 0) and turns turbulent on the bubble. At 1.5–3 × 10⁶ transition moves forward to 30–45 % chord with no bubble. Tripped: turbulent from the nose, with much higher friction everywhere.</figcaption></figure>
   <figure class="fig card">__PNG_XFBAND__
-    <figcaption class="cap">Light bar: the drag of the section in real air (laminar at the nose, turning turbulent by itself). Dark bar: the drag fully turbulent CFD would give. The % is how much too high the CFD would be. At Re 10⁵ the two are close because the real flow separates in a long bubble, which is draggy too. __XF_NOTE__</figcaption></figure>
+    <figcaption class="cap">Four airfoils, each run alone in 2-D XFOIL (not a cut of a 3-D wing), at exactly 2° and Mach 0. <strong>Light bar</strong>: free transition (e<sup>N</sup>, N<sub>crit</sub> 9): the flow stays laminar from the nose and turns turbulent by itself, as in quiet real air. <strong>Dark bar</strong>: tripped at 1 % chord: turbulent from the nose, which is what fully turbulent CFD (SA) assumes. The % is tripped / free − 1: how much too high fully turbulent CFD puts the profile drag. At Re 10⁵ the two are close because the free flow separates in a long bubble, which is draggy too. __XF_NOTE__</figcaption></figure>
   <figure class="fig card">__PNG_XFTR__
     <figcaption class="cap">Where the real flow turns turbulent on the upper surface. Light: laminar (low friction); dark: turbulent. Higher Re moves the change toward the nose; the BWB centre-body section (MH 104) turns turbulent earliest.</figcaption></figure>
   <div class="tbl"><table class="wide">

@@ -151,25 +151,32 @@ def plots(res: dict) -> None:
     names = list(SECTIONS)
     short = {k: SECTIONS[k].split(" (")[0] for k in names}
 
-    def pick(pol: dict) -> tuple[str, dict] | tuple[None, None]:
-        for al in ("2", "0", "4"):
-            if al in pol:
-                return al, pol[al]
-        return None, None
+    from cfdauto.flowmap import xfoil as xf
+
+    def at2(name: str, re_: float, tripped: bool) -> dict | None:
+        """Exactly 2 deg, Mach 0: a robust XFOIL run marched from 0 deg (cached). Both bars use the same angle."""
+        return xf.run(load_airfoil(name).selig(), re_, 2.0, tripped, 0.0)
+
+    def pick(pol: dict, name: str = "", re_: float = 0.0, tripped: bool = False) -> tuple[str, dict] | tuple[None, None]:
+        r = at2(name, re_, tripped)
+        return ("2", r) if r else (None, None)
 
     fig, axes = plt.subplots(1, 4, figsize=(13.5, 3.9), dpi=110, sharey=True)
     for ax, re_ in zip(axes, RE):
         k = f"{re_:.0e}"
         ys = np.arange(len(names))
         for i, name in enumerate(names):
-            af, f = pick(res[f"{name}|{k}|free"]["polar"])
-            at, t = pick(res[f"{name}|{k}|trip"]["polar"])
-            if not f or not t:
-                continue
-            ax.barh(i + 0.18, f["cd"] * 1e4, height=0.34, color=col[name], alpha=0.45)
-            ax.barh(i - 0.18, t["cd"] * 1e4, height=0.34, color=col[name])
-            pct = 100 * (t["cd"] / f["cd"] - 1)
-            ax.text(t["cd"] * 1e4 + 3, i - 0.18, f"{pct:+.0f} %", va="center", fontsize=8.5, color=ink, fontweight="bold")
+            af, f = pick(None, name, re_, False)
+            at, t = pick(None, name, re_, True)
+            if t:
+                ax.barh(i - 0.18, t["cd"] * 1e4, height=0.34, color=col[name])
+            if f:
+                ax.barh(i + 0.18, f["cd"] * 1e4, height=0.34, color=col[name], alpha=0.45)
+            if f and t:
+                pct = 100 * (t["cd"] / f["cd"] - 1)
+                ax.text(t["cd"] * 1e4 + 3, i - 0.18, f"{pct:+.0f} %", va="center", fontsize=8.5, color=ink, fontweight="bold")
+            else:   # shown, not hidden: XFOIL gave no converged answer at exactly 2 deg
+                ax.text(3, i + 0.18, "free: XFOIL no answer at 2°", va="center", fontsize=7.5, color="#B02A20")
         ax.set_yticks(ys)
         ax.set_yticklabels([short[n] for n in names], fontsize=9)
         ax.invert_yaxis()
@@ -180,10 +187,11 @@ def plots(res: dict) -> None:
         for s_ in ("top", "right"):
             ax.spines[s_].set_visible(False)
     from matplotlib.patches import Patch
-    fig.legend(handles=[Patch(color="#7A8794", alpha=0.45, label="real air: laminar at the nose, turns turbulent by itself (free transition)"),
-                        Patch(color="#7A8794", label="what fully turbulent CFD assumes (turbulent from the nose)")],
+    fig.legend(handles=[Patch(color="#7A8794", alpha=0.45, label="free transition (e^N, N_crit 9): laminar at the nose, turns turbulent by itself, as in quiet air"),
+                        Patch(color="#7A8794", label="tripped at 1 % chord: turbulent from the nose, as fully turbulent CFD (SA) assumes")],
                loc="lower center", ncol=2, fontsize=8.5, frameon=False)
-    fig.suptitle("Drag of one airfoil section at about 2°: real flow vs fully turbulent CFD. The % is how much too high the CFD would be.",
+    fig.suptitle("2-D airfoil sections (XFOIL), each alone, not cut from a wing; angle exactly 2°, Mach 0. Profile drag, free vs tripped; "
+                 "the % = tripped / free − 1.",
                  x=0.01, ha="left", fontsize=10.5, color=ink)
     fig.tight_layout(rect=(0, 0.08, 1, 0.94))
     fig.savefig(DOCS / "xfoil_band.png")
@@ -193,8 +201,9 @@ def plots(res: dict) -> None:
     fig, axes = plt.subplots(1, 4, figsize=(13.5, 3.3), dpi=110, sharey=True)
     for ax, re_ in zip(axes, RE):
         for i, name in enumerate(names):
-            p = pick(res[f"{name}|{re_:.0e}|free"]["polar"])[1]
+            p = pick(None, name, re_, False)[1]
             if not p:
+                ax.text(2, i, "XFOIL no answer at 2°", va="center", fontsize=7.5, color="#B02A20")
                 continue
             xt = 100 * p["xtr_top"]
             ax.barh(i, xt, left=0, height=0.55, color=col[name], alpha=0.30)
@@ -211,7 +220,8 @@ def plots(res: dict) -> None:
     fig.legend(handles=[Patch(color="#7A8794", alpha=0.30, label="laminar (smooth): low friction"),
                         Patch(color="#7A8794", label="turbulent: high friction")],
                loc="lower center", ncol=2, fontsize=8.5, frameon=False)
-    fig.suptitle("Upper surface at about 2°: where the real flow turns turbulent. Higher Re → it turns turbulent earlier.",
+    fig.suptitle("2-D airfoil sections (XFOIL), upper surface at exactly 2°, free transition: where the flow turns turbulent. "
+                 "Higher Re → earlier.",
                  x=0.01, ha="left", fontsize=10.5, color=ink)
     fig.tight_layout(rect=(0, 0.1, 1, 0.93))
     fig.savefig(DOCS / "xfoil_transition.png")

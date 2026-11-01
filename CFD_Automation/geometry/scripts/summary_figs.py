@@ -229,17 +229,27 @@ def fig_spaces() -> None:
     plt.close(fig)
 
 
-def fig_pipeline() -> None:
-    """Render the page's five-step figure (needs node + Playwright)."""
-    js = ROOT / "docs" / "_render_pipeline.js"
+def fig_page_svg(section: str, name: str) -> None:
+    """Render one of the page's diagrams (the svg in section #<section>) to docs/<name> (needs node + Playwright)."""
+    js = ROOT / "docs" / f"_render_{section}.js"
     js.write_text("""const { chromium } = require('playwright');
 (async () => { const b = await chromium.launch(); const p = await b.newPage({viewport: {width: 1200, height: 900}, deviceScaleFactor: 2});
-await p.goto('file://%s'); const el = await p.$('#pipeline .svgwrap'); await el.screenshot({path: '%s'}); await b.close(); })();"""
-                  % (DOCS / "GEOMETRY_GENERATOR.html", DOCS / "summary_pipeline.png"))
+await p.goto('file://%s'); const el = await p.$('#%s .svgwrap'); await el.screenshot({path: '%s'}); await b.close(); })();"""
+                  % (DOCS / "GEOMETRY_GENERATOR.html", section, DOCS / name))
     try:
         subprocess.run(["node", str(js)], check=True, capture_output=True, timeout=120)
     finally:
         js.unlink(missing_ok=True)
+
+
+def fig_pipeline() -> None:
+    """The page's five-step figure."""
+    fig_page_svg("pipeline", "summary_pipeline.png")
+
+
+def fig_runs() -> None:
+    """The page's 'What was run' diagram: 2-D runs, strip theory, outputs, no 3-D CFD yet."""
+    fig_page_svg("runs", "summary_runs.png")
 
 
 def main() -> None:
@@ -247,7 +257,8 @@ def main() -> None:
     fig_types()
     fig_spaces()
     fig_pipeline()
-    print("written: docs/summary_vector.png, summary_types.png, summary_spaces.png, summary_pipeline.png")
+    fig_runs()
+    print("written: docs/summary_vector.png, summary_types.png, summary_spaces.png, summary_pipeline.png, summary_runs.png")
 
 
 if __name__ == "__main__":

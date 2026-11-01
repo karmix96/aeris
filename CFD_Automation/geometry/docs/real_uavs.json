@@ -2357,7 +2357,7 @@
    "payload": 2.5,
    "role": "ISR",
    "use": "span",
-   "check": "database says Flying Wing; the Puma family has a tail",
+   "check": "database says Flying Wing; the Puma family is a conventional wing",
    "span_covered": true,
    "span_covered_full": true
   },

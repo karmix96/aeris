@@ -49,7 +49,7 @@ aircraft:
   - {name: Lockheed Martin Fury, class: II, family: tailless, family_src: S, span: 5.2, area: null, mtow: 195,
      cruise: null, max: null, stype: secondary, use: span, note: "'blended' wing; no speeds published",
      source: "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/"}
-  # --- tailed ---------------------------------------------------------------------------
+  # --- conventional ------------------------------------------------------------------------
   - {name: Black Swift S0, class: I, family: conventional, family_src: S, span: 1.387, area: 0.188, mtow: 1.59,
      cruise: 17.0, max: null, stype: manufacturer, use: ranges, note: "54.6 in; 292 in2",
      source: "https://techpartnerships.noaa.gov/wp-content/uploads/2024/01/VTOL-S0-Data-Sheet.pdf"}
@@ -359,7 +359,7 @@ hcdi_db:
   - {model: XQ-58 Valkyrie, class: II, family: tailless, family_src: D, span: 8.229, mtow: null, payload: 272.2, role: ISR, use: none,
      check: "jet, top 1,050 km/h; listed as Class II but it is far heavier than 600 kg (Class III)"}
   - {model: Puma LE, class: I, family: conventional, family_src: K, span: 4.6, mtow: null, payload: 2.5, role: ISR, use: span,
-     check: "database says Flying Wing; the Puma family has a tail"}
+     check: "database says Flying Wing; the Puma family is a conventional wing"}
   - {model: V2U, class: I, family: conventional, family_src: D, span: 1.2, mtow: 15.0, payload: 3.5, role: Barrage Munition, use: span}
   - {model: Shahed 107, class: I, family: conventional, family_src: D, span: 3.0, mtow: 26.0, payload: 20.0, role: ISR, use: span}
   - {model: Orlan-10, class: I, family: conventional, family_src: D, span: 3.05, mtow: 18.0, payload: 5.5, role: ISR, use: span,

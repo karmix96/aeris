@@ -334,7 +334,7 @@ def verification_table() -> str:
 def real_table() -> tuple[str, dict]:
     """Rows of the real-UAV table and its summary, from docs/real_uavs.json."""
     d = json.loads((DOCS / "real_uavs.json").read_text())
-    fam = {"tailless": "Tailless", "conventional": "With tail", "delta": "Delta + tail"}
+    fam = {"tailless": "Tailless", "conventional": "Conventional", "delta": "Delta"}
     use = {"ranges": "<span class='flag ok'>sets range</span>", "span": "<span class='muted'>span only</span>",
            "none": "<span class='flag open'>not used</span>"}
     out = []
@@ -380,7 +380,7 @@ def hcdi_cell(h: dict | None) -> str:
 
 
 def hcdi_table(d: dict) -> str:
-    fam = {"tailless": "Tailless", "conventional": "With tail"}
+    fam = {"tailless": "Tailless", "conventional": "Conventional"}
     out = []
     for r in sorted(d["hcdi_db"], key=lambda r: (r["family"], r["span"])):
         inside = ("<span class='flag ok'>inside</span>" if r.get("span_covered")
@@ -545,6 +545,71 @@ def fig_pipeline() -> str:
             o.append(f'<line class="stroke" x1="{ax}" y1="{20 + h / 2}" x2="{ax + gap - 6}" y2="{20 + h / 2}"/>'
                      f'<polygon class="arrowhead" points="{ax + gap - 4},{20 + h / 2} {ax + gap - 11},{16 + h / 2} {ax + gap - 11},{24 + h / 2}"/>')
     o.append(f'<text class="lab muted" x="10" y="{h + 50}">Each step narrows or reads the one before it. Steps 1–3: geometry (this module). Steps 4–5: flow maps and the flow dataset (XFOIL strips via section tables).</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
+def fig_runs() -> str:
+    """Every run: inputs, 2-D XFOIL runs, strip theory (2-D -> 3-D), outputs, and the 3-D CFD still to come."""
+    o = ['<svg class="dg" viewBox="0 0 1000 700" role="img" aria-label="What was run. 2-D XFOIL runs on single airfoils: '
+         'an airfoil study and the section tables, plus direct checks. Strip theory turns the tables into 3-D wing results for '
+         'the flow maps, the flow dataset and the checks. The geometry generator and the real UAV database feed it. No 3-D CFD '
+         'has been run yet.">',
+         '<defs><marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+         '<path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>']
+
+    def box(x, y, w, h, head, lines, cls="acc", dashed=False, muted_from=None):
+        o.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" class="{"dash" if dashed else "stepbox"}"/>')
+        o.append(f'<text class="lab head {cls}" x="{x + 12}" y="{y + 24}" style="font-size:14px">{head}</text>')
+        for j, ln in enumerate(lines):
+            c = "lab muted" if muted_from is not None and j >= muted_from else "lab"
+            dx = 26 if ln.startswith(" ") else 12            # SVG drops leading spaces: indent by position
+            o.append(f'<text class="{c}" x="{x + dx}" y="{y + 46 + 17 * j}" style="font-size:12px">{ln.strip()}</text>')
+
+    def arrow(points):
+        pts = " ".join(f"{a},{b}" for a, b in points)
+        o.append(f'<polyline class="stroke" points="{pts}" marker-end="url(#ahr)"/>')
+
+    o.append('<text class="lab muted" x="10" y="22" style="font-size:12px">2-D RUNS: XFOIL, ONE AIRFOIL AT A TIME</text>')
+    o.append('<text class="lab muted" x="340" y="22" style="font-size:12px">2-D → 3-D</text>')
+    o.append('<text class="lab muted" x="680" y="22" style="font-size:12px">WHAT CAME OUT</text>')
+    # column 1: 2-D runs
+    box(10, 40, 290, 78, "A · Airfoil study", ["4 airfoils × 4 Re × free / tripped", "32 polars 0–8° + 32 runs at exactly 2°"], "amber")
+    box(10, 136, 290, 60, "Flow phenomena (2-D only)", ["drag, transition, bubbles per airfoil"], "amber")
+    arrow([(155, 118), (155, 134)])
+    box(10, 230, 290, 122, "B · Section tables", ["10 airfoils + 3 blends", "14 Re × 3 Mach × 49 angles",
+                                                 "free (N_crit 5, 9, 11) and tripped", "2,408 sweeps = 58,996 points (91 % ok)"], "amber")
+    box(10, 470, 290, 72, "C · Direct XFOIL checks", ["890 single runs: tables vs direct,", "whole-wing check, first flow maps"], "amber")
+    # column 2: geometry and strip theory
+    box(340, 40, 300, 96, "Geometry generator", ["730 wings built and checked", "the wing for each strip case", "(no flow computed here)"], "acc")
+    arrow([(490, 136), (490, 228)])
+    box(340, 230, 300, 220, "Strip theory: 2-D → 3-D", [
+        "1  cut the half wing into 10 strips",
+        "2  each strip: its chord, twist, airfoil",
+        "3  local Re = (ρ / μ) · V · chord",
+        "    local angle = root angle + twist",
+        "4  read free + tripped answers (B)",
+        "5  add up along the span, chord-",
+        "    weighted → the wing's results",
+        "not included: induced angle,",
+        "crossflow, 3-D bubble relief"], "bwbc", muted_from=7)
+    arrow([(300, 290), (338, 290)])
+    # column 3: inputs from real wings and the outputs
+    box(680, 40, 310, 96, "Real UAV database", ["34 wings with area, 112 spans", "speeds and wing loadings", "(no flow computed here)"], "acc")
+    arrow([(835, 136), (835, 228)])
+    o.append('<text class="lab muted" x="845" y="186" style="font-size:11px">speeds, wing loadings</text>')
+    box(680, 230, 310, 60, "Flow maps (the tool)", ["1 example + 24 focus maps"], "bwbc")
+    box(680, 300, 310, 80, "Flow dataset", ["400 wings × 4 sets × 126 conditions", "= 201,600 cases → statistics"], "bwbc")
+    box(680, 390, 310, 60, "Assumption checks", ["8 re-runs × 40,320 cases"], "bwbc")
+    for y in (260, 340, 420):
+        arrow([(640, y), (678, y)])
+    arrow([(300, 506), (920, 506), (920, 452)])
+    # 3-D CFD
+    box(10, 572, 980, 76, "3-D CFD: none run yet", [
+        "Next: ADflow SA mesh studies on the reference wings; then SU2 γ-Reθ on 2–3 of them, to check in 3-D what the strips "
+        "predict here."], "warn", dashed=True)
+    o.append('<text class="lab muted" x="10" y="684" style="font-size:12px">Every flow number on this page comes from 2-D XFOIL '
+             'runs on single airfoils, used directly (A) or combined along the span by strip theory (B → wing results).</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -1540,6 +1605,9 @@ svg.dg .outboard { fill: var(--amber); opacity: .18; stroke: var(--amber); strok
 svg.dg .tube { fill: var(--accent); opacity: .30; stroke: var(--accent); stroke-width: 1.2; }
 svg.dg .station { stroke: var(--muted); stroke-width: .9; }
 svg.dg .station.brk { stroke: var(--amber); stroke-width: 2.4; }
+.cbox { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--bwb); border-radius: 6px; padding: 10px 14px; font-size: 15px; line-height: 1.5; max-width: 100%; }
+.cbox .ctag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--bwb); margin-bottom: 2px; }
+figcaption .howto { color: var(--ink); font-weight: 600; }
 ol.concl { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; max-width: 80ch; }
 ol.concl li strong { color: var(--ink); }
 footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
@@ -1550,7 +1618,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#pipeline">The plan</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#flowdata">Flow dataset</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#pipeline">The plan</a><a href="#runs">What was run</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#flowdata">Flow dataset</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#build">One wing, step by step</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -1575,12 +1643,37 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li><strong>Flow maps</strong> (<a href="#flowmaps">Flow maps</a>, <a href="#flowdata">Flow dataset</a>): local Re along the span, where the flow turns turbulent, bubbles, and how the sections change them, per family; then every focus wing × 4 section sets × 126 conditions, with trends, sensitivity and checks.</li>
     <li><strong>The tool</strong> (<code>python -m cfdauto.flowmap</code>): give it a wing, a speed (or Mach), an altitude and an angle; it names the family and type, draws the flow map, proposes the turbulence model with the size of the SA error, says whether the condition is level flight at a real wing loading, and where the wing sits in the dataset. <code>--sheet</code> adds the whole Mach × angle picture.</li>
   </ol>
+  <div class="cbox"><span class="ctag">Conclusion</span>We look wide but study densely where real wings are. The generator makes the wings; 2-D flow runs on them say which turbulence model and which mesh refinement each wing needs; the tool does the same for any new wing.</div>
+</section>
+
+<section id="runs">
+  <h2>What was run: 2-D, 3-D, and how 2-D becomes 3-D</h2>
+  <p>No 3-D CFD has been run yet. All flow results come from XFOIL, which solves one 2-D airfoil at a time. Strip theory turns those 2-D answers into wing results: the half wing is cut into strips, each strip is treated as its own airfoil at its own Re and angle, and the strips are added up.</p>
+  <figure class="fig"><div class="svgwrap">__FIG_RUNS__</div></figure>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Study (section of this page)</th><th>What ran</th><th>Tool</th><th>How many</th></tr></thead>
+    <tbody>
+      <tr><td>Design space, Key pairs, Wing families, Sizes</td><td>planform maths on sampled design vectors</td><td>generator</td><td>1,500–2,000 vectors per type and space; no flow</td></tr>
+      <tr><td>Checks and results</td><td>wings built, measured and checked</td><td>generator (numpy loft)</td><td>730 wings</td></tr>
+      <tr><td>Real wings</td><td>real sizes and speeds against the generated wings</td><td>database check</td><td>34 wings with an area, 112 spans</td></tr>
+      <tr><td>Reynolds and Mach</td><td>Re = (ρ / μ) · V · chord</td><td>formula</td><td>no runs</td></tr>
+      <tr><td>Flow phenomena (2-D)</td><td>A: free vs tripped airfoils</td><td>XFOIL</td><td>32 polars (0–8°) + 32 runs at exactly 2°</td></tr>
+      <tr><td>Flow maps</td><td>strip theory on the section tables (B)</td><td>flow-map engine</td><td>1 example + 24 focus maps</td></tr>
+      <tr><td>Flow dataset</td><td>strip theory on the section tables (B)</td><td>flow-map engine</td><td>201,600 wing cases</td></tr>
+      <tr><td>Flow dataset: sensitivity</td><td>statistics on the 201,600 cases</td><td>gradient-boosted model</td><td>no new flow runs</td></tr>
+      <tr><td>Flow dataset: assumption checks</td><td>the same 80 wings with one assumption changed; tables vs direct</td><td>engine + XFOIL (C)</td><td>8 × 40,320 cases; 320 direct runs; 3 blends</td></tr>
+      <tr><td>Where the mesh must be fine</td><td>rules from Stage 0 and the roadmap</td><td>none</td><td>no runs</td></tr>
+      <tr><td>3-D CFD</td><td>none yet</td><td>ADflow (planned), SU2 (planned)</td><td>0</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>No 3-D CFD has been run yet. Every flow number on this page is 2-D XFOIL, used alone (airfoil study) or added up along the span by strip theory (wing results). These numbers show where to look and which model to use; 3-D CFD on a few reference wings must confirm them before they go into the paper.</div>
 </section>
 
 <section id="summary">
   <h2>Final ranges and flows</h2>
   <p>Everything in one table. <strong>Bold</strong>: the focus space (realistic, sampled densely). <span class="fullr">Grey</span>: the full space (supported, sampled sparsely). Speeds come from the real wings of each family; study Re levels: 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶.</p>
   <div class="tbl"><table class="wide summ">__SUMMARY__</table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Four types in two families, from one generator. In the focus space every type spans about 0.4–7 m and flies at Mach 0.03–0.20, at Re of about 5 × 10⁴ – 3.5 × 10⁶ on the mean chord. Tailless wings are swept and washed out to fly without a tail; conventional wings are nearly straight. Every type needs a fine mesh at the leading and trailing edges, the tip and the wake.</div>
   <p class="muted">Details: <a href="#design">Design space</a>, <a href="#ranges">Sizes</a>, <a href="#reynolds">Re and Mach</a>, <a href="#phenomena">Flow phenomena</a>, <a href="#refine">Where to refine</a>.</p>
 </section>
 
@@ -1588,6 +1681,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>Design space: what we support, where real wings are, where we focus</h2>
   <p>One row per variable, one lane per wing type. <strong>Light bar</strong>: the full space (everything the generator supports; 40 wings + 5 hold-out per type, both corner sets at its edges). <strong>Dark bar</strong>: the focus space (where real wings are; 100 wings + 5 reference + 10 hold-out per type). <strong>Black marks</strong>: real wings and published designs. Rows marked "derived" are computed from the inputs.</p>
   <figure class="fig card">__PNG_DESIGN__<figcaption>Read a row left to right: if the black marks sit inside the dark bar, the focus space covers the real wings; the light bar shows how far beyond them we still promise to work. Root twist only sets the incidence; washout is what changes the wing. Sources: <code>configs/shape_evidence.yaml</code>, <code>configs/real_uavs.yaml</code>.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Most real and published values (black marks) sit inside the dark focus bars, so the focus space covers real wings. A few sit only inside the light full-space bars: two spans of 10–11 m, a second-hand flying-wing washout of 10°, and one published range of the BWB chord at b2. The full space is needed, but rarely.</div>
   <div class="weak amber"><strong>What the figure shows honestly.</strong> Shape evidence is thin for conventional wings (Raymer rules, partly second-hand) and for the layout shares (one BWB paper). Sizes are well covered. The full space is our choice, set to the widest value in any source; nothing real sits at its far edges.</div>
 </section>
 
@@ -1595,18 +1689,26 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>Key pairs</h2>
   <p>The same three layers in two dimensions, one panel per type. Faint dots: full space. Strong dots: focus space. Black diamonds: real or published wings that give both values.</p>
   <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size</strong>: full span b (tip to tip) against mean chord. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; conventional: cranked and tapered).</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>The focus space covers 32 of the 34 real wings with a published area (a generated wing within 10 % in span and mean chord). The other two, Hermes 450 and Götten UAV 9, are larger than 7 m; the full space covers them.</div>
   <figure class="fig card">__PNG_PAIR_PLANFORM__<figcaption><strong>Planform</strong>: aspect ratio against overall taper. The BWB lives at very low taper (big centre body), the others at 0.3–1.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Taper separates the BWB from the rest: only the BWB has a very small tip (4–25 % of the root chord). The other three types overlap (taper 0.2–1), so the type rules use the kink and the root chord, not taper alone.</div>
   <figure class="fig card">__PNG_PAIR_SWEEP__<figcaption><strong>Sweep</strong>: aspect ratio against inner-panel leading-edge sweep. Published sweeps given at the quarter chord (marked c/4 in the sources) sit a few degrees below their leading-edge value.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Sweep separates the families. Tailless wings are swept to fly without a tail (BWB 15–40°, flying wing 10–40°, focus); conventional wings are nearly straight (cranked −3 to 3°, tapered −5 to 15°). The real wings sit inside these ranges.</div>
   <figure class="fig card">__PNG_PAIR_TWIST__<figcaption><strong>Trim</strong>: sweep against washout. Tailless wings trim with sweep and washout together; the published tailless wings sit inside the focus space.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Tailless wings need washout as well as sweep (focus: BWB 1–9°, flying wing 0–8°); conventional wings need little (0–5°). The published tailless wings that give both values sit inside the focus box.</div>
 </section>
 
 <section id="family">
   <h2>Wing families</h2>
   <p>For each type, one variable group at a time goes from the full minimum to the full maximum; all others stay at the focus mid-range. Columns 2–4 (solid) are the focus space; columns 1 and 5 (dashed) are the edges of the full space. Top views are scaled to equal span so the shape is visible; true sizes are in <a href="#ranges">Sizes</a>.</p>
   <figure class="fig card">__PNG_FAM_BWB__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>BWB: aspect ratio, chords and sweep change the shape most. The solid (focus) shapes look like real BWBs; the dashed full-space edges (AR 2.5, 60° sweep, 16° washout) are extreme, but still valid wings the mesher must handle.</div>
   <figure class="fig card">__PNG_FAM_CONV__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Cranked: aspect ratio changes the shape most (stubby AR 4.5 to slender AR 16.5); the crank is mild and the sweep small. The dashed edges (−15° and 35° sweep, AR 20) are there only to test robustness.</div>
   <figure class="fig card">__PNG_FAM_TAP__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Tapered: like the cranked wing without the crank. Aspect ratio and taper set the shape; the sweep stays small (−5 to 15°). The dashed edges are there only to test robustness.</div>
   <figure class="fig card">__PNG_FAM_FW__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Flying wing: sweep and aspect ratio set the shape (10–40°, AR 3–13). Moving the breaks does not change its outline (straight edges); it only moves where the sections and the twist change.</div>
 </section>
 
 <section id="inputs">
@@ -1633,12 +1735,14 @@ __DERIVED__
     </tbody>
   </table></div>
   <p class="muted">Checked on every built wing: chords (0.1 %), sweeps (0.1°), twists and panel dihedrals (0.2°) and the aspect ratio (0.1 %), measured on the loft against the inputs.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>18 numbers and 4 airfoil names describe every wing. Everything else is computed from them and checked on the built surface.</div>
 </section>
 
 <section id="ranges">
   <h2>Sizes we can make</h2>
   <p>The input ranges are in <a href="#inputs">Parameters</a>. This is what they produce.</p>
   <figure class="fig">__GIF_SIZES__<figcaption>Smallest and largest wing (least and most area) of each type, true scale. Solid: focus space. Dashed: full space. Left view 0.6 m wide, right view 22 m wide; same scale in every frame.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>True scale shows the spread: focus wings span about 0.4–7 m, the full space 0.1–20 m. The smallest wings have tips of only 2–5 cm, which is why their tips fly at very low Re.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Space</th><th>Full span b (tip to tip)</th><th>Wing area</th><th>Mean chord</th><th>Root chord</th><th>Tip chord</th></tr></thead>
     <tbody>__EXTREMES__</tbody>
@@ -1647,9 +1751,10 @@ __DERIVED__
   <h2 style="font-size:22px">What the focus space makes</h2>
   <p class="muted">2,000 Latin-hypercube wings per type.</p>
   <div class="tbl"><table class="mid">
-    <thead><tr><th></th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th></tr></thead>
+    <thead><tr><th></th><th>BWB</th><th>Flying wing</th><th>Cranked</th><th>Tapered</th></tr></thead>
     <tbody>__GEN__</tbody>
   </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The four focus spaces make wings of the same size (span 0.5–7 m, mean chord 0.1–1 m) but of different shape: the BWB is the low-taper, low-aspect-ratio one (taper 0.06–0.2, AR 3–9); the conventional types are the slender ones (AR 4.5–16.5).</div>
 </section>
 
 <section id="reynolds">
@@ -1665,6 +1770,7 @@ __DERIVED__
     <tbody>__RE_MACH__</tbody>
   </table></div>
   <p class="muted">Lowest: smallest chord at the family's lowest cruise speed at 3,048 m. Highest: largest chord at its highest top speed at sea level. Air from Stage 0 (ISA, Sutherland); a = 328.6 m/s at 3,048 m, 340.3 m/s at sea level. One wing covers a much narrower band than its row. Below the lowest study level (1 × 10⁵): only tips and the smallest wings at their slowest speed. Above the top one (3 × 10⁶): only the largest wings.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>The four study Re levels (10⁵ – 3 × 10⁶) cover the real wings (1.2 × 10⁵ – 3.1 × 10⁶ on the mean chord). Inside one wing, Re goes further: down to about 1.4 × 10⁴ at the smallest tips and up to 5.5 × 10⁶ at the largest BWB roots.</div>
   <h2 style="font-size:22px">What each Re band means</h2>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Re (on the local chord)</th><th>Flow</th><th>Who is there</th><th>RANS (SA, fully turbulent)</th></tr></thead>
@@ -1676,6 +1782,7 @@ __DERIVED__
     </tbody>
   </table></div>
   <p class="muted">Bands are approximate (Carmichael 1981; Lissaman 1983; Mueller &amp; DeLaurier 2003). "SA drag error" = profile drag of fully turbulent CFD ÷ profile drag of the real flow − 1, from XFOIL (see <a href="#phenomena">Flow phenomena</a> and <a href="#flowdata">Flow dataset</a>). Corrected 1 Nov 2026: this table had called SA "good" above 5 × 10⁵; the 2-D runs show the opposite in quiet air.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>No Re band in our range is safe for fully turbulent SA drag in quiet air: from 10⁵ up it gives too much drag (it misses the laminar run); below 10⁵ it misses the laminar separation. For drag, the model choice matters more than the mesh.</div>
 </section>
 
 <section id="phenomena">
@@ -1683,8 +1790,10 @@ __DERIVED__
   <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
   <figure class="fig"><div class="svgwrap">__FIG_RE__</div>
     <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The study level 1 × 10⁵ (added 30 Oct 2026) now reaches the mini Class I wings; only the tips stay below every level. From the generated envelope and the real wings with a published area and speeds (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Every type flies in or near the low-Re regime (below 5 × 10⁵), and the tips go deepest (down to 2 × 10⁴). Low-Re effects are the rule for these wings, not the exception.</div>
   <figure class="fig card">__PNG_LOCALRE__
     <figcaption class="cap">Real geometry, real speeds: local chord Reynolds number along the span. The smallest wings at their slowest speed sit almost wholly below 10⁵ (red); the BWB carries two regimes at once, its centre body an order of magnitude above its tips. The largest wings at top speed are turbulent except near the BWB and flying-wing tips.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>One wing can hold two regimes: on the smallest BWB the root runs at 2.4 × 10⁵ and the tip at 1.4 × 10⁴, 17 times less. One flow model and one first-cell height may not fit the whole span.</div>
   <h2 style="font-size:22px">What fully turbulent CFD would miss: estimated in 2-D with XFOIL (no CFD run yet)</h2>
   <p>No CFD has been run yet. Four airfoils, each on its own (2-D, not a cut of a wing), were run in XFOIL (Drela 1989: a panel method coupled to a boundary-layer model, not RANS): MH 104, the BWB centre body (root); MH 61, the BWB outer wing (tip); MH 60, the flying wing; NACA 4415, the conventional wings (root). Each was run twice at the four study Re:</p>
   <ul>
@@ -1694,24 +1803,30 @@ __DERIVED__
   <p>The gap between the two is the error that comes from ignoring transition. It is a 2-D proxy: no sweep, no crossflow, no 3-D relief.</p>
   <figure class="fig"><div class="svgwrap">__FIG_SURF__</div>
     <figcaption class="cap">Words used below. An airfoil has two surfaces: the upper (top, suction) side, where the boundary layer first stays laminar and then turns turbulent, and the lower (bottom, pressure) side. Each XFOIL run is one such 2-D section on its own, not a cut through a 3-D wing.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>The laminar run, bubbles and transition that matter here happen mostly on the upper surface, so the next figures show that surface.</div>
   <figure class="fig card">__PNG_XFCF__
     <figcaption class="cap">2-D airfoil sections in XFOIL, exactly 4°, top (upper) surface only: skin friction from nose (0) to trailing edge (1). Solid: free transition (real quiet air); dashed: tripped at 1 % chord (fully turbulent CFD). At 10⁵ and 3 × 10⁵ the free flow runs laminar to mid-chord, separates (shaded, Cf &lt; 0) and turns turbulent on the bubble. At 1.5–3 × 10⁶ transition moves forward to 30–45 % chord with no bubble. Tripped: turbulent from the nose, with much higher friction everywhere.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>In quiet real air the flow stays laminar (low friction) over a large part of the chord; fully turbulent CFD puts high friction everywhere. That difference is the extra drag fully turbulent CFD adds.</div>
   <figure class="fig card">__PNG_XFBAND__
     <figcaption class="cap">Four airfoils, each run alone in 2-D XFOIL (not a cut of a 3-D wing), at exactly 2° and Mach 0. <strong>Light bar</strong>: free transition (e<sup>N</sup>, N<sub>crit</sub> 9): the flow stays laminar from the nose and turns turbulent by itself, as in quiet real air. <strong>Dark bar</strong>: tripped at 1 % chord: turbulent from the nose, which is what fully turbulent CFD (SA) assumes. The % is tripped / free − 1: how much too high fully turbulent CFD puts the profile drag. At Re 10⁵ the two are close because the free flow separates in a long bubble, which is draggy too. __XF_NOTE__</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>From Re 3 × 10⁵ up, fully turbulent CFD puts the profile drag about +40 to +130 % too high (2-D, 2°). At 10⁵ the gap is small (−1 to +21 %), but only because the real flow has a draggy bubble too: SA is close there by luck, not because it models the flow.</div>
   <figure class="fig card">__PNG_XFTR__
     <figcaption class="cap">2-D airfoil sections in XFOIL, exactly 2°, free transition, top (upper) surface only: where the flow turns turbulent, from nose (left) to trailing edge (right). Light: laminar (low friction); dark: turbulent. Higher Re moves the change toward the nose; the BWB centre-body section (MH 104) turns turbulent earliest.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Where the flow turns turbulent depends on Re and on the airfoil, so it has to be predicted (a transition model), not assumed (fully turbulent).</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
     <tbody>__PHEN__</tbody>
   </table></div>
-  <div class="weak"><strong>The biggest one.</strong> Most of these wings fly where transition and laminar bubbles set the drag, and the planned model cannot see them. Mesh error can be made small; this model error cannot. Every drag number needs its model band, and differences between wings are safer than absolute drag.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Most of these wings fly where transition and laminar bubbles set the drag, and the planned model cannot see them. Mesh error can be made small; this model error cannot. Every drag number needs its model band, and differences between wings are safer than absolute drag.</div>
 </section>
 
 <section id="flowmaps">
   <h2>Flow maps</h2>
   <p>What the tool returns for one wing: the half wing coloured by local Re, the line where the upper surface turns turbulent, laminar bubbles, trailing-edge separation, the phenomena, the proposed model with the size of the SA error, whether the condition is level flight at a real wing loading, where the wing sits in the flow dataset, and the other section sets at the same condition. The 2-D answers come from the section tables (the same engine as the <a href="#flowdata">flow dataset</a>; direct XFOIL for sections without a table).</p>
   <figure class="fig card">__PNG_FMEX__<figcaption>__FMEX_CAP__</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>One run of the tool shows, for one wing at one condition, where the flow is laminar, where bubbles sit and which model to use. On this wing SA would add +90 % profile drag, so the tool proposes a transition model.</div>
   <figure class="fig card">__PNG_FMEX_SHEET__<figcaption>The same wing over Mach × root angle (<code>--sheet</code>): SA error, laminar run, bubble span and trailing-edge separation per condition. Faded: not level flight at a real wing loading for its span.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>No speed or angle makes SA right on this wing: the error is +26 to +102 % in every cell, and +36 to +99 % in the 9 level-flight cells.</div>
   <h2 style="font-size:22px">The focus space, per type: slow and fast, three section sets</h2>
   <p>Mid wing of each type. Slow: the family's lowest cruise speed at 3,048 m, 5°. Fast: its highest top speed at sea level, 1°. Sets: the suggested one and two sourced alternatives (SD7032 flies on the Puma 3AE, LA2573A on the Dragon Eye: NTNU database).</p>
   <div class="tbl"><table class="wide">
@@ -1719,10 +1834,15 @@ __DERIVED__
     <tbody>__FMTABLE__</tbody>
   </table></div>
   <p class="muted">"SA drag": how much fully turbulent SA would raise the wing's profile drag (chord-weighted XFOIL strips). Every case gets the same proposal: a transition model (γ-Reθ with SST, SU2) for drag, SA for mesh studies and as a bound. Negative: the real flow has a long bubble that costs more than early turbulence (LA2573A, slow).</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Slow or fast, every type and section set gets about +30 to +90 % profile drag from SA. The one exception is LA2573A at slow speed (−10 to −13 %): its long bubble makes the real flow draggier than SA.</div>
   <figure class="fig card">__PNG_FM_BWB__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>BWB: +51 to +67 % slow and +46 to +60 % fast, whatever the sections. Changing the airfoils does not fix SA.</div>
   <figure class="fig card">__PNG_FM_FW__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Flying wing: +51 to +64 % slow and +68 to +81 % fast, the highest of all types at speed.</div>
   <figure class="fig card">__PNG_FM_CR__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Cranked: +51 to +52 % slow with NACA 4415 and SD7032, but −10 % with LA2573A; fast +30 to +90 %. On conventional wings the airfoil changes the error the most.</div>
   <figure class="fig card">__PNG_FM_TA__</figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Tapered: as the cranked wing: +50 to +51 % slow (−13 % with LA2573A), +30 to +90 % fast.</div>
   <div class="weak amber"><strong>What these maps cannot tell.</strong> Strips are 2-D: no induced angle (the outer strips see too high an angle), no crossflow transition on swept leading edges, no 3-D relief of bubbles. The angle (5° slow, 1° fast) is our choice, not trimmed. Use them to know where to look and which model to pick, not for numbers.</div>
 </section>
 
@@ -1733,6 +1853,7 @@ __DERIVED__
 __FD_KPI__
   </div>
   <div class="weak amber"><strong>Same assumptions as the flow maps.</strong> 2-D strips along the half wing; local angle = root angle + twist (no induced angle); XFOIL e<sup>N</sup> with N<sub>crit</sub> 9 (quiet air) for free transition, tripped at 1 % chord for fully turbulent (what SA does); Stage 0 air. "SA drag error" = profile drag tripped / free − 1, chord-weighted along the span. A grid point is "level flight" when the lift it makes (3-D estimate) carries the wing loading real wings of the same span carry (fit to 37 real wings, within × / ÷ 2).</div>
+  <div class="weak" style="border-left-color: var(--bwb)"><strong>Four words used in every figure below.</strong> <strong>SA drag error</strong>: how much more profile drag fully turbulent CFD (SA) gives than the real flow; +60 % means 1.6 times the real value, 0 means right. <strong>Laminar run</strong>: how far from the nose the flow on the upper surface stays laminar, in % of the chord. <strong>Bubble span</strong>: the share of the half wing with a laminar separation bubble. <strong>Level flight</strong>: the wing makes the lift that real wings of its span carry. Every figure has a <em>How to read</em> line and a conclusion box under it.</div>
   <h2 style="font-size:22px">What we found, under these assumptions</h2>
   <ol class="concl">
 __FD_CONCL__
@@ -1740,53 +1861,71 @@ __FD_CONCL__
 
   <h2 style="font-size:22px">1. The 2-D building blocks</h2>
   <p>Every section, free and tripped, on a grid of 14 Re (1.5 × 10⁴ – 6 × 10⁶) × 3 Mach × 49 angles: 2,408 XFOIL sweeps, made robust (a failing angle is skipped, never hangs). A wing is then evaluated in milliseconds by interpolation.</p>
-  <figure class="fig card">__PNG_FD_SXTR__<figcaption class="cap">Where the free flow turns turbulent on the upper surface (fraction of chord). Bright: long laminar run. It falls with Re and with angle. Grey: no converged 2-D answer (stall).</figcaption></figure>
-  <figure class="fig card">__PNG_FD_SBUB__<figcaption class="cap">Laminar separation bubble on the upper surface (red: yes). Bubbles cover most of the low-Re half of every map at small and moderate angles; they move forward and vanish as Re grows.</figcaption></figure>
-  <figure class="fig card">__PNG_FD_SBIAS__<figcaption class="cap">How much more drag a fully turbulent section has (tripped / free − 1). Red: fully turbulent SA gives too much drag, most at Re 3 × 10⁵ – 3 × 10⁶ and small angles; white near stall, where the real flow turns turbulent early anyway. Blue, below about Re 10⁵: the real flow has more drag than fully turbulent CFD (long laminar bubbles).</figcaption></figure>
+  <figure class="fig card">__PNG_FD_SXTR__<figcaption class="cap"><span class="howto">How to read.</span> Ten small maps, one per airfoil (2-D XFOIL, free transition, Mach 0.1). In each map, left to right is the angle the airfoil sees (−6° to 14°) and bottom to top is its Re (4 = 10⁴, 5 = 10⁵, 6 = 10⁶). The colour shows where the flow on the upper surface turns turbulent: yellow = near the trailing edge (long laminar run), dark purple = near the nose. Grey: XFOIL gave no answer (stall). Dashed lines: the four study Re levels.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>On every airfoil the laminar run is long at low Re and small angles, and shrinks as Re or the angle grows. Our wings fly mostly at small angles and Re 10⁵ – 3 × 10⁶, where the run is long; fully turbulent CFD throws it away.</div>
+  <figure class="fig card">__PNG_FD_SBUB__<figcaption class="cap"><span class="howto">How to read.</span> Same ten maps and axes. Red: XFOIL finds a laminar separation bubble on the upper surface (the laminar flow lifts off, turns turbulent and lands again). White: no bubble. Grey: no answer.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Every airfoil has bubbles over a wide band, from about Re 6 × 10⁴ to 2 × 10⁶ at small and moderate angles. They change drag and lift, and fully turbulent CFD cannot see them.</div>
+  <figure class="fig card">__PNG_FD_SBIAS__<figcaption class="cap"><span class="howto">How to read.</span> Same maps. The colour is the SA drag error of the airfoil: how much more profile drag it gets when made fully turbulent (tripped) than with real free transition. Red: SA gives too much drag (darkest about +150 %). White: about the same. Blue: the real flow has more drag than SA (a long bubble).</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Fully turbulent CFD gives +50 to +150 % profile drag over most of the useful range (Re 3 × 10⁵ – 3 × 10⁶, small angles). It is close only near stall (white), and below about Re 10⁵ the sign flips (blue).</div>
 
   <h2 style="font-size:22px">2. Where the wings fly in Re</h2>
-  <figure class="fig card">__PNG_FD_BANDS__<figcaption class="cap">Share of the half wing in each Re band, by flight Mach (all focus wings, sets, altitudes). Slow flight puts most of the small tailless wings below 10⁵.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_BANDS__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type. Left to right: flight Mach (speed). Bottom to top: share of the half wing, 0–100 %. The coloured layers show how much of the half wing sits in each Re band: red below 10⁵, orange 10⁵ – 5 × 10⁵ (bubbles), light blue 5 × 10⁵ – 3 × 10⁶, dark blue above 3 × 10⁶. At any Mach the layers add up to 100 %. Mean over all focus wings, section sets and altitudes.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Slow flight puts most of the wing in the bubble band: at Mach 0.03, 67–91 % of the half wing is at Re 10⁵ – 5 × 10⁵ and 2–13 % is below 10⁵. At Mach 0.14 the bubble band shrinks to 3–16 %. Re above 3 × 10⁶ appears only at the highest speeds (a quarter of the BWB half wing at Mach 0.2, faster than real BWBs fly).</div>
 
   <h2 style="font-size:22px">3. How wrong is fully turbulent SA?</h2>
-  <figure class="fig card">__PNG_FD_VIOL__<figcaption class="cap">The SA drag error over all rows at realistic speeds, per type and section set. The green band is ±10 % ("SA adequate").</figcaption></figure>
-  <figure class="fig card">__PNG_FD_BRE__<figcaption class="cap">The same error against the wing's mean Re, one line per root angle. This is the main trend: the error is largest between 2 × 10⁵ and 2 × 10⁶ at low angles, and shrinks at high angle (the free flow turns turbulent near the nose by itself).</figcaption></figure>
+  <figure class="fig card">__PNG_FD_VIOL__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type; one violin per section set (* = suggested). A violin is wide where many cases have that SA drag error. Dot and bar: the median and the middle 80 % of cases. White diamond: the median in level flight. Green band: ±10 %, where SA would be good enough. Cases: all focus wings at realistic speeds, all angles and altitudes.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>For every type and section set the median error is +38 to +64 %. Few cases fall in the green band: 0–10 % with the suggested sections, at most 33 % (E387). Changing the airfoil does not make SA right.</div>
+  <figure class="fig card">__PNG_FD_BRE__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type (suggested sections). Left to right: the wing's mean Re (log scale: 5 = 10⁵, 6 = 10⁶). Bottom to top: SA drag error. Each coloured line is the median for one root angle (dark purple 0° to yellow 10°); the grey cloud is all cases. Green band: ±10 %. Dotted red line: Re 10⁵.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>The error is largest near Re 10⁶ at small angles (2–4°), up to about +95 %. It is smaller at 10°, where the real flow turns turbulent near the nose by itself (on flying wings it even falls inside ±10 %). Toward Re 10⁵ it falls to zero, and below 10⁵ it turns negative (bubbles).</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Section set</th><th>SA drag error, median</th><th>10–90 %</th><th>Within ±10 %</th><th>Laminar run, upper</th><th>Span with a bubble</th><th>Span with TE separation</th><th>Span with a 2-D answer</th></tr></thead>
     <tbody>__FD_STATS__</tbody>
   </table></div>
   <p class="muted">__FD_STATS_NOTE__</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Over all cases at realistic speeds SA is within ±10 % only 10 % of the time. The wing type changes the median little (+38 to +64 % over all types and sets); on conventional wings the section set matters more.</div>
   <h2 style="font-size:22px">In level flight only</h2>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Rows in level flight</th><th>SA drag error, median</th><th>10–90 %</th><th>Within ±10 %</th><th>Laminar run, upper</th><th>Span with a bubble</th><th>Span with TE separation</th><th>Rows with part below Re 10⁵</th></tr></thead>
     <tbody>__FD_LEVEL__</tbody>
   </table></div>
   <p class="muted">__FD_TOTAL__</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>In level flight (27 % of cases) the error is even larger: median +60 to +69 % by type, within ±10 % in at most 11 % of cases. Counted on the whole drag (profile + induced), fully turbulent CFD is about +18 to +26 % too high.</div>
 
   <h2 style="font-size:22px">4. Trends</h2>
-  <figure class="fig card">__PNG_FD_TMACH__<figcaption class="cap">Faster flight raises Re: the laminar run shortens, bubbles disappear, and the SA error changes with them. Lines: section sets.</figcaption></figure>
-  <figure class="fig card">__PNG_FD_TALPHA__<figcaption class="cap">A higher angle moves transition forward on the upper surface and shrinks the SA error, except on LA2573A, where it grows: at low angles its long laminar bubble makes the real flow draggy as well, so the gap is small. Bubbles first grow, then shrink.</figcaption></figure>
-  <figure class="fig card">__PNG_FD_PART__<figcaption class="cap">The SA error against single wing inputs. Size (mean chord) acts through Re; the shape inputs barely matter once size is fixed. Dihedral is a check: it should do nothing here, and it does nothing.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_TMACH__<figcaption class="cap"><span class="howto">How to read.</span> Four columns, one per type. Three rows: SA drag error; laminar run on the upper surface (% of chord); share of the span with a bubble. Left to right: flight Mach. Line: median; shaded band: the middle half of the cases; one colour per section set. Grey zone: faster than any real wing of that family.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Flying faster (higher Re) shortens the laminar run (about 49 → 35 % of chord) and removes bubbles (from 88 % to 41 % of the span). The SA error grows from about +40 % at Mach 0.03 to about +62 % at Mach 0.1, then stays flat.</div>
+  <figure class="fig card">__PNG_FD_TALPHA__<figcaption class="cap"><span class="howto">How to read.</span> Same layout as above, but left to right is the root angle (0–10°).</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>A higher angle moves transition toward the nose (laminar run about 62 → 12 % of chord), so the SA error falls: about +76 % at 2°, +20 % at 10°. LA2573A is the exception: its error grows with the angle. Trailing-edge separation appears only at 10°.</div>
+  <figure class="fig card">__PNG_FD_PART__<figcaption class="cap"><span class="howto">How to read.</span> Six panels, one wing input each: mean chord (size), aspect ratio, washout, sweep, taper, dihedral. Left to right: the input value; bottom to top: SA drag error. Line: median; band: the middle half; one colour per type. Suggested sections, realistic speeds.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Only size matters: bigger wings (larger mean chord, so higher Re) have about 15 points more error. Aspect ratio, taper and sweep move it by less than 4 points; more washout lowers it on flying wings (about −10 points). Dihedral does nothing, as it should (it is the check).</div>
 
   <h2 style="font-size:22px">5. Which model, where</h2>
-  <figure class="fig card">__PNG_FD_CAT__<figcaption class="cap">The tool's proposal per condition (suggested sections), with the median SA error in each cell. Outlined: where at least half the wings are in level flight at a real wing loading.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_CAT__<figcaption class="cap"><span class="howto">How to read.</span> One panel per type (suggested sections). Left to right: flight Mach; bottom to top: root angle. Each cell is one flight condition. Colour: the model the tool proposes for most wings there (green: SA is enough; orange: transition model; red: transition model, part of the span below Re 10⁵; grey: beyond 2-D stall). Number: the median SA drag error in %. Black frame: half or more of the wings fly level there at a real wing loading.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Almost every cell is orange: these wings need a transition model for drag. SA is enough only on flying wings at 10° root angle; the BWB is red at the slowest speed (part of its span below Re 10⁵). In the framed level-flight cells the answer is orange, except two flying-wing cells at 10°.</div>
 
   <h2 style="font-size:22px">6. What drives the flow: sensitivity</h2>
   <p>The dataset crosses wings, section sets and conditions in full, so the three groups are independent and their shares can be read apart. A gradient-boosted model (test R² in the table) gives each group's share alone and with its interactions (total).</p>
-  <figure class="fig card">__PNG_FD_GROUPS__<figcaption class="cap">What sets each output: the wing shape, the sections, or how the wing flies (speed, angle, altitude).</figcaption></figure>
+  <figure class="fig card">__PNG_FD_GROUPS__<figcaption class="cap"><span class="howto">How to read.</span> Two panels: tailless and conventional wings. One bar per output (SA drag error, laminar run, bubbles and so on). Each bar splits how much that output varies into what each group explains on its own: blue = wing shape, brown = sections, green = how it flies (speed, angle, altitude); grey = only when the groups act together. On the right, 'total' is each group's share including what it does together with the others.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>How the wing flies sets the SA error: 68 % on its own for tailless wings (92 % in total). On conventional wings the sections matter too, but only together with the angle (5 % alone, 60 % in total). The wing shape alone explains little (2–4 %); it acts through size and Re.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Family</th><th>Output</th><th>Wing shape alone / total</th><th>Sections alone / total</th><th>Flight alone / total</th><th>Model R²</th><th>Strongest inputs (share of importance; ↑ grows with it, ↓ falls)</th></tr></thead>
     <tbody>__FD_DRIVERS__</tbody>
   </table></div>
-  <figure class="fig card">__PNG_FD_PERM__<figcaption class="cap">Each input's importance (permutation of a gradient-boosted model; sums to 1 per output). Sign: direction of the rank correlation.</figcaption></figure>
-  <figure class="fig card">__PNG_FD_ETA__<figcaption class="cap">The same with a model-free measure: the share of variance one input explains alone (η², binned). Inputs that move together (size and taper, for example) share credit. For wing inputs, values up to about 0.05 are noise (200 wings per family): dihedral, which cannot change a strip answer, shows that level.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>The root angle is the strongest single input for the SA error (43–66 % of the importance), then Mach and, on conventional wings, the section set (34 %). The share of the span below Re 10⁵ depends on speed and size only.</div>
+  <figure class="fig card">__PNG_FD_PERM__<figcaption class="cap"><span class="howto">How to read.</span> Two panels (tailless, conventional). Rows: inputs; columns: outputs. A darker cell means that input matters more for that output: it measures how much worse a fitted model predicts when that input is shuffled (each column adds up to 1). + / −: the output grows / falls as the input grows.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Angle, Mach, size and the section set carry almost all of the importance. The other planform inputs carry little, except taper for the low-Re tips of tailless wings and washout for where they stall.</div>
+  <figure class="fig card">__PNG_FD_ETA__<figcaption class="cap"><span class="howto">How to read.</span> Same layout, with a simpler measure that needs no model: the share of the variation one input explains on its own (η²). For wing inputs, values up to about 0.05 are noise: dihedral, which cannot change a strip answer, shows that level.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>The simple measure agrees with the model: angle and Mach dominate, size comes next, and the other wing inputs are near noise level.</div>
 
   <h2 style="font-size:22px">7. How much do our assumptions change the answer?</h2>
   <p>Each check reruns 20 wings per type with one assumption changed, and compares the same wing, sections and condition (percentage points of the SA drag error, laminar run, bubble span and TE-separation span).</p>
-  <figure class="fig card">__PNG_FD_CHECKS__<figcaption class="cap">Left: change of the SA drag error. Middle and right: section tables against direct XFOIL runs at random points.</figcaption></figure>
+  <figure class="fig card">__PNG_FD_CHECKS__<figcaption class="cap"><span class="howto">How to read.</span> Left: one box per changed assumption, on the same wings, sections and conditions; it shows how many points the SA drag error moves (line: median; box: the middle half; 0 = no change). Middle: profile drag from the section tables (up) against a direct XFOIL run (across) at 320 random points; dots on the diagonal agree. Right: the same for where the flow turns turbulent.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Only the turbulence level of the air (N<sub>crit</sub>) moves the answer much: N<sub>crit</sub> 5 lowers the error by 9 points (median). The induced angle raises it by 4; more or fewer strips and compressibility change almost nothing. The tables match direct XFOIL (median drag difference 0.7 %). The main finding, SA gives too much drag, holds in every check.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Changed</th><th>SA error, median change [points]</th><th>5–95 %</th><th>Laminar run, median change [points]</th><th>Bubble span, mean size of change [points]</th><th>TE-separation span, mean size of change [points]</th><th>Pairs</th></tr></thead>
     <tbody>__FD_CHECKS__</tbody>
   </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Bubbles are the most fragile answer: with N<sub>crit</sub> 5 the bubble span changes by 35 points on average, far more than the laminar run (about 6 points). Bubble results need a 3-D or wind-tunnel check before we rely on them.</div>
 
   <div class="weak"><strong>Limits of this approach.</strong>
     <ul>
@@ -1812,13 +1951,16 @@ python -m cfdauto.flowmap ... --method xfoil | --ncrit 5 | --induced | --strips 
   <p>Each phenomenon above lives in one region of the flow; each region gets its own rule. The rules are the Grand Roadmap recipes (R-S, R-V) and the Stage 0 error budget: the share is how much of the 65 % grid error each direction may use. The last column says where S8 stands today.</p>
   <figure class="fig"><div class="svgwrap">__FIG_RSIDE__</div>
     <figcaption class="cap">Side view: fine cells at the wall (all around), at the nose and at the trailing edge, then a wake box that stays fine for 2 chords and coarsens to 10 chords, all inside the background box.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Cells must be small where the flow changes fast: at the wall, the nose, the trailing edge and the near wake. Further away they can grow.</div>
   <figure class="fig"><div class="svgwrap">__FIG_RTOP__</div>
     <figcaption class="cap">Top view: stations nearly even from the root, squeezed toward the tip, and one exactly on each break; outboard blocks past the tip; the wake box behind the whole trailing edge; the vortex tube from about 2 chords behind the tip.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Along the span: more stations near the tip, where the flow changes fastest, and one exactly on each break, where the surface has a kink. The tip vortex gets its own fine tube.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Zone</th><th>Captures</th><th>Rule (starting value)</th><th>Budget share</th><th>Source</th><th>S8 today</th></tr></thead>
     <tbody>__REFINE__</tbody>
   </table></div>
   <p class="muted">Budget shares from Stage 0: chordwise 35 %, spanwise 15 %, wall-normal 20 %, edges and base 15 %, wake 15 % of the grid error; domain 10 % of the total. All values are starting values; the mesh studies (Grand Roadmap stage 4) confirm or replace them.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Each mesh direction gets its share of the allowed grid error. These are starting rules; the mesh studies will confirm or replace them.</div>
 </section>
 
 <section id="fix" class="weak">
@@ -1829,10 +1971,11 @@ __FIXES__
   </ol>
 </section>
 
-<section>
+<section id="build">
   <h2>One wing, step by step</h2>
   <div class="card">__GIF_BUILD__</div>
   <p class="cap">Seven steps: design vector, planform, sections, twist and dihedral, trailing edge, loft, measure-label-check. Example: a BWB with every variable at mid-range.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>The same seven fixed steps make every wing, and two builds of the same vector give the same surface hash: the generator is repeatable.</div>
 </section>
 
 <section id="decisions">
@@ -1858,6 +2001,7 @@ __DECISIONS__
   </div>
   <div class="card">__PNG_REAL__</div>
   <p class="cap">Clouds: 2,000 generated wings per type (green BWB, blue conventional and tapered). Red: real wings with a published area. Dotted lines: real wings with a published span only.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>The generated clouds cover the real wings: in the focus space 32 of the 34 real wings with an area have a generated wing within 10 % in span and mean chord; the full space covers all 34.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>Area m²</th><th>Mean chord m</th><th>AR</th><th>Cruise / max m/s</th><th>Re low – high</th><th>MTOW kg</th><th>HCDI database</th><th>Use</th><th>Source (type)</th></tr></thead>
     <tbody>
@@ -1865,8 +2009,9 @@ __REAL__
     </tbody>
   </table></div>
   <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges; they rest on: __STYPES__. HCDI database column: the same aircraft in your UAS dashboard, where listed.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Real Class I–II wings fly at Re 1.2 × 10⁵ – 3.1 × 10⁶ on the mean chord. None of our families reaches 5 × 10⁶, so 3 × 10⁶ is the right top study level.</div>
   <h2 style="font-size:22px">Spans from the HCDI UAS database (v13)</h2>
-  <p>794 entries; 76 fixed-wing Class I–II; 18 give a span; <strong>none gives a wing area</strong>, so these rows test the span range only. Four Class I flying wings (3.1–3.5 m) were longer than the old BWB range; the BWB span now reaches 3.5 m. Every conventional wing is inside; tailless Class II wings (5–7.3 m) stay outside until their areas are found.</p>
+  <p>794 entries; 76 fixed-wing Class I–II; 22 give a span; <strong>none gives a wing area</strong>, so these rows test the span range only ("inside": within 10 % of the focus span range of its family). Every tailless span is inside, up to 7.3 m. Four conventional Class II wings (8–10 m) are outside the focus space, which stops at 7 m; the full space covers them.</p>
   <div class="weak amber"><strong>Database weak points.</strong> No source per row. 28 rows share cruise 35 m/s, endurance 6 h and range 100 km (look like defaults); on 8 rows cruise is above top speed. Orlan-10 is listed as Class II at 18 kg, Puma LE as a flying wing, XQ-58 Valkyrie (a jet) as Class II; Zala Z-16's maker field names a microchip company. Only span, class, MTOW and payload are used here.</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>MTOW kg</th><th>Payload kg</th><th>Role</th><th>Span vs generator</th><th>Check</th></tr></thead>
@@ -1874,6 +2019,7 @@ __REAL__
 __HCDI__
     </tbody>
   </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The HCDI database gives spans only. Every Class I span and every tailless span fits the focus space; only four conventional Class II wings (8–10 m) need the full space.</div>
 </section>
 
 <section id="checks">
@@ -1892,6 +2038,7 @@ __HCDI__
 __SETS__
     </tbody>
   </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>All 730 sampled wings build and pass the four checks; none is refused. The type rules usually agree with the sampled type, but not always: 14 of the 100 focus BWBs read as flying wings by the rule, and many corner wings read as the neighbouring type.</div>
   <h2 style="font-size:22px">Is the loft the designed wing? (every sampled wing)</h2>
   <p class="muted">Worst value over every training, corner and reference wing (<code>scripts/verify_sets.py</code>, numpy loft). Stations, chords, twists, sweeps, panel dihedrals and the straightness of each panel match the inputs to machine precision. AR: the loft measures the true chord, which is a little shorter between two stations of different twist (up to 0.035 %; 0 without twist). Sections: up to 0.012 % of chord, at the smallest tips, where the 0.5 mm trailing-edge floor is a large share of a 3 cm chord. Root: every point of the root section at y = 0, and no point of a half wing below y = 0, so the mirrored halves meet only there.</p>
   <div class="tbl"><table class="wide">
@@ -1900,6 +2047,7 @@ __SETS__
 __VSETS__
     </tbody>
   </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The loft is the designed wing: stations, chords, twists, sweeps and dihedrals match the inputs to machine precision, and the sections within 0.012 % of the chord (at the smallest tips).</div>
   <h2 style="font-size:22px">Is the surface the intended wing? (published wings)</h2>
   <p class="muted">Errors in % of local chord. Sections: the loft cut at each station against the original airfoil points (limit 0.01). Edges: against the exact straight lines (limit 1e-6). Outside CAD: only the M6 has one (limit 0.05).</p>
   <div class="tbl"><table class="mid">
@@ -1908,6 +2056,7 @@ __VSETS__
 __VERIFY__
     </tbody>
   </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Every published wing passes: sections within 0.003 % of the chord, edges exact, and the ONERA M6 within 0.011 % of the chord of its CAD model.</div>
 </section>
 
 <section id="open" class="weak amber">
@@ -1927,6 +2076,7 @@ __LIMITS__
   <h2>Published wings it rebuilds</h2>
   <div class="card">__GIF_REF__</div>
   <p class="cap">Each frame is a wing rebuilt by the same generator, with the same loft and checks as the sampled wings. BlendedNet wings are made directly from the BlendedNet parameters.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>The same generator rebuilds the ONERA M6, RIBES, NASA CRM and BlendedNet wings, so our meshes and results can be compared with published data.</div>
   <div class="card">__PNG_TOP__</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Wing</th><th>Type</th><th>Size</th><th>What it is for</th><th>How close the copy is</th><th>Sources</th></tr></thead>
@@ -1936,6 +2086,7 @@ __ROWS__
   </table></div>
   <div class="card">__PNG_CRM__</div>
   <p class="cap">NASA CRM against its published 21-station table. Chords match exactly; with four stations the twist is off by at most 0.51°.</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Four stations give the CRM chords exactly but not its smooth twist (up to 0.51° off): good for mesh tests, not for matching CRM force data exactly.</div>
 </section>
 
 <section id="commands">
@@ -1967,8 +2118,8 @@ python scripts/make_generator_page.py                                # this page
 """
 
 
-SECTION_ORDER = ("glance", "pipeline", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "flowmaps", "flowdata", "refine",
-                 "open", "decisions", "fix", "real", "checks", "limits", "published", "commands")
+SECTION_ORDER = ("glance", "pipeline", "runs", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "flowmaps", "flowdata", "refine",
+                 "open", "decisions", "fix", "build", "real", "checks", "limits", "published", "commands")
 
 
 def open_html() -> str:
@@ -1996,6 +2147,8 @@ def reorder_sections(page: str) -> str:
     """Put the sections in reading order: overview and pictures first, details and evidence after."""
     import re
     blocks = {m.group(1): m.group(0) for m in re.finditer(r'<section id="([a-z]+)"[^>]*>.*?</section>', page, re.S)}
+    if page.count("<section") != len(blocks):          # a section without an id would be dropped silently
+        raise ValueError("every <section> needs an id and a place in SECTION_ORDER")
     missing = [k for k in blocks if k not in SECTION_ORDER]
     if missing:
         raise ValueError(f"sections without a place in SECTION_ORDER: {missing}")
@@ -2013,7 +2166,7 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FIG_SURF__": fig_surfaces(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
+    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FIG_RUNS__": fig_runs(), "__FIG_SURF__": fig_surfaces(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
                                 "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
                                 "__VSETS__": verification_sets_html()} | params_tables_html() | flowdata_html()
     page = PAGE

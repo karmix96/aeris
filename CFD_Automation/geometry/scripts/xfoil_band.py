@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 from cfdauto.geometry.sections import load_airfoil  # noqa: E402
 
 DOCS = ROOT / "docs"
-SECTIONS = {"naca4415": "NACA 4415 (wings with a tail)", "mh61": "MH 61 (BWB outer wing)",
+SECTIONS = {"naca4415": "NACA 4415 (conventional wings)", "mh61": "MH 61 (BWB outer wing)",
             "mh60": "MH 60 (flying wing)", "mh104": "MH 104 (BWB centre body)"}
 RE = (1e5, 3e5, 1.5e6, 3e6)
 ALPHAS = (0, 2, 4, 6, 8)

@@ -131,8 +131,8 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
             if r["family"] == fam and r["use"] == "span":
                 ax.plot([r["span"]] * 2, [0.04, 0.075], color="#6A4BB0", lw=1.4, zorder=2,
                         transform=ax.get_xaxis_transform())
-        ax.set_title({"tailless": "Tailless vs the bwb and flying-wing types",
-                      "conventional": "Wing + tail vs the conventional and tapered types"}[fam], fontsize=10)
+        ax.set_title({"tailless": "Tailless: real wings vs the BWB and flying-wing types",
+                      "conventional": "Conventional: real wings vs the cranked and tapered types"}[fam], fontsize=10)
         ax.set_xlabel("full span [m]")
         ax.set_ylabel("mean chord = area / span [m]")
         ax.set_ylim(bottom=0)

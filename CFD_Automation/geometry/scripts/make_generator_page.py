@@ -1020,6 +1020,49 @@ def _naca4(m=0.04, p=0.4, t=0.12, n=60):
     return pts
 
 
+def fig_surfaces() -> str:
+    """One airfoil at an angle: upper and lower surface, nose, trailing edge, chord, angle, flow."""
+    import math
+    pts = _naca4(m=0.04, p=0.4, t=0.12, n=60)
+    a = math.radians(-8)                      # drawn nose-up
+    C, X0, Y0 = 520, 200, 150
+
+    def tr(x, y):
+        return X0 + C * (x * math.cos(a) - y * math.sin(a)), Y0 - C * (x * math.sin(a) + y * math.cos(a))
+    up = [tr(x, yu) for x, yu, yl in pts]
+    lo = [tr(x, yl) for x, yu, yl in pts]
+    poly = " ".join(f"{u:.1f},{v:.1f}" for u, v in up + lo[::-1])
+    upl = " ".join(f"{u:.1f},{v - 3:.1f}" for u, v in up)
+    lol = " ".join(f"{u:.1f},{v + 3:.1f}" for u, v in lo)
+    le, te = tr(0, 0), tr(1, 0)
+    o = ['<svg class="dg" viewBox="0 0 1000 300" role="img" aria-label="One airfoil section at an angle of attack: the upper surface is '
+         'the top side, the suction side with lower pressure; the lower surface is the bottom side, the pressure side; flow comes from '
+         'the left onto the leading edge (nose) and leaves at the trailing edge">',
+         '<defs><marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+         '<path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>',
+         f'<polygon class="wing" points="{poly}"/>',
+         f'<polyline class="lam" points="{upl}"/>',
+         f'<polyline class="turb" style="opacity:.35" points="{lol}"/>',
+         f'<line class="dash" x1="{le[0]:.1f}" y1="{le[1]:.1f}" x2="{te[0]:.1f}" y2="{te[1]:.1f}"/>',
+         f'<line class="dash" x1="{le[0]:.1f}" y1="{le[1]:.1f}" x2="{le[0] + C:.1f}" y2="{le[1]:.1f}"/>',
+         f'<text class="lab muted" x="{le[0] + C + 10:.1f}" y="{le[1] + 4:.1f}">flow direction</text>',
+         f'<text class="lab muted" x="{le[0] + C + 10:.1f}" y="{le[1] + 24:.1f}">α = angle between flow and chord line</text>',
+         f'<text class="lab muted" x="{le[0] + C + 10:.1f}" y="{le[1] + 44:.1f}">(chord line: nose to trailing edge, dashed)</text>']
+    for k, y in enumerate((70, 110, 150)):
+        o.append(f'<line class="stroke" x1="30" y1="{y + 40}" x2="140" y2="{y + 40}" marker-end="url(#ahs)"/>')
+    o.append('<text class="lab" x="30" y="100">flow</text>')
+    o.append(f'<text class="lab bwbc" x="{X0 + 160}" y="{Y0 - 95}"><tspan font-weight="700">Upper surface</tspan> = the top side '
+             '(suction side: lower pressure, most of the lift)</text>')
+    o.append(f'<text class="lab acc" x="{X0 + 200}" y="{Y0 + 95}"><tspan font-weight="700">Lower surface</tspan> = the bottom side '
+             '(pressure side)</text>')
+    o.append(f'<text class="lab" x="{le[0] - 8:.1f}" y="{le[1] - 22:.1f}" text-anchor="end">leading edge (nose)</text>')
+    o.append(f'<text class="lab" x="{te[0] + 10:.1f}" y="{te[1] + 5:.1f}">trailing edge</text>')
+    o.append('<text class="lab muted" x="30" y="290">One 2-D airfoil section, as XFOIL runs it: no span, no sweep, no wing around it. '
+             'Every 2-D figure below is of this kind.</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
 def fig_section() -> str:
     """One section: the real boundary layer against what the planned CFD assumes."""
     pts = _naca4()
@@ -1644,12 +1687,14 @@ __DERIVED__
     <figcaption class="cap">Real geometry, real speeds: local chord Reynolds number along the span. The smallest wings at their slowest speed sit almost wholly below 10⁵ (red); the BWB carries two regimes at once, its centre body an order of magnitude above its tips. The largest wings at top speed are turbulent except near the BWB and flying-wing tips.</figcaption></figure>
   <h2 style="font-size:22px">What the planned CFD misses: measured in 2-D</h2>
   <p>Each suggested section was run in XFOIL (Drela 1989; e<sup>N</sup> transition, N<sub>crit</sub> 9) twice: free transition, and tripped at 1 % chord, which is what fully turbulent SA does. The gap is the 2-D size of the model band. It is a proxy: no sweep, no crossflow, no 3-D relief.</p>
+  <figure class="fig"><div class="svgwrap">__FIG_SURF__</div>
+    <figcaption class="cap">Words used below. An airfoil has two surfaces: the upper (top, suction) side, where the boundary layer first stays laminar and then turns turbulent, and the lower (bottom, pressure) side. Each XFOIL run is one such 2-D section on its own, not a cut through a 3-D wing.</figcaption></figure>
   <figure class="fig card">__PNG_XFCF__
-    <figcaption class="cap">Upper surface at 4°. At 10⁵ and 3 × 10⁵ the free flow runs laminar to mid-chord, separates (shaded, Cf &lt; 0) and turns turbulent on the bubble. At 1.5–3 × 10⁶ transition moves forward to 30–45 % chord with no bubble. Tripped: turbulent from the nose, with much higher friction everywhere.</figcaption></figure>
+    <figcaption class="cap">2-D airfoil sections in XFOIL, exactly 4°, top (upper) surface only: skin friction from nose (0) to trailing edge (1). Solid: free transition (real quiet air); dashed: tripped at 1 % chord (fully turbulent CFD). At 10⁵ and 3 × 10⁵ the free flow runs laminar to mid-chord, separates (shaded, Cf &lt; 0) and turns turbulent on the bubble. At 1.5–3 × 10⁶ transition moves forward to 30–45 % chord with no bubble. Tripped: turbulent from the nose, with much higher friction everywhere.</figcaption></figure>
   <figure class="fig card">__PNG_XFBAND__
     <figcaption class="cap">Four airfoils, each run alone in 2-D XFOIL (not a cut of a 3-D wing), at exactly 2° and Mach 0. <strong>Light bar</strong>: free transition (e<sup>N</sup>, N<sub>crit</sub> 9): the flow stays laminar from the nose and turns turbulent by itself, as in quiet real air. <strong>Dark bar</strong>: tripped at 1 % chord: turbulent from the nose, which is what fully turbulent CFD (SA) assumes. The % is tripped / free − 1: how much too high fully turbulent CFD puts the profile drag. At Re 10⁵ the two are close because the free flow separates in a long bubble, which is draggy too. __XF_NOTE__</figcaption></figure>
   <figure class="fig card">__PNG_XFTR__
-    <figcaption class="cap">Where the real flow turns turbulent on the upper surface. Light: laminar (low friction); dark: turbulent. Higher Re moves the change toward the nose; the BWB centre-body section (MH 104) turns turbulent earliest.</figcaption></figure>
+    <figcaption class="cap">2-D airfoil sections in XFOIL, exactly 2°, free transition, top (upper) surface only: where the flow turns turbulent, from nose (left) to trailing edge (right). Light: laminar (low friction); dark: turbulent. Higher Re moves the change toward the nose; the BWB centre-body section (MH 104) turns turbulent earliest.</figcaption></figure>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
     <tbody>__PHEN__</tbody>
@@ -1963,7 +2008,7 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
+    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FIG_SURF__": fig_surfaces(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
                                 "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
                                 "__VSETS__": verification_sets_html()} | params_tables_html() | flowdata_html()
     page = PAGE

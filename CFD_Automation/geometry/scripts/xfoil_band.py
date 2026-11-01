@@ -141,7 +141,7 @@ def plots(res: dict) -> None:
     axes[0].set_ylabel("skin friction Cf × 1000")
     h, l = axes[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=4, fontsize=8, frameon=False)
-    fig.suptitle("Upper surface at 4°: laminar run, bubble (shaded, Cf < 0) and transition (dotted) vs fully turbulent", x=0.01,
+    fig.suptitle("2-D airfoil sections (XFOIL) at 4°, top (upper) surface: laminar run, bubble (shaded, Cf < 0), transition (dotted) vs tripped", x=0.01,
                  ha="left", fontsize=10.5, color=ink)
     fig.tight_layout(rect=(0, 0.08, 1, 0.95))
     fig.savefig(DOCS / "xfoil_cf.png")

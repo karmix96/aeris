@@ -1,3 +1,5 @@
 __pycache__/
 *.egg-info/
 build/
+Stage_2_surface_mesh/data/meshes/
+!Stage_2_surface_mesh/docs/*.png

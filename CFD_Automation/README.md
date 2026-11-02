@@ -8,12 +8,14 @@ Standalone; merged into AERIS when finished.
 
 - **Stage 0** (done): starting values — `Stage_0_decisions/` (open `decisions.html` for the readable version).
 - **Stage 1** (done): the wing generator and the flow dataset — `Stage_1_geometry/` (see its `README.md`).
-- Next: **Stage 2**, the surface mesh — `Stage_2_surface_mesh/` (made when the work starts).
+- **Stage 2** (code done, first screen run): the surface mesh — `Stage_2_surface_mesh/` (see its `README.md`).
+- Next: **Stage 3**, the volume mesh, the wake boxes and the CGNS export — `Stage_3_volume_mesh/`.
 
 ```
 cfdauto/                           the code of every stage (one Python package)
   paths.py                         where each stage's configs and data live
-  geometry/  flowmap/              Stage 1 (later: mesh/, solver/, ...)
+  geometry/  flowmap/              Stage 1
+  mesh/                            Stage 2 (surface); later the volume part, solver/, ...
 pyproject.toml                     install once: pip install -e CFD_Automation
 OPEN_DECISIONS.md                  still to decide, every stage (one list)
 Stage_0_decisions/
@@ -22,6 +24,7 @@ Stage_0_decisions/
   decisions.html                   the same, as one readable page
 Stage_1_geometry/                  Stage 1: configs, data, docs, tests, scripts
   decisions/*.md                   Stage 1 notes (trailing edge, loft, root section, ranges, flow maps, ...)
+Stage_2_surface_mesh/              Stage 2: configs/surface.yaml, decisions/, docs/, tests/, scripts/, data/studies/
 references/                        sources (REFERENCES.md, references.bib)
 ```
 
@@ -31,6 +34,7 @@ references/                        sources (REFERENCES.md, references.bib)
   `Stage_<N>` prefix.
 - Wing sets: `training_focus`, `holdout_focus`, `reference` (realistic wings);
   `training_full`, `holdout_full`, `corner1`, `corner2` (everything the generator supports).
-- Meshes: `mesh_<level>_<wing_hash8>`. "Family" is kept for the wing families (tailless, conventional).
+- Meshes: `mesh_<level>_<wing_hash8>_re<Re>` (the Re on the mean chord: the surface depends on it). "Family" is kept
+  for the wing families (tailless, conventional).
 - Code: one package, `cfdauto/`, with one subpackage per job (`geometry`, `flowmap`, then `mesh`, `solver`).
   Data, configs, docs and tests stay in their stage folder; `cfdauto/paths.py` says where.

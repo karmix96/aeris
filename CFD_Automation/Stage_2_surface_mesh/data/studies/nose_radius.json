@@ -1,0 +1,112 @@
+{
+ "mh104": {
+  "raw": {
+   "min_R_c_near_le": 0.006105527222160467,
+   "R_c_at_le_point": 0.008369722324017266,
+   "points_within_1pct_c": 8
+  },
+  "resampled": {
+   "R_c_upper": 0.018307102719533293,
+   "R_c_lower": 0.004833506732164045
+  }
+ },
+ "mh61": {
+  "raw": {
+   "min_R_c_near_le": 0.002608673820732614,
+   "R_c_at_le_point": 0.004050583846282996,
+   "points_within_1pct_c": 10
+  },
+  "resampled": {
+   "R_c_upper": 0.0022691036474743265,
+   "R_c_lower": 0.005318978587288391
+  }
+ },
+ "mh45": {
+  "raw": {
+   "min_R_c_near_le": 0.003616484727775359,
+   "R_c_at_le_point": 0.005140796816306456,
+   "points_within_1pct_c": 9
+  },
+  "resampled": {
+   "R_c_upper": 0.01241824830513845,
+   "R_c_lower": 0.0027612441949917965
+  }
+ },
+ "mh60": {
+  "raw": {
+   "min_R_c_near_le": 0.0034132165549068724,
+   "R_c_at_le_point": 0.004993849553482835,
+   "points_within_1pct_c": 10
+  },
+  "resampled": {
+   "R_c_upper": 0.007014991159323502,
+   "R_c_lower": 0.0036663902949448436
+  }
+ },
+ "e387": {
+  "raw": {
+   "min_R_c_near_le": 0.0071649783341240815,
+   "R_c_at_le_point": 0.010158405992242948,
+   "points_within_1pct_c": 3
+  },
+  "resampled": {
+   "R_c_upper": 0.0028086814569502636,
+   "R_c_lower": 0.0353343444165589
+  }
+ },
+ "sd7032": {
+  "raw": {
+   "min_R_c_near_le": 0.007707573765895222,
+   "R_c_at_le_point": 0.007707573765895222,
+   "points_within_1pct_c": 3
+  },
+  "resampled": {
+   "R_c_upper": 0.031764131365633524,
+   "R_c_lower": 0.0023139631398222497
+  }
+ },
+ "s5010": {
+  "raw": {
+   "min_R_c_near_le": 0.007740324042719235,
+   "R_c_at_le_point": 0.007740324042719235,
+   "points_within_1pct_c": 3
+  },
+  "resampled": {
+   "R_c_upper": 0.014580862269784731,
+   "R_c_lower": 0.0032657176258218488
+  }
+ },
+ "la2573a": {
+  "raw": {
+   "min_R_c_near_le": 0.028333081171289524,
+   "R_c_at_le_point": 0.032151484776309865,
+   "points_within_1pct_c": 3
+  },
+  "resampled": {
+   "R_c_upper": 0.03253181629788545,
+   "R_c_lower": 0.03309116579044906
+  }
+ },
+ "naca4415": {
+  "raw": {
+   "min_R_c_near_le": 0.024169244499876293,
+   "R_c_at_le_point": 0.024592411975954076,
+   "points_within_1pct_c": 6
+  },
+  "resampled": {
+   "R_c_upper": 0.008041031067480865,
+   "R_c_lower": 0.0740532268076378
+  }
+ },
+ "naca25118": {
+  "raw": {
+   "min_R_c_near_le": 0.03348494710429142,
+   "R_c_at_le_point": 0.033933615103467006,
+   "points_within_1pct_c": 9
+  },
+  "resampled": {
+   "R_c_upper": 0.03882117800879347,
+   "R_c_lower": 0.0296475815688216
+  }
+ }
+}

@@ -188,3 +188,38 @@
     Also corrected (L14): the first wall cell is set from each case's speed and changes only about 20 % along the
     span; the per-station need is enough wall layers at the root. Handover to the surface-mesh stage: summary
     section 9 and the project doc "Stage_1 Handover to the surface mesh".
+
+## Stage 2 (surface mesh) — choices I made (2 Nov 2026)
+
+56. **Cells per bubble: 20 at level C** (Ansys CFX Modeling Guide, gamma-Re_theta grid requirements: at least
+    20 nodes across a laminar separation bubble; 75–100 streamwise nodes; y+ about 1; wall-normal growth about
+    1.1). Bubble length from the Stage 1 XFOIL table at the local Re (0.40 c at 6e4 ... 0.05 c at and above 1e6).
+    Cost: ring of about 200 nodes at Re 1e5, 400 at 3e5, 850 at and above 1.5e6 (S8: 150). Open: whether the
+    coarse level needs the full 20 (the T6 chordwise ladder decides); the bubble length above 1e6 is a floor
+    (Stage 1 says "under 0.05 c"). See `Stage_2_surface_mesh/decisions/surface_rules.md`.
+57. **Wall-normal growth for a transition model: 1.1, not 1.25.** The same guide says 1.2 already moves
+    transition a little upstream. Stage 0 and the handover say 1.25. Decide in Stage 3 (volume mesh); it changes
+    the layer count, not the surface.
+58. **The upper transition band starts at the leading edge on every wing** (Stage 1: from 10 % c, from the
+    leading edge on panels swept over about 25°). One rule, about 10 % of the chord more at band spacing.
+59. **One surface per wing and Re level**; the mesh name is `mesh_<level>_<wing_hash8>_re<Re>` (the Stage 0
+    name plus the Re on the mean chord). The tip gap (s0) and the band cell depend on Re. Building one takes
+    3–6 s.
+60. **Both sides of a ring share one node distribution** (in arc fraction; the stricter side wins), so the tip
+    cap's cross lines stay upright. Different distributions per side collapsed the cap quads (scaled Jacobian
+    0.03). About 5–10 % more ring nodes.
+61. **Base cells per level: 8, 10, 14, 18** (even, so the cap's nose arc stays centred): ratios 1.25, 1.4,
+    1.29 instead of 1.3. The one spacing that does not follow the family ratio exactly; reported, not hidden.
+62. **Station gap 0.2 × local chord, at least 12 gaps per panel, growth 1.2 inside a panel** (checked limit
+    1.3 between any two gaps, because each panel holds a whole number of gaps). Our starting values, to be
+    tested in the spanwise ladder (law 8).
+63. **Largest cell outside the bands 2 % c** (our choice). On most stations the band covers so much of the
+    ring that it hardly applies (upper 85–100 % c only).
+64. **Stage 1 finding (from the mesher, 2 Nov 2026): the nose of the built sections is not round.** The
+    resampled sections' nose radius differs between the upper and lower side by 3-13 x on cambered sections
+    with small noses (NACA 4415: formula 0.0248 c, built 0.008 c upper / 0.074 c lower; E387 0.0102 c raw,
+    0.0028 / 0.0353 built), within the first ~0.1 % of the chord. The mesh follows the loft, so the surface
+    mesh is right for the wing as built; the wing's nose is not the airfoil's. Decide: fix in Stage 1
+    (resample the nose in arc length or fit the apex from the raw points; every geometry hash changes) before
+    the first solves, or carry it as a stated geometry deviation. See
+    `Stage_2_surface_mesh/decisions/surface_rules.md`, section 10, and `data/studies/nose_radius.json`.

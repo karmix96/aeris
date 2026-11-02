@@ -130,7 +130,7 @@ At a station v the loft gives the upper and lower surface at any x/c. The mesher
 
 ### Step 1 · Where the stations go
 
-A station sits exactly on every loft station (b0–b3 and the trailing-edge switch station some BWBs have), because the ruled loft has a crease there. Between them the target gap is 0.2 × the local chord, at least 12 gaps per panel, and the gaps may change by at most 1.2 from one to the next. Toward the tip the gaps shrink to the tip first cell s0 (y⁺ = 1 at the tip Re), so the cap faces a cell of the size it will get in the volume mesh. Each panel gets a whole number of gaps, placed so each holds the same share of ∫dy/h. Where each number comes from: a station on every loft station is geometry (the ruled loft has a crease there); the last gap = s0 is the Grand Roadmap (laws 9, 10: the cap's first cell must match the tip's); the growth limit 1.3 is the Stage 1 handover, and we build at 1.2 to leave room for whole numbers; the 0.2 × chord gap and the 12 per panel are our starting values, not derived from a study: 0.2 c gives surface cells about 50 × longer along the span than along the chord, usual for wing meshes, and 12 is the smallest whole number for which a break between two panels cannot step the gap by more than 1.2 × (1 + 1/12) ≈ 1.3. Both are open decision 62, for the spanwise ladder to test.
+A station sits exactly on every loft station (b0–b3 and the trailing-edge switch station some BWBs have), because the ruled loft has a crease there. Between them the target gap is 0.2 × the local chord, at least 12 gaps per panel, and the gaps may change by at most 1.2 from one to the next. Toward the tip the gaps shrink to the tip first cell s0: the height of the first layer of cells the volume mesh (Stage 3) will put on the wall, set by y⁺ = 1 at the tip Re (explained under Step 2), so the cap faces a cell of the size it will get in the volume mesh. Each panel gets a whole number of gaps, placed so each holds the same share of ∫dy/h. Where each number comes from: a station on every loft station is geometry (the ruled loft has a crease there); the last gap = s0 is the Grand Roadmap (laws 9, 10: the cap's first cell must match the tip's); the growth limit 1.3 is the Stage 1 handover, and we build at 1.2 to leave room for whole numbers; the 0.2 × chord gap and the 12 per panel are our starting values, not derived from a study: 0.2 c gives surface cells about 50 × longer along the span than along the chord, usual for wing meshes, and 12 is the smallest whole number for which a break between two panels cannot step the gap by more than 1.2 × (1 + 1/12) ≈ 1.3. Both are open decision 62, for the spanwise ladder to test.
 
 *\[Figure: BWB reference wing, level C, Re 3 × 10⁵. Left: the station gap along the span: the 0.2 c target, the size field after the 12-per-panel rule, the tip squeeze and the growth limit, and the gaps delivered. Middle: every station as a chord line. Right: the last 12 mm before the tip.\]*
 
@@ -171,6 +171,19 @@ Per station and side, the target cell size along the arc is the smallest of ever
 ### Step 2, continued: the two sizes that depend on the Reynolds number
 
 Two sizes: the band cell (bubble length / 20 at the local Re) and the tip first cell s0 (y⁺ = 1). So one wing has one surface per Re level; building one takes seconds.
+
+### What s0 is
+
+- s0 is the **first wall cell**: the height of the very first layer of cells that the volume mesh (Stage 3) will grow from the wing surface into the air. It is a volume-mesh size, not a surface-mesh size.
+- The surface mesh uses it in one place: the last station gap at the tip is set to s0, so the tip cap meets a cell of the same size as the first volume layer there (Grand Roadmap, laws 9 and 10). From the last panel's gap down to s0 takes about 40 stations at 1.2 per step: that is the "tip squeeze".
+- It is not a free choice: it follows from y⁺ = 1. y⁺ is the distance from the wall measured in the flow's own wall units; the turbulence model wants the first cell inside the thin layer right at the wall, which means y⁺ about 1 (Stage 0 budget, row 1c, after the DPW gridding guidelines; Grand Roadmap law 13).
+
+### Where its formula comes from
+
+- **s0 / c = y⁺ / (Re √(Cf / 2))**, with Cf = 0.026 Re^(−1/7): the friction law of a turbulent flat plate (White, Viscous Fluid Flow). Why: y⁺ = y u_τ / ν, the friction velocity is u_τ = U √(Cf / 2), so y = y⁺ ν / (U √(Cf / 2)); divide by the chord and ν / (U c) = 1 / Re.
+- Only the Re changes it, so it is one number per station, like the band cell: 0.032 % c at Re 6 × 10⁴, 0.0072 % c at 3 × 10⁵, 0.0024 % c at 10⁶ (middle panel of the figure below).
+- Example: the BWB reference wing at Re 3 × 10⁵ on the mean chord has a tip chord of 14 cm at a tip Re of 8 × 10⁴, so s0 = 0.025 % × 14 cm = 36 µm: the last station gap at its tip.
+- A flat plate is an estimate; the real wall friction differs along the chord. The volume mesh uses the same law per station, and the first solve audits y⁺ (assumption A4).
 
 ### What the band cell is
 

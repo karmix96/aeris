@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT.parent))   # CFD_Automation: the cfdauto package
 
 from cfdauto.geometry import published_wings as pw, verify  # noqa: E402
 from cfdauto.geometry.loft import build_loft  # noqa: E402

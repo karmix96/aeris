@@ -23,10 +23,11 @@ import re
 from pathlib import Path
 
 import numpy as np
+from ..paths import REPO, STAGE1
 
-GEOMETRY_ROOT = Path(__file__).resolve().parents[2]
+GEOMETRY_ROOT = STAGE1
 LOCAL_DIR = GEOMETRY_ROOT / "airfoils"
-AERIS_DB = Path(os.environ.get("CFDAUTO_AIRFOIL_DB", GEOMETRY_ROOT.parents[1] / "data" / "airfoil_database"))
+AERIS_DB = Path(os.environ.get("CFDAUTO_AIRFOIL_DB", REPO / "data" / "airfoil_database"))
 
 _NACA4 = re.compile(r"^naca(\d)(\d)(\d{2})$")
 _NACA5 = re.compile(r"^naca([1-9])([1-5])([01])(\d{2})$")

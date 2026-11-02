@@ -10,8 +10,10 @@
 
 ## Stage 1 (geometry) — choices I made
 
-7. **Folder.** Stage 1 lives in `CFD_Automation/Stage_1_geometry/` (config, `cfdauto` package, tests,
-   data). Run from there: `python -m cfdauto.geometry.build …`. No `src/` level.
+7. **Folder.** Stage 1 lives in `CFD_Automation/Stage_1_geometry/` (config, tests, data, docs). Run from
+   there: `python -m cfdauto.geometry.build …`. No `src/` level. **2 Nov 2026:** the code moved to one shared
+   package, `CFD_Automation/cfdauto/` (`geometry`, `flowmap`; later `mesh`, `solver`), installed once with
+   `pip install -e CFD_Automation`; stage folders keep configs, data, docs and tests (`cfdauto/paths.py`).
 8. ~~**Conventional ranges**~~ **Decided 29 Oct 2026:** size ranges come from a sourced table of
    real Class I–II wings (`Stage_1_geometry/configs/real_uavs.yaml`), not from a target Re. Root chord
    0.13–0.60 m for conventional and tapered; see `Stage_1_geometry/decisions/conventional_ranges.md`.
@@ -142,7 +144,7 @@
     conventional (cranked, tapered); the type is set by our rules inside the family. Span words:
     full span b (tip to tip), semi-span S = b/2. Focus space capped at b = 7 m.
     See `Stage_1_geometry/decisions/families_and_span.md`. Open: cap the full space too?
-51. **Flow dataset and the model rule (31 Oct 2026).** `Stage_1_geometry/cfdauto/flowmap`: XFOIL section tables
+51. **Flow dataset and the model rule (31 Oct 2026).** `cfdauto/flowmap`: XFOIL section tables
     (10 sections, free N_crit 9 and tripped, 14 Re × 3 Mach × 49 angles, 2,408 robust sweeps), one engine
     for the tool and the dataset, the dataset (400 focus wings × 4 section sets × 126 conditions = 201,600
     rows) and its analysis (trends, sensitivity, checks). Fully turbulent SA overestimates the profile drag

@@ -1,0 +1,19 @@
+# The cfdauto package: the code of every stage, in one place.
+# Install once into the AERIS .venv:  pip install -e CFD_Automation
+# (dependencies come from the AERIS environment: numpy, scipy, pyyaml, matplotlib; pyGeo/pySpline for the loft)
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cfdauto"
+dynamic = ["version"]
+description = "CFD_Automation: geometry -> mesh -> solver -> judgement for UAV wings"
+requires-python = ">=3.10"
+
+[tool.setuptools.dynamic]
+version = {attr = "cfdauto.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cfdauto*"]

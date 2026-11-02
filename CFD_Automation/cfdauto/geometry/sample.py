@@ -15,8 +15,9 @@ from scipy.stats import qmc
 
 from .params import FAMILIES, WING_TYPES, Config, TypeSpec, from_unit, load_config, mid_vector, to_unit
 from .planform import build_planform
+from ..paths import STAGE1
 
-SETS_DIR = Path(__file__).resolve().parents[2] / "data" / "sets"
+SETS_DIR = STAGE1 / "data" / "sets"
 
 
 def lhs(spec: TypeSpec, n: int, seed: int) -> list[dict]:

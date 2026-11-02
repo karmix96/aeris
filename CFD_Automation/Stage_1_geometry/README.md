@@ -3,7 +3,8 @@
 One design vector in, one exact wing surface out, with measured values, labels and a hash.
 Every later stage (mesh, solver, data) reads only this surface.
 
-Run from this folder with the AERIS `.venv` (pyGeo 1.17.0, pySpline 1.5.4).
+Run from this folder with the AERIS `.venv` (pyGeo 1.17.0, pySpline 1.5.4). The code is the shared
+`cfdauto` package in `../cfdauto/`; install it once with `pip install -e ..` (tests find it without).
 
 ```
 python -m cfdauto.geometry.sample                                   # write the sets
@@ -25,7 +26,7 @@ configs/wing.yaml          the one YAML (both wing types)
 configs/published_wings.yaml  ONERA M6, RIBES, NASA CRM, BlendedNet: values, sources, how close
 airfoils/                  project sections (M6, RIBES, copies); the AERIS database is searched too
 docs/                      GEOMETRY_GENERATOR.html (open this first), GIFs, pictures
-cfdauto/geometry/
+../cfdauto/geometry/      (the code; shared package, see ../README.md)
   params.py      read and check the YAML; the design vector
   planform.py    exact panels: leading/trailing edge, chords, stations
   sections.py    twist, dihedral, airfoils, trailing-edge opening
@@ -65,7 +66,7 @@ approximate NASA CRM wing, and BlendedNet designs (any BlendedNet or BlendedNet+
 `published_wings.blendednet(...)`). They keep their own blunt trailing edge
 (`trailing_edge: as_is`). Read each wing's `fidelity` before using it for validation.
 
-## Flow maps and the flow dataset (`cfdauto/flowmap`)
+## Flow maps and the flow dataset (`../cfdauto/flowmap`)
 
 What the flow will do on a wing, where, and which turbulence model to use, from 2-D strips
 (XFOIL, free transition N_crit 9 and tripped at 1 % chord) with a uniform (elliptic) induced angle;
@@ -79,7 +80,7 @@ python -m cfdauto.flowmap --type bwb --set reference --index 0 --mach 0.08 --alp
 ```
 
 ```
-cfdauto/flowmap/
+../cfdauto/flowmap/
   xfoil.py      robust XFOIL sweeps (a failing angle is skipped, never hangs); features: transition, bubbles, TE separation
   tables.py     section tables and their NaN-aware interpolation; the blend rule for strips between two sections
   engine.py     wing strips x conditions -> strip answers and wing metrics (vectorized; tool and dataset share it)

@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT.parent))   # CFD_Automation: the cfdauto package
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from cfdauto.geometry.build import load_set  # noqa: E402

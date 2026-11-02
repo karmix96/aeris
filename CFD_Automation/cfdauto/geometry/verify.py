@@ -25,9 +25,10 @@ import numpy as np
 from . import airfoils
 from .loft import Loft, edge_error_pct, section_points
 from .sections import Station
+from ..paths import REPO, STAGE1
 
-GEOMETRY_ROOT = Path(__file__).resolve().parents[2]
-AERIS_EXTERNAL = GEOMETRY_ROOT.parents[1] / "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/external"
+GEOMETRY_ROOT = STAGE1
+AERIS_EXTERNAL = REPO / "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/external"
 
 
 def _unit_chord(pts: np.ndarray) -> tuple[np.ndarray, np.ndarray]:

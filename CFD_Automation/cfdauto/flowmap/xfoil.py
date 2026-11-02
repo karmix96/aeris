@@ -26,8 +26,9 @@ import time
 from pathlib import Path
 
 import numpy as np
+from ..paths import STAGE1
 
-CACHE = Path(__file__).resolve().parents[2] / "data" / "xfoil_cache"
+CACHE = STAGE1 / "data" / "xfoil_cache"
 NCRIT = 9.0
 XTRIP = 0.01
 POINT_IDLE_S = 6.0      # kill a session that prints nothing for this long

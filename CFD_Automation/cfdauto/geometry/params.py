@@ -10,8 +10,9 @@ from pathlib import Path
 import yaml
 
 from . import airfoils as _airfoils
+from ..paths import STAGE1
 
-GEOMETRY_ROOT = Path(__file__).resolve().parents[2]
+GEOMETRY_ROOT = STAGE1
 DEFAULT_CONFIG = GEOMETRY_ROOT / "configs" / "wing.yaml"
 AIRFOIL_DIR = _airfoils.LOCAL_DIR   # project sections; the AERIS database is searched too
 STATIONS = ("b0", "b1", "b2", "b3")

@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT.parent))   # CFD_Automation: the cfdauto package
 
 from cfdauto.geometry import airfoils, preview, published_wings  # noqa: E402
 from cfdauto.geometry.labels import label  # noqa: E402

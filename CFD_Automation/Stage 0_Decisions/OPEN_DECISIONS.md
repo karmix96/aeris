@@ -176,3 +176,10 @@
     are made in a later stage. Until then the mesh is built transition-ready (y+ <= 1 per station, transition
     band upper 10-85 % c, lower 60-100 % c), so both options stay open. Mike also owes: the pyGeo tests and set
     rebuild on his machine; push the raw XFOIL data (33 MB) or accept the 40-minute rebuild.
+55. **Checks of the flow results (Mike, 2 Nov 2026).** None is needed before the mesh stage: the mesh rules come from
+    ranges (0-10 deg, all section sets), which the checks would not move. Needed before the paper quotes flow numbers:
+    the 3-D transition-model check on 2-3 reference wings (BWB centre body first), the first runs of the mesh stage.
+    Only if the paper states SA's error as a number: 2-D SA against tripped XFOIL (Re 1e5, 3e5, 1.5e6; about 1 day).
+    Optional: retry the failed XFOIL points (0.4 % of cases), the hinge-line case, a vortex-lattice span loading, a
+    source for the crossflow threshold, E387 against wind-tunnel data. Mesh rule added: on swept panels the upper
+    transition band starts at the leading edge (crossflow transition, which the 2-D strips cannot see, starts there).

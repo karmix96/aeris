@@ -343,7 +343,7 @@ def fig_mesh_zones() -> None:
     # ---- key
     rows = [(1, VIO, "Wall layers, all over: first cell from y⁺ ≤ 1 at each station's own Re (root and tip differ up to 17 × in Re)"),
             (2, RED, "Leading edge: suction peak; at high angle the flow turns turbulent at the nose"),
-            (3, AMB, "Transition band: upper surface 10–85 % chord, lower surface 60–100 % (laminar run ends, bubbles; for a transition model)"),
+            (3, AMB, "Transition band: upper 10–85 % chord (swept panels: from the nose), lower 60–100 % (laminar run ends, bubbles; transition model)"),
             (4, AMB, "Breaks b1, b2: kinks in the surface, jump in the span loading: a mesh station exactly on each"),
             (5, BLU, "Tip: smallest chord and Re (below 10⁵ on small wings), tip vortex, first to stall on swept wings"),
             (6, RED, "Trailing edge and blunt base: base flow and the start of the wake; separation there only near stall"),

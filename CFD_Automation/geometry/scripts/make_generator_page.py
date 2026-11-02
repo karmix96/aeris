@@ -174,7 +174,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Flow maps", "The SA rule", "The tool proposes SA when fully turbulent SA changes the profile drag by under 10 %, the upper surface turns turbulent near the nose (mean laminar run under 20 % chord; a small drag error with a long laminar run is a coincidence of two different flows) and no strip is below Re 10⁵. Both thresholds are our choice. Tie the first to the drag budget instead (the error in counts)?", "decide"),
     ("Flow maps", "N<sub>crit</sub> of the tool", "Default 9 (quiet air, as in flight at altitude). Low-level flight in gusty air is nearer 5–7; the check shows N<sub>crit</sub> 5 changes the SA error by __FD_N5__ points. Keep 9 and show 5 as a band?", "decide"),
     ("Flow maps", "Level-flight band", "A grid point counts as level flight when its wing loading is within × / ÷ 2 of the fit to 37 real wings (35 of them are). Keep, or narrow it per class?", "decide"),
-    ("Flow maps", "Check against a 3-D answer", "The strips have only a uniform induced angle, no crossflow and no 3-D bubble relief. Compare the tool with a vortex-lattice + strip method (e.g. AVL with XFOIL polars) or a few SU2 γ-Reθ runs on reference wings before quoting numbers in the paper.", "act"),
+    ("Flow maps", "Checks of the flow results", "Mike, 2 Nov 2026: no check is needed before the mesh stage; the mesh rules come from ranges, which the checks would not move. Needed before the paper quotes flow numbers: a few SU2 γ-Reθ runs on 2–3 reference wings (BWB centre body first), the first runs of the mesh stage. Only if the paper states SA's error as a number: 2-D SA against tripped XFOIL at Re 10⁵, 3 × 10⁵ and 1.5 × 10⁶ (about 1 day). Optional: retry the failed XFOIL points, a hinge-line case, a vortex-lattice span loading, a source for the crossflow threshold, E387 against wind-tunnel data.", "act"),
     ("Study plan (Stage 0)", "Grid share 65 %", "Of the 3-count drag budget, 65 % goes to the mesh. Keep?", "decide"),
     ("Study plan (Stage 0)", "Iterative error", "≤ 10 % of the budget is loose; Eça &amp; Hoekstra ask 0.1–1 %. Tighten to 1 %?", "decide"),
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
@@ -401,7 +401,7 @@ PHENOMENA = [
      "No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose. In 2-D (XFOIL) that raises profile drag by 37–128 % (median 76 %) at Re ≥ 3 × 10⁵. Carried as a model band (Stage 0); SU2 γ-Reθ is the proposed check.",
      "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35); our XFOIL runs (Drela 1989)"),
     ("Very low Re at the tips",
-     "BWB tip chords 3.5–16 cm: tip Re down to 2 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.",
+     "BWB tip chords 3.5–16 cm: tip Re down to about 1.4 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.",
      "Thick laminar boundary layers and early separation at the tip, where the vortex forms.",
      "Weakly. Same model limit as above, at its worst. The first-cell law must use the local chord, not the mean chord.",
      "Same as above; first-cell law: Grand Roadmap R-V.1"),
@@ -852,7 +852,7 @@ def flowdata_conclusions(a: dict) -> str:
         f"sweep drives spanwise flow, crossflow and tip stall.",
         f"<strong>Swept tailless wings may see crossflow transition (rough flag).</strong> {_pc(xf['bwb'], False)} of BWB rows and "
         f"{_pc(xf['flying_wing'], False)} of flying-wing rows have a strip swept over 25° with Re normal to its edge above 10⁶ (our "
-        f"threshold, not sourced). Neither XFOIL nor γ-Reθ without a crossflow term sees it; there the transition position is less certain.",
+        f"threshold, not sourced). Neither XFOIL nor γ-Reθ without a crossflow term sees it; there the transition position is less certain, so on swept panels the mesh transition band starts at the leading edge.",
         f"<strong>Our assumptions move the numbers, not the sign.</strong> More turbulent air (N<sub>crit</sub> 5) changes the error by "
         f"{_pt(n5, 0)} points, quieter air (11) by {_pt(n11, 0)}; leaving out the induced angle (the old baseline) by {_pt(ni['median'], 0)} "
         f"(5–95 %: {_pt(ni['q05'], 0)} to {_pt(ni['q95'], 0)}, the big changes at high angle); compressibility by {_pt(m0['median'])}; "
@@ -862,7 +862,7 @@ def flowdata_conclusions(a: dict) -> str:
         f"SA overestimates the total drag by a median {_pc(tot[0])} to {_pc(tot[-1])} by type: far above the 3-count mesh budget.",
         "<strong>What this means for the CFD.</strong> Start the mesh studies with SA (ADflow), with its inflow eddy viscosity fixed "
         "(ν̃/ν about 3), and use SA as an upper bound for drag. Make the mesh transition-ready (y⁺ ≤ 1 at each station's Re, fine cells "
-        "over the upper surface 10–85 % and the lower surface 60–100 % of the chord) and repeat a reduced mesh study with the "
+        "over the upper surface 10–85 % (from the leading edge on swept panels) and the lower surface 60–100 % of the chord) and repeat a reduced mesh study with the "
         "transition model: what a mesh must resolve depends on the model. For drag numbers or rankings, run a transition model "
         "(SU2 γ-Reθ) on reference wings and on a calibration subset. Below Re 10⁵, neither is enough. The tool gives the band, the "
         "bubble positions and the model for any wing in milliseconds.",
@@ -1085,7 +1085,7 @@ def fig_planform() -> str:
         (165, "laminar region behind the leading edge", (380, 212)),
         (210, "boundary layer drifts outboard (aft sweep)", (285, 259)),
         (255, "tip stalls first at high angle", (560, 282)),
-        (300, "smallest chord: Re down to 2 × 10⁴", (602, 268)),
+        (300, "smallest chord: Re down to 1.4 × 10⁴", (602, 268)),
         (345, "blunt base: base drag, shedding", (470, 292)),
         (392, "wake rolls up into the tip vortex", (644, 392)),
     ]
@@ -1205,7 +1205,7 @@ REFINE = [
     ("Leading edge (nose)", "Suction peak, start of the laminar run, stall at 12°",
      "Chordwise spacing solved so no cell turns the surface by more than 10° (ladder 12 / 10 / 8 / 6°); nose cells of neighbouring stations differ by at most 15 %",
      "chordwise 35 %", "Roadmap R-S.5, R-S.6 (laws 1, 2)", "In place"),
-    ("Transition band: upper surface 10–85 % chord, lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 11 % to 78 % of the chord), and the lower surface turns turbulent near the trailing edge",
+    ("Transition band: upper surface 10–85 % chord (from the leading edge on swept panels), lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 11 % to 78 % of the chord), and the lower surface turns turbulent near the trailing edge. On swept panels crossflow transition, which the 2-D strips cannot see, would start at the leading edge",
      "Only with a transition model: fine chordwise cells over the band and a cap on growth along the ring (≤ 1.25). With fully turbulent SA there is no bubble to resolve",
      "chordwise 35 %", "Our choice; depends on the transition route (Stage 0 D5)", "Not done"),
     ("Trailing edge and blunt base", "Base drag, base flow, start of the wake",
@@ -1278,7 +1278,7 @@ def fig_refine_side() -> str:
     o.append(f'<line class="leader" x1="{X0 - 12}" y1="{YC - 8}" x2="{X0 - 60}" y2="{YC + 70}"/><text class="lab" x="{X0 - 110}" y="{YC + 88}">nose: ≤ 10° turning per cell</text>')
     o.append(f'<line class="leader" x1="{te + 6}" y1="{YC + 10}" x2="{te + 40}" y2="{YC + 80}"/><text class="lab" x="{te + 20}" y="{YC + 98}">edge 0.1 % c · 8 cells across the base</text>')
     o.append(f'<line class="leader" x1="{X0 + 0.5 * C}" y1="{YC - 30}" x2="{X0 + 0.45 * C}" y2="{YC - 70}"/><text class="lab" x="{X0 + 0.1 * C:.0f}" y="{YC - 76}">wall layers: y⁺ ≤ 1, growth ≤ 1.25, ≥ 30 cells</text>')
-    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">transition band: upper 10–85 % c, lower 60–100 % c (transition model)</text>')
+    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">transition band: upper 10–85 % c (swept panels: from the nose), lower 60–100 % c</text>')
     o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed)</text>')
     o.append("</svg>")
     return "\n".join(o)
@@ -1811,7 +1811,7 @@ __DERIVED__
   <h2>Flow phenomena you will meet</h2>
   <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
   <figure class="fig"><div class="svgwrap">__FIG_RE__</div>
-    <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The study level 1 × 10⁵ (added 30 Oct 2026) now reaches the mini Class I wings; only the tips stay below every level. From the generated envelope and the real wings with a published area and speeds (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
+    <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to about 1.4 × 10⁴. The study level 1 × 10⁵ (added 30 Oct 2026) now reaches the mini Class I wings; only the tips stay below every level. From the generated envelope and the real wings with a published area and speeds (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>Every type flies in or near the low-Re regime (below 5 × 10⁵), and the tips go deepest (down to about 1.4 × 10⁴). Low-Re effects are the rule for these wings, not the exception.</div>
   <figure class="fig card">__PNG_LOCALRE__
     <figcaption class="cap">Real geometry, real speeds: local chord Reynolds number along the span. The smallest wings at their slowest speed sit almost wholly below 10⁵ (red); the BWB carries two regimes at once, its centre body an order of magnitude above its tips. The largest wings at top speed are turbulent except near the BWB and flying-wing tips.</figcaption></figure>

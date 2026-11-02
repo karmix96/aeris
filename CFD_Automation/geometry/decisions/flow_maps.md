@@ -88,8 +88,9 @@ logic check and an independent review; their fixes are in the code and the numbe
   on 20 % of the span at 10°, SA adequate for flying wings at 10°) were artefacts.
 - L9. SA's error does not cancel at the 2-count level: D1 is a numerical target; drag ranking needs
   transition-model results, at least on a calibration subset.
-- L10. Mesh transition band: upper 0.10–0.85 c, lower 0.60–1.00 c.
-- L11. Done: "beyond 2-D stall" is "no XFOIL answer". Still to do: retry failed points with finer steps.
+- L10. Mesh transition band: upper 0.10–0.85 c, lower 0.60–1.00 c; on swept panels the upper band starts at the
+  leading edge (crossflow transition, not seen by the strips, would start there; added 2 Nov 2026).
+- L11. Done: "beyond 2-D stall" is "no XFOIL answer". Optional: retry failed points with finer steps.
 - L12. Done: the NACA set on tailless wings is tagged (cannot trim) and left out of the statistics. Start the
   3-D check on the BWB centre body (about 30 % of the half span, about half of the area).
 - L13. Done: sections coded by airfoil set in the sensitivity; test split by wing (R² now 0.88 tailless,
@@ -105,6 +106,11 @@ not a flight envelope (the level-flight flag is a rough filter); statistics desc
 sets, not a population of aircraft; the error measure is the 2-D, transition-only part of the SA error.
 
 ## Open (page "Open decisions")
+
+Mike, 2 Nov 2026: the model choice is made in a later stage (the mesh is built transition-ready meanwhile);
+no flow check is needed before the mesh stage; the 3-D check is the first run of the mesh stage and is needed
+before the paper quotes flow numbers; the other checks are optional (OPEN_DECISIONS 54, 55).
+
 
 Transition model in the pipeline (SU2 γ-Reθ for drag; ADflow SA for the first mesh studies on a
 transition-ready mesh, then a reduced mesh study with the transition model; the SA inflow value); D1 as a

@@ -96,6 +96,10 @@ logic check and an independent review; their fixes are in the code and the numbe
 - L13. Done: sections coded by airfoil set in the sensitivity; test split by wing (R² now 0.88 tailless,
   0.95 conventional for the SA error); flags never averaged into 0.5; crossflow flag per strip (still an
   unsourced threshold); "Class I and small Class II".
+- L14 (2 Nov 2026). "A first cell per station" was overstated: at one flight speed y+ = 1 gives a first cell
+  that changes only about 20 % along the span (Re and chord change together: s0 ~ c^(1/14)); it changes with the
+  speed (Mach 0.03 -> 0.20: about 6 x smaller). What changes per station is the boundary-layer thickness (up to
+  about 10 x from a small BWB's tip to its root), so the wall-layer count must cover the root.
 
 ## Limits
 

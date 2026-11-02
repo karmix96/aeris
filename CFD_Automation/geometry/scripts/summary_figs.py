@@ -341,7 +341,7 @@ def fig_mesh_zones() -> None:
     bx.set_xlim(-0.2, 2.05); bx.set_ylim(-0.25, 0.33); bx.set_aspect("equal"); bx.axis("off")
 
     # ---- key
-    rows = [(1, VIO, "Wall layers, all over: first cell from y⁺ ≤ 1 at each station's own Re (root and tip differ up to 17 × in Re)"),
+    rows = [(1, VIO, "Wall layers, all over: first cell from y⁺ ≤ 1 at each case's speed (about the same along the span); more layers at the root"),
             (2, RED, "Leading edge: suction peak; at high angle the flow turns turbulent at the nose"),
             (3, AMB, "Transition band: upper 10–85 % chord (swept panels: from the nose), lower 60–100 % (laminar run ends, bubbles; transition model)"),
             (4, AMB, "Breaks b1, b2: kinks in the surface, jump in the span loading: a mesh station exactly on each"),

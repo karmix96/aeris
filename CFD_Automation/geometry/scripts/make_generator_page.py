@@ -403,7 +403,7 @@ PHENOMENA = [
     ("Very low Re at the tips",
      "BWB tip chords 3.5–16 cm: tip Re down to about 1.4 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.",
      "Thick laminar boundary layers and early separation at the tip, where the vortex forms.",
-     "Weakly. Same model limit as above, at its worst. The first-cell law must use the local chord, not the mean chord.",
+     "Weakly. Same model limit as above, at its worst. The first wall cell barely changes along the span (Re and chord change together), but the thicker root boundary layer needs more wall layers.",
      "Same as above; first-cell law: Grand Roadmap R-V.1"),
     ("Wake behind the trailing edge",
      "Every wing, the whole span. At 12° the wake leaves the edge at an angle; behind a blunt base it starts wide.",
@@ -1199,7 +1199,7 @@ def fig_section() -> str:
 # zone | phenomena it captures | rule (starting value) | budget share (Stage 0) | where the rule comes from | today in S8
 REFINE = [
     ("Wall-normal, every wall", "Boundary layer, skin friction, separation; transition if a transition model is run",
-     "First cell from y⁺ ≤ 1 at each station's own Re (local chord), so small tips get their own; growth ≤ 1.25 inside the boundary layer, ≤ 1.3 outside; ≥ 30 cells across the boundary layer",
+     "First cell from y⁺ ≤ 1 at the flight speed of each case (law 13 per station; along the span it changes only about 20 %, because Re and chord change together, and the smallest chord sets it); growth ≤ 1.25 inside the boundary layer, ≤ 1.3 outside; ≥ 30 cells across the boundary layer at every station (on a small BWB the root boundary layer is up to about 10 × thicker than the tip's)",
      "wall-normal 20 %", "Roadmap R-V.1, R-V.2 (laws 13, 14); DPW gridding guidelines",
      "One first cell (4.71 µm) for every station; growth 1.253; 29 cells across the boundary layer"),
     ("Leading edge (nose)", "Suction peak, start of the laminar run, stall at 12°",
@@ -1815,7 +1815,7 @@ __DERIVED__
   <div class="cbox"><span class="ctag">Conclusion</span>Every type flies in or near the low-Re regime (below 5 × 10⁵), and the tips go deepest (down to about 1.4 × 10⁴). Low-Re effects are the rule for these wings, not the exception.</div>
   <figure class="fig card">__PNG_LOCALRE__
     <figcaption class="cap">Real geometry, real speeds: local chord Reynolds number along the span. The smallest wings at their slowest speed sit almost wholly below 10⁵ (red); the BWB carries two regimes at once, its centre body an order of magnitude above its tips. The largest wings at top speed are turbulent except near the BWB and flying-wing tips.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>One wing can hold two regimes: on the smallest BWB the root runs at 2.4 × 10⁵ and the tip at 1.4 × 10⁴, 17 times less. One flow model and one first-cell height may not fit the whole span.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>One wing can hold two regimes: on the smallest BWB the root runs at 2.4 × 10⁵ and the tip at 1.4 × 10⁴, 17 times less. One flow model may not fit the whole span. One first-cell height does (it changes only about 20 % along the span, because Re and chord change together), but the root boundary layer is up to about 10 × thicker and needs more wall layers.</div>
   <h2 style="font-size:22px">What fully turbulent CFD would miss: estimated in 2-D with XFOIL (no CFD run yet)</h2>
   <p>No CFD has been run yet. Four airfoils, each on its own (2-D, not a cut of a wing), were run in XFOIL (Drela 1989: a panel method coupled to a boundary-layer model, not RANS): MH 104, the BWB centre body (root); MH 61, the BWB outer wing (tip); MH 60, the flying wing; NACA 4415, the conventional wings (root). Each was run twice at the four study Re:</p>
   <ul>

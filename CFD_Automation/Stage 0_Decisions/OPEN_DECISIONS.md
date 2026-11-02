@@ -183,3 +183,6 @@
     Optional: retry the failed XFOIL points (0.4 % of cases), the hinge-line case, a vortex-lattice span loading, a
     source for the crossflow threshold, E387 against wind-tunnel data. Mesh rule added: on swept panels the upper
     transition band starts at the leading edge (crossflow transition, which the 2-D strips cannot see, starts there).
+    Also corrected (L14): the first wall cell is set from each case's speed and changes only about 20 % along the
+    span; the per-station need is enough wall layers at the root. Handover to the surface-mesh stage: summary
+    section 9 and the project doc "G1 handover to the surface mesh".

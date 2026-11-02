@@ -109,6 +109,24 @@ Stage 1 made the wing: one exact loft per design vector, with measured values an
 - **The family ratio r = 1.3 between levels C, M, F**: every spacing of the whole mesh divided by 1.3 to make the next finer mesh, for the grid-convergence estimate. Source: Celik et al. 2008 (r ≥ 1.3).
 - They are unrelated numbers that happen to be equal. The station rules above come from the first (growth), not from the family ratio; the only numbers derived from a growth limit are the 12 per panel (so the jump at a break stays under 1.3) and the about 40 stations of the tip squeeze.
 
+### The one node list of step 4, in plain words
+
+### Why one list
+
+- A structured mesh needs the same ring at every station: the same number of nodes, at the same relative places, so that node i of one station joins node i of the next in a clean four-sided cell.
+- Step 2 gave every station its own wish list of cell sizes along the section, and the lists differ: the root has the highest local Re (small band cells), the tip has the sharpest nose (small nose cells), the lower side has its band at the back.
+- With a list per station, node i drifted along the chord from one station to the next; where the stations are tens of µm apart at the tip, that drift sheared the cells (scaled Jacobian 0.08, Study 3).
+
+### How the lists are merged
+
+- Every side of every station is measured as a fraction of its own length, 0 at the nose and 1 at the trailing edge, so all lists sit on one scale whatever the chord.
+- At each fraction the smallest wished cell of any station or side is taken. Example on the BWB reference wing: nose, root wants 0.10 % of the side, tip wants 0.03 %, everyone gets 0.03 %; band, root wants 0.37 %, tip 1.7 %, everyone gets 0.37 %.
+- Nodes are placed once on the merged list, and that list is used on every station and both sides. Nobody gets a coarser cell than it wished; the cost is about 3 % more nodes. The sharpest nose and the finest band of the wing are everywhere.
+
+*\[Figure: Left: the wish lists of three stations of the BWB reference wing (root, mid-span, tip; solid upper side, dashed lower side) on the common scale, and the merged list in black. Right: the merged list applied to the root ring and the tip ring, both drawn at unit chord, with every 30th node pair joined.\]*
+
+<span class="ctag">Conclusion</span>The merged list is the lower envelope of all wish lists: the root's band sets the middle, the tip's nose sets the front, the lower band of every station sets the back. On the rings, node i lands at the same place on the root and the tip, which is what makes the cells between stations clean.
+
 *\[Figure: Every station gap of two reference wings as a bar, coloured by the rule that set it: the BWB (semi-span 3 chords) and the most slender tapered reference wing (7 chords). Black lines: the loft stations.\]*
 
 <span class="ctag">Conclusion</span>On real wings of our focus space the 0.2 × chord rule never acts: every gap is set either by the 12-per-panel floor (the straight runs) or by the growth limit (the tip squeeze from millimetres down to tens of µm, and the step between two panels whose floors differ). So the station count is mostly 12 × the number of panels plus about 40 for the squeeze; the spanwise ladder should test the floor and the squeeze before the 0.2 c value.

@@ -573,3 +573,48 @@ def fig_station_rules():
         a.legend(handles=[Patch(color=c, label=k) for k, c in cols.items()] + [Patch(color=INK, label="a loft station (b0..b3, trailing-edge switch)")], loc="lower left", ncol=2, fontsize=8)
     fig.suptitle("which rule sets each station gap (bars: one per gap, coloured by the rule that set it; black lines: the loft stations)", fontsize=10, color=INK)
     save(fig, "station_rules.png")
+
+
+# --- 17. how the one node list is made ------------------------------------------------------------
+def fig_merge(w, m):
+    from cfdauto.mesh.ring import FRAC, field_in_arc_fraction
+    rl = rules("C")
+    js = {"root": 0, "mid-span": m.wing.shape[1] // 2, "tip": m.wing.shape[1] - 1}
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.4), gridspec_kw={"width_ratios": [1.3, 1]})
+    a = ax[0]
+    cols = {"root": ACC, "mid-span": BWB, "tip": AMBER}
+    gs = []
+    for name, j in js.items():
+        r = m.stations[j]
+        sec = Section.at(w.loft, r["v"], rl.dense_per_side)
+        c = sec.chord
+        sp = RingSpec(r["h_le_c_asked"] * c, r["h_band_c"] * c, rl.max_spacing_c * c, rl.te_spacing_c * c)
+        for upper, ls in ((True, "-"), (False, "--")):
+            h = sec.size_field(upper, sp.h_le, sp.h_band, sp.h_max, sp.h_te, rl.band_upper if upper else rl.band_lower, rl.chord_growth, rl.nose_turning_deg)
+            arc = sec.arc_up if upper else sec.arc_lo
+            a.semilogy(arc / arc[-1], h / arc[-1] * 100, ls, color=cols[name], lw=1,
+                       label=f"{name} ({'upper' if upper else 'lower'}), chord {c * 100:.0f} cm, Re {r['re_local']:.1e}")
+        gs.append(field_in_arc_fraction(sec, sp, rl))
+    secs = [Section.at(w.loft, r["v"], rl.dense_per_side) for r in m.stations]
+    specs = [RingSpec(r["h_le_c_asked"] * r["chord_m"], r["h_band_c"] * r["chord_m"], rl.max_spacing_c * r["chord_m"], rl.te_spacing_c * r["chord_m"]) for r in m.stations]
+    frac, g, need = union_distribution(secs, specs, rl)
+    a.semilogy(FRAC, g * 100, color=INK, lw=2.4, label=f"merged: the smallest at every place, all {len(secs)} stations → {len(frac)} nodes per side")
+    a.set_xlabel("place along the side: fraction of the arc from the nose (0) to the trailing edge (1)")
+    a.set_ylabel("wished cell size, % of the side's length"); a.legend(fontsize=7, loc="lower center"); a.set_ylim(1e-2, 5)
+    a.set_title("step 4: each station's wish list (three of 82 shown), and the merged list", fontsize=9)
+    a = ax[1]
+    n = m.info["n_side"]
+    for name, j in (("root", 0), ("tip", m.wing.shape[1] - 1)):
+        ring = m.wing[:, j]; c = m.stations[j]["chord_m"]
+        p = (ring - ring[n - 1]) / c                               # unit chord, nose at the origin
+        off = 0.0 if name == "root" else -0.35
+        a.plot(p[:2 * n - 1, 0], p[:2 * n - 1, 2] + off, "-", color=LINE, lw=0.8)
+        a.plot(p[:2 * n - 1, 0], p[:2 * n - 1, 2] + off, ".", color=cols[name], ms=1.5)
+        a.text(0.5, off + 0.16, f"{name} ring, chord {c * 100:.0f} cm, drawn at unit chord", color=cols[name], fontsize=8, ha="center")
+    r0 = (m.wing[:, 0] - m.wing[n - 1, 0]) / m.stations[0]["chord_m"]
+    r1 = (m.wing[:, -1] - m.wing[n - 1, -1]) / m.stations[-1]["chord_m"]
+    for i in range(0, 2 * n - 1, max(1, (2 * n - 1) // 30)):
+        a.plot([r0[i, 0], r1[i, 0]], [r0[i, 2], r1[i, 2] - 0.35], color=MUTED, lw=0.4)
+    a.set_aspect("equal"); a.set_xlabel("x / chord"); a.set_yticks([])
+    a.set_title("the same list on the root and the tip:\nnode i at the same place on both (every 30th node joined)", fontsize=9)
+    save(fig, "merge.png")

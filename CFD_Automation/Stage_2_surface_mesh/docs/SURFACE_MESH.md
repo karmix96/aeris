@@ -140,11 +140,11 @@ A station sits exactly on every loft station (b0–b3 and the trailing-edge swit
 
 ### The five rules, and where each comes from
 
-- **A station on every loft station** (b0, b1, b2, b3 and the trailing-edge switch station). Geometry: the loft is straight between them and has a crease at each, so a station there follows the kink.
-- **At least 12 gaps per panel.** Our choice: a panel gets a whole number of gaps, so the gap size can jump at a break by up to 1/n; 12 is the smallest n for which 1.2 × (1 + 1/12) stays under the 1.3 limit below.
-- **A gap of 0.2 × the local chord** where the panel is long enough for it (a panel longer than 2.4 chords). Our starting value (open decision 62). On the reference wings it never acts: the 12-per-panel floor and the tip squeeze set every gap.
-- **Neighbouring gaps differ by at most 1.2** (built) and **1.3** (checked). The 1.3 is the Stage 1 handover's limit on spanwise growth; 1.2 is what we build at, to leave room for the whole-number jumps at the breaks.
-- **The last gap at the tip = s0**, the first wall cell the volume mesh will put on the tip cap (y⁺ = 1 at the tip Re). Grand Roadmap, laws 9 and 10. From the last panel's gap down to s0 at 1.2 per step takes about 40 stations.
+- **A station on every loft station** (b0, b1, b2, b3 and the trailing-edge switch station). Geometry: the loft is straight between them and has a crease at each, so a station there follows the kink. <span class="flag ok">source: geometry; Stage 1 handover</span>
+- **At least 12 gaps per panel.** A panel gets a whole number of gaps, so the gap size can jump at a break by up to 1/n; 12 is the smallest n for which 1.2 × (1 + 1/12) stays under the 1.3 limit below. <span class="flag chg">our choice, derived from the 1.3 limit; open decision 62</span>
+- **A gap of 0.2 × the local chord** where the panel is long enough for it (longer than 2.4 chords). On the reference wings it never acts: the 12-per-panel floor and the tip squeeze set every gap. <span class="flag chg">our choice, no source; open decision 62</span>
+- **Neighbouring gaps differ by at most 1.2** (built) and **1.3** (checked). The 1.3 is the Stage 1 handover's limit on spanwise growth (the DPW guidelines give the same kind of limit for growth in general); 1.2 is what we build at, to leave room for the whole-number jumps at the breaks. <span class="flag ok">source: Stage 1 handover; DPW (Levy et al. 2013)</span> <span class="flag chg">1.2: our choice</span>
+- **The last gap at the tip = s0**, the first wall cell the volume mesh will put on the tip cap (y⁺ = 1 at the tip Re). From the last panel's gap down to s0 at 1.2 per step takes about 40 stations. <span class="flag ok">source: Grand Roadmap, laws 9 and 10 (our own primer); s0 from the flat-plate law, White 2006</span>
 
 ### Two different 1.3s on this page
 

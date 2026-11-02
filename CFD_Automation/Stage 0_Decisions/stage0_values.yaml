@@ -5,7 +5,7 @@ D1_accuracy:
   increment_target:
     value: {dCD: 2, dCL: 0.005}
     unit: {dCD: drag counts, dCL: "-"}
-    reason: Wings differ by a few drag counts, so the target must sit below that. Shared mesh errors cancel in the difference.
+    reason: Wings differ by a few drag counts, so the target must sit below that. Shared mesh errors cancel in the difference. Since 2 Nov 2026 (Stage 1) a numerical target only (mesh + iterations); SA's own error on differences is 4 counts median (2-D strips).
     sources: [morrison2014dpw]
   absolute_budget_CD:
     value: "max(0.03*CD, 3 counts)"
@@ -129,9 +129,10 @@ D3_conditions_and_measurement:
     reason: Otherwise the cause of a difference cannot be named.
     sources: []
   turbulence_model:
-    value: Spalart-Allmaras, no transition model; low-Re drag carries a model band
-    reason: At low Re transition sets the drag; fully turbulent RANS tests the mesh, not the flow.
-    sources: [crivellini2014]
+    value: SA for mesh studies now; final model and SA inflow value in a later stage (by G0, decision 54); mesh built transition-ready; every drag number carries a model band
+    transition_ready_mesh: {yplus_max: 1, min_cells_across_bl: 30, band_upper_c: [0.10, 0.85], band_lower_c: [0.60, 1.00], swept_panels_upper_band_from_le: true}
+    reason: Stage 1 (2-D XFOIL strips) found long laminar runs and bubbles; fully turbulent SA overpredicts profile drag by a median +62 % (+69 % in level flight). What the mesh must resolve depends on the model.
+    sources: [spalart2007, crivellini2014]   # plus the Stage 1 flow study
 
 D4_working_rules:
   mesh_name: {value: "<family>_<level>_<wing_hash8>", reason: One name means one mesh.}

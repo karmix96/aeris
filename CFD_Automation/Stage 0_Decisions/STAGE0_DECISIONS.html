@@ -136,7 +136,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <tbody>
     <tr><td class="what">Comparing two wings</td><td class="val">ΔCD ≤ 2 counts<br>ΔCL ≤ 0.005</td>
       <td><p>The error on the <em>difference</em> between two wings is at most 2 counts. Wing A 0.0210, wing B 0.0205: 5 counts apart, so B is really better. Less than 2 counts apart is a tie.</p></td>
-      <td><p>We mostly pick the better wing. Two wings meshed the same way share much of their error, and it cancels in the difference.</p></td>
+      <td><p>We mostly pick the better wing. Two wings meshed the same way share much of their error, and it cancels in the difference.</p><p class="warn">Since Stage 1 (2 Nov): a numerical target only. Fully turbulent SA's own error on the difference between similar wings is 4 counts median (above 2 in 71 % of pairs; 2-D strips).</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">Industry goal ±1 count (Morrison et al.). We start at 2.</span></td></tr>
     <tr><td class="what">Drag of one wing</td><td class="val">max(3 % of CD, 3 counts)</td>
       <td><p>CD 0.0200 → may be off by 6 counts. CD 0.0080 → 3 % is 2.4, so the 3-count floor applies. Used against wind-tunnel data.</p></td>
@@ -261,10 +261,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>Up to ~100 m/s at sea level. Air nearly incompressible. Transonic is a later stage.</p></td>
       <td><p>Class I and II UAVs fly well below this.</p></td>
       <td class="src"><span class="tag own">our choice</span></td></tr>
-    <tr><td class="what">Reynolds number (mean chord)</td><td class="val">3×10⁵<br>1.5×10⁶<br>5×10⁶</td>
-      <td><p>How "big and fast" the wing is to the air: Re = ρ·V·c ÷ μ. A 0.2 m chord at 25 m/s, 1,500 m ≈ 3×10⁵. Wall cells must shrink as Re grows, so every mesh study runs at all three.</p></td>
-      <td><p>Low, middle, high end of small Class I and Class II. Mini/micro Class I (e.g. Raven) sit below 3×10⁵ and are left out.</p></td>
-      <td class="src"><span class="tag pub">published</span><span class="ref">ISA atmosphere; Sutherland's law; aircraft data</span></td></tr>
+    <tr><td class="what">Reynolds number (mean chord)</td><td class="val">1×10⁵<br>3×10⁵<br>1.5×10⁶<br>3×10⁶</td>
+      <td><p>How "big and fast" the wing is to the air: Re = ρ·V·c ÷ μ. A 0.2 m chord at 25 m/s, 1,500 m ≈ 3×10⁵. Wall cells must shrink as Re grows, so every mesh study runs at all four.</p></td>
+      <td><p>Real Class I–II wings with a published wing area fly at 1.2×10⁵ to 2.7×10⁶ (RUAG Ranger, top speed). 1×10⁵ added for mini Class I (30 Oct); top lowered from 5×10⁶ to 3×10⁶ (29 Oct). Wing tips (1–2×10⁴) get no level: no RANS model is reliable there.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">ISA; Sutherland's law; sourced table of real UAV wings</span></td></tr>
     <tr><td class="what">Angles of attack</td><td class="val">0°, 4°, 8°<br>+12° nose &amp; wake</td>
       <td><p>Every study at 0, 4, 8. Nose and wake studies also at 12.</p></td>
       <td><p>Cruise, climb, high lift. The nose needs finer cells as the angle grows.</p></td>
@@ -294,10 +294,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>Between two compared runs only one setting changes. In a mesh study the wing never changes.</p></td>
       <td><p>With two changes, nobody can say which moved the result.</p></td>
       <td class="src"><span class="tag own">our choice</span></td></tr>
-    <tr><td class="what">Turbulence model</td><td class="val">Spalart–Allmaras, no transition</td>
-      <td><p>Boundary layer treated as turbulent from the nose. At low Re, drag carries a model band.</p></td>
-      <td><p>At low Re, where the flow turns turbulent sets much of the drag, and this model does not predict it.</p></td>
-      <td class="src"><span class="tag own">our choice</span><span class="ref">current source (Crivellini 2014) does not support it</span></td></tr>
+    <tr><td class="what">Turbulence model</td><td class="val">SA for now; final choice later (by G0)</td>
+      <td><p>Mesh studies start with fully turbulent Spalart–Allmaras. The mesh is built transition-ready: y+ ≤ 1 at each case's speed, ≥ 30 cells across the boundary layer, fine chordwise cells over the band (upper 10–85 % of chord, from the nose on swept panels; lower 60–100 %). Every drag number carries a model band.</p></td>
+      <td><p>Stage 1 (2-D strips, smooth wing, calm air): long laminar runs and bubbles on most wings; SA overpredicts profile drag by a median +62 % (+69 % in level flight). What the mesh must resolve depends on the model.</p><p>"SA" is fully turbulent only with inflow ν̃/ν ≈ 3; lower values give "apparent transition".</p></td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">Stage 1 flow study; Spalart &amp; Rumsey 2007; Crivellini 2014</span></td></tr>
     </tbody>
   </table></div>
 </section>
@@ -339,10 +339,11 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <section class="weak">
   <h2>Weak points still open</h2>
   <ul>
-    <li><strong>Reynolds levels.</strong> The check gives Re per metre of chord, not each aircraft's real Re from its own mean chord, and mixes cruise with maximum speed. No example aircraft reaches 5×10⁶; for now it is a safety margin.</li>
+    <li><strong>Drag ranking with SA.</strong> The 2-count increment target holds for the mesh, not for the model: SA's own error on differences is about 4 counts. Ranking wings or airfoils by drag needs transition-model results, at least on a calibration subset.</li>
+    <li><strong>Turbulence model.</strong> Choice deferred to a later stage (by G0). The mesh must stay transition-ready until then, or it is rebuilt.</li>
     <li><strong>Numerical settings.</strong> Earlier tests moved drag 12–21 counts against a 0.45-count share. Expect this to drive the solver settings.</li>
     <li><strong>Iteration share.</strong> 0.30 counts is looser than Celik's 1/10-of-mesh-error rule (0.195). The measured 0.12 meets both; re-check once the mesh family is frozen.</li>
-    <li><strong>Turbulence-model source.</strong> Crivellini 2014 found Spalart–Allmaras did fairly well at low Re, so it does not back the rule. Treat the rule as our choice until a better source is found.</li>
+    <li><strong>Still open from Stage 0:</strong> grid share 65 %, pitching moment 0.002, the iteration share, a D5 (open decisions 1, 3, 4, 6).</li>
     <li><strong>Split of the mesh share.</strong> A plan, not a measurement. Change it only by a written decision, before new results.</li>
   </ul>
 </section>
@@ -365,8 +366,9 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li>Hanley, Lippman-Hand. If nothing goes wrong, is everything all right? JAMA 249, 1983. <a href="https://doi.org/10.1001/jama.1983.03330370053031">DOI</a></li>
     <li>Nosek et al. The preregistration revolution. PNAS 115, 2018. <a href="https://doi.org/10.1073/pnas.1708274114">DOI</a></li>
     <li>Crivellini et al. Laminar separation bubble on low-Re airfoils: RANS modelling. J. Phys. Conf. Ser. 501, 2014. <a href="https://doi.org/10.1088/1742-6596/501/1/012024">DOI</a></li>
+    <li>Spalart, Rumsey. Effective inflow conditions for turbulence models in aerodynamic calculations. AIAA J. 45, 2007. <a href="https://doi.org/10.2514/1.29373">DOI</a></li>
   </ol>
 </section>
 
-<footer>Mirrors <span class="num">CFD_Automation/Stage 0_Decisions/STAGE0_DECISIONS.md</span> in the aeris repository (commit 5441b1e). If the two ever differ, the repository file wins.</footer>
+<footer>Mirrors <span class="num">CFD_Automation/Stage 0_Decisions/STAGE0_DECISIONS.md</span> in the aeris repository (updated 2 Nov 2026 with the Stage 1 findings). If the two ever differ, the repository file wins.</footer>
 </div>

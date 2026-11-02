@@ -29,6 +29,11 @@ program can read, are in `stage0_values.yaml`.
   wings meshed the same way carry much of the same error, and it cancels when you subtract.
 - **Source:** Morrison, Kleb & Vassberg (DPW observations): "Industry's goal is ±1 drag count."
   We start at 2.
+- **Update 2 Nov 2026 (Stage 1 flow study, 2-D strips):** with fully turbulent SA alone, 2 counts is
+  a **numerical target only** (mesh and iterations). SA's own error on the drag difference between
+  similar wings is 4 counts median and above 2 counts in 71 % of pairs; the ranking flips in 6 %.
+  A dataset meant to rank wings or airfoils by drag needs transition-model results, at least on a
+  calibration subset (open decision 52 d).
 
 ### Absolute drag: max(3 % of CD, 3 counts)
 - **In practice:** the drag of one wing may be off from the truth by at most 3 % or 3 counts,
@@ -245,7 +250,8 @@ The wing generator is new, so the wings are defined by **rules**, not by name.
   wing has high Re. Example: a 0.2 m chord at 25 m/s and 1,500 m gives about 3 × 10⁵.
   Every mesh study is run at these four levels, because the cells next to the wall must be smaller
   at higher Re.
-- **Why these three:** low, middle and high end of small Class I and Class II wings (check below).
+- **Why these four:** from the slowest mini Class I wings to the fastest Class II wings with a
+  published wing area (see the updates below the check).
 - **Source:** NATO UAS class table; ISA atmosphere; Sutherland's law.
 
 **Reynolds check.** Re = ρVc/μ, ISA atmosphere, Sutherland viscosity.
@@ -348,13 +354,22 @@ flow: the model band is largest there (see the turbulence-model decision).
 - **Why:** if two things change, we cannot say which one moved the result.
 - **Source:** our choice.
 
-### Turbulence model: Spalart–Allmaras, no transition model
-- **In practice:** the solver treats the boundary layer as turbulent from the leading edge. Real
-  wings at low Re keep a laminar stretch first, which lowers friction drag. So at low Re our drag is
-  reported with a model error band next to the mesh error.
-- **Why:** at low Re, where the flow turns turbulent decides much of the drag, and this model does
-  not predict it.
-- **Source:** Crivellini et al. 2014.
+### Turbulence model: Spalart–Allmaras for now; the final choice in a later stage
+- **In practice:** mesh studies start with fully turbulent Spalart–Allmaras (SA). The turbulence-model
+  choice and the SA inflow value are made in a later stage, at the latest by gate G0 (decision 54).
+  Until then **every mesh is built transition-ready**: first cell y+ ≤ 1 at each case's speed, at
+  least 30 cells across the boundary layer at every station, and fine chordwise cells over the
+  transition band (upper surface 10–85 % of chord, from the leading edge on swept panels; lower
+  surface 60–100 %). Every drag number carries a model band next to the mesh error.
+- **Why:** Stage 1 (2-D XFOIL strips, smooth wing in calm air) found a long laminar run and laminar
+  bubbles on most of these wings; fully turbulent SA overpredicts the profile drag by a median
+  +62 % (+69 % in level flight). What a mesh must resolve depends on the model, so a mesh tuned only
+  for SA would have to be rebuilt for a transition model.
+- **Note on SA:** "SA" means fully turbulent only with the standard inflow eddy viscosity
+  (ν̃/ν about 3). With a low inflow value SA shows an uncontrolled "apparent transition"
+  (Crivellini & D'Alessandro 2014). The value is fixed and recorded with the model choice.
+- **Source:** Stage 1 flow study (project doc "Stage_1 Executive summary"); Spalart & Rumsey 2007
+  (inflow value); Crivellini et al. 2014.
 
 ---
 

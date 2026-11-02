@@ -86,7 +86,7 @@ class Section:
         # the nose radius of the loft changes fast over the first 0.1 % c, and with cells growing
         # from the first one the largest turning sat on a growing cell and did not fall steadily as
         # the nose spacing was reduced
-        return limit_growth(s, flat_ends(s, h, NOSE_FLAT_CELLS * h_le, h_te), growth)
+        return limit_growth(s, flat_ends(s, h, h_le, h_te, n0=NOSE_FLAT_CELLS), growth)
 
 
 @dataclass

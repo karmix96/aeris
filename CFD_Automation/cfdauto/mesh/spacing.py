@@ -56,17 +56,17 @@ def equidistribute(s: Array, h: Array, n_points: int) -> Array:
     return out
 
 
-def flat_ends(s: Array, h: Array, h0: float | None, h1: float | None) -> Array:
-    """Hold the size at h0 over the first h0 of the line and at h1 over the last h1.
+def flat_ends(s: Array, h: Array, h0: float | None, h1: float | None, n0: int = 1, n1: int = 1) -> Array:
+    """Hold the size at h0 over the first n0 cells (n0 * h0 of the line) and at h1 over the last n1.
 
     A cell is about the size of h at its middle, so an end cell is the asked size only if
     h stays at that size over the whole cell."""
     h = np.asarray(h, dtype=float).copy()
     if h0 is not None:
-        m = s <= s[0] + h0
+        m = s <= s[0] + n0 * h0
         h[m] = np.minimum(h[m], h0)
     if h1 is not None:
-        m = s >= s[-1] - h1
+        m = s >= s[-1] - n1 * h1
         h[m] = np.minimum(h[m], h1)
     return h
 

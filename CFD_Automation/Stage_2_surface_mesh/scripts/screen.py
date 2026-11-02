@@ -43,7 +43,7 @@ def one(wing_type: str, set_name: str, index: int, re: float, level: str) -> dic
                 "cells_per_panel": m.info["cells_per_panel"], "turning_repairs": m.info["turning_repairs"],
                 "semi_span_m": m.info["semi_span_m"], "mean_chord_m": m.info["mean_chord_m"],
                 "tip_chord_m": m.info["tip_chord_m"], "re_tip": m.info["re_tip"],
-                "envelope_clamped": int(sum(r["envelope_clamped"] for r in m.stations)),
+                "nose_tightened": int(sum(r["nose_tightened"] for r in m.stations)),
                 "nose_capped_at_band": int(sum(r["nose_capped_at_band"] for r in m.stations)),
                 "input_hash": w.input_hash}
     except Exception as exc:  # a crash is a failure with a reason, never a missing row

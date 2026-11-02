@@ -54,13 +54,23 @@ The two cap cells where the nose arc meets the sides have three corners on the s
 corner angle is 180° minus the ring's turning there, whatever the smoothing does. They are reported on
 their own and refused only if folded.
 
-## 5. One point count per side for the whole wing
+## 5. One node distribution for the whole wing
 
-A structured mesh needs the same ring at every station. The station that needs most nodes (the root,
-usually: the largest chord at the highest local Re gets the smallest band cell as a fraction of the
-chord) sets the count; every other station puts its spare points in its largest cells first, so no
-cell anywhere is coarser than its rule asks. On the BWB reference wing at Re 3 × 10⁵ the tip needs
-85 of the root's 295 points per side.
+A structured mesh needs the same ring at every station. The first version gave every station the
+same count but its own distribution (the station that needs most sets the count, the others put
+their spare points in their largest cells). The screen then showed surface quads with a scaled
+Jacobian down to 0.08: node i drifted along the chord between neighbouring stations (a different
+nose spacing, band cell or count), and where the stations are squeezed to tens of µm at the tip, a
+drift of a fraction of a cell shears the quad. Now there is one node distribution in arc fraction for
+the whole wing: at every place the strictest station wins (the sharpest nose, the finest band). Node
+i sits at the same arc fraction on every station, so the quads between stations are clean (0.08 →
+0.58 on the worst flying wing; 0.77 → 0.92 on the BWB reference wing), no cell is coarser than its
+station asks, the spanwise envelope (law 2) holds by construction and no repair was needed on any
+reference wing. Cost: about 3 % more ring nodes (BWB reference wing 590 → 610). On the BWB reference
+wing at Re 3 × 10⁵ the tip alone would need 85 of the 305 points per side.
+
+The lowest wing-quad quality left (0.09–0.13) sits on corner wings whose first panel is 4–6 mm wide
+with a 50 mm chord drop: a trailing edge swept at about 85°, a property of those wings.
 
 ## 6. The turning rule holds at every ring node, and the nose solve must survive the envelope
 
@@ -74,11 +84,10 @@ the section (a dense step turning more than 1°) is reported apart (`geometry_ki
 two nearest nodes are left out of the turning check: no cell size can reduce it.
 
 Because the turning is not quite monotone in the nose spacing (section 10), a solved spacing that
-passes can fail once the envelope tightens it by 1.15. The solve therefore walks down until every
-spacing in [0.77 h, h] passes. A station that still lands above the target after the envelope is
-scanned down on its own ring, 10 % a step, and the envelope is applied again (0 repairs on the BWB
-and flying-wing reference wings, 2 on the cranked, up to about 30 on NACA 4415 wings, whose built
-nose is the most distorted).
+passes can fail once a tighter distribution moves the nodes. The solve therefore walks down until
+every spacing in [0.77 h, h] passes, and the turning is measured again on the rings as built; if a
+station still lands above the target, the nose spacing of the whole wing is tightened by 10 % and
+the rings are rebuilt (0 repairs on the reference wings).
 
 ## 7. Stations
 

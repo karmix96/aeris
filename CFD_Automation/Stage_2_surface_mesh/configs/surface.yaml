@@ -10,7 +10,8 @@ levels:
 chord:                            # around the section (one closed ring per station)
   nose_turning_deg: 10.0          # law 1: no nose cell turns the surface by more than this (solved by bisection)
   nose_turning_tol_deg: 0.02
-  nose_envelope: 1.15             # law 2: nose spacing / chord may change by at most this between stations (only tightening)
+  nose_envelope: 1.15             # law 2: nose spacing / chord may change by at most this between stations (a check;
+                                  # one node distribution for the whole wing makes it hold by construction)
   te_spacing_c: 0.001             # law 3: 0.1 % of local chord at the trailing-edge corners (DPW, Levy et al. 2013)
   base_cells: 8                   # law 6: cells across the blunt base at C (n_base = 9 points; must stay even)
   growth: 1.20                    # growth used to build the size field (the check below allows 1.25)

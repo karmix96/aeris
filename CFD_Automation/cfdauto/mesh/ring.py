@@ -127,13 +127,50 @@ def cells_per_side(sec: Section, spec: RingSpec, rules: Rules) -> float:
     return cells_needed(sec.arc_up, fields(sec, spec, rules))
 
 
+FRAC = np.linspace(0.0, 1.0, 6001)      # the common grid in arc fraction, shared by every station
+
+
+def field_in_arc_fraction(sec: Section, spec: RingSpec, rules: Rules) -> Array:
+    """The station's size field as cells per unit arc fraction, on the common FRAC grid."""
+    h = fields(sec, spec, rules)
+    return np.interp(FRAC, sec.arc_up / sec.arc_up[-1], h) / sec.arc_up[-1]
+
+
+def union_distribution(secs: list[Section], specs: list[RingSpec], rules: Rules) -> tuple[Array, Array, Array]:
+    """One node distribution in arc fraction for the whole wing: at every place the strictest station
+    wins. Node i then sits at the same arc fraction on every station, so the surface quads between
+    neighbouring stations are not sheared. With a distribution per station, node i drifted along the
+    chord between stations (a different nose spacing, band cell or count), and where the stations are
+    squeezed to tens of um at the tip that drift of a fraction of a cell made quads with a scaled
+    Jacobian of 0.08. Returns the node fractions, the union field and the cells each station needs.
+    """
+    gs = np.array([field_in_arc_fraction(sec, sp, rules) for sec, sp in zip(secs, specs)])
+    need = np.array([cells_needed(FRAC, g) for g in gs])
+    g = limit_growth(FRAC, gs.min(axis=0), rules.chord_growth)
+    n_side = int(np.ceil(cells_needed(FRAC, g) - 1e-9)) + 1
+    g = fill_to_count(FRAC, g, n_side)
+    return equidistribute(FRAC, g, n_side), g, need
+
+
+def build_ring_at(sec: Section, frac: Array, rules: Rules) -> dict:
+    """The ring with its side nodes at the given arc fractions (both sides), and the rules' base."""
+    u_up = np.interp(frac * sec.arc_up[-1], sec.arc_up, sec.u)
+    u_lo = np.interp(frac * sec.arc_lo[-1], sec.arc_lo, sec.u)
+    return _ring_from_u(sec, u_up, u_lo, rules)
+
+
 def build_ring(sec: Section, spec: RingSpec, rules: Rules, n_side: int) -> dict:
-    """The ring with n_side points per side (nose and corners included) and the rules' base."""
+    """The ring with n_side points per side from the station's own field (used by the nose solve)."""
     h = fill_to_count(sec.arc_up, fields(sec, spec, rules), n_side)   # extra points to the largest cells first
     s_up = equidistribute(sec.arc_up, h, n_side)
     frac = s_up / sec.arc_up[-1]
     u_up = np.interp(s_up, sec.arc_up, sec.u)
     u_lo = np.interp(frac * sec.arc_lo[-1], sec.arc_lo, sec.u)
+    return _ring_from_u(sec, u_up, u_lo, rules)
+
+
+def _ring_from_u(sec: Section, u_up: Array, u_lo: Array, rules: Rules) -> dict:
+    n_side = len(u_up)
     for u in (u_up, u_lo):
         u[0], u[-1] = 0.0, 1.0
     p_up = sec.loft.upper(u_up, np.full_like(u_up, sec.v))
@@ -251,7 +288,7 @@ def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Ru
         raise RuntimeError(f"nose solve did not converge at v={sec.v:.4f} (turning {got:.3f} deg)")
     # The turning is not quite monotone in the spacing on some noses (the loft's nose radius
     # changes within the first cells, Stage 1 finding). The answer must also hold when the
-    # envelope tightens it by up to 1.15: walk down until every spacing in [0.77 h, h] passes.
+    # wing's shared distribution moves the nodes: walk down until every spacing in [0.77 h, h] passes.
     for _ in range(40):
         window = [measure(mid * 0.95 ** k) for k in range(1, 6)]
         if all(g <= target for g, _ in window):
@@ -264,7 +301,8 @@ def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Ru
 
 
 def envelope(h_le_c: Array, limit: float) -> Array:
-    """law 2: nose spacing / chord may change by at most `limit` between stations; only tightening."""
+    """law 2: nose spacing / chord may change by at most `limit` between stations; only tightening.
+    Kept for per-station distributions; with one distribution for the whole wing it is a check."""
     out = np.asarray(h_le_c, dtype=float).copy()
     for i in range(1, len(out)):
         out[i] = min(out[i], out[i - 1] * limit)

@@ -5,9 +5,11 @@
 Steps (Grand Roadmap recipe R-S):
 1. stations along the span (on every loft station, chord-scaled, squeezed to the tip);
 2. at each station: the nose spacing solved for the turning target at level C (law 1);
-3. the spanwise envelope on nose spacing / chord (law 2), then every spacing divided by r^k;
-4. one common point count per side (the station that needs most sets it; the others get
-   spare points in their largest cells: no cell is ever coarser than asked);
+3. every spacing divided by r^k for this level;
+4. one node distribution in arc fraction for the whole wing: at every place the strictest
+   station wins, so node i sits at the same arc fraction on every station (no sheared quads
+   where the stations are squeezed at the tip) and no cell is ever coarser than asked; the
+   spanwise envelope (law 2) holds by construction;
 5. the rings, every node asked from the loft; the tip cap from the tip ring;
 6. the checks; nothing is written unless all pass.
 """
@@ -25,7 +27,7 @@ import numpy as np
 from .cap import tip_cap
 from .checks import Check, scaled_jacobian
 from .laws import Rules, rules as get_rules
-from .ring import RingSpec, Section, build_ring, cells_per_side, envelope, kink_mask, nose_turning, solve_nose, turning
+from .ring import RingSpec, Section, build_ring_at, kink_mask, nose_turning, solve_nose, turning, union_distribution
 from .stations import SpanTable, place_stations
 
 Array = np.ndarray
@@ -94,62 +96,37 @@ def build_surface(loft, re_mean: float, level: str = "C", config=None) -> Surfac
                      "nose_capped_at_band": nose["capped_at_band"], "nose_solved": nose["solved"],
                      "geometry_kink_deg": nose["kinks"]["max_deg"], "_kinks": nose["kinks"]})
 
-    # 3-5. envelope, this level's spacings, one count per side, the rings. The turning is
-    # measured again on the final rings: the node positions move when the nose spacing is
-    # tightened by the envelope or the count changes, and on a cambered nose the largest
-    # turning can then land a little above the target. Such a station gets a smaller nose
-    # spacing and everything is rebuilt (only ever tightening).
+    # 3-5. This level's spacings per station, then ONE node distribution in arc fraction for the
+    # whole wing (the strictest station wins at every place), the rings, and the turning measured
+    # again on the rings as built. A station above the target tightens the nose spacing of the
+    # whole wing by 10 % (the union keeps every station's own band and trailing-edge cells).
     target = rc.nose_turning_deg + rc.nose_turning_tol_deg
-    h_le_c = envelope(np.array([r["h_le_c_solved"] for r in rows]), rc.nose_envelope)
+    h_le_c = np.array([r["h_le_c_solved"] for r in rows])
 
     def make_specs(h_le_c):
         return [RingSpec(h_le=h * sec.chord / rl.scale, h_band=rl.band_spacing_c(r["re_local"]) * sec.chord,
                          h_max=rl.max_spacing_c * sec.chord, h_te=rl.te_spacing_c * sec.chord)
                 for r, sec, h in zip(rows, secs, h_le_c)]
 
-    def ring_turning(sec, sp, r, n_side):
-        out = build_ring(sec, sp, rl, n_side)
-        return out, nose_turning(out["ring"], n_side, kink_mask(out["u_upper"], out["u_lower"], r["_kinks"], n_side))
-
     repairs = 0
-    for _round in range(10):
+    for repairs in range(40):
         specs = make_specs(h_le_c)
-        # one count per side for every station; a station that needs fewer gets its spare points
-        # in its largest cells (the nose, trailing edge and band keep their asked size)
-        need = np.array([cells_per_side(sec, sp, rl) for sec, sp in zip(secs, specs)])
-        n_side = int(np.ceil(need.max() - 1e-9)) + 1
-        outs, turn = [], []
-        for sec, sp, r in zip(secs, specs, rows):
-            out, t = ring_turning(sec, sp, r, n_side)
-            outs.append(out)
-            turn.append(t)
-        turn = np.array(turn)
+        frac, _, need = union_distribution(secs, specs, rl)
+        n_side = len(frac)
+        outs = [build_ring_at(sec, frac, rl) for sec in secs]
+        turn = np.array([nose_turning(o["ring"], n_side, kink_mask(o["u_upper"], o["u_lower"], r["_kinks"], n_side))
+                         for o, r in zip(outs, rows)])
         bad = (turn > target) & np.array([r["nose_solved"] for r in rows])
         if not bad.any():
             break
-        # The nose cells of a station depend on its own nose spacing only (the common count
-        # changes the largest cells), so each bad station is scanned down on its own ring, 10 % a
-        # step, until it passes; then the envelope is applied again (it only tightens neighbours).
-        for j in np.flatnonzero(bad):
-            h = h_le_c[j]
-            for _ in range(40):
-                h *= 0.9
-                sp = make_specs(h_le_c)[j]
-                sp = RingSpec(h * secs[j].chord / rl.scale, sp.h_band, sp.h_max, sp.h_te)
-                n_j = max(n_side, int(np.ceil(cells_per_side(secs[j], sp, rl))) + 1)   # the count may grow
-                _, t = ring_turning(secs[j], sp, rows[j], n_j)
-                if t <= target:
-                    break
-            h_le_c[j] = h
-            repairs += 1
-        h_le_c = envelope(h_le_c, rc.nose_envelope)
+        h_le_c = h_le_c * 0.9
     rings = [o["ring"] for o in outs]
     us = [np.concatenate([o["u_upper"][::-1], o["u_lower"][1:], np.full(rl.n_base - 2, np.nan)]) for o in outs]
     repair = repairs
     for r, sec, sp, h, nd in zip(rows, secs, specs, h_le_c, need):
         c = sec.chord
         r |= {"h_le_c_asked": sp.h_le / c, "h_band_c": sp.h_band / c, "h_te_c": sp.h_te / c,
-              "envelope_clamped": bool(h < r["h_le_c_solved"] * (1 - 1e-12)),
+              "nose_tightened": bool(h < r["h_le_c_solved"] * (1 - 1e-12)),
               "cells_needed": float(nd), "spare_points": int(n_side - 1 - np.ceil(nd - 1e-9))}
     wing = np.stack(rings, axis=1)
     u = np.stack(us, axis=1)

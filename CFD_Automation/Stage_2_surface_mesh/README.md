@@ -50,16 +50,17 @@ tests/mesh/                tests
 | Where | Rule | Source |
 | --- | --- | --- |
 | Nose | no node turns the surface by more than 10° (solved by bisection on the ring as built); away from the nose the same angle caps the cell from the local curvature | law 1 (S8) |
-| Nose, along the span | nose spacing / chord changes by at most 1.15 between stations, only tightening | law 2 (S8) |
+| Nose, along the span | nose spacing / chord changes by at most 1.15 between stations (checked; holds by construction with one distribution for the wing) | law 2 (S8) |
 | Trailing edge | 0.1 % of local chord at the corners; 8 cells across the base | laws 3, 6 (DPW; S8) |
 | Transition band | upper 0–85 % c, lower 60–100 % c: cell = bubble length / 20; bubble length from local Re (Stage 1 table) | Stage 1 handover; Ansys CFX transition-model grid guide (20 nodes per bubble) |
 | Elsewhere | cells grow by at most 1.2 (checked: 1.25), never above 2 % c | DPW; Stage 1 handover |
 | Stations | one exactly on every loft station; gap = 0.2 × local chord, at least 12 per panel; growth ≤ 1.2 (checked: 1.3) | laws 8, 9 |
 | Tip | stations squeezed so the last gap = tip first cell s0 (y⁺ = 1 at the tip Re, flat plate) | laws 9, 10, 13 |
 
-Both sides of a station share one distribution in arc fraction (the stricter side wins at each place), so
-the tip cap's cross lines stay upright. One point count per side for the whole wing: the station that
-needs most sets it; the others put their spare points in their largest cells, never coarser than asked.
+One node distribution in arc fraction for the whole wing, both sides: at every place the strictest station
+and side wins. So node i sits at the same arc fraction on every station (clean quads between the squeezed
+tip stations, upright cross lines on the cap), no cell is coarser than its station asks, and the spanwise
+envelope holds by construction.
 
 ## Checks that refuse
 

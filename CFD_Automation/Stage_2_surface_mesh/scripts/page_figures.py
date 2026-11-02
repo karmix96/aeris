@@ -697,3 +697,61 @@ def fig_band_cell():
     a.legend(loc="upper right", fontsize=8)
     a.set_title("how the number is derived for one station: Re → bubble length → ÷ 20", fontsize=10)
     save(fig, "band_cell.png")
+
+
+# --- 21. how XFOIL gives the bubble length, and where the Stage 2 table sits in the Stage 1 data ---
+def fig_bubble_xfoil():
+    from cfdauto.paths import STAGE1
+    rc = rules("C")
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.3))
+    # left: a sketch of the wall friction along the upper surface, and how a bubble is read off it
+    a = ax[0]
+    x = np.linspace(0, 1, 600)
+    xs, xr = 0.36, 0.49                                            # separation, reattachment
+    lam = 0.0045 * np.sqrt(np.clip(1 - x / xs, 0, None)) + 0.0005 * np.clip(1 - x / xs, 0, None)
+    bub = -0.0009 * np.sin(np.pi * np.clip((x - xs) / (xr - xs), 0, 1)) ** 0.8
+    tur = (0.0040 * np.exp(-(x - xr) / 0.08) + 0.0018 * np.exp(-(x - xr) / 0.8)) * (1 - np.exp(-np.clip(x - xr, 0, None) / 0.012))
+    cf = np.where(x < xs, lam, np.where(x < xr, bub, tur))
+    a.axhline(0, color=INK, lw=0.8)
+    a.plot(x, cf, color=ACC, lw=1.6)
+    a.fill_between(x, cf, 0, where=(cf < 0), color=AMBER, alpha=0.4, lw=0)
+    a.axvline(0.95, color=MUTED, ls=":", lw=1); a.text(0.955, 0.0058, "95 % c", color=MUTED, fontsize=8)
+    a.annotate("", (xs, -0.0013), (xr, -0.0013), arrowprops=dict(arrowstyle="<->", color=INK, lw=0.9))
+    a.text((xs + xr) / 2, -0.0016, "bubble length =\nthe stretch where Cf < 0", color=INK, fontsize=8.5, ha="center", va="top")
+    a.text(0.13, 0.0050, "laminar: the wall\nfriction falls", color=INK, fontsize=8.5, ha="center", va="bottom")
+    a.text(0.72, 0.0046, "turbulent after reattachment:\nthe friction jumps up, then decays", color=INK, fontsize=8.5, ha="center")
+    a.annotate("separation:\nCf crosses 0", (xs, 0), (0.22, -0.0027), color=INK, fontsize=8, ha="center", arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+    a.annotate("reattachment:\nCf back above 0", (xr, 0), (0.68, -0.0027), color=INK, fontsize=8, ha="center", arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+    a.text(0.985, -0.0022, "Cf < 0 reaching\npast 95 % c =\ntrailing-edge\nseparation,\nnot a bubble", color=MUTED, fontsize=7.5, ha="right", va="top")
+    a.set_xlim(0, 1); a.set_ylim(-0.0036, 0.0068); a.set_xlabel("x / chord along the upper surface"); a.set_ylabel("wall friction coefficient Cf (sketch)")
+    a.set_title("how one XFOIL run gives one bubble: the stretch where the wall friction is negative", fontsize=10)
+    # right: the Stage 1 tables (10 airfoils, free transition N_crit 9, Mach 0.1, 0-8 deg) against the Stage 2 table
+    a = ax[1]
+    files = sorted(p for p in (STAGE1 / "data" / "section_tables").glob("*__free__n9.npz") if "+" not in p.name)
+    rows: dict[float, list[float]] = {}
+    for f in files:
+        d = np.load(f)
+        re, mach, al = d["re"], d["mach"], d["alpha"]
+        im = int(np.argmin(abs(mach - 0.1))); ia = (al >= 0) & (al <= 8)
+        for i, r in enumerate(re):
+            bu = d["bub_u"][i, im, ia]; L = (d["bub_u_e"] - d["bub_u_s"])[i, im, ia]
+            m = (bu >= 0.5) & np.isfinite(L)
+            rows.setdefault(float(r), []).extend(L[m].tolist())
+    res = sorted(r for r in rows if len(rows[r]) >= 4)
+    n_tot = len(files) * int(ia.sum())
+    bp = a.boxplot([rows[r] for r in res], positions=res, widths=[0.22 * r for r in res], manage_ticks=False,
+                   patch_artist=True, showfliers=False, medianprops=dict(color=INK, lw=1.4),
+                   boxprops=dict(facecolor="#DCE6F0", edgecolor=ACC, lw=1), whiskerprops=dict(color=ACC, lw=0.9), capprops=dict(color=ACC, lw=0.9))
+    for r in res:
+        a.text(r, 0.0082, f"{100 * len(rows[r]) / n_tot:.0f} %", color=MUTED, fontsize=7.5, ha="center")
+    a.text(2.1e4, 0.0115, "share of cases with a bubble:", color=MUTED, fontsize=7.5, ha="left", va="center")
+    tab_re = [float(v) for v in rc.raw["chord"]["bubble_length"]["re"]]
+    tab_l = [float(v) for v in rc.raw["chord"]["bubble_length"]["l_c"]]
+    grid = np.geomspace(2e4, 6e6, 200)
+    a.plot(grid, [rc.bubble_length_c(v) for v in grid], color=AMBER, lw=1.8, label="Stage 2 table (used for the band cell)")
+    a.plot(tab_re, tab_l, "o", color=AMBER, ms=6)
+    a.set_xscale("log"); a.set_yscale("log"); a.set_xlim(2e4, 8e6); a.set_ylim(0.0075, 1.0)
+    a.set_xlabel("local Re"); a.set_ylabel("bubble length / chord (upper surface)")
+    a.legend(loc="upper right", fontsize=8)
+    a.set_title(f"where the table sits in the Stage 1 data: {len(files)} airfoils, 0–8°, Mach 0.1, N_crit 9\n(box: middle half of the bubbles found; whiskers: the rest)", fontsize=9.5)
+    save(fig, "bubble_xfoil.png")

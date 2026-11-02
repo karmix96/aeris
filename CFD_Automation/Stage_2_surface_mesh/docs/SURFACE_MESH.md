@@ -201,6 +201,22 @@ Two sizes: the band cell (bubble length / 20 at the local Re) and the tip first 
 
 <span class="ctag">Conclusion</span>The band cell is one number per station and side, set by the local Re alone: the rule has no free choice except the 20, which comes from one vendor guide. The bubble lengths are 2-D XFOIL values, so the rule is as good as that table; 3-D effects, sweep and roughness move bubbles and are not in it.
 
+### How XFOIL gives the bubble length
+
+- XFOIL computes the thin layer of air on the surface (the boundary layer) along the section and writes, at every point of the surface, the wall friction coefficient Cf: how hard the air rubs on the wall, and in which direction.
+- Where the flow has lifted off, the air at the wall runs backwards and Cf is negative. So a bubble is read as a stretch of Cf \< 0 on one surface: it starts where Cf crosses zero (separation) and ends where Cf comes back above zero (reattachment). Its length is end − start, in chords.
+- Two rules keep it honest: a Cf \< 0 stretch that reaches past 95 % c is trailing-edge separation, not a bubble; stretches shorter than 0.5 % c are ignored. If a surface has several, the longest counts. Transition itself is XFOIL's e^N method with N_crit 9 (calm air). Code: Stage 1 `cfdauto/flowmap/xfoil.py`, `features()`.
+
+### From the runs to the table
+
+- Stage 1 ran this on the 10 airfoils of the section sets at 14 Re, 3 Mach and 49 angles (2,408 sweeps). The Stage 2 table takes the upper-surface bubbles at Mach 0.1, 0–8°, and reads the typical length per Re: 0.45 c at 6 × 10⁴, 0.31 c at 10⁵, 0.11 c at 4 × 10⁵, 0.055 c at 10⁶ (medians), rounded to 0.40, 0.30, 0.10 and 0.05.
+- The length changes with the angle of attack and the airfoil: the middle half of the bubbles sits within about 10–40 % of the median, depending on Re. The table is at or just under the median, so about half the bubbles get 20 cells or more; the shortest quarter gets 14–18.
+- Below Re 4 × 10⁴ XFOIL finds no bubble (open separation); above 1.5 × 10⁶ only a few airfoils keep one (MH 104, LA2573A). The table stays at 0.05 c there, which is "under 0.05 c" in the Stage 1 handover.
+
+*\[Figure: Left: a sketch of the wall friction Cf along the upper surface of one XFOIL run, and how the bubble is read from it. Right: every upper-surface bubble length in the Stage 1 tables (10 airfoils, free transition N_crit 9, Mach 0.1, 0–8°) per Re as a box (middle half) and whiskers (the rest), with the share of cases that have a bubble, and the Stage 2 table on top.\]*
+
+<span class="ctag">Conclusion</span>The table follows the medians of the Stage 1 runs within rounding. It is one length per Re, while the real bubbles at one Re spread by tens of per cent with angle and airfoil, so the 20-cells rule holds for the typical bubble, not the shortest one. Everything here is 2-D XFOIL in calm air; a 3-D check of bubble lengths is still owed (A2).
+
 *\[Figure: Left: the bubble-length table from Stage 1. Middle: the band cell and s0 against the local Re at level C. Right: ring nodes of the reference wings against the Re on the mean chord; S8's 150 for comparison.\]*
 
 <span class="ctag">Conclusion</span>The ring grows with Re until the bubble-length floor (0.05 c, band cell 0.25 % c) is reached at about Re 10⁶, then stays at about 850 nodes. At 10⁵ it is about 200: the rule follows the physics (long bubbles need few cells per chord), not a fixed count. Every Re level needs its own surface.

@@ -1205,7 +1205,7 @@ REFINE = [
     ("Leading edge (nose)", "Suction peak, start of the laminar run, stall at 12°",
      "Chordwise spacing solved so no cell turns the surface by more than 10° (ladder 12 / 10 / 8 / 6°); nose cells of neighbouring stations differ by at most 15 %",
      "chordwise 35 %", "Roadmap R-S.5, R-S.6 (laws 1, 2)", "In place"),
-    ("Transition band: upper surface 10–85 % chord, lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 15 % to 80 % of the chord), and the lower surface turns turbulent near the trailing edge",
+    ("Transition band: upper surface 10–85 % chord, lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 11 % to 78 % of the chord), and the lower surface turns turbulent near the trailing edge",
      "Only with a transition model: fine chordwise cells over the band and a cap on growth along the ring (≤ 1.25). With fully turbulent SA there is no bubble to resolve",
      "chordwise 35 %", "Our choice; depends on the transition route (Stage 0 D5)", "Not done"),
     ("Trailing edge and blunt base", "Base drag, base flow, start of the wake",

@@ -1,8 +1,8 @@
 # Stage_2 — Surface mesh page (text copy, 2 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs/SURFACE_MESH.html` (repo karmix96/aeris,
-branch `stage2-surface-mesh`). The 14 figures are in the HTML page and on the live page https://claude.ai/artifact/6SXM1yDgwbPvgNRsDb24fi; here each
-one is a *[Figure: ...]* line with its caption. Companion files: 'Stage_2 Surface mesh status and handover' (short), 'Stage_1 Handover to the surface
+branch `stage2-surface-mesh`). The 14 figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
+line with its caption. Companion files: 'Stage_2 Surface mesh status and handover' (short), 'Stage_1 Handover to the surface
 mesh' (the input). If this copy and the repository ever differ, the repository wins.
 
 CFD_Automation · Stage 2 · surface mesh · cfdauto 0.7.0 · 2 Nov 2026
@@ -49,13 +49,53 @@ Rings are 3–6 × S8's 150 nodes because of 20 nodes per bubble (one vendor sou
 
 `CFD_Automation/cfdauto/mesh/` (code), `Stage_2_surface_mesh/` (config, decisions, docs, tests, scripts, studies). Project doc: Stage_2 Surface mesh status and handover.
 
+## Why a structured mesh, and why this one
+
+A mesh is the set of small cells the solver computes on. There are two ways to build one. A **structured** mesh is rows and columns: every cell has an address (i, j, k), its neighbours are the next addresses, and the rows follow the surface. An **unstructured** mesh is a list of cells of any shape (triangles, tetrahedra, polyhedra) joined by a table of who touches whom. Both solve the same equations; they differ in what they make easy and what they make hard.
+
+*\[Figure: The BWB root section meshed both ways, for the picture only: left, rows of quads that follow the surface (the ring of Stage 2 is the first row; the layers are drawn by a plain offset here, the real march is Stage 3); right, triangles from a Delaunay triangulation of points around the same section.\]*
+
+<span class="ctag">Conclusion</span>The structured mesh puts long, thin cells along the surface where the flow changes little along the wall and much across it; the unstructured one needs many more cells for the same resolution near the wall, and its cells have no rows to refine by a fixed ratio.
+
+### What a structured mesh gives us
+
+- **Cells aligned with the flow.** The boundary layer is thin and changes fast across, slowly along; rows of high-aspect-ratio quads resolve it with few cells and low numerical error. The DPW guidelines and most published wing CFD use structured near-wall grids for this reason.
+- **An exact refinement family.** Celik's grid-convergence method (Stage 0, D3) needs meshes that are true scaled copies with r ≥ 1.3. With rows, every spacing can be divided by r; a triangle mesh can only be "about" 1.3 × finer.
+- **Addresses.** Every node has (i, j): the nose is a known index, the trailing edge another, the tip a known station. Error maps by region (Grand Roadmap T3), ablations by direction (T6) and the laws (stage 5) all need that.
+- **The solver.** ADflow is a structured multiblock solver; overset lets us add the wake and tip-vortex boxes without one giant block.
+- **Rules, not hand work.** With one topology for every wing, the mesh is a set of numbers (spacings, counts, growth) that a law can give. That is the paper's claim.
+
+### What it costs
+
+- **One topology per class of shape.** The O ring around the section with an H cap on the tip fits wings with a flat tip and a blunt trailing edge. A winglet, a box wing or a fuselage would need a new block layout, by hand. (That is why box wings are out of scope.)
+- **Counts are shared.** Every station carries the same ring, so the station that needs most nodes sets the count for all; the tip, which needs about a third, gets the full ring. Cells cannot be added in one place only; refinement where the flow asks for it comes from the overset boxes (Stage 3), not from the near-body mesh.
+- **Quality follows the geometry.** Where the trailing edge sweeps at 85° over a 4 mm panel (corner set), the quads between stations shear; where two built noses differ (finding 64), the two sides fight. An unstructured mesh would not care.
+- **The cap has corners.** Closing a ring with one H patch leaves two cells with three corners on the smooth nose; a polyhedral cap would not.
+- **No wake in the O mesh.** An O ring cannot set the spacing along the wake (a layer is a quarter chord thick one chord behind); the wake box and the tip tube of Stage 3 carry it.
+
+### O, C or H around the section, and why O-H
+
+Three ways to wrap rows around a section: **O** (closed rings), **C** (rows that wrap the nose and run off behind the trailing edge, so the wake has rows), **H** (rows above and below, a collapsed line at the nose). The mesh study (S0–S8, in the AERIS_MESH_STUDY folder) tried six strategies and settled on S8, an O ring with an H cap on the tip: the O ring puts the nose and the base inside one closed curve, so leading-edge resolution is a spacing request, not a block dimension (the C-family's nose collar capped it at 5 points, which was the whole source of the pressure-peak defect); the H cap is the one patch that closes the ring without a collapsed edge. The price, no rows in the wake, is paid with overset boxes (Stage 3).
+
+*\[Figure: Left, side view: the ring (Stage 2) and a sketch of the O layers the march will add (Stage 3), with the wake box behind the trailing edge. Right, top view: the half wing with its stations, the tip cap and the outboard blocks, the wake box and the tip-vortex tube of the overset plan.\]*
+
+<span class="ctag">Conclusion</span>Stage 2 builds only the first row (the ring at every station) and the patch on the tip. Everything that reaches into the air, the layers, the outboard blocks, the boxes, is Stage 3 and uses this surface as its wall.
+
+### What the surface mesh must get right (from Stage 1)
+
+The flow study of Stage 1 said where the baseline must be fine before any refinement: the nose (the suction peak; transition reaches it at high angle), a wide transition band (upper 10–85 % c, lower 60–100 % c: the laminar run and the bubbles move with the angle), the trailing edge and its blunt base, every break of the planform (a kink in the loft), the tip (smallest chord, lowest Re, the vortex), and a station count that scales with the semi-span in local chords. The wall and the wake belong to Stage 3. Every one of these became a rule below.
+
 ## What Stage 2 is
 
 Stage 1 made the wing: one exact loft per design vector, with measured values and a hash. Stage 2 puts a structured surface mesh on that loft: a closed ring of points around the section at every span station, root to tip, the same ring at every station, plus one patch that closes the flat tip. Every node is asked from the loft at (x/c, v); nothing is interpolated between stored sections. The volume mesh (the march off the wall), the wake boxes and the CGNS file are Stage 3. The mesh name carries the level and the Re: `mesh_<level>_<wing_hash8>_re<Re>`, because the tip gap and the band cells depend on the Re.
 
 *\[Figure: the pipeline: loft → stations → size fields → nose solve → one distribution → rings + cap → 13 checks → files\]*
 
-*\[Figure: The four reference wings (index 0) at level C, Re 3 × 10⁵ on the mean chord: every second station and every 24th ring line of the upper surface. Same rules, same code, four shapes.\]*
+<span class="ctag">Conclusion</span>Six steps, the same for every wing: stations, size fields, the nose solve, one distribution, rings and cap, checks. No step knows the wing type; the rules read the loft, the chord and the local Re.
+
+*\[Figure: The four reference wings (index 0) at level C, Re 3 × 10⁵ on the mean chord: every second station and every 24th ring line of the upper surface.\]*
+
+<span class="ctag">Conclusion</span>Same rules, same code, four shapes: the BWB gets the most ring nodes (its root carries the highest local Re, so the smallest band cell as a fraction of the chord) and the most stations (its tip is the smallest). Nothing was set by hand for any type.
 
 The Grand Roadmap's recipe R-S (one closed ring per station) and its step M1 (every surface constant into one module of laws) are what this stage implements. The volume recipe R-V and steps M2–M5 (first-cell law, march, boxes, overset export, driver) are Stage 3.
 
@@ -79,6 +119,229 @@ The AERIS Mesh Automation Primer (Annex G, the Grand Roadmap) gives the surface 
 | Stage 1 handover  | Fine at the nose, over a wide transition band (upper 10–85 % c, from the leading edge on swept panels; lower 60–100 % c), at the trailing edge (0.1 % c, 8 base cells), on every break, toward the tip (cap first cell = tip first cell), station count scaling with span / mean chord; cells per bubble: no source yet. | <span class="flag chg">done, with two changes</span> | The upper band starts at the leading edge on every wing (decision 58); the cells-per-bubble rule now has a source (20, decision 56). The wall and wake rows of the handover are Stage 3.                                                                                                                                                                        |
 
 Two things in the primer are not in this stage on purpose: the constants it names (n_side 75, n_span 49, 1,601 dense points) were S8's values for one wing; here every count follows from a rule, so it changes with the wing and the Re. And the primer's M1 asks for a bit-identical rebuild of g83; CFD_Automation has no AERIS wings, so the equivalent test is a bit-identical rebuild of the same input (it passes).
+
+## How exactly the surface mesh is made
+
+One wing, one level, one Re. The steps below run in this order; each one has a figure from the BWB reference wing unless said otherwise.
+
+### 1. The loft in, the dense section
+
+At a station v the loft gives the upper and lower surface at any x/c. The mesher samples each side at 6,001 points, cosine in x/c (dense at the nose and the trailing edge), and keeps a table of arc length against x/c per side. That table turns a cell size in metres into a position on the loft; the dense points themselves are never nodes. The same dense curve gives the radius of curvature along the section (right panel), used by the curvature cap and the kink check.
+
+*\[Figure: BWB reference wing, root section (MH 104). Left: the dense sample at the nose (the first 120 of 6,001 points per side). Middle: arc length against x/c per side. Right: radius of curvature of the built section along the chord.\]*
+
+<span class="ctag">Conclusion</span>Six thousand points per side resolve the nose to 3 × 10⁻⁵ c of arc, finer than any cell asked for. The curvature of the built section is not the same on the two sides at the leading edge (0.024 c against 0.005 c): finding 64, below.
+
+### 2. Where the stations go
+
+A station sits exactly on every loft station (b0–b3 and the trailing-edge switch station some BWBs have), because the ruled loft has a crease there. Between them the target gap is 0.2 × the local chord, at least 12 gaps per panel, and the gaps may change by at most 1.2 from one to the next. Toward the tip the gaps shrink to the tip first cell s0 (y⁺ = 1 at the tip Re), so the cap faces a cell of the size it will get in the volume mesh. Each panel gets a whole number of gaps, placed so each holds the same share of ∫dy/h.
+
+*\[Figure: BWB reference wing, level C, Re 3 × 10⁵. Left: the station gap along the span: the 0.2 c target, the size field after the 12-per-panel rule, the tip squeeze and the growth limit, and the gaps delivered. Middle: every station as a chord line. Right: the last 12 mm before the tip.\]*
+
+<span class="ctag">Conclusion</span>The 0.2 c rule hardly acts: the 12-per-panel floor sets the inner panels and the tip squeeze sets the outer one (43 of its gaps lie in the last few millimetres, from 3 cm down to 36 µm). The station count is therefore mostly a count of panels and of the squeeze, not of the chord; the spanwise ladder must test both.
+
+### 3. The size field around the section
+
+Per station and side, the target cell size along the arc is the smallest of every rule that applies there: the largest cell (2 % c), the transition band (bubble length / 20 at the local Re; upper 0–85 % c, lower 60–100 % c), the curvature cap (cell ≤ R × 10° away from the nose), the nose cell held over four cells, the trailing-edge cell (0.1 % c), then a growth limit of 1.2 per cell. Points are then placed so each cell holds the same share of ∫ds/h: the same tool as along the span.
+
+*\[Figure: The root section of the BWB reference wing, upper side: the six layers of the size field, one on top of the other, and the cells delivered.\]*
+
+<span class="ctag">Conclusion</span>On this wing the band sets almost everything: with the upper band to 85 % c and the lower band from 60 % c shared through the one distribution, the whole ring is at band spacing except the nose and the trailing edge. The 2 % c cap and the curvature cap never act here. The delivered nose cell (0.04 % c) is smaller than this station's own need (0.1 % c) because the sharpest nose of the wing, the tip's MH 61, sets it for every station.
+
+### 4. The nose: solved on the ring as built
+
+S8 found that a nose-radius estimate gave 20° per cell when 6° was asked, so the nose spacing is solved: build the ring, measure the largest turning at any node, bisect the nose spacing until the turning is 10° ± 0.02°. The check covers every ring node except the two trailing-edge corners, because on cambered noses the sharpest cell sits a few cells onto the lower surface. The built noses are not monotone (right panel; finding 64), so the solve walks down until every spacing in \[0.77 h, h\] passes, and a station that still lands above the target after the shared distribution tightens the nose spacing of the whole wing by 10 %.
+
+*\[Figure: Turning per cell against the nose spacing, measured on rings built at 40 spacings. Left: the BWB root (MH 104). Right: a NACA 4415 station of a tapered training wing.\]*
+
+<span class="ctag">Conclusion</span>On a smooth nose the turning falls steadily and one bisection finds the spacing. On the built NACA 4415 nose it rises again between 0.05 and 0.1 % c: a solution found by bisection can fail when the nodes move, so the solve must check a window, and the check must run on the final rings. The plateau at large spacings is the curvature cap taking over from the nose rule.
+
+### 5. One node distribution for the whole wing
+
+A structured mesh needs the same ring at every station. The first version gave each station the same count but its own distribution; the screen then showed surface quads with a scaled Jacobian down to 0.08: node i drifted along the chord between neighbouring stations (a different nose spacing, band cell or count), and where the stations are squeezed to tens of µm at the tip, a drift of a fraction of a cell shears the quad. Now the size fields of all stations and both sides are put on one grid of arc fraction, the strictest wins at every place, and that one distribution serves every station.
+
+*\[Figure: Flying wing, training_full 6, level C: the scaled Jacobian of every wing quad (1 = right angles, 0 = flat), per-station distributions against the one distribution, and the histogram of all quads.\]*
+
+<span class="ctag">Conclusion</span>With one distribution node i sits at the same arc fraction on every station: the sheared band at station 65 (0.08) is gone and the worst quad is 0.58, the sweep of the wing. The cost is about 3 % more ring nodes and the sharpest nose and finest band of the wing everywhere; the gain is a clean structured surface for the march, and the spanwise envelope (law 2) holds by construction.
+
+### 6. The ring
+
+Upper trailing-edge corner → nose → lower trailing-edge corner → across the blunt base; 2 n_side + n_base − 3 unique nodes, the same at every station; n_base = 9 points (8 cells) at C. The base nodes are straight between the two corners. Every node is evaluated on the loft at its (x/c, v).
+
+*\[Figure: The root ring of the BWB reference wing: node order (left), the nose with the turning per node (middle), and the trailing edge with its 0.1 % c cells and the 8 base cells (right).\]*
+
+<span class="ctag">Conclusion</span>One closed curve holds the nose, both sides and the base, so the leading edge is a spacing request in metres and the base needs no block of its own. The turning at the nose nodes is at or below 10°; the two trailing-edge corners turn by about 90° by design and are left out of the check.
+
+### 7. The tip cap
+
+Ported from S8: one H patch whose edge is the tip ring node for node (checked to 1e-12 m), xi along the chord from a short nose arc to the base, eta across the thickness, 400 Laplacian sweeps with the edge held, oriented so that i × j points outboard. With one distribution for both sides its cross lines join upper and lower nodes at the same arc fraction and stay upright; with a different distribution per side they slanted across the thin trailing-edge region and the cells collapsed (scaled Jacobian 0.03 on the BWB reference wings at Re 3 × 10⁶).
+
+*\[Figure: The tip cap of the BWB reference wing (top) and the scaled Jacobian of its cells (bottom), chordwise cell against cell across the thickness.\]*
+
+<span class="ctag">Conclusion</span>The cap is a clean patch of upright quads over the whole chord; the only weak cells are the two where the nose arc meets the sides, whose three corners lie on the smooth ring (corner angle 180° minus the ring's turning). They are reported apart and refused only if folded. The real test of the cap is the march off it (Stage 3), where it is a viscous wall facing along the span.
+
+### 8. What depends on the Reynolds number
+
+Two sizes: the band cell (bubble length / 20 at the local Re) and the tip first cell s0 (y⁺ = 1). So one wing has one surface per Re level; building one takes seconds.
+
+*\[Figure: Left: the bubble-length table from Stage 1. Middle: the band cell and s0 against the local Re at level C. Right: ring nodes of the reference wings against the Re on the mean chord; S8's 150 for comparison.\]*
+
+<span class="ctag">Conclusion</span>The ring grows with Re until the bubble-length floor (0.05 c, band cell 0.25 % c) is reached at about Re 10⁶, then stays at about 850 nodes. At 10⁵ it is about 200: the rule follows the physics (long bubbles need few cells per chord), not a fixed count. Every Re level needs its own surface.
+
+### 9. The checks, then the files
+
+A build writes a mesh only if every check passes; otherwise it writes `refusal.json` with the failed checks and their values. A violation is reported per station, never averaged away (`stations.csv`). The files: `surface.npz` (the arrays), `surface.xyz` (Plot3D, opens in ParaView), `stations.csv`, `quality.json`, `manifest.json` with four hashes (wing input, loft surface, mesh code, mesh nodes).
+
+| Check               | What it measures                                                                         | Limit                   |
+|---------------------|------------------------------------------------------------------------------------------|-------------------------|
+| `nose_turning`      | largest turning at any ring node (not the two TE corners, not geometry kinks)            | ≤ 10.2°                 |
+| `geometry_kinks`    | a kink of the section itself (a dense step turning \> 1°), which no cell size can reduce | ≤ 10.2°                 |
+| `nose_envelope`     | nose spacing / chord between neighbouring stations                                       | ≤ 1.15                  |
+| `chord_growth`      | neighbouring cells along the ring                                                        | ≤ 1.25 (within 1 %)     |
+| `band_spacing`      | largest cell inside the band / the band target                                           | ≤ 1.01                  |
+| `te_spacing`        | trailing-edge cell / 0.1 % c                                                             | ≤ 1.01                  |
+| `span_growth`       | neighbouring station gaps                                                                | ≤ 1.3                   |
+| `loft_stations_hit` | distance from the nearest station to every loft station                                  | 0 m                     |
+| `tip_gap`           | last station gap / tip first cell                                                        | 0.8 … 1.01              |
+| `planar_stations`   | every ring in its station plane (y = const)                                              | ≤ 1e-9 m                |
+| `wing_quads`        | smallest scaled Jacobian of the wing quads                                               | ≥ 0.05                  |
+| `cap_quads`         | smallest scaled Jacobian of the cap quads, the two nose-corner cells apart               | ≥ 0.05                  |
+| `cap_nose_corners`  | the two cap cells with three corners on the smooth nose                                  | \> 0 (not folded)       |
+| `ring_count`        | unique ring nodes                                                                        | = 2 n_side + n_base − 3 |
+
+<span class="ctag">Conclusion</span>Thirteen checks, each with a number and a limit, written before the results (Stage 0, D4). They are what makes the screen a result and not a hope: a wing that passes has met every rule, and a wing that fails says which.
+
+## The rules and their sources
+
+Level C values from `configs/surface.yaml`. "Law n" is the row of the laws table in the Grand Roadmap. The second table gives the two Re-dependent sizes at the Re levels of the study (and 6 × 10⁴ and 5.5 × 10⁶, the extremes a station can see).
+
+| Where                                             | Law            | Rule at level C                                                                                                                                                                                                      | Source                                                                                                                                                 |
+|---------------------------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Nose turning<span class="id">law 1</span>         | law 1          | no ring node turns the surface by more than 10° (± 0.02); solved by bisection on the ring as built; away from the nose the same angle caps the cell from the local curvature radius (cell ≤ R × 10°, x/c \> 0.5 %)   | S8 (measured on the built ring, because a radius estimate gave 20° for 6° asked)                                                                       |
+| Nose, along the span<span class="id">law 2</span> | law 2          | nose spacing / chord changes by at most 1.15 between stations                                                                                                                                                        | S8; holds by construction with one distribution for the wing                                                                                           |
+| Trailing edge<span class="id">law 3</span>        | law 3          | 0.1 % of the local chord at the two corners                                                                                                                                                                          | DPW gridding guidelines (Levy et al. 2013)                                                                                                             |
+| Blunt base<span class="id">law 6</span>           | law 6          | 8 cells across the base at C (even, so the cap's nose arc is centred): 10, 14, 18 at M, F, FF                                                                                                                        | S8 (base cells 4/6/8 ladder); our choice                                                                                                               |
+| Transition band<span class="id">Stage 1</span>    | Stage 1        | upper surface 0–85 % c, lower 60–100 % c; cell = bubble length / 20; bubble length from the local Re: 0.4 c at 6e+04, 0.3 c at 1e+05, 0.1 c at 4e+05, 0.05 c at 1e+06 (log-log between the points, constant outside) | Stage 1 handover (band, bubble lengths from 2-D XFOIL, N_crit 9); Ansys CFX Modeling Guide, γ-Re_θ transition model: at least 20 nodes across a bubble |
+| Largest cell<span class="id">own</span>           | own            | 2 % c outside the bands                                                                                                                                                                                              | our choice (starting value)                                                                                                                            |
+| Growth along the ring<span class="id">DPW</span>  | DPW            | 1.2 per cell used to build the size field; checked ≤ 1.25 (within 1 %)                                                                                                                                               | Stage 1 handover; DPW                                                                                                                                  |
+| Stations<span class="id">laws 8, 9</span>         | laws 8, 9      | one exactly on every loft station; gap = 0.2 × local chord, at least 12 gaps per panel; growth 1.2 (checked ≤ 1.3)                                                                                                   | our starting values; the spanwise ladder decides                                                                                                       |
+| Tip<span class="id">laws 9, 10, 13</span>         | laws 9, 10, 13 | stations squeezed so the last gap = 1 × the tip first cell s0; s0 / c = y⁺ / (Re √(Cf/2)), Cf = 0.026 Re^(−1/7) at y⁺ = 1                                                                                            | Grand Roadmap (cap first cell = tip s0); turbulent flat plate (White 2006)                                                                             |
+| Levels<span class="id">law 23</span>              | law 23         | C, M, F, FF: every spacing ÷ 1.3^k, the growth g^(1 / 1.3^k) so each level is a true scaled copy                                                                                                                     | Celik et al. 2008 (r ≥ 1.3)                                                                                                                            |
+
+| Local Re | Bubble length | Band cell (level C) | First wall cell s0, y⁺ = 1 |
+|----------|---------------|---------------------|----------------------------|
+| 6e+04    | 0.400 c       | 2.00 % c            | 0.0321 % c                 |
+| 1e+05    | 0.300 c       | 1.50 % c            | 0.0200 % c                 |
+| 3e+05    | 0.126 c       | 0.63 % c            | 0.0072 % c                 |
+| 1e+06    | 0.050 c       | 0.25 % c            | 0.0024 % c                 |
+| 3e+06    | 0.050 c       | 0.25 % c            | 0.0008 % c                 |
+| 6e+06    | 0.050 c       | 0.25 % c            | 0.0005 % c                 |
+
+The family (C, M, F, FF) is checked in Study 2 below. What the band rule costs: about 200 ring nodes at Re 10⁵, 400 at 3 × 10⁵, 850 at and above 1.5 × 10⁶, against 150 in S8. The chordwise direction holds 35 % of the mesh budget (Stage 0, D1), so this rule is the first thing the chordwise ladder (Grand Roadmap T6) must test; if 20 nodes per bubble is more than the drag needs, the coarse level can be relaxed. The whole ring is in practice at band spacing (upper 0–85 % c and lower 60–100 % c, shared through the one distribution), except the nose and the trailing edge, which are finer.
+
+## The studies, with their conclusions
+
+Six studies were run while building the mesher. Each one says what was done, what the figure shows, and what we conclude. None of them is a flow result: no solver has run on these surfaces.
+
+### Study 1 · The robustness screen
+
+**What was done.** Every built wing of every type and set (730 wings: reference, training_focus, training_full, corner1, corner2) meshed at level C and Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels, with the numpy twin of the loft. Pass/fail limits were written before the run (the 13 checks). Failures stay in every count.
+
+**Result.** 790 builds, 790 passed every check, 0 refused, 0 crashed. Largest delivered turning 10.02° (target 10 ± 0.02), largest chord growth 1.208 (limit 1.25), a nose repair on 32 builds. Lowest wing-quad quality 0.09, lowest cap quality 0.11. Build time median 5.0 s, max 8.1 s.
+
+| Type (builds)     | Ring nodes min–median–max | Stations  | Quads        | Build time \[s\] | Wing quads J min / median | Cap quads J min / median | Passed    |
+|-------------------|---------------------------|-----------|--------------|------------------|---------------------------|--------------------------|-----------|
+| BWB (202)         | 486–614–860               | 71–83–134 | 36k–52k–101k | 4.2–5.3–8.1      | 0.09 / 0.82               | 0.19 / 0.34              | 202 / 202 |
+| flying wing (193) | 370–430–528               | 66–76–116 | 28k–34k–58k  | 4.0–4.8–7.0      | 0.48 / 0.88               | 0.15 / 0.19              | 193 / 193 |
+| cranked (202)     | 364–410–594               | 69–78–119 | 27k–36k–72k  | 4.0–4.9–7.6      | 0.40 / 0.98               | 0.15 / 0.43              | 202 / 202 |
+| tapered (193)     | 364–420–506               | 69–79–116 | 28k–34k–55k  | 3.7–4.9–7.8      | 0.56 / 0.98               | 0.15 / 0.43              | 193 / 193 |
+
+| Re on the mean chord | BWB: ring × stations (5 wings) | flying wing: ring × stations (5 wings) | cranked: ring × stations (5 wings) | tapered: ring × stations (5 wings) |
+|----------------------|--------------------------------|----------------------------------------|------------------------------------|------------------------------------|
+| 1.0e+05              | 280–310 × 72–97                | 218–234 × 68–91                        | 198–206 × 69–75                    | 192–208 × 67–85                    |
+| 3.0e+05              | 568–638 × 77–103               | 416–458 × 74–96                        | 384–404 × 75–81                    | 368–412 × 73–91                    |
+| 1.5e+06              | 860–860 × 85–111               | 844–844 × 82–104                       | 848–848 × 83–89                    | 848–848 × 81–99                    |
+| 3.0e+06              | 858–860 × 89–114               | 844–844 × 85–108                       | 848–848 × 86–92                    | 848–848 × 85–102                   |
+
+*\[Figure: Every build of the screen: ring nodes against the mean chord, stations against semi-span / mean chord, and build time, per type.\]*
+
+<span class="ctag">Conclusion</span>Ring size is set by the local Re of the largest chord, not by the wing's size: the BWB sits at about 600 nodes, the three other types at about 400, whatever the chord. The station count rises with the aspect ratio (semi-span in chords) as the law intends, from about 70 to 130. Build time is 4–8 s for every wing; the mesher is not the bottleneck of the workflow.
+
+*\[Figure: Distributions over the screen at Re 3 × 10⁵: ring nodes and stations per type, and the lowest scaled Jacobian of the wing quads and of the cap quads per wing, per type (dashed: the refusal limit 0.05).\]*
+
+<span class="ctag">Conclusion</span>The wing quads are good on all types (median 0.82–0.98); the few wings below 0.3 are corner wings with an 85°-swept first panel. The cap quads are the weaker part (median 0.19–0.43): the H patch is squeezed between a thin section and the many chordwise cells. Both are far from the refusal limit; the march will say whether the cap quality matters.
+
+<span class="ctag">Conclusion</span>The mesher is robust on the sets we have: 0 refusals in 790 builds at level C, so, by the rule of three (Stage 0, D2), the true failure rate on this design space is below about 0.4 % with 95 % confidence, for the surface alone. What the screen does not show: whether the volume march accepts these surfaces, whether 20 nodes per bubble is the right coarse level, and anything about the flow. It was run on the numpy loft; the pyGeo run is owed.
+
+### Study 2 · The family ratios (C, M, F)
+
+**What was done.** Levels C, M, F of the four reference wings at Re 3 × 10⁵; the ratio of every spacing between levels measured on the built meshes (nose cells at the root and the tip, the trailing-edge cell, the band cell at the root and the tip, the first and last station gap, a base cell), and the counts.
+
+*\[Figure: Left: the nose of the BWB root ring at C, M, F. Middle: the measured ratio of every spacing between levels on the BWB reference wing (dashed: 1.3). Right: ring nodes and stations per level for all four types.\]*
+
+<span class="ctag">Conclusion</span>Every spacing refines by 1.30 within 3 %, and the counts (rings and stations) grow by 1.3 per level: the levels are true scaled copies, as Celik's method needs. The two exceptions are whole numbers: the base cells (8, 10, 14, 18: 1.25, 1.4, 1.29) and the gaps of the first panel (12, 16, 21). A first version with the same growth at every level refined only the end spacings and grew the station count by 1.2, not 1.3; the growth must scale too.
+
+| Spacing                      | BWB C/M                           | BWB M/F | flying wing C/M                 | flying wing M/F | cranked C/M                     | cranked M/F | tapered C/M                     | tapered M/F |
+|------------------------------|-----------------------------------|---------|---------------------------------|-----------------|---------------------------------|-------------|---------------------------------|-------------|
+| nose cell, root              | 1.323                             | 1.299   | 1.300                           | 1.299           | 1.300                           | 1.299       | 1.300                           | 1.299       |
+| nose cell, tip               | 1.322                             | 1.301   | 1.299                           | 1.299           | 1.300                           | 1.300       | 1.299                           | 1.300       |
+| trailing-edge cell           | 1.300                             | 1.300   | 1.299                           | 1.300           | 1.299                           | 1.300       | 1.299                           | 1.300       |
+| band cell, root              | 1.300                             | 1.300   | 1.300                           | 1.300           | 1.300                           | 1.300       | 1.298                           | 1.300       |
+| band cell, tip               | 1.293                             | 1.309   | 1.300                           | 1.300           | 1.300                           | 1.300       | 1.298                           | 1.300       |
+| first station gap            | 1.333                             | 1.312   | 1.333                           | 1.313           | 1.333                           | 1.313       | 1.333                           | 1.313       |
+| last station gap (tip)       | 1.304                             | 1.289   | 1.287                           | 1.305           | 1.302                           | 1.295       | 1.302                           | 1.295       |
+| base cell                    | 1.250                             | 1.400   | 1.250                           | 1.400           | 1.250                           | 1.400       | 1.250                           | 1.400       |
+| ring × stations at C / M / F | 604 × 82 / 782 × 107 / 1016 × 139 |         | 430 × 74 / 556 × 96 / 720 × 125 |                 | 398 × 75 / 514 × 98 / 668 × 127 |             | 408 × 75 / 526 × 98 / 684 × 127 |             |
+
+<span class="ctag">Conclusion</span>The family rule (law 23) holds on the surface for all four types. The primer asks for 1 %; 3 % is what whole numbers allow and it is reported, not hidden. The same rule, every spacing ÷ 1.3 and the growth g^(1/1.3), must be carried into the march and the boxes in Stage 3.
+
+### Study 3 · One distribution per station, or one for the wing
+
+**What was done.** The first screen (per-station distributions) was read for the lowest wing-quad quality; the worst wing (flying wing, training_full 6, 0.08) was rebuilt both ways and the scaled Jacobian of every quad compared (figure in section 5 above). Then the whole screen was rerun with one distribution.
+
+<span class="ctag">Conclusion</span>One distribution for the wing: the sheared quads in the tip squeeze go from 0.08 to 0.58, the BWB reference wing from 0.77 to 0.92, and no wing of the sets falls below 0.09 (the 85°-sweep corner wings, a property of those wings). The price is about 3 % more ring nodes and the sharpest nose of the wing at every station. Decision 60.
+
+### Study 4 · The nose radius of the built sections (a Stage 1 finding)
+
+**What was done.** While solving the nose spacing the turning did not fall steadily as the spacing was reduced (section 4). The raw airfoil files of the ten suggested sections were compared with the Stage 1 resampled sections: nose radius from y ≈ √(2 R x) at the first cosine point (x = 2.5 × 10⁻⁴ c) on each side, and a circle through three raw points at the leading edge; for NACA 4415 also the formula (R = 1.1019 t²).
+
+*\[Figure: The first 1.2 % of the chord of NACA 4415, E387 and MH 104: the raw file points, the built section, circles fitted to the built upper and lower nose, and (NACA 4415) the formula's circle.\]*
+
+<span class="ctag">Conclusion</span>The built nose is not the airfoil's nose. NACA 4415 has one nose of 0.0248 c by formula; the built section shows 0.008 c on the upper side and 0.074 c on the lower side at the leading-edge point. E387: 0.0102 c raw, 0.0028 / 0.035 c built. The round-nosed LA2573A and NACA 25118 are fine. The error lives in the first about 0.1 % of the chord.
+
+| Section   | Raw file: R/c at the leading-edge point | Built: upper side | Built: lower side | Ratio built / raw |
+|-----------|-----------------------------------------|-------------------|-------------------|-------------------|
+| naca4415  | 0.0246                                  | 0.0080            | 0.0741            | 0.3 × / 3.0 ×     |
+| e387      | 0.0102                                  | 0.0028            | 0.0353            | 0.3 × / 3.5 ×     |
+| sd7032    | 0.0077                                  | 0.0318            | 0.0023            | 4.1 × / 0.3 ×     |
+| mh104     | 0.0084                                  | 0.0183            | 0.0048            | 2.2 × / 0.6 ×     |
+| mh61      | 0.0041                                  | 0.0023            | 0.0053            | 0.6 × / 1.3 ×     |
+| mh45      | 0.0051                                  | 0.0124            | 0.0028            | 2.4 × / 0.5 ×     |
+| mh60      | 0.0050                                  | 0.0070            | 0.0037            | 1.4 × / 0.7 ×     |
+| s5010     | 0.0077                                  | 0.0146            | 0.0033            | 1.9 × / 0.4 ×     |
+| la2573a   | 0.0322                                  | 0.0325            | 0.0331            | 1.0 × / 1.0 ×     |
+| naca25118 | 0.0339                                  | 0.0388            | 0.0296            | 1.1 × / 0.9 ×     |
+
+<span class="ctag">Conclusion and open decision</span>The likely cause: Stage 1 takes the leading edge at the raw point farthest from the trailing edge and interpolates each side in √x from there; when that point is not exactly the nose apex, the two branches are not √x-symmetric. The mesh follows the loft as built, so the surface mesh is right for the wing we have; the wing's nose is not the airfoil's. It matters for the suction peak at high angle and for any law that reads a nose radius (law 1 measures the turning instead, so it adapts). Open decision 64: fix in Stage 1 (every geometry hash changes) or carry as a stated deviation. Mike decides.
+
+### Study 5 · The corner set: where the rules stop
+
+**What was done.** The first screen crashed on the smallest BWB corner wing (12 mm tip chord). Its tip section was examined: the trailing-edge thickness floor of 0.5 mm is 4 % of that chord, and the opening of the trailing edge over the aft part of the section makes a bend of about 10° at its start; the band cell there (2 % c at that tip's Re) could not follow it, so the nose solve could never bring the largest turning under 10°.
+
+*\[Figure: BWB corner wing 0, tip station (chord 12 mm, trailing edge 4 % thick): the ring (left) and the cells along the upper side with the curvature cap R × 10° (right).\]*
+
+<span class="ctag">Conclusion</span>The turning rule now applies along the whole ring from the local curvature, not only at the nose, and the bend at 90 % c gets cells small enough to turn ≤ 10° each. A true kink (a dense step turning more than 1°) would be reported apart as a geometry fault; none was found in the sets. The corner set did its job: it found the limit of the rule and the rule was widened.
+
+### Study 6 · Three passes of the screen: what each one found
+
+| Pass      | Code state                 | Refused or crashed | What it found, and the fix                                                                                                                                                                                                                                                                                                                              |
+|-----------|----------------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1         | a distribution per station | 10 of 790          | Tip gap 0.1 % above the asked value (whole numbers of gaps: tolerance 0.8–1.01); the nose solve crashed on the smallest corner wing (the 10° bend: curvature cap along the ring, kinks reported apart); a break 0.9 mm from the root broke the span grid (dense grid per panel); the lowest wing-quad quality 0.08 in the tip squeeze (Study 3).        |
+| 2         | one distribution           | 17 of 790          | Chord growth 1.25–1.26 at NACA 4415 noses, where the two built sides differ most (the lower side follows the upper side's arc fraction): the growth check allows 1 %, as the other delivered-against-asked checks do.                                                                                                                                   |
+| 3         | growth tolerance           | 0 of 790           | Clean. While drawing the size-field figure for this page the reported nose spacing did not match the delivered cells: the helper that holds a size over a length took the length as the size, so the nose cell was 4 × the asked size (the solve compensated, so the turning was right). Fixed; the nose is now held over four cells of the asked size. |
+| 4 (final) | as committed               | 0 of 790           | The numbers on this page. The largest growth fell to 1.21.                                                                                                                                                                                                                                                                                              |
+
+<span class="ctag">Conclusion</span>Four passes, each on the whole set, were needed to get from the first working mesher to the one that passes every wing. The earlier passes are development evidence, not results; the fourth, on the committed code, is the result. The corner and full-space sets are where every failure appeared, as Stage 0 said they would.
 
 ## What was done, step by step
 
@@ -154,195 +417,19 @@ Chord growth 1.25–1.26 on NACA 4415 noses (the lower side follows the upper si
 
 ### The nose held over four cells
 
-The helper that holds a size over a length took the length as the size, so the nose cell came out 4 × the asked size and the solve compensated. Fixed; the delivered turning was right all along, the reported asked spacing was not.
+The helper that holds a size over a length took the length as the size, so the nose cell came out 4 × the asked size and the solve compensated. Fixed; the delivered turning was right all along, the reported asked spacing was not. The largest growth fell from 1.26 to 1.21.
 
-**13 · screen 3**
+**13 · screens 3, 4**
 
-### The final screen
+### The last two screens
 
-Every built wing of every type and set at level C, Re 3 × 10⁵; the reference wings at all four Re levels. The numbers on this page.
+The third pass was clean but the size-field figure of this page exposed the nose held over one cell instead of four (step 12); the fourth, on the committed code, gives the numbers on this page: 790 of 790.
 
 **14 · studies**
 
 ### Family ratios, nose radius, figures, docs
 
 C, M, F on the four reference wings; raw against built nose radius of the ten suggested airfoils; this page; the decisions note; open decisions 56–64; the branch pushed.
-
-## How the surface mesh works
-
-### 1. The loft in, the dense section
-
-At a station v the loft gives the upper and lower surface at any x/c. The mesher samples each side at 6,001 points, cosine in x/c (dense at the nose and the trailing edge), and keeps a table of arc length against x/c per side. That table turns a cell size in metres into a position on the loft; the dense points themselves are never nodes. The same dense curve gives the radius of curvature along the section (right panel), used by the curvature cap and the kink check.
-
-*\[Figure: BWB reference wing, root section (MH 104). Left: the dense sample at the nose. Middle: arc length against x/c per side. Right: radius of curvature of the built section: the two sides differ at the leading edge (finding 64).\]*
-
-### 2. Where the stations go
-
-A station sits exactly on every loft station (b0–b3 and the trailing-edge switch station some BWBs have), because the ruled loft has a crease there. Between them the target gap is 0.2 × the local chord, at least 12 gaps per panel, and the gaps may change by at most 1.2 from one to the next. Toward the tip the gaps shrink to the tip first cell s0 (y⁺ = 1 at the tip Re), so the cap faces a cell of the size it will get in the volume mesh: about 40 of the last panel's gaps lie in the last few millimetres.
-
-*\[Figure: BWB reference wing, level C, Re 3 × 10⁵. Left: the station gap along the span: the 0.2 c target, the size field after the 12-per-panel rule, the tip squeeze and the growth limit, and the gaps delivered. Middle: every station as a chord line. Right: the last 12 mm before the tip.\]*
-
-### 3. The size field around the section
-
-Per station and side, the target cell size along the arc is the smallest of every rule that applies there: the largest cell (2 % c), the transition band (bubble length / 20 at the local Re; upper 0–85 % c, lower 60–100 % c), the curvature cap (cell ≤ R × 10° away from the nose), the nose cell held over four cells, the trailing-edge cell (0.1 % c), then a growth limit of 1.2 per cell. Points are then placed so each cell holds the same share of ∫ds/h.
-
-*\[Figure: The root section of the BWB reference wing, upper side: the six layers of the size field and the cells delivered. Because both sides share one distribution, the lower side's band (60–100 % c) also sets the upper side's cells there, and the sharpest nose of the wing (the tip's MH 61) sets the nose cell of every station.\]*
-
-### 4. The nose: solved, not estimated
-
-S8 found that a nose-radius estimate gave 20° per cell when 6° was asked, so the nose spacing is solved: build the ring, measure the largest turning at any node, bisect the nose spacing until the turning is 10° ± 0.02°. The check covers every ring node except the two trailing-edge corners, because on cambered noses the sharpest cell sits a few cells onto the lower surface. The built noses are not monotone (right panel; finding 64), so the solve walks down until every spacing in \[0.77 h, h\] passes, and a station that still lands above the target after the shared distribution tightens the nose spacing of the whole wing by 10 %.
-
-*\[Figure: Turning per cell against the nose spacing. Left: the BWB root, smooth. Right: a NACA 4415 station of a tapered training wing, not monotone: the built nose radius changes within the first cells.\]*
-
-### 5. One node distribution for the whole wing
-
-A structured mesh needs the same ring at every station. The first version gave each station the same count but its own distribution; the screen then showed surface quads with a scaled Jacobian down to 0.08: node i drifted along the chord between neighbouring stations (a different nose spacing, band cell or count), and where the stations are squeezed to tens of µm at the tip, a drift of a fraction of a cell shears the quad. Now the size fields of all stations and both sides are put on one grid of arc fraction, the strictest wins at every place, and that one distribution serves every station: node i sits at the same arc fraction everywhere, no cell is coarser than its station asks, and the spanwise envelope holds by construction. Cost: about 3 % more ring nodes, and the sharpest nose and the finest band of the wing everywhere.
-
-*\[Figure: Flying wing, training_full 6, level C: the scaled Jacobian of every wing quad, per-station distributions against the one distribution, and the histogram of all quads.\]*
-
-### 6. The ring
-
-Upper trailing-edge corner → nose → lower trailing-edge corner → across the blunt base; 2 n_side + n_base − 3 unique nodes, the same at every station; n_base = 9 points (8 cells) at C. The base nodes are straight between the two corners.
-
-*\[Figure: The root ring of the BWB reference wing: node order, the nose with the turning per node, and the trailing edge with its 0.1 % c cells and the 8 base cells.\]*
-
-### 7. The tip cap
-
-Ported from S8: one H patch whose edge is the tip ring node for node (checked to 1e-12 m), xi along the chord from a short nose arc to the base, eta across the thickness, 400 Laplacian sweeps with the edge held, oriented so that i × j points outboard. With one distribution for both sides its cross lines join upper and lower nodes at the same arc fraction and stay upright; with a different distribution per side they slanted across the thin trailing-edge region and the cells collapsed (scaled Jacobian 0.03 on the BWB reference wings at Re 3 × 10⁶). The two cells where the nose arc meets the sides have three corners on the smooth ring, so their corner angle is 180° minus the ring's turning there; they are reported apart and refused only if folded.
-
-*\[Figure: The tip cap of the BWB reference wing and the scaled Jacobian of its cells.\]*
-
-### 8. What depends on the Reynolds number
-
-Two sizes: the band cell (bubble length / 20 at the local Re) and the tip first cell s0 (y⁺ = 1). So one wing has one surface per Re level; building one takes seconds. The ring grows with Re until the bubble-length floor of 0.05 c (band cell 0.25 % c) is reached, at about Re 10⁶.
-
-*\[Figure: Left: the bubble length table. Middle: the band cell and s0 against Re. Right: ring nodes of the reference wings against the Re on the mean chord; S8's 150 for comparison.\]*
-
-### 9. The checks
-
-A build writes a mesh only if every check passes; otherwise it writes `refusal.json` with the failed checks and their values. A violation is reported per station, never averaged away (`stations.csv`).
-
-| Check               | What it measures                                                                         | Limit                   |
-|---------------------|------------------------------------------------------------------------------------------|-------------------------|
-| `nose_turning`      | largest turning at any ring node (not the two TE corners, not geometry kinks)            | ≤ 10.2°                 |
-| `geometry_kinks`    | a kink of the section itself (a dense step turning \> 1°), which no cell size can reduce | ≤ 10.2°                 |
-| `nose_envelope`     | nose spacing / chord between neighbouring stations                                       | ≤ 1.15                  |
-| `chord_growth`      | neighbouring cells along the ring                                                        | ≤ 1.25 (within 1 %)     |
-| `band_spacing`      | largest cell inside the band / the band target                                           | ≤ 1.01                  |
-| `te_spacing`        | trailing-edge cell / 0.1 % c                                                             | ≤ 1.01                  |
-| `span_growth`       | neighbouring station gaps                                                                | ≤ 1.3                   |
-| `loft_stations_hit` | distance from the nearest station to every loft station                                  | 0 m                     |
-| `tip_gap`           | last station gap / tip first cell                                                        | 0.8 … 1.01              |
-| `planar_stations`   | every ring in its station plane (y = const)                                              | ≤ 1e-9 m                |
-| `wing_quads`        | smallest scaled Jacobian of the wing quads                                               | ≥ 0.05                  |
-| `cap_quads`         | smallest scaled Jacobian of the cap quads, the two nose-corner cells apart               | ≥ 0.05                  |
-| `cap_nose_corners`  | the two cap cells with three corners on the smooth nose                                  | \> 0 (not folded)       |
-| `ring_count`        | unique ring nodes                                                                        | = 2 n_side + n_base − 3 |
-
-## The rules and their sources
-
-Level C values from `configs/surface.yaml`. "Law n" is the row of the laws table in the Grand Roadmap. The second table gives the two Re-dependent sizes at the Re levels of the study (and 6 × 10⁴ and 5.5 × 10⁶, the extremes a station can see).
-
-| Where                                             | Law            | Rule at level C                                                                                                                                                                                                      | Source                                                                                                                                                 |
-|---------------------------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Nose turning<span class="id">law 1</span>         | law 1          | no ring node turns the surface by more than 10° (± 0.02); solved by bisection on the ring as built; away from the nose the same angle caps the cell from the local curvature radius (cell ≤ R × 10°, x/c \> 0.5 %)   | S8 (measured on the built ring, because a radius estimate gave 20° for 6° asked)                                                                       |
-| Nose, along the span<span class="id">law 2</span> | law 2          | nose spacing / chord changes by at most 1.15 between stations                                                                                                                                                        | S8; holds by construction with one distribution for the wing                                                                                           |
-| Trailing edge<span class="id">law 3</span>        | law 3          | 0.1 % of the local chord at the two corners                                                                                                                                                                          | DPW gridding guidelines (Levy et al. 2013)                                                                                                             |
-| Blunt base<span class="id">law 6</span>           | law 6          | 8 cells across the base at C (even, so the cap's nose arc is centred): 10, 14, 18 at M, F, FF                                                                                                                        | S8 (base cells 4/6/8 ladder); our choice                                                                                                               |
-| Transition band<span class="id">Stage 1</span>    | Stage 1        | upper surface 0–85 % c, lower 60–100 % c; cell = bubble length / 20; bubble length from the local Re: 0.4 c at 6e+04, 0.3 c at 1e+05, 0.1 c at 4e+05, 0.05 c at 1e+06 (log-log between the points, constant outside) | Stage 1 handover (band, bubble lengths from 2-D XFOIL, N_crit 9); Ansys CFX Modeling Guide, γ-Re_θ transition model: at least 20 nodes across a bubble |
-| Largest cell<span class="id">own</span>           | own            | 2 % c outside the bands                                                                                                                                                                                              | our choice (starting value)                                                                                                                            |
-| Growth along the ring<span class="id">DPW</span>  | DPW            | 1.2 per cell used to build the size field; checked ≤ 1.25 (within 1 %)                                                                                                                                               | Stage 1 handover; DPW                                                                                                                                  |
-| Stations<span class="id">laws 8, 9</span>         | laws 8, 9      | one exactly on every loft station; gap = 0.2 × local chord, at least 12 gaps per panel; growth 1.2 (checked ≤ 1.3)                                                                                                   | our starting values; the spanwise ladder decides                                                                                                       |
-| Tip<span class="id">laws 9, 10, 13</span>         | laws 9, 10, 13 | stations squeezed so the last gap = 1 × the tip first cell s0; s0 / c = y⁺ / (Re √(Cf/2)), Cf = 0.026 Re^(−1/7) at y⁺ = 1                                                                                            | Grand Roadmap (cap first cell = tip s0); turbulent flat plate (White 2006)                                                                             |
-| Levels<span class="id">law 23</span>              | law 23         | C, M, F, FF: every spacing ÷ 1.3^k, the growth g^(1 / 1.3^k) so each level is a true scaled copy                                                                                                                     | Celik et al. 2008 (r ≥ 1.3)                                                                                                                            |
-
-| Local Re | Bubble length | Band cell (level C) | First wall cell s0, y⁺ = 1 |
-|----------|---------------|---------------------|----------------------------|
-| 6e+04    | 0.400 c       | 2.00 % c            | 0.0321 % c                 |
-| 1e+05    | 0.300 c       | 1.50 % c            | 0.0200 % c                 |
-| 3e+05    | 0.126 c       | 0.63 % c            | 0.0072 % c                 |
-| 1e+06    | 0.050 c       | 0.25 % c            | 0.0024 % c                 |
-| 3e+06    | 0.050 c       | 0.25 % c            | 0.0008 % c                 |
-| 6e+06    | 0.050 c       | 0.25 % c            | 0.0005 % c                 |
-
-What the band rule costs: about 200 ring nodes at Re 10⁵, 400 at 3 × 10⁵, 850 at and above 1.5 × 10⁶, against 150 in S8. The chordwise direction holds 35 % of the mesh budget (Stage 0, D1), so this rule is the first thing the chordwise ladder (Grand Roadmap T6) must test; if 20 nodes per bubble is more than the drag needs, the coarse level can be relaxed. The whole ring is in practice at band spacing (upper 0–85 % c and lower 60–100 % c, shared through the one distribution), except the nose and the trailing edge, which are finer.
-
-## The family: C, M, F, FF
-
-Every spacing (nose, trailing edge, band, station gaps, and the cells in the stretched parts between them) at level M is the C value divided by 1.3; the growth used to build the size field is g^(1/1.3) per level (1.2 at C, 1.15 at M, 1.11 at F). With the same growth at every level the end spacings refine but the stretched parts do not, and the station count grew by only 1.2 per level. Measured on the four reference wings at Re 3 × 10⁵:
-
-*\[Figure: Left: the nose of the BWB root ring at C, M, F. Middle: the measured ratio of every spacing between levels on the BWB reference wing (dashed: 1.3). Right: ring nodes and stations per level, all four types.\]*
-
-| Spacing                      | BWB C/M                           | BWB M/F | flying wing C/M                 | flying wing M/F | cranked C/M                     | cranked M/F | tapered C/M                     | tapered M/F |
-|------------------------------|-----------------------------------|---------|---------------------------------|-----------------|---------------------------------|-------------|---------------------------------|-------------|
-| nose cell, root              | 1.323                             | 1.299   | 1.300                           | 1.299           | 1.300                           | 1.299       | 1.300                           | 1.299       |
-| nose cell, tip               | 1.322                             | 1.301   | 1.299                           | 1.299           | 1.300                           | 1.300       | 1.299                           | 1.300       |
-| trailing-edge cell           | 1.300                             | 1.300   | 1.299                           | 1.300           | 1.299                           | 1.300       | 1.299                           | 1.300       |
-| band cell, root              | 1.300                             | 1.300   | 1.300                           | 1.300           | 1.300                           | 1.300       | 1.298                           | 1.300       |
-| band cell, tip               | 1.293                             | 1.309   | 1.300                           | 1.300           | 1.300                           | 1.300       | 1.298                           | 1.300       |
-| first station gap            | 1.333                             | 1.312   | 1.333                           | 1.313           | 1.333                           | 1.313       | 1.333                           | 1.313       |
-| last station gap (tip)       | 1.304                             | 1.289   | 1.287                           | 1.305           | 1.302                           | 1.295       | 1.302                           | 1.295       |
-| base cell                    | 1.250                             | 1.400   | 1.250                           | 1.400           | 1.250                           | 1.400       | 1.250                           | 1.400       |
-| ring × stations at C / M / F | 604 × 82 / 782 × 107 / 1016 × 139 |         | 430 × 74 / 556 × 96 / 720 × 125 |                 | 398 × 75 / 514 × 98 / 668 × 127 |             | 408 × 75 / 526 × 98 / 684 × 127 |             |
-
-Two whole numbers keep the ratio from being exactly 1.3: the base cells (8, 10, 14, 18: ratios 1.25, 1.4, 1.29) and the gaps per panel (12, 16, 21: 1.33, 1.31). Both are reported, not hidden. The primer asks for 1 %; 3 % is what whole numbers allow.
-
-## The studies
-
-### 1. The robustness screen
-
-Every built wing of every type and set (730 wings: reference, training_focus, training_full, corner1, corner2) at level C and Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels: **790 builds, 790 passed every check, 0 refused, 0 crashed.** With the numpy twin of the loft. Largest delivered turning 10.02° (target 10 ± 0.02), largest chord growth 1.208 (limit 1.25 within 1 %), a nose repair needed on 32 builds. Lowest wing-quad quality 0.09: on corner wings whose first panel is 4–6 mm wide with a 50 mm chord drop (a trailing edge swept at about 85°), a property of those wings. Lowest cap quality 0.11.
-
-| Type (builds)     | Ring nodes min–median–max | Stations  | Quads        | Build time \[s\] | Wing quads J min / median | Cap quads J min / median | Passed    |
-|-------------------|---------------------------|-----------|--------------|------------------|---------------------------|--------------------------|-----------|
-| BWB (202)         | 486–614–860               | 71–83–134 | 36k–52k–101k | 4.2–5.3–8.1      | 0.09 / 0.82               | 0.19 / 0.34              | 202 / 202 |
-| flying wing (193) | 370–430–528               | 66–76–116 | 28k–34k–58k  | 4.0–4.8–7.0      | 0.48 / 0.88               | 0.15 / 0.19              | 193 / 193 |
-| cranked (202)     | 364–410–594               | 69–78–119 | 27k–36k–72k  | 4.0–4.9–7.6      | 0.40 / 0.98               | 0.15 / 0.43              | 202 / 202 |
-| tapered (193)     | 364–420–506               | 69–79–116 | 28k–34k–55k  | 3.7–4.9–7.8      | 0.56 / 0.98               | 0.15 / 0.43              | 193 / 193 |
-
-| Re on the mean chord | BWB: ring × stations (5 wings) | flying wing: ring × stations (5 wings) | cranked: ring × stations (5 wings) | tapered: ring × stations (5 wings) |
-|----------------------|--------------------------------|----------------------------------------|------------------------------------|------------------------------------|
-| 1.0e+05              | 280–310 × 72–97                | 218–234 × 68–91                        | 198–206 × 69–75                    | 192–208 × 67–85                    |
-| 3.0e+05              | 568–638 × 77–103               | 416–458 × 74–96                        | 384–404 × 75–81                    | 368–412 × 73–91                    |
-| 1.5e+06              | 860–860 × 85–111               | 844–844 × 82–104                       | 848–848 × 83–89                    | 848–848 × 81–99                    |
-| 3.0e+06              | 858–860 × 89–114               | 844–844 × 85–108                       | 848–848 × 86–92                    | 848–848 × 85–102                   |
-
-*\[Figure: The screen: ring nodes against the mean chord, stations against semi-span / mean chord, and build time, per type.\]*
-
-*\[Figure: The screen: distributions of ring nodes and stations per type, and the lowest scaled Jacobian of the wing and cap quads per type (dashed: the refusal limit 0.05).\]*
-
-What the screen does not show: whether the volume march accepts these surfaces, whether 20 nodes per bubble is the right coarse level, and anything about the flow. The two earlier passes were development evidence: the first found the tip-gap tolerance, the kinked noses of the corner set, the 0.9 mm panel and the 0.08 quads; the second found the 1.25–1.26 growth on NACA 4415 noses.
-
-### 2. The family ratios
-
-C, M, F of the four reference wings at Re 3 × 10⁵ (section above): every spacing 1.30 between levels within 3 %, ring nodes and stations × 1.3.
-
-### 3. The nose radius of the built sections (a Stage 1 finding)
-
-While solving the nose spacing the turning did not fall steadily as the spacing was reduced. The cause is in the loft: the curvature at the leading edge differs between the upper and lower side. The raw airfoil files against the Stage 1 resampled sections, nose radius from y ≈ √(2 R x) at the first cosine point (x = 2.5 × 10⁻⁴ c):
-
-*\[Figure: The first 1.2 % of the chord: the raw file points, the built section, circles fitted to the built upper and lower nose, and (NACA 4415) the formula's circle.\]*
-
-| Section   | Raw file: R/c at the leading-edge point | Built: upper side | Built: lower side | Ratio built / raw |
-|-----------|-----------------------------------------|-------------------|-------------------|-------------------|
-| naca4415  | 0.0246                                  | 0.0080            | 0.0741            | 0.3 × / 3.0 ×     |
-| e387      | 0.0102                                  | 0.0028            | 0.0353            | 0.3 × / 3.5 ×     |
-| sd7032    | 0.0077                                  | 0.0318            | 0.0023            | 4.1 × / 0.3 ×     |
-| mh104     | 0.0084                                  | 0.0183            | 0.0048            | 2.2 × / 0.6 ×     |
-| mh61      | 0.0041                                  | 0.0023            | 0.0053            | 0.6 × / 1.3 ×     |
-| mh45      | 0.0051                                  | 0.0124            | 0.0028            | 2.4 × / 0.5 ×     |
-| mh60      | 0.0050                                  | 0.0070            | 0.0037            | 1.4 × / 0.7 ×     |
-| s5010     | 0.0077                                  | 0.0146            | 0.0033            | 1.9 × / 0.4 ×     |
-| la2573a   | 0.0322                                  | 0.0325            | 0.0331            | 1.0 × / 1.0 ×     |
-| naca25118 | 0.0339                                  | 0.0388            | 0.0296            | 1.1 × / 0.9 ×     |
-
-On cambered sections with a small nose radius the two sides are off by up to 3–13 × in opposite directions, within the first about 0.1 % of the chord. The likely cause: the leading edge is taken at the raw point farthest from the trailing edge, and each side is interpolated in √x from that point; when that point is not exactly the nose apex, the two branches are not √x-symmetric. The mesh follows the loft as built, so the surface mesh is right for the wing we have; the wing's nose is not the airfoil's. It matters for the suction peak at high angle and for a nose-radius law (law 1 measures the turning, so it adapts). Logged as open decision 64.
-
-### 4. The corner set: where the rules stop
-
-The corner wings push every variable to its bounds. The smallest BWB corner wing has a 12 mm tip chord; the 0.5 mm trailing-edge floor is 4 % of it, and the opening of the trailing edge over the aft part of the section is a tight bend of about 10°. The band cell (2 % c at that tip's Re) could not follow it, so the turning rule now caps the cell from the local curvature along the whole ring. A true kink (a dense step turning more than 1°) would be reported apart; none was found in the sets.
-
-*\[Figure: BWB corner wing 0, tip station (chord 12 mm, trailing edge 4 % thick): the ring and the cells along the upper side with the curvature cap.\]*
 
 ## Assumptions
 

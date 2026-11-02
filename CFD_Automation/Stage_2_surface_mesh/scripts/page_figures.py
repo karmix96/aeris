@@ -437,3 +437,95 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# --- 14. why structured: the same section meshed both ways ----------------------------------------
+def fig_structured_vs_unstructured(w, m):
+    from scipy.spatial import Delaunay
+    n = m.info["n_side"]
+    ring = m.wing[:, 0]
+    sides = ring[: 2 * n - 1]                                    # upper TE corner -> nose -> lower TE corner
+    closed = np.vstack([ring, ring[:1]])
+    c = m.stations[0]["chord_m"]
+    # a few O layers for the picture: offset along the outward normal, growing 1.4 x per layer
+    t = np.gradient(closed[:, [0, 2]], axis=0)
+    nrm = np.column_stack([t[:, 1], -t[:, 0]])
+    nrm /= np.linalg.norm(nrm, axis=1)[:, None]
+    layers = [closed[:, [0, 2]]]
+    d = 0.0
+    for k in range(14):
+        d += 0.0025 * c * 1.4 ** k
+        layers.append(closed[:, [0, 2]] + d * nrm)
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.2))
+    a = ax[0]
+    for L in layers[::1]:
+        a.plot(L[:, 0], L[:, 1], color=MUTED, lw=0.4)
+    for i in range(0, len(closed), 6):
+        a.plot([L[i, 0] for L in layers], [L[i, 1] for L in layers], color=MUTED, lw=0.3)
+    a.plot(closed[:, 0], closed[:, 1], color=INK, lw=1)
+    a.set_xlim(-0.12 * c, 1.12 * c); a.set_ylim(-0.35 * c, 0.35 * c); a.set_aspect("equal")
+    a.set_title("structured (what we build): rows of quads along the surface,\nevery cell with an (i, j) address (layers drawn by a plain offset here)", fontsize=9)
+    a.set_xlabel("x [m]"); a.set_ylabel("z [m]")
+    a = ax[1]
+    rng = np.random.default_rng(3)
+    pts = [sides[::3, [0, 2]]]
+    for k in range(1, 4):
+        pts.append(layers[3 * k][::5] + rng.normal(0, 0.004 * c, (len(layers[3 * k][::5]), 2)))
+    box = np.column_stack([rng.uniform(-0.12 * c, 1.12 * c, 500), rng.uniform(-0.35 * c, 0.35 * c, 500)])
+    P = np.vstack(pts + [box])
+    tri = Delaunay(P)
+    cen = P[tri.simplices].mean(axis=1)
+    from matplotlib.path import Path as MPath
+    inside = MPath(closed[:, [0, 2]]).contains_points(cen)
+    a.triplot(P[:, 0], P[:, 1], tri.simplices[~inside], color=MUTED, lw=0.3)
+    a.plot(closed[:, 0], closed[:, 1], color=INK, lw=1)
+    a.set_xlim(-0.12 * c, 1.12 * c); a.set_ylim(-0.35 * c, 0.35 * c); a.set_aspect("equal")
+    a.set_title("unstructured (not used here): triangles joined by a list;\nany shape, but no rows and no exact refinement family", fontsize=9)
+    a.set_xlabel("x [m]")
+    save(fig, "structured_vs_unstructured.png")
+
+
+# --- 15. the O-H topology and what Stage 3 adds ---------------------------------------------------
+def fig_topology(m):
+    n = m.info["n_side"]
+    ring = m.wing[:, 0]
+    closed = np.vstack([ring, ring[:1]])
+    c = m.stations[0]["chord_m"]
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.6), gridspec_kw={"width_ratios": [1, 1.25]})
+    a = ax[0]
+    t = np.gradient(closed[:, [0, 2]], axis=0)
+    nrm = np.column_stack([t[:, 1], -t[:, 0]]); nrm /= np.linalg.norm(nrm, axis=1)[:, None]
+    # offset layers near the wall, pulled onto circles further out (as the S8 march does over its outer half)
+    centre = np.array([0.5 * c, 0.0])
+    ang = np.arctan2(closed[:, 2] - centre[1], closed[:, 0] - centre[0])
+    ds = np.geomspace(0.01 * c, 2.0 * c, 12)
+    for d in ds:
+        L = closed[:, [0, 2]] + d * nrm
+        R = 0.55 * c + d
+        circ = centre + R * np.column_stack([np.cos(ang), np.sin(ang)])
+        wgt = np.clip((d - 0.1 * c) / (1.0 * c), 0.0, 1.0)
+        L = (1 - wgt) * L + wgt * circ
+        a.plot(L[:, 0], L[:, 1], color=MUTED, lw=0.4)
+    a.plot(closed[:, 0], closed[:, 2], color=INK, lw=1.2)
+    a.add_patch(plt.Rectangle((0.98 * c, -0.45 * c), 2.2 * c, 0.9 * c, fill=False, ls="--", color=AMBER, lw=1.2))
+    a.text(1.05 * c, 0.5 * c, "wake box (Stage 3): 0.0075 c cells to 2 c, then to 10 c", color=AMBER, fontsize=8)
+    a.text(-2.0 * c, 2.1 * c, "O layers: the march off the wall (Stage 3),\nfirst cell s0 at y⁺ = 1, reach ≈ 2 c", color=MUTED, fontsize=8)
+    a.set_xlim(-2.3 * c, 3.4 * c); a.set_ylim(-2.6 * c, 2.6 * c); a.set_aspect("equal")
+    a.set_title("side view: the O topology around the section (the ring is Stage 2)", fontsize=9); a.set_xlabel("x [m]"); a.set_ylabel("z [m]")
+    a = ax[1]
+    w = m.wing
+    le, te = w[n - 1], w[0]
+    a.fill(np.concatenate([le[:, 0], te[::-1, 0]]), np.concatenate([le[:, 1], te[::-1, 1]]), color=LINE, alpha=0.6)
+    for j in range(0, w.shape[1], 3):
+        a.plot([le[j, 0], te[j, 0]], [le[j, 1], te[j, 1]], color=MUTED, lw=0.4)
+    a.plot(le[:, 0], le[:, 1], color=INK, lw=1); a.plot(te[:, 0], te[:, 1], color=INK, lw=1)
+    yt = le[-1, 1]
+    a.add_patch(plt.Rectangle((le[-1, 0] - 0.2 * c, yt), 1.6 * c, 0.3 * c, fill=False, color=VIOLET, lw=1.2))
+    a.text(le[-1, 0] - 0.2 * c, yt + 0.33 * c, "outboard blocks + tip cap (H): the cap is Stage 2, the blocks Stage 3", color=VIOLET, fontsize=8)
+    a.add_patch(plt.Rectangle((te[:, 0].max(), -0.05), 2.0 * c, yt + 0.3 * c, fill=False, ls="--", color=AMBER, lw=1.2))
+    a.text(te[:, 0].max() + 0.05 * c, 0.02, "wake box", color=AMBER, fontsize=8)
+    a.add_patch(plt.Rectangle((te[-1, 0] + 1.9 * c, yt - 0.25 * c), 3.0 * c, 0.5 * c, fill=False, ls=":", color=WARN, lw=1.2))
+    a.text(te[-1, 0] + 1.95 * c, yt - 0.45 * c, "tip-vortex tube: from 2 c behind the tip", color=WARN, fontsize=8)
+    a.set_aspect("equal"); a.set_xlim(-0.3 * c, te[-1, 0] + 5.2 * c); a.set_ylim(-0.1, yt + 0.9 * c)
+    a.set_title("top view: the half wing with its stations; the nested boxes of the overset plan (Stage 3)", fontsize=9); a.set_xlabel("x [m]"); a.set_ylabel("y [m]")
+    save(fig, "topology.png")

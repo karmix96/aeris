@@ -164,9 +164,9 @@ A station sits exactly on every loft station (b0–b3 and the trailing-edge swit
 
 Per station and side, the target cell size along the arc is the smallest of every rule that applies there: the largest cell (2 % c), the transition band (bubble length / 20 at the local Re; upper 0–85 % c, lower 60–100 % c), the curvature cap (cell ≤ R × 10° away from the nose), the nose cell held over four cells, the trailing-edge cell (0.1 % c), then a growth limit of 1.2 per cell. Points are then placed so each cell holds the same share of ∫ds/h: the same tool as along the span.
 
-*\[Figure: The root section of the BWB reference wing, upper side: the six layers of the size field, one on top of the other, and the cells delivered.\]*
+*\[Figure: The root section of the BWB reference wing, upper side, built one rule at a time: each panel adds one rule to the previous result (grey). 1: no cell larger than 2 % c. 2: the transition band. 3: the curvature cap. 4: the nose and trailing-edge cells. 5: growth ≤ 1.2 turns the jumps into ramps: the station's own wish list. 6: what is delivered after the list is shared with the lower side and the other stations (dots).\]*
 
-<span class="ctag">Conclusion</span>On this wing the band sets almost everything: with the upper band to 85 % c and the lower band from 60 % c shared through the one distribution, the whole ring is at band spacing except the nose and the trailing edge. The 2 % c cap and the curvature cap never act here. The delivered nose cell (0.04 % c) is smaller than this station's own need (0.1 % c) because the sharpest nose of the wing, the tip's MH 61, sets it for every station.
+<span class="ctag">Conclusion</span>On this wing the band sets almost everything: with the upper band to 85 % c and the lower band from 60 % c shared through the one distribution, the whole ring is at band spacing except the nose and the trailing edge. The curvature cap never acts here (panel 3 equals panel 2). The delivered nose cell (0.04 % c, panel 6) is smaller than this station's own 0.096 % c (panel 4) because the sharpest nose of the wing, the tip's MH 61, sets it for every station.
 
 ### Step 2, continued: the two sizes that depend on the Reynolds number
 

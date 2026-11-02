@@ -120,32 +120,47 @@ def fig_stations(w, m):
 
 # --- 3. the size field around the section, rule by rule --------------------------------------
 def fig_size_field(w, m):
+    """Six panels: one rule added per panel, the previous result in grey behind it."""
     rc = rules("C")
     j = 0
     r = m.stations[j]
     sec = Section.at(w.loft, r["v"], rc.dense_per_side)
     c = sec.chord
-    s = sec.arc_up
+    s_arc = sec.arc_up
     u = sec.u
-    h_max = np.full_like(u, rc.max_spacing_c * c)
-    band = np.where((u >= rc.band_upper[0]) & (u <= rc.band_upper[1]), r["h_band_c"] * c, h_max)
-    curv = np.minimum(band, np.where(u > 0.005, np.radians(rc.nose_turning_deg) * sec.curvature_radius(True), np.inf))
-    ends = flat_ends(s, curv, 4 * r["h_le_c_asked"] * c, rc.te_spacing_c * c)
-    final = limit_growth(s, ends, rc.chord_growth)
-    fig, ax = plt.subplots(figsize=(13, 4.2))
-    ax.semilogy(u, h_max / c, color=LINE, lw=3, label="1. largest cell 2 % c")
-    ax.semilogy(u, band / c, color=AMBER, lw=2, label=f"2. transition band 0–85 % c: bubble / 20 = {r['h_band_c'] * 100:.2f} % c at Re {r['re_local']:.1e}")
-    ax.semilogy(u, curv / c, color=VIOLET, lw=1.5, label="3. curvature cap: cell ≤ R × 10° (x/c > 0.5 %)")
-    ax.semilogy(u, ends / c, color=BWB, lw=1.2, label=f"4. this station's nose {r['h_le_c_asked'] * 100:.3f} % c held over 4 cells (solved for 10°); trailing edge 0.1 % c")
-    ax.semilogy(u, final / c, color=ACC, lw=2.2, label="5. growth ≤ 1.2 per cell: this station's upper-side field")
+    h1 = np.full_like(u, rc.max_spacing_c * c)
+    h2 = np.where((u >= rc.band_upper[0]) & (u <= rc.band_upper[1]), r["h_band_c"] * c, h1)
+    h3 = np.minimum(h2, np.where(u > 0.005, np.radians(rc.nose_turning_deg) * sec.curvature_radius(True), np.inf))
+    h4 = flat_ends(s_arc, h3, r["h_le_c_asked"] * c, rc.te_spacing_c * c, n0=4)
+    h5 = limit_growth(s_arc, h4, rc.chord_growth)
     lo_band = np.where((u >= rc.band_lower[0]) & (u <= rc.band_lower[1]), r["h_band_c"] * c, np.nan)
-    ax.semilogy(u, lo_band / c, color=WARN, lw=2, ls="--", label="6. the lower side's band 60–100 % c: shared with the upper side through the one distribution")
     um, d = side_cells(m, j, True)
-    ax.semilogy(um, d / c, ".", color=INK, ms=3, label="cells delivered (upper side, root): the strictest station and side at every place")
-    nose_del = d[0] / c * 100
-    ax.text(0.012, 2.6e-4, f"delivered nose {nose_del:.3f} % c: the sharpest nose of the wing (tip, MH 61)\nsets it for every station", color=MUTED, fontsize=8.5)
-    ax.set_xlabel("x / c (upper surface)"); ax.set_ylabel("cell size / chord"); ax.legend(loc="lower right")
-    ax.set_title(f"the size field around the root section, rule by rule ({m.info['n_side']} nodes per side)")
+    steps = [
+        ("1 · start: no cell larger than 2 % of the chord", None, h1, LINE, "flat line: 2 % c everywhere"),
+        (f"2 · the transition band, 0–85 % c: cells of {r['h_band_c'] * 100:.2f} % c", h1, h2, AMBER, "bubble length / 20 at this station's Re 6 × 10⁵"),
+        ("3 · the curvature cap: a cell may turn the surface by ≤ 10°", h2, h3, VIOLET, "acts only where the surface bends: nothing here, the nose is handled next"),
+        (f"4 · the nose ({r['h_le_c_asked'] * 100:.3f} % c, held over 4 cells) and the trailing edge (0.1 % c)", h3, h4, BWB, "two small cells at the two ends"),
+        ("5 · growth ≤ 1.2 per cell: the jumps become ramps", h4, h5, ACC, "this is the station's own wish list"),
+        ("6 · shared with the lower side and every other station: the cells delivered", h5, None, INK, "the lower band (60–100 % c, dashed) and the tip's sharper nose set the rest"),
+    ]
+    fig, ax = plt.subplots(2, 3, figsize=(13, 6.4), sharex=True, sharey=True)
+    for a, (title, prev, cur, col, note) in zip(ax.ravel(), steps):
+        if prev is not None:
+            a.semilogy(u, prev / c, color=MUTED, lw=1.2, alpha=0.5)
+        if cur is not None:
+            a.semilogy(u, cur / c, color=col, lw=2.2)
+        else:
+            a.semilogy(u, lo_band / c, "--", color=WARN, lw=1.6)
+            a.semilogy(um, d / c, ".", color=INK, ms=3)
+        a.axvspan(*rc.band_upper, color=AMBER, alpha=0.05)
+        a.set_title(title, fontsize=9)
+        a.text(0.02, 0.06, note, transform=a.transAxes, fontsize=8, color=MUTED)
+        a.set_ylim(1e-4, 5e-2)
+    for a in ax[1]:
+        a.set_xlabel("x / c, upper surface (nose at 0, trailing edge at 1)")
+    for a in ax[:, 0]:
+        a.set_ylabel("cell size / chord")
+    fig.suptitle("the size field of the root section, built one rule at a time (grey: the previous panel)", fontsize=10, color=INK)
     save(fig, "size_field.png")
 
 

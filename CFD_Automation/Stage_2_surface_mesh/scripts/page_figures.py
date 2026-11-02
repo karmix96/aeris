@@ -633,3 +633,67 @@ def fig_merge(w, m):
     a.set_aspect("equal"); a.set_xlabel("x / chord"); a.set_yticks([])
     a.set_title("the same list on the root and the tip:\nnode i at the same place on both (every 30th node joined)", fontsize=9)
     save(fig, "merge.png")
+
+
+# --- 20. the band cell: what it is and where the formula comes from --------------------------------
+def fig_band_cell():
+    rc = rules("C")
+    re0, c_loc, c_mean = 3.0e5, 1.0, 1.0
+    L = rc.bubble_length_c(re0)                                   # bubble length / chord at Re 3e5
+    h = rc.band_spacing_c(re0)                                    # = L / 20
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.3), gridspec_kw={"width_ratios": [1.25, 1]})
+    # left: a sketch of a laminar separation bubble on an upper surface, with 20 cells across it
+    a = ax[0]
+    x = np.linspace(0, 1, 400)
+    yt = 5 * 0.12 * (0.2969 * np.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1015 * x**4)
+    yc = np.where(x < 0.4, 0.02 / 0.16 * (2 * 0.4 * x - x**2), 0.02 / 0.36 * (0.2 + 2 * 0.4 * x - x**2))
+    up, lo = yc + yt, yc - yt
+    a.fill_between(x, lo, up, color="#F1F4F7", lw=0); a.plot(x, up, color=INK, lw=1.2); a.plot(x, lo, color=INK, lw=1.2)
+    # the transition band on the upper side, 0-85 % c
+    mb = x <= 0.85
+    a.plot(x[mb], up[mb] + 0.012, color=ACC, lw=6, alpha=0.25, solid_capstyle="butt")
+    a.annotate("transition band, upper side 0–85 % c: the bubble can sit\nanywhere here, so the whole band gets the band cell", (0.845, np.interp(0.845, x, up) + 0.012),
+               (0.78, -0.16), color=ACC, fontsize=8.5, ha="center", va="top", arrowprops=dict(arrowstyle="-", color=ACC, lw=0.8))
+    # the bubble: laminar separation at xs, turbulent reattachment at xs + L
+    xs = 0.36
+    xb = np.linspace(xs, xs + L, 60)
+    ub = np.interp(xb, x, up)
+    bump = 0.028 * np.sin(np.pi * (xb - xs) / L) ** 1.2
+    a.fill_between(xb, ub, ub + bump, color=AMBER, alpha=0.35, lw=0)
+    a.plot(xb, ub + bump, color=AMBER, lw=1.4)
+    a.annotate("laminar flow\nseparates", (xs, np.interp(xs, x, up)), (0.20, 0.33), color=INK, fontsize=8.5, ha="center",
+               arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+    a.annotate("turbulent flow\nreattaches", (xs + L, np.interp(xs + L, x, up)), (0.64, 0.33), color=INK, fontsize=8.5, ha="center",
+               arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+    a.text(xs + L / 2, np.interp(xs + L / 2, x, up) + 0.06, "the bubble", color=AMBER, fontsize=9, ha="center", fontweight="bold")
+    # 20 cells across the bubble, drawn as ticks on the surface
+    for i in range(21):
+        xi = xs + i * L / 20
+        yi = np.interp(xi, x, up)
+        a.plot([xi, xi], [yi - 0.016, yi + 0.008], color=WARN, lw=0.9)
+    a.annotate("", (xs, -0.045), (xs + L, -0.045), arrowprops=dict(arrowstyle="<->", color=INK, lw=0.9))
+    a.text(xs + L / 2 - 0.12, -0.075, f"bubble length L = {L:.3f} c at Re 3 × 10⁵\n20 cells across it → band cell = L / 20 = {h * 100:.2f} % c",
+           color=INK, fontsize=8.5, ha="center", va="top")
+    a.set_xlim(-0.03, 1.03); a.set_ylim(-0.24, 0.4); a.axis("off")
+    a.set_title("what the band cell is: 20 cells across a laminar separation bubble", fontsize=10)
+    # right: how the number is derived, step by step, for one station
+    a = ax[1]
+    re = np.geomspace(2e4, 6e6, 200)
+    a.loglog(re, [rc.bubble_length_c(x) for x in re], color=AMBER, lw=1.6, label="bubble length / chord (Stage 1 XFOIL table)")
+    tab_re = [float(v) for v in rc.raw["chord"]["bubble_length"]["re"]]
+    tab_l = [float(v) for v in rc.raw["chord"]["bubble_length"]["l_c"]]
+    a.plot(tab_re, tab_l, "o", color=AMBER, ms=5)
+    a.loglog(re, [rc.band_spacing_c(x) for x in re], color=ACC, lw=1.6, label="band cell / chord = bubble length / 20")
+    a.plot([re0, re0], [2.2e-3, L], color=MUTED, lw=0.8, ls=":")
+    a.plot([2e4, re0], [L, L], color=AMBER, lw=0.8, ls=":")
+    a.plot([2e4, re0], [h, h], color=ACC, lw=0.8, ls=":")
+    a.annotate("", (re0, h * 1.15), (re0, L / 1.15), arrowprops=dict(arrowstyle="->", color=INK, lw=1))
+    a.text(re0 * 1.15, np.sqrt(L * h), "÷ 20", color=INK, fontsize=9.5, va="center", fontweight="bold")
+    a.text(2.2e4, L * 1.15, f"② bubble {L:.3f} c", color=AMBER, fontsize=8.5)
+    a.text(2.2e4, h / 1.15, f"③ band cell {h:.4f} c = {h * 100:.2f} % c\n   ≈ {0.85 / h:.0f} cells over the upper band", color=ACC, fontsize=8.5, va="top")
+    a.text(2.2e4, 1.1e-3, "① local Re of the station = Re on the mean chord × local chord / mean chord (here 3 × 10⁵)", color=INK, fontsize=8.5, va="bottom")
+    a.set_xlim(2e4, 6e6); a.set_ylim(1e-3, 0.8)
+    a.set_xlabel("local Re of the station"); a.set_ylabel("length / chord")
+    a.legend(loc="upper right", fontsize=8)
+    a.set_title("how the number is derived for one station: Re → bubble length → ÷ 20", fontsize=10)
+    save(fig, "band_cell.png")

@@ -172,6 +172,22 @@ Per station and side, the target cell size along the arc is the smallest of ever
 
 Two sizes: the band cell (bubble length / 20 at the local Re) and the tip first cell s0 (y⁺ = 1). So one wing has one surface per Re level; building one takes seconds.
 
+### What the band cell is
+
+- At our Reynolds numbers the flow on the wing starts laminar, lifts off the surface, becomes turbulent in the air just above it, and lands again. The pocket of slow air between lift-off and landing is the **laminar separation bubble**. It changes the drag and where the flow turns turbulent, so the mesh must resolve it.
+- The bubble is long at low Re and short at high Re: 0.40 c at Re 6 × 10⁴, 0.05 c at Re 10⁶ and above. These lengths come from the Stage 1 XFOIL table (2-D, calm air, N_crit 9); nothing else in the project says how long a bubble is.
+- Where the bubble sits depends on the angle of attack, which changes from run to run. So one cell size is set over the whole stretch where it can sit, the **transition band** (upper side 0–85 % c, lower side 60–100 % c): that cell size is the band cell.
+
+### Where the formula comes from
+
+- **band cell = bubble length / 20**, in three steps per station: ① local Re = Re on the mean chord × local chord / mean chord; ② bubble length from the table at that Re; ③ divide by 20.
+- The 20 is not ours: the Ansys CFX guide for the γ-Re_θ transition model asks for at least 20 nodes across a bubble, or the model puts transition in the wrong place. The Stage 1 rule had no source; this is the only one found (decision 56). One vendor, one model: the T6 ladder (20 → 13 → 8) must test it.
+- Example at Re 3 × 10⁵: bubble 0.126 c → cell 0.63 % c → about 135 cells over the upper band. At Re 10⁵: 0.30 c → 1.5 % c → about 57 cells. A long root chord has a higher local Re, so a shorter bubble and a smaller cell as a fraction of its chord.
+
+*\[Figure: Left: a laminar separation bubble on the upper side of a section, with the 20 cells the rule puts across it (red ticks) and the band where it may sit (blue). Right: the three steps for one station at Re 3 × 10⁵: the local Re, the bubble length read from the Stage 1 table, and the division by 20.\]*
+
+<span class="ctag">Conclusion</span>The band cell is one number per station and side, set by the local Re alone: the rule has no free choice except the 20, which comes from one vendor guide. The bubble lengths are 2-D XFOIL values, so the rule is as good as that table; 3-D effects, sweep and roughness move bubbles and are not in it.
+
 *\[Figure: Left: the bubble-length table from Stage 1. Middle: the band cell and s0 against the local Re at level C. Right: ring nodes of the reference wings against the Re on the mean chord; S8's 150 for comparison.\]*
 
 <span class="ctag">Conclusion</span>The ring grows with Re until the bubble-length floor (0.05 c, band cell 0.25 % c) is reached at about Re 10⁶, then stays at about 850 nodes. At 10⁵ it is about 200: the rule follows the physics (long bubbles need few cells per chord), not a fixed count. Every Re level needs its own surface.

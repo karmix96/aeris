@@ -128,7 +128,7 @@ def rules_table(cfg: dict) -> str:
     ch, sp = cfg["chord"], cfg["span"]
     rc = rules("C")
     rows = [
-        ("Nose turning", "law 1", f"no ring node turns the surface by more than {ch['nose_turning_deg']:g}° (± {ch['nose_turning_tol_deg']}); solved by bisection on the ring as built; away from the nose the same angle caps the cell from the local curvature radius (cell ≤ R × 10°, x/c > 0.5 %)", "S8 (measured on the built ring, because a radius estimate gave 20° for 6° asked)"),
+        ("Nose turning", "law 1", f"no ring node turns the surface by more than {ch['nose_turning_deg']:g}° (± {ch['nose_turning_tol_deg']}); solved by bisection on the ring as built; away from the nose the same angle caps the cell from the local curvature radius (cell ≤ R × 10°, x/c > 0.5 %)", "10° is the Grand Roadmap's starting value (law 1), not a derived number; the primer plans a ladder 12 / 10 / 8 / 6° in T6 to test it. Meaning: a straight cell that turns the surface by θ misses the curve by about R θ² / 8, 0.4 % of the local radius at 10°, and a half-round nose gets 18 cells. S8: measured on the built ring, because a radius estimate gave 20° for 6° asked"),
         ("Nose, along the span", "law 2", f"nose spacing / chord changes by at most {ch['nose_envelope']} between stations", "S8; holds by construction with one distribution for the wing"),
         ("Trailing edge", "law 3", f"{ch['te_spacing_c'] * 100:g} % of the local chord at the two corners", "DPW gridding guidelines (Levy et al. 2013)"),
         ("Blunt base", "law 6", f"{ch['base_cells']} cells across the base at C (even, so the cap's nose arc is centred): 10, 14, 18 at M, F, FF", "S8 (base cells 4/6/8 ladder); our choice"),

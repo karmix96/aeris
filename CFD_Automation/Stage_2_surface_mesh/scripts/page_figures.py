@@ -33,6 +33,7 @@ OUT = STAGE2 / "docs" / "page"
 INK, MUTED, LINE = "#142230", "#566573", "#D6DEE6"
 ACC, BWB, WARN, AMBER, VIOLET = "#0C5EA8", "#2E8B57", "#B02A20", "#9A6200", "#6A4BB0"
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
+TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
 COLS = {"bwb": BWB, "flying_wing": AMBER, "cranked": ACC, "tapered": VIOLET}
 plt.rcParams.update({"font.size": 9.5, "axes.edgecolor": LINE, "axes.labelcolor": INK, "xtick.color": MUTED,
                      "ytick.color": MUTED, "axes.titlesize": 10, "axes.titlecolor": INK, "legend.fontsize": 8.5,
@@ -529,3 +530,46 @@ def fig_topology(m):
     a.set_aspect("equal"); a.set_xlim(-0.3 * c, te[-1, 0] + 5.2 * c); a.set_ylim(-0.1, yt + 0.9 * c)
     a.set_title("top view: the half wing with its stations; the nested boxes of the overset plan (Stage 3)", fontsize=9); a.set_xlabel("x [m]"); a.set_ylabel("y [m]")
     save(fig, "topology.png")
+
+
+# --- 16. the station rules, one by one, on two wings ------------------------------------------------
+def fig_station_rules():
+    rl = rules("C")
+    fig, ax = plt.subplots(2, 1, figsize=(13, 5.6))
+    picks = [("bwb", "reference", 0), ("tapered", "reference", None)]
+    # the most slender tapered reference wing, where the 0.2 c rule gets to act
+    best, best_ar = 0, 0.0
+    for i in range(5):
+        w = wing_from_set("tapered", "reference", i)
+        tab = SpanTable.of(w.loft, 201)
+        if tab.semi_span / tab.mean_chord > best_ar:
+            best, best_ar = i, tab.semi_span / tab.mean_chord
+    picks[1] = ("tapered", "reference", best)
+    cols = {"12 per panel": ACC, "0.2 × chord": BWB, "growth ≤ 1.2 between neighbours (the tip squeeze to s0, or the step between two panels)": AMBER}
+    for a, (t, st, i) in zip(ax, picks):
+        w = wing_from_set(t, st, i)
+        m = build_surface(w.loft, 3.0e5, "C")
+        y = np.array([r["y_m"] for r in m.stations]); ch = np.array([r["chord_m"] for r in m.stations])
+        loft_y = np.array(m.info["loft_station_y_m"])
+        gaps = np.diff(y); mid = 0.5 * (y[1:] + y[:-1]); cmid = 0.5 * (ch[1:] + ch[:-1])
+        panel = np.array([np.diff(loft_y)[np.searchsorted(loft_y, g, side="right") - 1] for g in mid])
+        rule = []
+        for g, c, pw in zip(gaps, cmid, panel):
+            if abs(g - pw / 12) / g < 0.03 and pw / 12 <= 0.2 * c * 1.03:
+                rule.append("12 per panel")
+            elif abs(g - 0.2 * c) / g < 0.03:
+                rule.append("0.2 × chord")
+            else:
+                rule.append("growth ≤ 1.2 between neighbours (the tip squeeze to s0, or the step between two panels)")
+        for g, md, r in zip(gaps, mid, rule):
+            a.bar(md, g * 1000, width=g * 0.9, color=cols[r], alpha=0.85)
+        for yl in loft_y:
+            a.axvline(yl, color=INK, lw=1.2)
+        a.set_yscale("log"); a.set_ylabel("station gap [mm]"); a.set_xlabel("y along the semi-span [m]")
+        n = {r: rule.count(r) for r in cols if r in rule}
+        a.set_title(f"{TYPE_NAME[t]} reference wing {i}: semi-span / mean chord = {y[-1] / m.info['mean_chord_m']:.1f}; "
+                    + ", ".join(f"{v} gaps by '{k.split(' (')[0]}'" for k, v in n.items()) + f"; {len(y)} stations", fontsize=9)
+        from matplotlib.patches import Patch
+        a.legend(handles=[Patch(color=c, label=k) for k, c in cols.items()] + [Patch(color=INK, label="a loft station (b0..b3, trailing-edge switch)")], loc="lower left", ncol=2, fontsize=8)
+    fig.suptitle("which rule sets each station gap (bars: one per gap, coloured by the rule that set it; black lines: the loft stations)", fontsize=10, color=INK)
+    save(fig, "station_rules.png")

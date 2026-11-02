@@ -378,6 +378,23 @@ def build_page(d: dict) -> tuple[str, str]:
   <p>Stage 1 made the wing: one exact loft per design vector, with measured values and a hash. Stage 2 puts a structured surface mesh on that loft: a closed ring of points around the section at every span station, root to tip, the same ring at every station, plus one patch that closes the flat tip. Every node is asked from the loft at (x/c, v); nothing is interpolated between stored sections. The volume mesh (the march off the wall), the wake boxes and the CGNS file are Stage 3. The mesh name carries the level and the Re: <code>mesh_&lt;level&gt;_&lt;wing_hash8&gt;_re&lt;Re&gt;</code>, because the tip gap and the band cells depend on the Re.</p>
   {fig_pipeline()}
   {cbox("Six steps, the same for every wing: stations, size fields, the nose solve, one distribution, rings and cap, checks. No step knows the wing type; the rules read the loft, the chord and the local Re.")}
+  <h3>The station rules of step 1, one by one</h3>
+  <div class="two">
+    <div class="box"><h3>The five rules, and where each comes from</h3><ul>
+      <li><strong>A station on every loft station</strong> (b0, b1, b2, b3 and the trailing-edge switch station). Geometry: the loft is straight between them and has a crease at each, so a station there follows the kink.</li>
+      <li><strong>At least 12 gaps per panel.</strong> Our choice: a panel gets a whole number of gaps, so the gap size can jump at a break by up to 1/n; 12 is the smallest n for which 1.2 × (1 + 1/12) stays under the 1.3 limit below.</li>
+      <li><strong>A gap of 0.2 × the local chord</strong> where the panel is long enough for it (a panel longer than 2.4 chords). Our starting value (open decision 62). On the reference wings it never acts: the 12-per-panel floor and the tip squeeze set every gap.</li>
+      <li><strong>Neighbouring gaps differ by at most 1.2</strong> (built) and <strong>1.3</strong> (checked). The 1.3 is the Stage 1 handover's limit on spanwise growth; 1.2 is what we build at, to leave room for the whole-number jumps at the breaks.</li>
+      <li><strong>The last gap at the tip = s0</strong>, the first wall cell the volume mesh will put on the tip cap (y⁺ = 1 at the tip Re). Grand Roadmap, laws 9 and 10. From the last panel's gap down to s0 at 1.2 per step takes about 40 stations.</li>
+    </ul></div>
+    <div class="box"><h3>Two different 1.3s on this page</h3><ul>
+      <li><strong>Growth 1.3 between neighbouring station gaps</strong> (and 1.25 between neighbouring cells along the ring): how fast cells may change size next to each other, inside one mesh. Source: the Stage 1 handover and the DPW guidelines.</li>
+      <li><strong>The family ratio r = 1.3 between levels C, M, F</strong>: every spacing of the whole mesh divided by 1.3 to make the next finer mesh, for the grid-convergence estimate. Source: Celik et al. 2008 (r ≥ 1.3).</li>
+      <li>They are unrelated numbers that happen to be equal. The station rules above come from the first (growth), not from the family ratio; the only numbers derived from a growth limit are the 12 per panel (so the jump at a break stays under 1.3) and the about 40 stations of the tip squeeze.</li>
+    </ul></div>
+  </div>
+  {figc("station_rules.png", "Every station gap of two reference wings as a bar, coloured by the rule that set it: the BWB (semi-span 3 chords) and the most slender tapered reference wing (7 chords). Black lines: the loft stations.",
+        "On real wings of our focus space the 0.2 × chord rule never acts: every gap is set either by the 12-per-panel floor (the straight runs) or by the growth limit (the tip squeeze from millimetres down to tens of µm, and the step between two panels whose floors differ). So the station count is mostly 12 × the number of panels plus about 40 for the squeeze; the spanwise ladder should test the floor and the squeeze before the 0.2 c value.")}
   {figc("four_types.png", "The four reference wings (index 0) at level C, Re 3 × 10⁵ on the mean chord: every second station and every 24th ring line of the upper surface.",
         "Same rules, same code, four shapes: the BWB gets the most ring nodes (its root carries the highest local Re, so the smallest band cell as a fraction of the chord) and the most stations (its tip is the smallest). Nothing was set by hand for any type.")}
   <p>The Grand Roadmap's recipe R-S (one closed ring per station) and its step M1 (every surface constant into one module of laws) are what this stage implements. The volume recipe R-V and steps M2–M5 (first-cell law, march, boxes, overset export, driver) are Stage 3.</p>

@@ -93,6 +93,26 @@ Stage 1 made the wing: one exact loft per design vector, with measured values an
 
 <span class="ctag">Conclusion</span>Six steps, the same for every wing: stations, size fields, the nose solve, one distribution, rings and cap, checks. No step knows the wing type; the rules read the loft, the chord and the local Re.
 
+### The station rules of step 1, one by one
+
+### The five rules, and where each comes from
+
+- **A station on every loft station** (b0, b1, b2, b3 and the trailing-edge switch station). Geometry: the loft is straight between them and has a crease at each, so a station there follows the kink.
+- **At least 12 gaps per panel.** Our choice: a panel gets a whole number of gaps, so the gap size can jump at a break by up to 1/n; 12 is the smallest n for which 1.2 × (1 + 1/12) stays under the 1.3 limit below.
+- **A gap of 0.2 × the local chord** where the panel is long enough for it (a panel longer than 2.4 chords). Our starting value (open decision 62). On the reference wings it never acts: the 12-per-panel floor and the tip squeeze set every gap.
+- **Neighbouring gaps differ by at most 1.2** (built) and **1.3** (checked). The 1.3 is the Stage 1 handover's limit on spanwise growth; 1.2 is what we build at, to leave room for the whole-number jumps at the breaks.
+- **The last gap at the tip = s0**, the first wall cell the volume mesh will put on the tip cap (y⁺ = 1 at the tip Re). Grand Roadmap, laws 9 and 10. From the last panel's gap down to s0 at 1.2 per step takes about 40 stations.
+
+### Two different 1.3s on this page
+
+- **Growth 1.3 between neighbouring station gaps** (and 1.25 between neighbouring cells along the ring): how fast cells may change size next to each other, inside one mesh. Source: the Stage 1 handover and the DPW guidelines.
+- **The family ratio r = 1.3 between levels C, M, F**: every spacing of the whole mesh divided by 1.3 to make the next finer mesh, for the grid-convergence estimate. Source: Celik et al. 2008 (r ≥ 1.3).
+- They are unrelated numbers that happen to be equal. The station rules above come from the first (growth), not from the family ratio; the only numbers derived from a growth limit are the 12 per panel (so the jump at a break stays under 1.3) and the about 40 stations of the tip squeeze.
+
+*\[Figure: Every station gap of two reference wings as a bar, coloured by the rule that set it: the BWB (semi-span 3 chords) and the most slender tapered reference wing (7 chords). Black lines: the loft stations.\]*
+
+<span class="ctag">Conclusion</span>On real wings of our focus space the 0.2 × chord rule never acts: every gap is set either by the 12-per-panel floor (the straight runs) or by the growth limit (the tip squeeze from millimetres down to tens of µm, and the step between two panels whose floors differ). So the station count is mostly 12 × the number of panels plus about 40 for the squeeze; the spanwise ladder should test the floor and the squeeze before the 0.2 c value.
+
 *\[Figure: The four reference wings (index 0) at level C, Re 3 × 10⁵ on the mean chord: every second station and every 24th ring line of the upper surface.\]*
 
 <span class="ctag">Conclusion</span>Same rules, same code, four shapes: the BWB gets the most ring nodes (its root carries the highest local Re, so the smallest band cell as a fraction of the chord) and the most stations (its tip is the smallest). Nothing was set by hand for any type.

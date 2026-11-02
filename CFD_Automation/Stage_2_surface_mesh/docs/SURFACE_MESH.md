@@ -1,8 +1,8 @@
 # Stage_2 — Surface mesh page (text copy, 2 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs/SURFACE_MESH.html` (repo karmix96/aeris,
-branch `stage2-surface-mesh`). The 14 figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
-line with its caption. Companion files: 'Stage_2 Surface mesh status and handover' (short), 'Stage_1 Handover to the surface
+branch `stage2-surface-mesh`). The 14 figures are in the HTML page and on the live page https://claude.ai/artifact/6SXM1yDgwbPvgNRsDb24fi; here each
+one is a *[Figure: ...]* line with its caption. Companion files: 'Stage_2 Surface mesh status and handover' (short), 'Stage_1 Handover to the surface
 mesh' (the input). If this copy and the repository ever differ, the repository wins.
 
 CFD_Automation · Stage 2 · surface mesh · cfdauto 0.7.0 · 2 Nov 2026

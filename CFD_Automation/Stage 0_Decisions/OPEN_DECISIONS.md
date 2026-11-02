@@ -185,4 +185,4 @@
     transition band starts at the leading edge (crossflow transition, which the 2-D strips cannot see, starts there).
     Also corrected (L14): the first wall cell is set from each case's speed and changes only about 20 % along the
     span; the per-station need is enough wall layers at the root. Handover to the surface-mesh stage: summary
-    section 9 and the project doc "G1 handover to the surface mesh".
+    section 9 and the project doc "Stage_1 Handover to the surface mesh".

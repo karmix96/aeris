@@ -129,16 +129,21 @@ def assemble() -> None:
                             **{f: arr[f] for f in FIELDS})
 
 
+FLAGS = ("bub_u", "bub_l", "sep_u", "sep_l")      # 0/1 fields: never averaged into 0.5
+
+
 def fill_single_gaps(arr: dict) -> int:
     """Fill isolated one-angle XFOIL failures by linear interpolation between the two neighbouring
     angles (both converged). They are numerical: with a forced trip, XFOIL can fail at the one angle
-    where the stagnation point crosses the trip. Two or more failures in a row stay NaN (no 2-D answer)."""
+    where the stagnation point crosses the trip. Two or more failures in a row stay NaN (no 2-D answer).
+    A 0/1 flag (bubble, separation) is filled only where both neighbours agree; else it stays NaN."""
     cd = arr["cd"]
     hole = ~np.isfinite(cd[..., 1:-1]) & np.isfinite(cd[..., :-2]) & np.isfinite(cd[..., 2:])
     if not hole.any():
         return 0
     for f, v in arr.items():
-        mid = 0.5 * (v[..., :-2] + v[..., 2:])
+        lo, hi = v[..., :-2], v[..., 2:]
+        mid = np.where(lo == hi, lo, np.nan) if f in FLAGS else 0.5 * (lo + hi)
         inner = v[..., 1:-1]
         inner[hole] = mid[hole]
     return int(hole.sum())

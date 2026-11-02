@@ -10,8 +10,12 @@ Sensitivity of each wing metric to each input, per family:
   - permutation importance of a gradient-boosted model (captures interactions);
   - Spearman rank correlation (direction).
 Checks of the method (assumption sensitivities): N_crit 5 / 9 / 11, compressibility at fixed Re,
-strips per panel 1 / 2 / 5, an induced-angle correction, the section tables against direct XFOIL runs,
-and the blend rule against direct 50/50 blends.
+strips per panel 1 / 2 / 5, the induced angle left out (the old baseline), the section tables against direct
+XFOIL runs, and the blend rule against direct 50/50 blends.
+
+Baseline (2 Nov 2026): induced angle included. Statistics use realistic speeds and section sets that can trim
+the wing (realistic_set); sections enter the sensitivity by airfoil set (the same airfoils on BWB and flying
+wing are one level), and the gradient-boosting test split keeps every wing on one side (no leakage).
 """
 
 from __future__ import annotations
@@ -55,9 +59,23 @@ def _plt():
 
 
 def short_label(label: str) -> str:
-    """'MH 60 / MH 45 (suggested)' -> 'MH 60 / MH 45*'; other notes in brackets dropped."""
-    star = "*" if "(suggested)" in label else ""
+    """'MH 60 / MH 45 (suggested)' -> 'MH 60 / MH 45*'; '(not reflexed)' -> a dagger (cannot trim a tailless wing);
+    other notes in brackets dropped."""
+    star = "*" if "(suggested)" in label else ("†" if "not reflexed" in label else "")
     return label.split(" (")[0] + star
+
+
+def airfoil_set(label: str) -> str:
+    """The airfoil set behind a set label, the same on every type: 'MH 104 / MH 61 (suggested)' -> 'MH 104 / MH 61'."""
+    return label.split(" (")[0]
+
+
+def realistic(df: pd.DataFrame) -> pd.DataFrame:
+    """Rows the statistics use: realistic speeds and a section set that can trim the wing."""
+    keep = df["realistic_speed"]
+    if "realistic_set" in df:
+        keep = keep & df["realistic_set"]
+    return df[keep]
 
 
 def _clean(ax):
@@ -89,23 +107,30 @@ GROUPS = {"wing shape": [i for i in INPUTS if i not in ("set", "mach", "alpha_de
 
 
 def _xy(d: pd.DataFrame, o: str, n_max: int = 40000, seed: int = 7):
+    """Inputs, output and a train mask that keeps every wing on one side (75 % of the wings train)."""
     X = d[list(INPUTS)].copy()
-    X["set"] = X["set"].map({"A": 0, "B": 1, "C": 2, "D": 3})
+    names = sorted(d["set"].unique())
+    X["set"] = d["set"].map({k: i for i, k in enumerate(names)})
     y = d[o]
+    wing = (d["type"].astype(str) + ":" + d["wing"].astype(str)).values
     ok = y.notna().values
-    X, y = X[ok], y[ok]
+    X, y, wing = X[ok], y[ok], wing[ok]
+    rng = np.random.default_rng(seed)
     n = min(len(y), n_max)
-    idx = np.random.default_rng(seed).choice(len(y), n, replace=False)
-    return X.iloc[idx], y.iloc[idx]
+    idx = rng.choice(len(y), n, replace=False)
+    X, y, wing = X.iloc[idx], y.iloc[idx], wing[idx]
+    ids = np.unique(wing)
+    train_ids = set(rng.choice(ids, int(round(0.75 * len(ids))), replace=False))
+    train = np.array([w in train_ids for w in wing])
+    return X, y, train
 
 
-def _fit(X: pd.DataFrame, y: pd.Series, cols: list[str]):
+def _fit(X: pd.DataFrame, y: pd.Series, cols: list[str], train: np.ndarray):
     from sklearn.ensemble import HistGradientBoostingRegressor
-    cut = int(0.75 * len(y))
     cat = [k for k, c in enumerate(cols) if c == "set"]
     model = HistGradientBoostingRegressor(max_iter=250, learning_rate=0.08, categorical_features=cat or None, random_state=0)
-    model.fit(X[cols].iloc[:cut], y.iloc[:cut])
-    return model, float(model.score(X[cols].iloc[cut:], y.iloc[cut:]))
+    model.fit(X[cols][train], y[train])
+    return model, float(model.score(X[cols][~train], y[~train]))
 
 
 def sensitivity(df: pd.DataFrame) -> dict:
@@ -116,23 +141,23 @@ def sensitivity(df: pd.DataFrame) -> dict:
     from sklearn.inspection import permutation_importance
     out = {}
     for fam in FAMILIES:
-        d = df[(df["family"] == fam) & df["realistic_speed"]]
+        d = realistic(df[df["family"] == fam]).copy()
+        d["set"] = d["set_label"].map(airfoil_set)          # the airfoil set, not the type's letter
         res = {}
         for o in OUTPUTS:
             y = d[o]
             e = {i: eta2(d[i], y, i in CATEGORICAL) for i in INPUTS}
             s = {i: (spearman(d[i], y) if i != "set" else np.nan) for i in INPUTS}
-            X, ys = _xy(d, o)
-            cut = int(0.75 * len(ys))
-            model, r2 = _fit(X, ys, list(INPUTS))
-            pi = permutation_importance(model, X.iloc[cut:], ys.iloc[cut:], n_repeats=4, random_state=0, n_jobs=1)
+            X, ys, train = _xy(d, o)
+            model, r2 = _fit(X, ys, list(INPUTS), train)
+            pi = permutation_importance(model, X[~train], ys[~train], n_repeats=4, random_state=0, n_jobs=1)
             imp = {i: float(max(v, 0.0)) for i, v in zip(INPUTS, pi.importances_mean)}
             tot = sum(imp.values()) or 1.0
             first, total = {}, {}
             for g, cols in GROUPS.items():
-                first[g] = max(_fit(X, ys, cols)[1], 0.0)
+                first[g] = max(_fit(X, ys, cols, train)[1], 0.0)
                 rest = [c for c in INPUTS if c not in cols]
-                total[g] = max(r2 - _fit(X, ys, rest)[1], 0.0)
+                total[g] = max(r2 - _fit(X, ys, rest, train)[1], 0.0)
             res[o] = {"eta2": e, "spearman": s, "perm": {k: v / tot for k, v in imp.items()}, "r2": r2,
                       "eta2_sum": float(np.nansum(list(e.values()))), "group_first": first, "group_total": total}
             print(f"  sensitivity {fam} {o}: R2 {r2:.3f}", flush=True)
@@ -166,16 +191,16 @@ def check_variants(n_wings: int = 20) -> dict:
     res["mach0"] = pair(base, build(n_wings=n_wings, mach_in_tables=0.0, fc=fc), "no compressibility (Mach 0 in 2-D, same Re)")
     res["strips1"] = pair(base, build(n_wings=n_wings, n_per_panel=1, fc=fc), "7 strips instead of 10")
     res["strips5"] = pair(base, build(n_wings=n_wings, n_per_panel=5, fc=fc), "19 strips instead of 10")
-    ind = build(n_wings=n_wings, induced=True, fc=fc)
-    res["induced"] = pair(base, ind, "uniform induced angle CL/(π AR) subtracted")
-    res["total_drag"] = total_drag(ind)
+    res["no_induced"] = pair(base, build(n_wings=n_wings, induced=False, fc=fc),
+                             "induced angle left out (the old baseline): local angle = root angle + twist")
+    res["total_drag"] = total_drag(base)
     return res
 
 
 def total_drag(d: pd.DataFrame) -> dict:
     """The SA error as a share of the whole drag: profile drag plus an elliptic induced drag
-    CL^2 / (pi AR), with CL from the induced-angle run (the most realistic lift of the strip model)."""
-    d = d[d["realistic_speed"]].copy()
+    CL^2 / (pi AR), with CL from the strips with the induced angle (the baseline)."""
+    d = realistic(d).copy()
     cdi = d["cl2d"] ** 2 / (np.pi * d["aspect_ratio"])
     d["total_bias"] = (d["cd_trip"] - d["cd_free"]) / (d["cd_free"] + cdi)
     d["induced_share"] = cdi / (d["cd_free"] + cdi)
@@ -293,7 +318,7 @@ def fig_section_maps() -> None:
         for ax in axes[:, 0]:
             ax.set_ylabel("log₁₀ Re (chord)")
         cb = fig.colorbar(im, ax=axes, shrink=0.8, pad=0.01); cb.set_label(lab)
-        fig.suptitle(title + ". Grey: no converged 2-D answer (stall). Dashed: the four study Re levels.", x=0.01, ha="left",
+        fig.suptitle(title + ". Grey: no XFOIL answer (near stall, or a failed point). Dashed: the four study Re levels.", x=0.01, ha="left",
                      fontsize=10.5)
         fig.savefig(DOCS / f"flow_sections_{key}.png", bbox_inches="tight")
         plt.close(fig)
@@ -326,7 +351,8 @@ def fig_distributions(df: pd.DataFrame) -> None:
     for ax in axes[::2]:
         ax.set_ylabel("SA drag error [%]")
     fig.suptitle("How far fully turbulent SA is from the free-transition drag (all focus wings, realistic speeds, angles, altitudes)\n"
-                 "dot and bar: median and 10–90 %; diamond: median in level flight; green band: ±10 %; * suggested sections",
+                 "dot and bar: median and 10–90 %; diamond: median in level flight; green band: ±10 %; * suggested sections; "
+                 "† not reflexed: cannot trim a tailless wing (reference only)",
                  x=0.01, ha="left", fontsize=10.5)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     fig.savefig(DOCS / "flow_bias_violins.png")
@@ -348,6 +374,8 @@ def fig_trends(df: pd.DataFrame) -> None:
                 for s in sorted(dd["set"].unique()):
                     g = dd[dd["set"] == s].groupby(xcol)[ycol]
                     lab = dd[dd["set"] == s]["set_label"].iloc[0]
+                    if "realistic_set" in dd and not bool(dd[dd["set"] == s]["realistic_set"].iloc[0]):
+                        lab += ", cannot trim"
                     if ycol == "bubble_span":          # mostly all or nothing per row: show the mean, no band
                         mean = g.mean()
                         h, = ax.plot(mean.index, scale * mean, color=SET_COL[s], lw=1.8, marker="o", ms=3, label=lab)
@@ -502,9 +530,9 @@ def fig_checks(chk: dict, tab: dict, bl: dict) -> None:
     plt = _plt()
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.4), dpi=105)
     ax = axes[0]
-    keys = ["ncrit_5", "ncrit_11", "mach0", "strips1", "strips5", "induced"]
+    keys = ["ncrit_5", "ncrit_11", "mach0", "strips1", "strips5", "no_induced"]
     short = {"ncrit_5": "N_crit 5 (Tu 0.37 %)", "ncrit_11": "N_crit 11 (Tu 0.03 %)", "mach0": "no compressibility",
-             "strips1": "7 strips", "strips5": "19 strips", "induced": "induced angle"}
+             "strips1": "7 strips", "strips5": "19 strips", "no_induced": "no induced angle"}
     data = [100 * np.array(chk[k]["delta_bias"]) for k in keys]
     ax.boxplot(data, orientation="horizontal", showfliers=False, widths=0.6)
     ax.set_yticks(range(1, len(keys) + 1)); ax.set_yticklabels([short[k] for k in keys], fontsize=8)
@@ -604,14 +632,18 @@ def fig_groups(sens: dict) -> None:
 
 # ============================================================================================ conclusions
 def numbers(df: pd.DataFrame, sens: dict, chk: dict, tab: dict, bl: dict) -> dict:
-    d = df[df["realistic_speed"]]
-    out = {"rows": int(len(df)), "rows_realistic": int(len(d)), "wings": int(df.groupby(["type", "wing"]).ngroups),
-           "conditions": int(df.groupby(["mach", "altitude_m", "alpha_deg"]).ngroups)}
+    sp = df[df["realistic_speed"]]                 # every set (per-set tables)
+    d = realistic(df)                              # headline statistics: sets that can trim the wing
+    out = {"rows": int(len(df)), "rows_realistic": int(len(d)), "rows_realistic_speed": int(len(sp)),
+           "wings": int(df.groupby(["type", "wing"]).ngroups),
+           "conditions": int(df.groupby(["mach", "altitude_m", "alpha_deg"]).ngroups),
+           "baseline": "induced angle included (uniform, elliptic, iterated)"}
     out["bias"] = {}
     for t in WING_TYPES:
-        for s in sorted(d["set"].unique()):
-            x = d[(d["type"] == t) & (d["set"] == s)]["sa_bias"].dropna()
-            out["bias"][f"{t}|{s}"] = {"label": d[(d["type"] == t) & (d["set"] == s)]["set_label"].iloc[0],
+        for s in sorted(sp["set"].unique()):
+            xx = sp[(sp["type"] == t) & (sp["set"] == s)]
+            x = xx["sa_bias"].dropna()
+            out["bias"][f"{t}|{s}"] = {"label": xx["set_label"].iloc[0], "trims": bool(xx["realistic_set"].iloc[0]),
                                        "median": float(x.median()), "q10": float(x.quantile(0.1)), "q90": float(x.quantile(0.9)),
                                        "share_sa_ok": float((x.abs() < engine.SA_OK).mean())}
     allb = d["sa_bias"].dropna()
@@ -657,9 +689,10 @@ def numbers(df: pd.DataFrame, sens: dict, chk: dict, tab: dict, bl: dict) -> dic
     }
     out["by_set"] = {}
     for t in WING_TYPES:
-        for st in sorted(d["set"].unique()):
-            x = d[(d["type"] == t) & (d["set"] == st)]
-            out["by_set"][f"{t}|{st}"] = {"label": x["set_label"].iloc[0], "bubble_span_mean": float(x["bubble_span"].mean()),
+        for st in sorted(sp["set"].unique()):
+            x = sp[(sp["type"] == t) & (sp["set"] == st)]
+            out["by_set"][f"{t}|{st}"] = {"label": x["set_label"].iloc[0], "trims": bool(x["realistic_set"].iloc[0]),
+                                         "bubble_span_mean": float(x["bubble_span"].mean()),
                                          "te_sep_span_mean": float(x["te_sep_span"].mean()), "conv_span_mean": float(x["conv_span"].mean()),
                                          "lam_upper_median": float(x["lam_upper"].median()),
                                          "cd_free_median": float(x["cd_free"].median()), "cd_trip_median": float(x["cd_trip"].median())}
@@ -669,7 +702,46 @@ def numbers(df: pd.DataFrame, sens: dict, chk: dict, tab: dict, bl: dict) -> dic
     w = d[d["set"] == "A"].groupby(["type", "wing"])["sa_bias"].median()
     out["wing_spread"] = {t: {f"q{q}": float(w[t].quantile(q / 100)) for q in (10, 50, 90)} for t in WING_TYPES}
     out["median_ci"] = bootstrap_median_ci(d)
+    out["lam_by_alpha"] = {f"{k:g}": float(v) for k, v in d.groupby("alpha_deg")["lam_upper"].median().items()}
+    out["bubble_span_by_mach"] = {f"{k:g}": float(v) for k, v in d.groupby("mach")["bubble_span"].mean().items()}
+    out["bubble_extent"] = _bubble_extent(d)
+    out["level_flight"]["bias_by_mach"] = {f"{k:g}": float(v) for k, v in lf.groupby("mach")["sa_bias"].median().items()}
+    out["level_flight"]["bias_by_alpha"] = {f"{k:g}": float(v) for k, v in lf.groupby("alpha_deg")["sa_bias"].median().items()}
+    out["no_answer_by_alpha"] = {f"{k:g}": int(v) for k, v in df[df["category"] == 3].groupby("alpha_deg").size().items()}
+    out["pairs"] = pair_differences(d)
     return out
+
+
+def _bubble_extent(d: pd.DataFrame) -> dict:
+    """Where on the chord the upper-surface bubbles sit (rows with a bubble): start and end quantiles."""
+    b = d[d["bubble_span"] > 0]
+    end = b["bubble_start"] + b["bubble_len"]
+    return {"start_q05": float(b["bubble_start"].quantile(0.05)), "start_median": float(b["bubble_start"].median()),
+            "end_median": float(end.median()), "end_q95": float(end.quantile(0.95)),
+            "share_outside_30_70": float(((b["bubble_start"] < 0.3) | (end > 0.7)).mean()),
+            "start_median_by_alpha": {f"{k:g}": float(v) for k, v in b.groupby("alpha_deg")["bubble_start"].median().items()},
+            "lam_lower_median": float(d["lam_lower"].median())}
+
+
+def pair_differences(d: pd.DataFrame, n_per_group: int = 400, seed: int = 1) -> dict:
+    """Does SA's error cancel between similar wings? Random pairs of wings with the same type, section set,
+    Mach and altitude and nearly the same lift (|delta CL| < 0.03): SA's error on the profile-drag difference
+    in drag counts, and how often SA ranks the pair the other way round."""
+    rng = np.random.default_rng(seed)
+    errs, flips, gaps = [], [], []
+    x = d.dropna(subset=["cd_free", "cd_trip", "cl2d"])
+    for _, g in x.groupby(["type", "set", "mach", "altitude_m"]):
+        cl, cf, ct = g["cl2d"].values, g["cd_free"].values, g["cd_trip"].values
+        ia, ib = rng.integers(0, len(g), n_per_group), rng.integers(0, len(g), n_per_group)
+        m = (ia != ib) & (np.abs(cl[ia] - cl[ib]) < 0.03)
+        ia, ib = ia[m], ib[m]
+        df_, dt_ = cf[ia] - cf[ib], ct[ia] - ct[ib]
+        errs.append(np.abs(dt_ - df_) * 1e4); flips.append(np.sign(dt_) != np.sign(df_)); gaps.append(np.abs(df_) * 1e4)
+    e, f, gp = np.concatenate(errs), np.concatenate(flips), np.concatenate(gaps)
+    mid = (gp >= 2) & (gp <= 10)
+    return {"n": int(len(e)), "err_counts_median": float(np.median(e)), "err_counts_q90": float(np.quantile(e, 0.9)),
+            "share_above_2_counts": float((e > 2).mean()), "share_flipped": float(f.mean()),
+            "share_flipped_gap_2_10": float(f[mid].mean()) if mid.any() else None}
 
 
 def bootstrap_median_ci(d: pd.DataFrame, n_boot: int = 300, seed: int = 3) -> dict:
@@ -696,8 +768,8 @@ def _paired_altitude(d: pd.DataFrame) -> dict:
 
 
 def summary_for_tool(df: pd.DataFrame) -> dict:
-    """Per type: quantiles of the main metrics over realistic speeds (the tool shows where a wing sits)."""
-    d = df[df["realistic_speed"]]
+    """Per type: quantiles of the main metrics over realistic speeds and sets (the tool shows where a wing sits)."""
+    d = realistic(df)
     out = {}
     for t in WING_TYPES:
         out[t] = {}

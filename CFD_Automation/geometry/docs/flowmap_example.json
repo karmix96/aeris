@@ -13,7 +13,7 @@
  "method": "tables",
  "assumptions": {
   "ncrit": 9.0,
-  "induced_angle": false,
+  "induced_angle": true,
   "strips_per_panel": 2,
   "tables_mach": null
  },
@@ -73,16 +73,16 @@
    "re": 2089437.007874016,
    "re_normal": 1853353.2612277416,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 6.0,
-   "cl": 0.7905812303743656,
-   "cd_free": 0.006490166998307992,
-   "cd_tripped": 0.012136178619509679,
-   "xtr_upper": 0.3048698811948865,
-   "xtr_lower": 0.981797843869616,
+   "alpha_local": 4.771040072012037,
+   "cl": 0.6300429471154778,
+   "cd_free": 0.005917106055217318,
+   "cd_tripped": 0.011487491775407503,
+   "xtr_upper": 0.3294324168971957,
+   "xtr_lower": 0.9584659494123167,
    "bubbles_upper": [
     [
-     0.28337999999999997,
-     0.3045342183919188
+     0.2981979410663795,
+     0.3209657764381779
     ]
    ],
    "bubbles_lower": [],
@@ -102,16 +102,16 @@
    "re": 1863081.3320204911,
    "re_normal": 1652573.324594287,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 5.499999999998881,
-   "cl": 0.7307159566341542,
-   "cd_free": 0.006441056265901066,
-   "cd_tripped": 0.012106157794105498,
-   "xtr_upper": 0.3206726651102516,
-   "xtr_lower": 0.9778723082990652,
+   "alpha_local": 4.271040072010918,
+   "cl": 0.5703344779184388,
+   "cd_free": 0.005939201964377647,
+   "cd_tripped": 0.011505845392908966,
+   "xtr_upper": 0.3450826446084069,
+   "xtr_lower": 0.9421806446517434,
    "bubbles_upper": [
     [
-     0.2833800000000082,
-     0.3130100000000061
+     0.32320863184192267,
+     0.3422091318757715
     ]
    ],
    "bubbles_lower": [],
@@ -131,16 +131,16 @@
    "re": 1636725.6561685468,
    "re_normal": 1451793.3879622342,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 5.000000000001253,
-   "cl": 0.6716857491678581,
-   "cd_free": 0.00647461012604069,
-   "cd_tripped": 0.012118906676021689,
-   "xtr_upper": 0.33648293761023323,
-   "xtr_lower": 0.9732033333535357,
+   "alpha_local": 3.7710400720132906,
+   "cl": 0.5086586175283734,
+   "cd_free": 0.005985827157472096,
+   "cd_tripped": 0.0115640390388485,
+   "xtr_upper": 0.35890746848586363,
+   "xtr_lower": 0.9294455237192587,
    "bubbles_upper": [
     [
-     0.2886304681322204,
-     0.31694762660506004
+     0.33782413706402226,
+     0.36524758668358326
     ]
    ],
    "bubbles_lower": [],
@@ -160,16 +160,16 @@
    "re": 1410369.9803150222,
    "re_normal": 1251013.45132878,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 4.500000000000135,
-   "cl": 0.6117405338471376,
-   "cd_free": 0.0065457043579517146,
-   "cd_tripped": 0.01220550406950857,
-   "xtr_upper": 0.35274205000919345,
-   "xtr_lower": 0.9695395017864927,
+   "alpha_local": 3.2710400720121724,
+   "cl": 0.4476841282561226,
+   "cd_free": 0.0061030704598364315,
+   "cd_tripped": 0.011686766813194515,
+   "xtr_upper": 0.3727922856797832,
+   "xtr_lower": 0.9141039367607049,
    "bubbles_upper": [
     [
-     0.3396268770526068,
-     0.35914086640055104
+     0.34185,
+     0.381303782728695
     ]
    ],
    "bubbles_lower": [],
@@ -189,16 +189,16 @@
    "re": 1236250.2296584502,
    "re_normal": 1120423.2098653002,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 3.999999999999016,
-   "cl": 0.5501869969778151,
-   "cd_free": 0.006319122221666813,
-   "cd_tripped": 0.011817640121675856,
-   "xtr_upper": 0.3763542788502033,
-   "xtr_lower": 0.9739473121524371,
+   "alpha_local": 2.7710400720110533,
+   "cl": 0.3950843925082489,
+   "cd_free": 0.005845509741021558,
+   "cd_tripped": 0.011360985000262615,
+   "xtr_upper": 0.4215988731288751,
+   "xtr_lower": 0.924139256287559,
    "bubbles_upper": [
     [
      0.34185,
-     0.3791290189067692
+     0.39480791600790677
     ]
    ],
    "bubbles_lower": [],
@@ -218,12 +218,12 @@
    "re": 1062130.4790031083,
    "re_normal": 962617.1239694841,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 3.5000000000013882,
-   "cl": 0.49419962345467805,
-   "cd_free": 0.0059083832098354005,
-   "cd_tripped": 0.01147202084542386,
-   "xtr_upper": 0.43090753181641805,
-   "xtr_lower": 0.9838645809315065,
+   "alpha_local": 2.2710400720134256,
+   "cl": 0.3431279750038073,
+   "cd_free": 0.005485544389005309,
+   "cd_tripped": 0.011084065490129521,
+   "xtr_upper": 0.4906927081826493,
+   "xtr_lower": 0.9521093181742559,
    "bubbles_upper": [],
    "bubbles_lower": [],
    "te_separation": false,
@@ -242,12 +242,12 @@
    "re": 888010.7283465508,
    "re_normal": 804811.0380725662,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 3.00000000000027,
-   "cl": 0.4427063237818011,
-   "cd_free": 0.0054979232380343536,
-   "cd_tripped": 0.011224771458035155,
-   "xtr_upper": 0.510099285146227,
-   "xtr_lower": 1.0,
+   "alpha_local": 1.7710400720123074,
+   "cl": 0.2868268240338351,
+   "cd_free": 0.005148005029574964,
+   "cd_tripped": 0.010899941415293893,
+   "xtr_upper": 0.5762512650834563,
+   "xtr_lower": 0.9920935910749594,
    "bubbles_upper": [],
    "bubbles_lower": [],
    "te_separation": false,
@@ -266,16 +266,16 @@
    "re": 682549.4225723085,
    "re_normal": 659292.1149812836,
    "band": "5 \u00d7 10\u2075 \u2013 3 \u00d7 10\u2076",
-   "alpha_local": 2.333333333333755,
-   "cl": 0.3700789959429944,
-   "cd_free": 0.005783964795810869,
-   "cd_tripped": 0.011628686824876602,
-   "xtr_upper": 0.5689670589175593,
-   "xtr_lower": 0.999540096610352,
+   "alpha_local": 1.1043734053457923,
+   "cl": 0.20953419853056077,
+   "cd_free": 0.005560972498817018,
+   "cd_tripped": 0.011371020935988345,
+   "xtr_upper": 0.621800235407383,
+   "xtr_lower": 0.985749842906383,
    "bubbles_upper": [
     [
-     0.5077333333333217,
-     0.5816380513994579
+     0.5476905027648535,
+     0.6273194712406092
     ]
    ],
    "bubbles_lower": [],
@@ -295,16 +295,16 @@
    "re": 477088.1167980991,
    "re_normal": 460831.7334308994,
    "band": "10\u2075 \u2013 5 \u00d7 10\u2075",
-   "alpha_local": 1.6666666666673118,
-   "cl": 0.3037367670033972,
-   "cd_free": 0.006534395805020876,
-   "cd_tripped": 0.012368356720084638,
-   "xtr_upper": 0.6247607549182977,
-   "xtr_lower": 1.0,
+   "alpha_local": 0.43770673867934917,
+   "cl": 0.13539124334948854,
+   "cd_free": 0.006440636696100595,
+   "cd_tripped": 0.01217879376953028,
+   "xtr_upper": 0.6697457145661496,
+   "xtr_lower": 0.9777539420782287,
    "bubbles_upper": [
     [
-     0.5182354765790327,
-     0.6402828508062923
+     0.5518341847812944,
+     0.6844290051164459
     ]
    ],
    "bubbles_lower": [],
@@ -324,16 +324,16 @@
    "re": 310556.3215911006,
    "re_normal": 299974.37154217745,
    "band": "10\u2075 \u2013 5 \u00d7 10\u2075",
-   "alpha_local": 1.1263157894727769,
-   "cl": 0.25428937673937424,
-   "cd_free": 0.008010544273872709,
-   "cd_tripped": 0.013521541055489247,
-   "xtr_upper": 0.6769260492527452,
-   "xtr_lower": 1.0,
+   "alpha_local": -0.10264413851518572,
+   "cl": 0.09511344921943586,
+   "cd_free": 0.008003144116578613,
+   "cd_tripped": 0.013395236892505252,
+   "xtr_upper": 0.7166947070144536,
+   "xtr_lower": 0.9771356554629951,
    "bubbles_upper": [
     [
-     0.519705544897663,
-     0.6996143925797066
+     0.5533078100854096,
+     0.7407074791253827
     ]
    ],
    "bubbles_lower": [],
@@ -354,32 +354,32 @@
   "span_re_5e5_3e6": 0.7624999999998733,
   "span_re_gt_3e6": 0.0,
   "conv_span": 1.0,
-  "cd_free": 0.006284682840245887,
-  "cd_trip": 0.011950134917471813,
-  "sa_bias": 0.9014698468068223,
-  "cl2d": 0.5641655464217711,
-  "lam_upper": 0.4168793966207439,
-  "lam_lower": 0.9833798206811617,
-  "xtr_upper_min": 0.3048698811948865,
-  "xtr_upper_max": 0.6769260492527452,
+  "cd_free": 0.005881339265159675,
+  "cd_trip": 0.011500715803856176,
+  "sa_bias": 0.9554586609184395,
+  "cl2d": 0.4043182069867146,
+  "lam_upper": 0.4549989466453486,
+  "lam_lower": 0.9506497625083261,
+  "xtr_upper_min": 0.3294324168971957,
+  "xtr_upper_max": 0.7166947070144536,
   "bubble_span": 0.7895833333333716,
-  "bubble_len": 0.06396941563686367,
-  "bubble_start": 0.38531771249935665,
+  "bubble_len": 0.07015336770158628,
+  "bubble_start": 0.4119704009504852,
   "te_sep_span": 0.0,
   "re_clamped_span": 0.0,
-  "alpha_induced": 0.0,
+  "alpha_induced": 1.2289599279879626,
   "max_sweep": 27.5,
   "re_normal_max": 1853353.2612277416,
-  "cl3d": 0.38620017149989133,
-  "wing_loading": 193.19234041401106,
-  "lam_mean": 0.7001296086509528,
+  "cl3d": 0.4043182069867146,
+  "wing_loading": 202.25568615466534,
+  "lam_mean": 0.7028243545768373,
   "category": 1,
   "crossflow_risk": true
  },
- "limits": "2-D strips (XFOIL e^N, N_crit 9 = quiet air): no induced angle (the local angle is too high toward the tip), no crossflow transition on swept wings, no 3-D relief of bubbles. Where to look, not the 3-D answer.",
+ "limits": "2-D strips (XFOIL e^N, N_crit 9 = quiet air) with a uniform induced angle: no crossflow transition on swept wings, no 3-D relief of bubbles, no tip effects. Where to look, not the 3-D answer.",
  "level_flight": {
-  "wing_loading_n_m2": 193.19234041401106,
-  "cl3d": 0.38620017149989133,
+  "wing_loading_n_m2": 202.25568615466534,
+  "cl3d": 0.4043182069867146,
   "real_band_n_m2": [
    96.47278249378043,
    385.8911299751217
@@ -395,12 +395,12 @@
   {
    "what": "Laminar run, then transition",
    "where": "upper surface, every converged strip",
-   "detail": "turns turbulent at 30\u201368 % chord"
+   "detail": "turns turbulent at 33\u201372 % chord"
   },
   {
    "what": "Laminar separation bubble",
    "where": "0\u201397 % of the semi-span",
-   "detail": "upper surface, 28\u201370 % chord"
+   "detail": "upper surface, 30\u201374 % chord"
   },
   {
    "what": "Spanwise flow (sweep)",
@@ -425,30 +425,29 @@
  ],
  "model": {
   "model": "Transition model: Langtry\u2013Menter \u03b3-Re\u03b8 with SST (SU2) for drag; SA fully turbulent (ADflow) for mesh studies and as a bound",
-  "why": "fully turbulent SA would change the profile drag by +90 % (laminar flow reaches up to 68 % of chord), so where it turns turbulent sets the drag",
+  "why": "fully turbulent SA would change the profile drag by +96 % (laminar flow reaches up to 72 % of chord), so where it turns turbulent sets the drag",
   "category": "transition model",
-  "sa_drag_bias": 0.9014698468068223,
+  "sa_drag_bias": 0.9554586609184395,
   "notes": [
-   "Laminar bubbles at 28\u201370 % chord: cluster chordwise cells there (a transition model needs about 2 \u00d7 the chordwise cells of fully turbulent RANS) and keep y+ \u2264 1.",
-   "Swept leading edge: add a crossflow-sensitive transition option, or treat the inboard transition as uncertain.",
-   "Local angles have no induced angle, so they are too high toward the tip (more so at low AR, here 6.0); the dataset checks show what that changes."
+   "Laminar bubbles at 30\u201374 % chord: cluster chordwise cells there (a transition model needs about 2 \u00d7 the chordwise cells of fully turbulent RANS) and keep y+ \u2264 1.",
+   "Swept leading edge: add a crossflow-sensitive transition option, or treat the inboard transition as uncertain."
   ]
  },
  "dataset_position": {
   "sa_bias": {
-   "value": 0.9014698468068223,
-   "percentile": 93.31197802013509,
-   "median": 0.564075
+   "value": 0.9554586609184395,
+   "percentile": 97.5,
+   "median": 0.658547
   },
   "lam_upper": {
-   "value": 0.4168793966207439,
-   "percentile": 43.32698907803791,
-   "median": 0.458535
+   "value": 0.4549989466453486,
+   "percentile": 42.670565861338375,
+   "median": 0.48384649999999996
   },
   "bubble_span": {
    "value": 0.7895833333333716,
-   "percentile": 67.91346354469611,
-   "median": 0.598413
+   "percentile": 63.52524962691747,
+   "median": 0.661371
   },
   "te_sep_span": {
    "value": 0.0,
@@ -476,8 +475,8 @@
     "mh61",
     "mh61"
    ],
-   "sa_bias": 0.9014698468068223,
-   "lam_upper": 0.4168793966207439,
+   "sa_bias": 0.9554586609184395,
+   "lam_upper": 0.4549989466453486,
    "bubble_span": 0.7895833333333716,
    "te_sep_span": 0.0,
    "conv_span": 1.0,
@@ -492,8 +491,8 @@
     "s5010",
     "s5010"
    ],
-   "sa_bias": 0.7712165424398141,
-   "lam_upper": 0.33093390278592166,
+   "sa_bias": 0.8892311668220128,
+   "lam_upper": 0.40057375433883213,
    "bubble_span": 0.395833333333407,
    "te_sep_span": 0.0,
    "conv_span": 1.0,
@@ -508,9 +507,9 @@
     "mh45",
     "mh45"
    ],
-   "sa_bias": 0.7582345554284267,
-   "lam_upper": 0.32719319871459496,
-   "bubble_span": 0.23750000000012667,
+   "sa_bias": 0.9123316595694131,
+   "lam_upper": 0.4111841166382453,
+   "bubble_span": 0.395833333333407,
    "te_sep_span": 0.0,
    "conv_span": 1.0,
    "category": "transition model"
@@ -524,9 +523,9 @@
     "naca4412",
     "naca4412"
    ],
-   "sa_bias": 0.8698509368066609,
-   "lam_upper": 0.44968744268338795,
-   "bubble_span": 0.6062500000000355,
+   "sa_bias": 0.9103501186527474,
+   "lam_upper": 0.5253728860158168,
+   "bubble_span": 0.48333333333329725,
    "te_sep_span": 0.0,
    "conv_span": 1.0,
    "category": "transition model"

@@ -5,6 +5,9 @@
 Each row is one wing at one flight condition with one section set: the inputs (geometry, sections,
 Mach, altitude, root angle) and the wing metrics from the engine (Re along the span, transition,
 bubbles, trailing-edge separation, the profile-drag bias of fully turbulent SA, the model category).
+Baseline (2 Nov 2026): the induced angle is included (engine.evaluate, induced=True). A section set marked
+`trims: false` in configs/flowmap.yaml (a non-reflexed set on a tailless wing) cannot trim: its rows are
+kept, flagged realistic_set = False, and never count as level flight.
 """
 
 from __future__ import annotations
@@ -56,7 +59,7 @@ def conditions(fc: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 
 def build(types=WING_TYPES, n_wings: int | None = None, set_name: str = "training", ncrit: float = 9.0,
-          induced: bool = False, n_per_panel: int | None = None, mach_in_tables=None, fc: dict | None = None) -> pd.DataFrame:
+          induced: bool = True, n_per_panel: int | None = None, mach_in_tables=None, fc: dict | None = None) -> pd.DataFrame:
     cfg, fc = load_config(), fc or load_flow_config()
     mach, alt, alpha = conditions(fc)
     npp = n_per_panel or fc["dataset"]["strips_per_panel"]
@@ -76,6 +79,7 @@ def build(types=WING_TYPES, n_wings: int | None = None, set_name: str = "trainin
                 df = pd.DataFrame({k: v for k, v in m.items()})
                 df["mach"], df["altitude_m"], df["alpha_deg"], df["speed_m_s"] = mach, alt, alpha, r["speed"]
                 df["type"], df["family"], df["wing"], df["set"], df["set_label"] = t, FAMILY_OF[t], wi, st["id"], st["label"]
+                df["realistic_set"] = bool(st.get("trims", True))
                 for k, v in base.items():
                     df[k] = v
                 rows.append(df)
@@ -85,7 +89,8 @@ def build(types=WING_TYPES, n_wings: int | None = None, set_name: str = "trainin
     out["realistic_speed"] = [lo[f][0] - 1e-9 <= M <= lo[f][1] + 1e-9 for f, M in zip(out["family"], out["mach"])]
     wl, wh = wing_loading_band(out["full_span_m"].values, out["family"].values, fc)
     out["ws_band_lo"], out["ws_band_hi"] = wl, wh
-    out["level_flight"] = (out["wing_loading"] >= wl) & (out["wing_loading"] <= wh) & (out["conv_span"] >= 0.5)
+    out["level_flight"] = ((out["wing_loading"] >= wl) & (out["wing_loading"] <= wh) & (out["conv_span"] >= 0.5)
+                           & out["realistic_set"])
     return out
 
 

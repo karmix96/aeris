@@ -4,7 +4,7 @@
     python -m cfdauto.flowmap --type cranked --vector my_wing.json --family conventional --mach 0.1
     python -m cfdauto.flowmap --type bwb --set reference --index 0 --mach 0.08 --sheet --machs 0.03 0.06 0.09 0.12 --alphas 0 2 4 6 8
     (add --airfoils mh61 mh61 mh45 mh45 to try other sections; --method xfoil to run XFOIL directly;
-     --ncrit 5 or 11, --induced, --strips 5 for the assumption checks)
+     --ncrit 5 or 11, --no-induced, --strips 5 for the assumption checks)
 
 Writes <out>.png and <out>.json (default data/flowmaps/<type>_<set>_<index>); with --sheet,
 <out>_sheet.png and <out>_sheet.json (Mach x angle maps from the section tables).
@@ -35,7 +35,8 @@ def main(argv=None) -> None:
     p.add_argument("--method", choices=("auto", "tables", "xfoil"), default="auto",
                    help="2-D answers from the section tables (auto when all sections have one) or direct XFOIL")
     p.add_argument("--ncrit", type=float, default=9.0, choices=(5.0, 9.0, 11.0), help="e^N N_crit (5, 11: checks only)")
-    p.add_argument("--induced", action="store_true", help="subtract a uniform induced angle CL/(pi AR) (check only)")
+    p.add_argument("--no-induced", action="store_true",
+                   help="leave out the induced angle (the old baseline; a check only)")
     p.add_argument("--strips", type=int, default=2, help="strips inside each panel (default 2 = 10 per half wing)")
     p.add_argument("--sheet", action="store_true", help="also a Mach x angle sheet from the section tables")
     p.add_argument("--machs", type=float, nargs="+", default=[0.03, 0.05, 0.08, 0.11, 0.14, 0.17, 0.20])
@@ -49,7 +50,7 @@ def main(argv=None) -> None:
     tailless = (a.family == "tailless") if a.family else a.type in TAILLESS_TYPES
     spec = cfg.types[a.type]
     fm = flow_map(spec, vec, tailless, a.speed, a.altitude, a.alpha, a.airfoils, method=a.method, mach=a.mach,
-                  ncrit=a.ncrit, n_per_panel=a.strips, induced=a.induced)
+                  ncrit=a.ncrit, n_per_panel=a.strips, induced=not a.no_induced)
     out = Path(a.out) if a.out else GEOMETRY_ROOT / "data" / "flowmaps" / f"{a.type}_{a.set or Path(a.vector).stem}_{a.index or 0}"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.with_suffix(".json").write_text(json.dumps(fm, indent=1, default=float))

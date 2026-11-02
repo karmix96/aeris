@@ -1,6 +1,8 @@
-# Flow maps and the flow dataset (cfdauto/flowmap). Same assumptions as the first flow maps:
-# 2-D XFOIL strips (via the section tables), local angle = root angle + twist (no induced angle),
-# free transition e^N with N_crit 9, fully turbulent = tripped at 1 % chord, Stage 0 air.
+# Flow maps and the flow dataset (cfdauto/flowmap). Baseline since 2 Nov 2026:
+# 2-D XFOIL strips (via the section tables), local angle = root angle + twist - induced angle (uniform,
+# elliptic, iterated), free transition e^N with N_crit 9, fully turbulent = tripped at 1 % chord, Stage 0 air.
+# A set with `trims: false` cannot trim the wing (tailless + a non-reflexed section): kept as a reference,
+# left out of the tailless statistics and of level flight.
 
 # Section sets tried on each type: the suggested one first, then sourced alternatives.
 section_sets:
@@ -8,12 +10,12 @@ section_sets:
     - {id: A, label: "MH 104 / MH 61 (suggested)", sections: [mh104, mh104, mh61, mh61], source: "Suewatanakul et al. 2022"}
     - {id: B, label: "S5010", sections: [s5010, s5010, s5010, s5010], source: "Lehmkuehler et al. 2012 (BWB wing section)"}
     - {id: C, label: "MH 60 / MH 45", sections: [mh60, mh60, mh45, mh45], source: "Hepperle tailless sections"}
-    - {id: D, label: "NACA 4415 / 4412 (not reflexed)", sections: [naca4415, naca4415, naca4412, naca4412], source: "contrast: a conventional-wing section"}
+    - {id: D, label: "NACA 4415 / 4412 (not reflexed)", sections: [naca4415, naca4415, naca4412, naca4412], source: "contrast: a conventional-wing section", trims: false}
   flying_wing:
     - {id: A, label: "MH 60 / MH 45 (suggested)", sections: [mh60, mh60, mh45, mh45], source: "Hepperle; Milenkovic-Babic et al. 2024"}
     - {id: B, label: "S5010", sections: [s5010, s5010, s5010, s5010], source: "Lehmkuehler et al. 2012"}
     - {id: C, label: "MH 104 / MH 61", sections: [mh104, mh104, mh61, mh61], source: "Suewatanakul et al. 2022"}
-    - {id: D, label: "NACA 4415 / 4412 (not reflexed)", sections: [naca4415, naca4415, naca4412, naca4412], source: "contrast"}
+    - {id: D, label: "NACA 4415 / 4412 (not reflexed)", sections: [naca4415, naca4415, naca4412, naca4412], source: "contrast", trims: false}
   cranked:
     - {id: A, label: "NACA 4415 / 4412 (suggested)", sections: [naca4415, naca4415, naca4412, naca4412], source: "Lednicer: Pioneer, Shadow 200"}
     - {id: B, label: "SD7032", sections: [sd7032, sd7032, sd7032, sd7032], source: "NTNU database: Puma 3AE"}
@@ -31,12 +33,14 @@ dataset:
   alpha_deg: [0, 2, 4, 6, 8, 10]                         # root angle; local = root + twist
   altitude_m: [0, 1524, 3048]
   strips_per_panel: 2                                    # 10 strips per half wing
+  induced_angle: true                                    # baseline (engine default); false = the old check
   realistic_mach:                                        # speeds of the real wings of each family
     tailless: [0.03, 0.14]                               # eBee 11.1 m/s .. RX-3 44.4 m/s
     conventional: [0.03, 0.20]                           # 11.1 .. RUAG Ranger 66.9 m/s
 
 # Level flight: is the grid point flyable? The wing loading a condition carries, W/S = CL_3D q, with
-# CL_3D = CL_2D(strips) x a/2pi (Helmbold/DATCOM lift-slope ratio, mean LE sweep), against the wing
+# CL_3D = the chord-weighted strip lift with the induced angle (without it: CL_2D x a/2pi, Helmbold with the
+# half-chord sweep), against the wing
 # loading of real wings of the same full span: log10(W/S) = a + offset(family) + k log10(b), fitted to the
 # 37 real wings with mass, area and span in configs/real_uavs.yaml (residual sd 0.21 dex). A row is level
 # flight when its W/S is within a factor `factor` of the fit (35 of the 37 real wings are).

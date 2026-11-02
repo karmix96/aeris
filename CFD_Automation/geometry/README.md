@@ -68,7 +68,8 @@ approximate NASA CRM wing, and BlendedNet designs (any BlendedNet or BlendedNet+
 ## Flow maps and the flow dataset (`cfdauto/flowmap`)
 
 What the flow will do on a wing, where, and which turbulence model to use, from 2-D strips
-(XFOIL, free transition N_crit 9 and tripped at 1 % chord). Needs `xfoil` only to build the tables.
+(XFOIL, free transition N_crit 9 and tripped at 1 % chord) with a uniform (elliptic) induced angle;
+`--no-induced` gives the old baseline as a check. Needs `xfoil` only to build the tables.
 
 ```
 python -m cfdauto.flowmap.tables --build     # section tables: 10 sections x 14 Re x 3 Mach x 49 angles (resumable)

@@ -164,3 +164,11 @@
     target only: SA's error on drag differences between similar wings is 4-5 counts median, so a drag dataset meant to
     rank wings needs transition-model results at least on a calibration subset; (e) the mesh transition band is upper
     10-85 % c and lower 60-100 % c, not 30-70 %.
+53. **Flow baseline corrected (2 Nov 2026).** The flow tool and dataset now include a uniform (elliptic)
+    induced angle (`engine.evaluate`, default; `--no-induced` is the old check). Also: "no XFOIL answer" instead
+    of "beyond 2-D stall"; the NACA set on tailless wings tagged (cannot trim) and left out of the statistics;
+    sections coded by airfoil set and a test split by wing in the sensitivity; bubble flags never averaged.
+    New numbers: SA profile-drag error median +62 % (level flight +69 %, within +-10 % in 4 %), +40 % at 10 deg;
+    TE separation 1-2 % of the half wing up to 10 deg; SA adequate 2 % of rows; similar-wing pairs: 4 counts
+    median error on the drag difference, above 2 counts in 71 %. Open: retry failed XFOIL points; a
+    vortex-lattice span loading instead of the uniform downwash; decisions 52 (a)-(e) stand.

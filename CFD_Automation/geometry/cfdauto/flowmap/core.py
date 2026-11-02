@@ -16,8 +16,8 @@ Steps
   6. Phenomena and a proposed model by the dataset's rule (engine.category), where the wing sits in the
      flow dataset of its type, and the other section sets of its type at the same condition.
 
-Limits (said in every output): 2-D strips; no induced angle (the local angle is too high toward the
-tip), no crossflow transition on swept wings, no 3-D relief of bubbles; e^N with N_crit 9 (quiet air).
+Limits (said in every output): 2-D strips with a uniform (elliptic) induced angle; no crossflow transition
+on swept wings, no 3-D relief of bubbles, no tip effects; e^N with N_crit 9 (quiet air).
 It shows where to look and what to expect, not the 3-D answer.
 """
 
@@ -36,14 +36,15 @@ from . import engine, tables, xfoil
 
 RHO_MU = engine.RHO_MU
 BANDS = engine.BANDS
-LIMITS = ("2-D strips (XFOIL e^N, N_crit 9 = quiet air): no induced angle (the local angle is too high toward the tip), "
-          "no crossflow transition on swept wings, no 3-D relief of bubbles. Where to look, not the 3-D answer.")
+LIMITS = ("2-D strips (XFOIL e^N, N_crit 9 = quiet air) with a uniform induced angle: no crossflow transition on "
+          "swept wings, no 3-D relief of bubbles, no tip effects. Where to look, not the 3-D answer.")
 SUMMARY = GEOMETRY_ROOT / "docs" / "flow_summary.json"
 MODELS = {
     0: "Spalart–Allmaras, fully turbulent (ADflow)",
     1: "Transition model: Langtry–Menter γ-Reθ with SST (SU2) for drag; SA fully turbulent (ADflow) for mesh studies and as a bound",
     2: "Transition model: Langtry–Menter γ-Reθ with SST (SU2) for drag; SA fully turbulent (ADflow) for mesh studies and as a bound",
-    3: "Beyond 2-D stall: the strips cannot judge; expect separated flow (URANS or hybrid RANS–LES if this condition matters)",
+    3: "No XFOIL answer on half the span or more (often near stall, sometimes a failed point): the strips cannot "
+       "judge; re-run XFOIL with finer angle steps before choosing a model",
 }
 
 
@@ -73,12 +74,26 @@ def strips(pf, stations, n_per_panel: int = 2) -> list[dict]:
 
 
 # --------------------------------------------------------------------------------------------- 2-D answers
-def _direct(ws: engine.WingStrips, mach: float, alt_m: float, alpha_deg: float, ncrit: float) -> dict:
-    """Direct XFOIL runs per strip, in the same layout as engine.evaluate (one condition)."""
+def _direct(ws: engine.WingStrips, mach: float, alt_m: float, alpha_deg: float, ncrit: float,
+            induced: bool = True) -> dict:
+    """Direct XFOIL runs per strip, in the same layout as engine.evaluate (one condition). With the induced
+    angle: a first free-transition pass gives the wing lift, then one relaxed step (exact for a 2 pi lift
+    slope, as in engine.evaluate) sets the downwash, and the strips are run at the reduced angle."""
     v = mach * sound_speed(alt_m)
     re_ = rho_over_mu(alt_m) * v * ws.chord
     al = alpha_deg + ws.twist
     n = len(ws.y)
+    alpha_i = 0.0
+    if induced:
+        cl = np.full(n, np.nan)
+        for i in range(n):
+            d = xfoil.run(ws.airfoil(i).selig(), float(re_[i]), float(al[i]), False, mach, ncrit)
+            if d and d.get("cl") is not None:
+                cl[i] = float(d["cl"])
+        wc = ws.w * ws.chord * np.isfinite(cl)
+        cl_w = float(np.nansum(wc * np.nan_to_num(cl)) / max(wc.sum(), 1e-12))
+        alpha_i = (1.0 / (1.0 + 2.0 / ws.aspect_ratio)) * math.degrees(cl_w / (math.pi * ws.aspect_ratio))
+        al = al - alpha_i
     free = {f: np.full((n, 1), np.nan) for f in tables.FIELDS}
     trip = {f: np.full((n, 1), np.nan) for f in tables.FIELDS}
     for i in range(n):
@@ -89,8 +104,9 @@ def _direct(ws: engine.WingStrips, mach: float, alt_m: float, alpha_deg: float, 
                 if d and d.get(f) is not None:
                     out[f][i, 0] = float(d[f])
     free["re_clamped"] = trip["re_clamped"] = np.zeros((n, 1), bool)
-    return {"re": re_[:, None], "alpha_local": al[:, None], "alpha_induced": np.zeros(1), "free": free, "trip": trip,
-            "mach": np.array([mach]), "alt_m": np.array([alt_m]), "alpha_root": np.array([alpha_deg]), "speed": np.array([v])}
+    return {"re": re_[:, None], "alpha_local": al[:, None], "alpha_induced": np.array([alpha_i]), "induced": bool(induced),
+            "free": free, "trip": trip, "mach": np.array([mach]), "alt_m": np.array([alt_m]),
+            "alpha_root": np.array([alpha_deg]), "speed": np.array([v])}
 
 
 def _empty(ws: engine.WingStrips, mach: float, alt_m: float, alpha_deg: float) -> dict:
@@ -98,7 +114,7 @@ def _empty(ws: engine.WingStrips, mach: float, alt_m: float, alpha_deg: float) -
     n = len(ws.y)
     nan = {f: np.full((n, 1), np.nan) for f in tables.FIELDS} | {"re_clamped": np.zeros((n, 1), bool)}
     return {"re": (rho_over_mu(alt_m) * v * ws.chord)[:, None], "alpha_local": (alpha_deg + ws.twist)[:, None],
-            "alpha_induced": np.zeros(1), "free": nan, "trip": dict(nan), "mach": np.array([mach]),
+            "alpha_induced": np.zeros(1), "induced": False, "free": nan, "trip": dict(nan), "mach": np.array([mach]),
             "alt_m": np.array([alt_m]), "alpha_root": np.array([alpha_deg]), "speed": np.array([v])}
 
 
@@ -121,7 +137,7 @@ def _val(x) -> float | None:
 # --------------------------------------------------------------------------------------------- one wing
 def flow_map(spec: TypeSpec, vec: dict, tailless: bool, speed_m_s: float | None = None, altitude_m: float = 0.0,
              alpha_deg: float = 2.0, airfoils: list[str] | None = None, run_xfoil: bool = True, method: str = "auto",
-             mach: float | None = None, ncrit: float = 9.0, n_per_panel: int = 2, induced: bool = False,
+             mach: float | None = None, ncrit: float = 9.0, n_per_panel: int = 2, induced: bool = True,
              compare_sets: bool = True) -> dict:
     """Flow map at one condition. Give speed_m_s or mach. method: auto (tables when every section has
     one, else direct XFOIL), tables, xfoil. ncrit 5 / 11 use the Mach 0.1 tables (sensitivity only)."""
@@ -143,7 +159,7 @@ def flow_map(spec: TypeSpec, vec: dict, tailless: bool, speed_m_s: float | None 
         r = engine.evaluate(ws, [M], [altitude_m], [alpha_deg], ncrit=ncrit, induced=induced,
                             mach_in_tables=None if ncrit == 9.0 else 0.1)
     elif meth == "xfoil":
-        r = _direct(ws, M, altitude_m, alpha_deg, ncrit)
+        r = _direct(ws, M, altitude_m, alpha_deg, ncrit, induced)
     else:
         r = _empty(ws, M, altitude_m, alpha_deg)
     met = {k: (v[0] if np.ndim(v) else v) for k, v in engine.metrics(ws, r).items()}
@@ -168,7 +184,7 @@ def flow_map(spec: TypeSpec, vec: dict, tailless: bool, speed_m_s: float | None 
     fm["phenomena"] = phenomena(fm, values)
     fm["model"] = proposal(fm)
     fm["dataset_position"] = dataset_position(fm)
-    if compare_sets and meth == "tables" and ncrit == 9.0 and not induced:
+    if compare_sets and meth == "tables" and ncrit == 9.0 and induced:
         fm["section_sets"] = other_sets(spec, vec, M, altitude_m, alpha_deg, n_per_panel)
     return fm
 
@@ -283,8 +299,8 @@ def proposal(fm: dict) -> dict:
     if any(p["what"].startswith("Crossflow") for p in fm["phenomena"]):
         notes.append("Swept leading edge: add a crossflow-sensitive transition option, or treat the inboard transition as uncertain.")
     if not fm["assumptions"]["induced_angle"]:
-        notes.append(f"Local angles have no induced angle, so they are too high toward the tip (more so at low AR, here "
-                     f"{fm['geometry']['aspect_ratio']:.1f}); the dataset checks show what that changes.")
+        notes.append(f"Check run without the induced angle: local angles are too high, more so at low AR (here "
+                     f"{fm['geometry']['aspect_ratio']:.1f}), so high-angle results lean toward stall.")
     if any(r.get("re_clamped") for r in rows):
         notes.append("Some strips are outside the tables' Re range (1.5 × 10⁴ – 6 × 10⁶): their values are taken at the edge.")
     return {"model": MODELS[cat], "why": why, "category": engine.CATEGORIES[cat], "sa_drag_bias": bias, "notes": notes}

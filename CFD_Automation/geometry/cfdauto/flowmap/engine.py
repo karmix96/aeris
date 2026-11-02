@@ -3,10 +3,11 @@
 The single-wing tool (core.flow_map) and the dataset (dataset.py) both use it, so the dataset and the
 tool give the same answer for the same wing and condition.
 
-Assumptions (the same as the first flow maps, 31 Oct 2026):
+Assumptions (baseline since 2 Nov 2026):
   - strips along the semi-span; each strip is a 2-D section (XFOIL, via the section tables);
-  - local angle = root angle + local twist (no induced angle, unless `induced=True`, an optional
-    uniform-downwash correction used only as a sensitivity check);
+  - local angle = root angle + local twist - induced angle: a uniform (elliptic) downwash CL / (pi AR),
+    iterated to convergence (induced=True, the default). induced=False is the old baseline without it,
+    kept as a check: it puts the strips too close to stall at high angle (logic check L8, 1 Nov 2026);
   - free transition: e^N with N_crit 9 (quiet air); fully turbulent: tripped at 1 % chord;
   - Re on the local chord with Stage 0 air; Mach in XFOIL by Karman-Tsien.
 """
@@ -26,9 +27,10 @@ RHO_MU = ((0.0, 68500.0), (1524.0, 60600.0), (3048.0, 53500.0))     # Stage 0 ai
 SA_OK = 0.10            # |SA profile-drag bias| below this: fully turbulent SA is adequate (our threshold) ...
 LAM_SHORT = 0.20        # ... if the upper surface also turns turbulent near the nose (mean laminar run below this)
 LOW_RE = 1e5
+CROSSFLOW_SWEEP, CROSSFLOW_RE = 25.0, 1e6   # rough crossflow flag on one strip (our threshold, not sourced)
 BANDS = ((0.0, 1e5, "below 10⁵", "#C0392B"), (1e5, 5e5, "10⁵ – 5 × 10⁵", "#E0A030"),
          (5e5, 3e6, "5 × 10⁵ – 3 × 10⁶", "#5B8FD0"), (3e6, 1e12, "above 3 × 10⁶", "#1F3F7A"))
-CATEGORIES = ("SA adequate", "transition model", "transition model; part below 10⁵", "beyond 2-D stall")
+CATEGORIES = ("SA adequate", "transition model", "transition model; part below 10⁵", "no XFOIL answer")
 
 
 def rho_over_mu(alt_m) -> np.ndarray:
@@ -47,9 +49,18 @@ def density(alt_m) -> np.ndarray:
 
 def lift_slope_ratio(aspect_ratio: float, sweep_deg: float) -> float:
     """3-D over 2-D lift-curve slope, a / 2 pi = AR / (2 + sqrt(4 + AR^2 (1 + tan^2 sweep)))
-    (Helmbold / DATCOM form; mean leading-edge sweep in place of the half-chord sweep)."""
+    (Helmbold / DATCOM form, sweep of the half-chord line). Used only without the induced angle."""
     t = math.tan(math.radians(sweep_deg))
     return aspect_ratio / (2.0 + math.sqrt(4.0 + aspect_ratio ** 2 * (1.0 + t * t)))
+
+
+def half_chord_sweep(pf) -> float:
+    """Area-weighted sweep of the half-chord line over the three panels [deg]."""
+    xh = np.asarray(pf.x_le, float) + 0.5 * np.asarray(pf.chord, float)
+    dy = np.diff(np.asarray(pf.y, float))
+    lam = np.degrees(np.arctan2(np.diff(xh), dy))
+    area = 0.5 * (np.asarray(pf.chord[:-1], float) + np.asarray(pf.chord[1:], float)) * dy
+    return float(np.sum(lam * area) / np.sum(area))
 
 
 @dataclass
@@ -133,13 +144,15 @@ def tables_cover(ws: WingStrips, ncrit: float = 9.0) -> bool:
     return all(tables.has(s, "free", ncrit) and tables.has(s, "trip", 9.0) for s in sections_needed(ws))
 
 
-def evaluate(ws: WingStrips, mach, alt_m, alpha_deg, ncrit: float = 9.0, induced: bool = False,
+def evaluate(ws: WingStrips, mach, alt_m, alpha_deg, ncrit: float = 9.0, induced: bool = True,
              mach_in_tables: np.ndarray | None = None) -> dict:
     """Strip results for m conditions (mach, alt_m, alpha_deg: arrays of length m, root angle).
 
     Returns arrays of shape (n_strips, m): re, alpha_local and, for 'free' and 'trip', the table fields.
     mach_in_tables overrides the Mach used for the 2-D compressibility only (sensitivity checks).
-    induced: subtract a uniform downwash angle CL_w / (pi AR) (elliptic, 3 fixed-point iterations)."""
+    induced: subtract a uniform downwash angle CL_w / (pi AR) (elliptic), iterated with the relaxation that
+    is exact for a lift slope of 2 pi (factor 1 / (1 + 2 / AR)), so a few steps converge. The returned
+    alpha_induced is the one the returned strips were evaluated at. induced=False: the old baseline (a check)."""
     mach, alt_m, alpha_deg = (np.atleast_1d(np.asarray(v, float)) for v in (mach, alt_m, alpha_deg))
     mach, alt_m, alpha_deg = np.broadcast_arrays(mach, alt_m, alpha_deg)
     v = mach * sound_speed(alt_m)
@@ -161,17 +174,19 @@ def evaluate(ws: WingStrips, mach, alt_m, alpha_deg, ncrit: float = 9.0, induced
                 out[f][idx] = r[f]
         return out
 
-    for _ in range(3 if induced else 1):
+    relax = 1.0 / (1.0 + 2.0 / max(float(ws.aspect_ratio), 1e-6))
+    n_iter = 5 if induced else 1
+    for it in range(n_iter):
         al_loc = alpha_deg[None, :] + ws.twist[:, None] - alpha_i[None, :]
         free = look("free", al_loc, ncrit)
-        if not induced:
-            break
         wc = ws.w[:, None] * ws.chord[:, None] * np.isfinite(free["cl"])
         cl_w = np.nansum(wc * np.nan_to_num(free["cl"]), 0) / np.maximum(wc.sum(0), 1e-12)
-        alpha_i = np.degrees(cl_w / (math.pi * ws.aspect_ratio))
+        if it == n_iter - 1:
+            break
+        alpha_i = alpha_i + relax * (np.degrees(cl_w / (math.pi * ws.aspect_ratio)) - alpha_i)
     trip = look("trip", al_loc, 9.0)
-    return {"re": re_, "alpha_local": al_loc, "alpha_induced": alpha_i, "free": free, "trip": trip,
-            "mach": mach, "alt_m": alt_m, "alpha_root": alpha_deg, "speed": v}
+    return {"re": re_, "alpha_local": al_loc, "alpha_induced": alpha_i, "cl_wing": cl_w, "induced": bool(induced),
+            "free": free, "trip": trip, "mach": mach, "alt_m": alt_m, "alpha_root": alpha_deg, "speed": v}
 
 
 def metrics(ws: WingStrips, r: dict) -> dict:
@@ -215,16 +230,22 @@ def metrics(ws: WingStrips, r: dict) -> dict:
         "max_sweep": np.full(re_.shape[1], float(np.max(ws.sweep))),
         "re_normal_max": np.max(re_ * np.cos(np.radians(ws.sweep))[:, None], 0),
     }
-    # level-flight check: the wing loading this condition would carry, from a 3-D lift estimate
-    sweep_mean = float(np.sum(ws.w * ws.sweep))
-    out["cl3d"] = out["cl2d"] * lift_slope_ratio(ws.aspect_ratio, sweep_mean)
+    # level-flight check: the wing loading this condition would carry. With the induced angle the strips
+    # already carry the downwash, so their chord-weighted lift is the wing CL; without it (the old
+    # baseline) the 2-D lift is scaled by the Helmbold lift-slope ratio.
+    if r.get("induced", False):
+        out["cl3d"] = out["cl2d"]
+    else:
+        out["cl3d"] = out["cl2d"] * lift_slope_ratio(ws.aspect_ratio, half_chord_sweep(ws.pf))
     q = 0.5 * density(r["alt_m"]) * np.asarray(r["speed"], float) ** 2
     out["wing_loading"] = out["cl3d"] * q
     out["lam_mean"] = 0.5 * (out["lam_upper"] + out["lam_lower"])
     for k in ("xtr_upper_min", "xtr_upper_max"):
         out[k] = np.where(np.isfinite(out[k]), out[k], np.nan)
     out["category"] = category(out)
-    out["crossflow_risk"] = (out["max_sweep"] > 25.0) & (out["re_normal_max"] > 1e6)
+    # rough crossflow flag: one strip both swept beyond 25 deg and above Re 1e6 normal to its edge
+    cf = (ws.sweep[:, None] > CROSSFLOW_SWEEP) & (re_ * np.cos(np.radians(ws.sweep))[:, None] > CROSSFLOW_RE)
+    out["crossflow_risk"] = cf.any(0)
     return out
 
 
@@ -237,7 +258,8 @@ def _colmean(a: np.ndarray) -> np.ndarray:
 
 def category(m: dict) -> np.ndarray:
     """Model proposal per condition (index into CATEGORIES), by stated rules (our choices):
-    beyond 2-D stall when under half the span converges; else SA adequate when |bias| < 10 %, the upper
+    no XFOIL answer when under half the span has one (often near stall, sometimes a failed point; not a
+    measured stall); else SA adequate when |bias| < 10 %, the upper
     surface turns turbulent near the nose (mean laminar run < 20 % chord: a small bias with a long
     laminar run is a coincidence of two different flows) and no strip is below Re 1e5; else a transition
     model (with a low-Re caution when part of the span is below 1e5)."""

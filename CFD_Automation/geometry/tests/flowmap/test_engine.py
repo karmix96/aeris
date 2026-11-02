@@ -94,12 +94,27 @@ def test_category_rule():
 
 
 def test_induced_angle_lowers_local_angle(fake_tables):
+    """The baseline includes the induced angle; induced=False (the old baseline) does not."""
     spec = CFG.types["tapered"]
     ws = engine.wing_strips(spec, params.mid_vector(spec))
-    a = engine.evaluate(ws, [0.1], [0.0], [6.0])
-    b = engine.evaluate(ws, [0.1], [0.0], [6.0], induced=True)
-    assert b["alpha_induced"][0] > 0
+    a = engine.evaluate(ws, [0.1], [0.0], [6.0], induced=False)
+    b = engine.evaluate(ws, [0.1], [0.0], [6.0])
+    assert a["alpha_induced"][0] == 0 and b["alpha_induced"][0] > 0
     assert np.all(b["alpha_local"] < a["alpha_local"])
+
+
+def test_induced_angle_is_converged_and_consistent(fake_tables):
+    """The returned induced angle is the one the strips were evaluated at, and it matches CL / (pi AR);
+    with the induced angle the level-flight lift is the strip lift (no extra lift-slope factor)."""
+    import math
+    spec = CFG.types["bwb"]
+    ws = engine.wing_strips(spec, params.mid_vector(spec))
+    r = engine.evaluate(ws, [0.08, 0.12], [0.0, 1524.0], [4.0, 8.0])
+    assert np.allclose(r["alpha_local"], np.array([4.0, 8.0])[None, :] + ws.twist[:, None] - r["alpha_induced"][None, :])
+    target = np.degrees(r["cl_wing"] / (math.pi * ws.aspect_ratio))
+    assert np.allclose(r["alpha_induced"], target, atol=0.05)
+    m = engine.metrics(ws, r)
+    assert np.allclose(m["cl3d"], m["cl2d"])
 
 
 needs_tables = pytest.mark.skipif(not all(tables.has(s) and tables.has(s, "trip") for s in tables.SECTIONS),
@@ -143,6 +158,15 @@ def test_single_angle_gaps_are_filled_double_gaps_kept():
     n = tables.fill_single_gaps(arr)
     assert n == 1 and arr["cd"][0, 0, 4] == pytest.approx(4.0)
     assert np.isnan(arr["cd"][1, 0, 6]) and np.isnan(arr["cd"][1, 0, 7])
+
+
+def test_gap_fill_keeps_flags_zero_or_one():
+    """A 0/1 bubble flag is filled only where both neighbours agree; it never becomes 0.5."""
+    arr = {"cd": np.ones((1, 1, 6)), "bub_u": np.array([[[0.0, 0.0, 1.0, 1.0, 1.0, 0.0]]])}
+    arr["cd"][0, 0, 1] = arr["cd"][0, 0, 3] = np.nan          # neighbours of 1: 0 and 1; of 3: 1 and 1
+    arr["bub_u"][0, 0, 1] = arr["bub_u"][0, 0, 3] = np.nan
+    assert tables.fill_single_gaps(arr) == 2
+    assert np.isnan(arr["bub_u"][0, 0, 1]) and arr["bub_u"][0, 0, 3] == 1.0
 
 
 def test_level_flight_band_follows_the_fit():

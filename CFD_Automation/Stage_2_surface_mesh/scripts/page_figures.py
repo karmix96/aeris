@@ -391,20 +391,55 @@ def fig_corner_bend():
     n = m.info["n_side"]
     ring = m.wing[:, j]
     c = m.stations[j]["chord_m"]
-    fig, ax = plt.subplots(1, 2, figsize=(13, 3.8), gridspec_kw={"width_ratios": [1.3, 1]})
+    rl = rules("C")
+    sec = Section.at(w.loft, m.stations[j]["v"], rl.dense_per_side)
+    le = ring[n - 1]
+    P = (ring - le)[:, [0, 2]] * 1000.0                          # mm, leading edge at the origin
+    closed = np.vstack([P, P[:1]])
+    te_t = np.linalg.norm(ring[0] - ring[2 * n - 2]) * 1000.0
+    # how much each surface turns across the opening (x/c 0.88 -> 0.92), from the dense section
+    vv = np.full_like(sec.u, sec.v)
+    turns = {}
+    for upper in (True, False):
+        pp = (w.loft.upper if upper else w.loft.lower)(sec.u, vv)
+        d = np.diff(pp[:, [0, 2]], axis=0); ang = np.degrees(np.arctan2(d[:, 1], d[:, 0]))
+        um_ = 0.5 * (sec.u[1:] + sec.u[:-1])
+        turns[upper] = abs(ang[int(np.argmin(abs(um_ - 0.92)))] - ang[int(np.argmin(abs(um_ - 0.88)))])
+    k = n + int(np.argmin(abs((ring[n:, 0] - le[0]) / c - 0.89)))     # the lower-side node nearest x/c 0.89
+    fig, ax = plt.subplots(1, 3, figsize=(13.5, 4.0), gridspec_kw={"width_ratios": [1.5, 1, 1.1]})
+    # left: the whole tip section, true shape
     a = ax[0]
-    closed = np.vstack([ring, ring[:1]])
-    a.plot(closed[:, 0], closed[:, 2], "-", color=LINE, lw=0.8); a.plot(ring[:, 0], ring[:, 2], ".", color=INK, ms=2.5)
-    a.set_aspect("equal"); a.set_xlabel("x [m]"); a.set_ylabel("z [m]")
-    a.set_title(f"BWB corner wing 0, tip station: chord {c * 1000:.0f} mm, trailing edge {np.linalg.norm(ring[0] - ring[2 * n - 2]) * 1000:.2f} mm thick "
-                f"({np.linalg.norm(ring[0] - ring[2 * n - 2]) / c * 100:.1f} % c)")
+    a.plot(closed[:, 0], closed[:, 1], "-", color=INK, lw=1.0); a.plot(P[:, 0], P[:, 1], ".", color=ACC, ms=2)
+    x0, x1 = 0.84 * c * 1000, 1.01 * c * 1000
+    a.add_patch(plt.Rectangle((x0, P[:, 1].min() - 0.15), x1 - x0, P[:, 1].max() - P[:, 1].min() + 0.3, fill=False, ec=WARN, lw=1, ls="--"))
+    a.text(x0 - 0.1, P[:, 1].max() + 0.25, "zoom →", color=WARN, fontsize=8.5, ha="right")
+    a.set_aspect("equal"); a.set_xlabel("x from the leading edge [mm]"); a.set_ylabel("z [mm]")
+    a.set_title(f"the tip section of BWB corner wing 0, true shape: chord {c * 1000:.0f} mm,\nbase {te_t:.2f} mm thick ({te_t / c / 10:.1f} % c): every node of the ring", fontsize=9.5)
+    # middle: the trailing edge, zoomed, with the opening marked
     a = ax[1]
+    mm = (P[:, 0] >= x0 - 0.2)
+    a.plot(closed[:, 0], closed[:, 1], "-", color=INK, lw=1.0); a.plot(P[mm, 0], P[mm, 1], "o", color=ACC, ms=3.5, mfc="white")
+    xa, xb = 0.88 * c * 1000, 0.92 * c * 1000
+    a.axvspan(xa, xb, color=WARN, alpha=0.10)
+    a.text(0.5 * (xa + xb), P[mm, 1].max() + 0.22, f"88–92 % c: the upper surface turns {turns[True]:.0f}°,\nthe lower {turns[False]:.0f}°, within 4 % of the chord", color=WARN, fontsize=8, ha="center", va="bottom")
+    a.annotate("", (P[0, 0], P[0, 1]), (P[2 * n - 2, 0], P[2 * n - 2, 1]), arrowprops=dict(arrowstyle="<->", color=MUTED, lw=0.8))
+    a.text(P[0, 0] + 0.08, 0.5 * (P[0, 1] + P[2 * n - 2, 1]), f"base\n{te_t:.2f} mm", color=MUTED, fontsize=8, va="center")
+    a.text(0.5 * (xa + xb), P[mm, 1].min() - 0.32, "a 2 % c cell here (this tip's band cell)\nturns about 10°; the 0.25 % c cells\ndelivered turn 2°", color=INK, fontsize=8, ha="center", va="top")
+    a.set_xlim(x0, x1 + 0.25); a.set_ylim(P[mm, 1].min() - 0.9, P[mm, 1].max() + 0.75); a.set_aspect("equal")
+    a.set_xlabel("x [mm]"); a.set_yticks([])
+    a.set_title("the trailing edge, zoomed: the 0.5 mm floor on the base\nthickness makes the aft 10 % c open out: a tight bend", fontsize=9.5)
+    # right: the cell sizes on the upper side: the station's own wish list, the cap, and what is delivered
+    a = ax[2]
+    sp = RingSpec(m.stations[j]["h_le_c_solved"] * c, m.stations[j]["h_band_c"] * c, rl.max_spacing_c * c, rl.te_spacing_c * c)
+    h = sec.size_field(True, sp.h_le, sp.h_band, sp.h_max, sp.h_te, rl.band_upper, rl.chord_growth, rl.nose_turning_deg)
+    a.semilogy(sec.u, h / c * 100, "-", color=AMBER, lw=1.6, label="this station's own wish list (band cell 2 % c)")
+    cap = np.radians(rl.nose_turning_deg) * sec.curvature_radius(True) / c * 100
+    a.semilogy(sec.u[1:-1], cap[1:-1], "-", color=VIOLET, lw=0.9, alpha=0.8, label="curvature cap R × 10° (cuts the list at the bend)")
     um, d = side_cells(m, j, True)
-    a.semilogy(um, d / c, ".", color=ACC, ms=3, label="cells delivered, upper side")
-    sec = Section.at(w.loft, m.stations[j]["v"], rules("C").dense_per_side)
-    a.semilogy(sec.u[1:-1], np.radians(10) * sec.curvature_radius(True)[1:-1] / c, color=VIOLET, lw=1, label="curvature cap R × 10°")
-    a.set_ylim(1e-4, 5e-2); a.set_xlabel("x / c"); a.set_ylabel("cell / chord"); a.legend()
-    a.set_title("the opening of the trailing edge (from 90 % c) is a tight bend: the cap shrinks the cells there")
+    a.semilogy(um, d / c * 100, ".", color=ACC, ms=3, label="delivered: the wing's shared list")
+    a.axvspan(0.88, 0.92, color=WARN, alpha=0.10)
+    a.set_ylim(1e-2, 3e2); a.set_xlim(-0.02, 1.02); a.set_xlabel("x / c"); a.set_ylabel("cell size, % of the chord")
+    a.legend(fontsize=7, loc="upper center"); a.set_title("cell sizes on the upper side: the cap cuts this station's\nlist at the bend; the shared list is 8 × finer anyway", fontsize=9.5)
     save(fig, "corner_bend.png")
 
 

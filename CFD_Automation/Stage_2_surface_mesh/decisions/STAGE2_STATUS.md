@@ -2,7 +2,7 @@
 
 Text copy for chats in this project. Repo: karmix96/aeris, branch `stage2-surface-mesh`,
 `CFD_Automation/Stage_2_surface_mesh/` (configs, decisions, docs, tests, scripts, studies) and the code in
-`CFD_Automation/cfdauto/mesh/`. Read first: `Stage_2_surface_mesh/README.md` (how to run, the rules table,
+`CFD_Automation/cfdauto/mesh/`. Read first: the page `Stage_2_surface_mesh/docs/SURFACE_MESH.html` (text copy: 'Stage_2 Surface mesh page'), then `Stage_2_surface_mesh/README.md` (how to run, the rules table,
 the checks) and `decisions/surface_rules.md` (why, and what the screen showed). Built and screened here with
 the numpy twin of the loft; not yet run with pyGeo (Mike's machine).
 
@@ -15,7 +15,7 @@ loft. The volume mesh, the wake boxes and the CGNS file are Stage 3.
 - Name: `mesh_<level>_<wing_hash8>_re<Re>` (the surface depends on the Re on the mean chord: tip gap, band cells).
 - Files per mesh: `surface.npz`, `surface.xyz` (Plot3D), `stations.csv` (asked and delivered per station),
   `quality.json` (every check), `manifest.json` (hashes). A refused mesh writes only `refusal.json`.
-- One mesh takes 3–10 s. Levels C, M, F, FF: every spacing ÷ 1.3 per level, and the growth g becomes g^(1/1.3),
+- One mesh takes 4–8 s. Levels C, M, F, FF: every spacing ÷ 1.3 per level, and the growth g becomes g^(1/1.3),
   so a finer level is a true scaled copy (ring nodes and stations both × 1.3; checked on the four reference wings:
   `data/studies/family_ratios.json`).
 
@@ -51,19 +51,19 @@ Every built wing of every type and set (730: reference, training_focus, training
 Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels: **790 builds, 790 passed, 0
 refusals, 0 crashes** (`data/studies/screen_C.json`, `docs/screen_C.png`).
 
-| Type | Ring nodes min–median–max | Stations | Quads | Build [s] | Wing quads J min / median | Cap quads J min / median |
+| Type (builds) | Ring nodes min–median–max | Stations | Quads | Build time [s] | Wing quads J min / median | Cap quads J min / median |
 | --- | --- | --- | --- | --- | --- | --- |
-| BWB (187) | 492–618–866 | 71–83–134 | 36k–53k–102k | 4.0–5.2–8.8 | 0.09 / 0.82 | 0.17 / 0.33 |
-| Flying wing (178) | 368–426–522 | 66–76–116 | 28k–34k–57k | 4.0–4.8–7.5 | 0.49 / 0.88 | 0.15 / 0.19 |
-| Cranked (187) | 360–408–592 | 69–78–119 | 27k–35k–72k | 4.2–5.4–8.5 | 0.40 / 0.98 | 0.12 / 0.43 |
-| Tapered (178) | 360–416–506 | 69–79–116 | 27k–34k–55k | 4.1–5.2–9.4 | 0.57 / 0.98 | 0.11 / 0.43 |
+| BWB (202) | 486–614–860 | 71–83–134 | 36k–52k–101k | 4.2–5.3–8.1 | 0.09 / 0.82 | 0.19 / 0.34 |
+| Flying wing (193) | 370–430–528 | 66–76–116 | 28k–34k–58k | 4.0–4.8–7.0 | 0.48 / 0.88 | 0.15 / 0.19 |
+| Cranked (202) | 364–410–594 | 69–78–119 | 27k–36k–72k | 4.0–4.9–7.6 | 0.40 / 0.98 | 0.15 / 0.43 |
+| Tapered (193) | 364–420–506 | 69–79–116 | 28k–34k–55k | 3.7–4.9–7.8 | 0.56 / 0.98 | 0.15 / 0.43 |
 
-Reference wings by Re (ring nodes, stations): 10⁵: 186–316, 67–97; 3 × 10⁵: 364–644, 73–103; 1.5 × 10⁶ and
-3 × 10⁶: 842–866, 81–114. Largest delivered turning 10.02°; largest growth 1.262 (limit 1.25 within 1 %).
+Reference wings by Re (ring nodes, stations): 10⁵: 192–310, 67–97; 3 × 10⁵: 368–638, 73–103; 1.5 × 10⁶ and
+3 × 10⁶: 844–860, 81–114. Largest delivered turning 10.02°; largest growth 1.21 (limit 1.25); a nose repair on 32 builds.
 The lowest wing-quad quality (0.09) is on corner wings whose first panel is 4–6 mm wide with a 50 mm chord
-drop (an 85° trailing-edge sweep): a property of those wings. Two earlier passes of the screen were development
+drop (an 85° trailing-edge sweep): a property of those wings. Three earlier passes of the screen were development
 evidence: they found and fixed the tip-gap tolerance, kinked noses on the corner set, a 0.9 mm panel, sheared
-quads in the tip squeeze (0.08) and the 1.25–1.26 growth on NACA 4415 noses.
+quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a nose held over one cell instead of four.
 
 ## What was found and decided (OPEN_DECISIONS 56–64; `decisions/surface_rules.md`)
 

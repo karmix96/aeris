@@ -119,9 +119,9 @@ count grew by only 1.2 per level instead of 1.3. The one exception is the base: 
 at M, 14 at F, 18 at FF (even counts, so the cap's nose arc stays centred), ratios 1.25, 1.4, 1.29. The
 first panel's gap count is an integer too (12, 16, 21: ratios 1.33, 1.31).
 
-Counts for the reference wings at Re 3 × 10⁵ (ring nodes × stations): BWB 590 × 82 (C), 766 × 107 (M),
-996 × 139 (F); flying wing 426 × 74, 552 × 96, 718 × 125; cranked 392 × 75, 510 × 98, 662 × 127;
-tapered 402 × 75, 522 × 98, 678 × 127.
+Counts for the reference wings at Re 3 × 10⁵ (ring nodes × stations): BWB 604 × 82 (C), 782 × 107 (M),
+1016 × 139 (F); flying wing 430 × 74, 556 × 96, 720 × 125; cranked 398 × 75, 514 × 98, 668 × 127;
+tapered 408 × 75, 526 × 98, 684 × 127.
 
 ## 10. Finding for Stage 1: the nose of the built sections is not round
 
@@ -149,8 +149,10 @@ the airfoil's. It matters for the suction peak at high angle and for the nose sp
 measures the turning, so it adapts, but a law "spacing from nose radius" would read the wrong radius).
 A Stage 1 fix (resample the nose in arc length, or fit the apex from the raw points) changes every
 geometry hash; it is logged as open decision 64 for Mike. The mesher is made robust meanwhile: the nose
-size is held over the first four cells, and a station whose turning lands above the target after the
-envelope gets a 10 % smaller nose spacing until it passes (0 repairs needed on the reference wings).
+size is held over the first four cells (the first version held a size of four cells over one cell, a bug in
+the helper that the solve compensated for and the third screen exposed through the reported asked spacing),
+and a station whose turning lands above the target after the shared distribution tightens the whole wing's
+nose spacing by 10 % until it passes (32 of 790 builds, one round each).
 
 ## 11. The screen
 
@@ -159,19 +161,20 @@ at level C and Re 3 × 10⁵ on the mean chord, and the 20 reference wings at al
 790 passed every check, 0 refusals, 0 crashes (`data/studies/screen_C.json`, `docs/screen_C.png`). With the
 numpy twin of the loft; the pyGeo run is still owed.
 
-| Type (187 / 178 builds) | Ring nodes min–median–max | Stations | Quads | Build time [s] | Wing quads J min / median | Cap quads J min / median |
+| Type (builds) | Ring nodes min–median–max | Stations | Quads | Build time [s] | Wing quads J min / median | Cap quads J min / median |
 | --- | --- | --- | --- | --- | --- | --- |
-| BWB | 492–618–866 | 71–83–134 | 36k–53k–102k | 4.0–5.2–8.8 | 0.09 / 0.82 | 0.17 / 0.33 |
-| Flying wing | 368–426–522 | 66–76–116 | 28k–34k–57k | 4.0–4.8–7.5 | 0.49 / 0.88 | 0.15 / 0.19 |
-| Cranked | 360–408–592 | 69–78–119 | 27k–35k–72k | 4.2–5.4–8.5 | 0.40 / 0.98 | 0.12 / 0.43 |
-| Tapered | 360–416–506 | 69–79–116 | 27k–34k–55k | 4.1–5.2–9.4 | 0.57 / 0.98 | 0.11 / 0.43 |
+| BWB (202) | 486–614–860 | 71–83–134 | 36k–52k–101k | 4.2–5.3–8.1 | 0.09 / 0.82 | 0.19 / 0.34 |
+| Flying wing (193) | 370–430–528 | 66–76–116 | 28k–34k–58k | 4.0–4.8–7.0 | 0.48 / 0.88 | 0.15 / 0.19 |
+| Cranked (202) | 364–410–594 | 69–78–119 | 27k–36k–72k | 4.0–4.9–7.6 | 0.40 / 0.98 | 0.15 / 0.43 |
+| Tapered (193) | 364–420–506 | 69–79–116 | 28k–34k–55k | 3.7–4.9–7.8 | 0.56 / 0.98 | 0.15 / 0.43 |
 
-Reference wings by Re level (ring nodes, stations): 10⁵: 186–316, 67–97; 3 × 10⁵: 364–644, 73–103;
-1.5 × 10⁶: 842–866, 81–111; 3 × 10⁶: 842–866, 85–114. The largest delivered turning is 10.02° (target 10 ±
-0.02), the largest chord growth 1.262 (limit 1.25 within 1 %: NACA 4415 noses, section 10), and a nose
-repair was needed on 9 of 730 wings (one round each). What the screen does not show: whether the volume
+Reference wings by Re level (ring nodes, stations): 10⁵: 192–310, 67–97; 3 × 10⁵: 368–638, 73–103;
+1.5 × 10⁶ and 3 × 10⁶: 844–860, 81–114. The largest delivered turning is 10.02° (target 10 ± 0.02), the largest
+chord growth 1.21 (limit 1.25), and a nose repair (the whole wing's nose spacing tightened by 10 %) was needed on
+32 of 790 builds, one round each. What the screen does not show: whether the volume
 march (Stage 3) accepts these surfaces, and whether 20 nodes per bubble is the right coarse level (T6).
 
-The two earlier passes of the screen are development evidence, not results: the first (per-station
+The three earlier passes of the screen are development evidence, not results: the first (per-station
 distributions) found the tip-gap tolerance, the kinked noses of the corner set, the 0.9 mm panel and the
-0.08 quads; the second (one distribution) found the 1.25–1.26 growth on NACA 4415 noses.
+0.08 quads; the second (one distribution) found the 1.25–1.26 growth on NACA 4415 noses; the third ran before
+the flat-nose fix (section 6). With the nose held over four cells the largest growth fell to 1.21.

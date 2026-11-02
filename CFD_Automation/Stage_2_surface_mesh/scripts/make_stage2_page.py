@@ -205,28 +205,37 @@ def checks_table() -> str:
 
 def fig_pipeline() -> str:
     boxes = [
-        ("Stage 1 loft", "upper(u, v), lower(u, v)\nstations b0..b3, v", "in"),
-        ("1 · Stations", "on every loft station\n0.2 c, ≥ 12 per panel\nsqueezed to s0 at the tip", "acc"),
-        ("2 · Size fields", "per station and side:\nnose, band, curvature,\nTE, 2 % c, growth 1.2", "acc"),
-        ("3 · Nose solve", "bisection on the ring\nas built: 10° per cell", "acc"),
-        ("4 · One distribution", "strictest station and\nside at every arc fraction", "acc"),
-        ("5 · Rings + cap", "every node on the loft;\nH patch on the tip ring", "acc"),
-        ("6 · 13 checks", "refuse → refusal.json\npass → files", "warn"),
-        ("Files", "surface.npz, .xyz,\nstations.csv, quality.json,\nmanifest.json", "out"),
+        ("IN · the Stage 1 loft", ["the exact wing surface:", "upper(x/c, v) and lower(x/c, v),", "with its loft stations b0..b3"], "in"),
+        ("1 · Stations", ["slices along the span:", "one on every loft station,", "one every 0.2 chord, ≥ 12 per panel,", "squeezed to s0 at the tip"], "acc"),
+        ("2 · Size fields", ["per station and side: how big a cell", "may be at every place (nose, band,", "curvature, trailing edge, 2 % c max),", "growing ≤ 1.2 per cell"], "acc"),
+        ("3 · Nose solve", ["the nose cell found by trial on the", "built ring: no node turns the", "surface by more than 10°"], "acc"),
+        ("4 · One distribution", ["at every place the strictest station", "and side wins: one node list", "for the whole wing"], "acc"),
+        ("5 · Rings and cap", ["every node asked from the loft", "(never interpolated); one H patch", "closes the flat tip"], "acc"),
+        ("6 · Thirteen checks", ["turning, growth, spacings, breaks,", "tip gap, quad quality; any failure:", "only refusal.json is written"], "warn"),
+        ("OUT · the files", ["surface.npz, surface.xyz (Plot3D),", "stations.csv, quality.json,", "manifest.json (four hashes)"], "out"),
     ]
-    w, h, gap, x0, y0 = 128, 92, 14, 8, 30
-    parts = [f'<svg viewBox="0 0 {x0 * 2 + len(boxes) * (w + gap) - gap} 140" role="img" aria-label="the surface mesh pipeline" style="width:100%;height:auto;max-width:100%">',
-             '<style>.pb{fill:var(--surface);stroke:var(--line);stroke-width:1.2}.pb.acc{stroke:var(--accent)}.pb.warn{stroke:var(--amber)}.pb.in,.pb.out{stroke:var(--muted);stroke-dasharray:4 3}'
-             '.ph{font:600 12px var(--body);fill:var(--ink)}.pt{font:11px var(--mono);fill:var(--muted)}.pa{stroke:var(--muted);stroke-width:1.2;fill:none;marker-end:url(#ah)}</style>',
-             '<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--muted)"/></marker></defs>']
-    for i, (head, body, cls) in enumerate(boxes):
-        x = x0 + i * (w + gap)
-        parts.append(f'<rect class="pb {cls}" x="{x}" y="{y0}" width="{w}" height="{h}" rx="5"/>')
-        parts.append(f'<text class="ph" x="{x + 8}" y="{y0 + 18}">{html.escape(head)}</text>')
-        for k, line in enumerate(body.split("\n")):
-            parts.append(f'<text class="pt" x="{x + 8}" y="{y0 + 36 + 14 * k}">{html.escape(line)}</text>')
-        if i < len(boxes) - 1:
-            parts.append(f'<path class="pa" d="M{x + w},{y0 + h / 2} L{x + w + gap - 2},{y0 + h / 2}"/>')
+    w, h, gx, gy, x0, y0 = 232, 118, 20, 34, 10, 10
+    cols = 4
+    W = x0 * 2 + cols * w + (cols - 1) * gx
+    H = y0 * 2 + 2 * h + gy
+    parts = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="the surface mesh pipeline, in six steps from the loft to the files" style="width:100%;height:auto;max-width:100%">',
+             '<style>.pb{fill:var(--surface);stroke:var(--line);stroke-width:1.4}.pb.acc{stroke:var(--accent)}.pb.warn{stroke:var(--amber)}.pb.in,.pb.out{stroke:var(--muted);stroke-dasharray:5 3}'
+             '.ph{font:700 14px var(--body);fill:var(--ink)}.ph.acc{fill:var(--accent)}.ph.warn{fill:var(--amber)}.ph.in,.ph.out{fill:var(--muted)}'
+             '.pt{font:12.5px var(--body);fill:var(--ink)}.pa{stroke:var(--muted);stroke-width:1.4;fill:none;marker-end:url(#ah2)}</style>',
+             '<defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--muted)"/></marker></defs>']
+    for i, (head, lines, cls) in enumerate(boxes):
+        r, c = divmod(i, cols)
+        x, y = x0 + c * (w + gx), y0 + r * (h + gy)
+        parts.append(f'<rect class="pb {cls}" x="{x}" y="{y}" width="{w}" height="{h}" rx="6"/>')
+        parts.append(f'<text class="ph {cls}" x="{x + 12}" y="{y + 24}">{html.escape(head)}</text>')
+        for k, line in enumerate(lines):
+            parts.append(f'<text class="pt" x="{x + 12}" y="{y + 46 + 17 * k}">{html.escape(line)}</text>')
+        if c < cols - 1:
+            parts.append(f'<path class="pa" d="M{x + w},{y + h / 2} L{x + w + gx - 2},{y + h / 2}"/>')
+        elif r == 0:   # wrap from the end of row 1 to the start of row 2
+            xe, ye = x + w / 2, y + h
+            xs2, ys2 = x0 + w / 2, y0 + h + gy
+            parts.append(f'<path class="pa" d="M{xe},{ye} L{xe},{ye + gy / 2} L{xs2},{ye + gy / 2} L{xs2},{ys2 - 2}"/>')
     parts.append("</svg>")
     return '<div class="card">' + "".join(parts) + "</div>"
 

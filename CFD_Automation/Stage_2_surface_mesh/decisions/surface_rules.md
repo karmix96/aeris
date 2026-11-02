@@ -154,5 +154,24 @@ envelope gets a 10 % smaller nose spacing until it passes (0 repairs needed on t
 
 ## 11. The screen
 
-See `data/studies/screen_C.json` and the figure `docs/screen_C.png`; the numbers are in the Stage 2
-summary in the project docs.
+Every built wing of every type and set (730: reference, training_focus, training_full, corner1, corner2)
+at level C and Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels: 790 builds,
+790 passed every check, 0 refusals, 0 crashes (`data/studies/screen_C.json`, `docs/screen_C.png`). With the
+numpy twin of the loft; the pyGeo run is still owed.
+
+| Type (187 / 178 builds) | Ring nodes min–median–max | Stations | Quads | Build time [s] | Wing quads J min / median | Cap quads J min / median |
+| --- | --- | --- | --- | --- | --- | --- |
+| BWB | 492–618–866 | 71–83–134 | 36k–53k–102k | 4.0–5.2–8.8 | 0.09 / 0.82 | 0.17 / 0.33 |
+| Flying wing | 368–426–522 | 66–76–116 | 28k–34k–57k | 4.0–4.8–7.5 | 0.49 / 0.88 | 0.15 / 0.19 |
+| Cranked | 360–408–592 | 69–78–119 | 27k–35k–72k | 4.2–5.4–8.5 | 0.40 / 0.98 | 0.12 / 0.43 |
+| Tapered | 360–416–506 | 69–79–116 | 27k–34k–55k | 4.1–5.2–9.4 | 0.57 / 0.98 | 0.11 / 0.43 |
+
+Reference wings by Re level (ring nodes, stations): 10⁵: 186–316, 67–97; 3 × 10⁵: 364–644, 73–103;
+1.5 × 10⁶: 842–866, 81–111; 3 × 10⁶: 842–866, 85–114. The largest delivered turning is 10.02° (target 10 ±
+0.02), the largest chord growth 1.262 (limit 1.25 within 1 %: NACA 4415 noses, section 10), and a nose
+repair was needed on 9 of 730 wings (one round each). What the screen does not show: whether the volume
+march (Stage 3) accepts these surfaces, and whether 20 nodes per bubble is the right coarse level (T6).
+
+The two earlier passes of the screen are development evidence, not results: the first (per-station
+distributions) found the tip-gap tolerance, the kinked noses of the corner set, the 0.9 mm panel and the
+0.08 quads; the second (one distribution) found the 1.25–1.26 growth on NACA 4415 noses.

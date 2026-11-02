@@ -52,7 +52,10 @@ def screen_picture(path: Path = STAGE2 / "data" / "studies" / "screen_C.json") -
     for a in ax:
         a.set_xscale("log"); a.tick_params(colors=MUTED); a.xaxis.label.set_color(INK); a.yaxis.label.set_color(INK)
     n_ok = sum(r["passed"] for r in rows)
-    fig.suptitle(f"Screen at level C, Re 3e5: {n_ok} of {len(rows)} meshes passed every check", fontsize=11, color=INK)
+    n_w = len({(r["wing_type"], r["set"], r["index"]) for r in rows})
+    fig.suptitle(f"Screen at level C: {n_ok} of {len(rows)} builds passed every check "
+                 f"({n_w} wings at Re 3e5 on the mean chord; the reference wings at all four Re levels)",
+                 fontsize=11, color=INK)
     fig.tight_layout()
     DOCS.mkdir(parents=True, exist_ok=True)
     fig.savefig(DOCS / "screen_C.png", dpi=130)

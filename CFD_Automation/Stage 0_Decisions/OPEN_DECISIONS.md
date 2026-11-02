@@ -172,3 +172,7 @@
     TE separation 1-2 % of the half wing up to 10 deg; SA adequate 2 % of rows; similar-wing pairs: 4 counts
     median error on the drag difference, above 2 counts in 71 %. Open: retry failed XFOIL points; a
     vortex-lattice span loading instead of the uniform downwash; decisions 52 (a)-(e) stand.
+54. **Model plan deferred (Mike, 2 Nov 2026).** The turbulence-model choice (52 a) and the SA inflow value (52 b)
+    are made in a later stage. Until then the mesh is built transition-ready (y+ <= 1 per station, transition
+    band upper 10-85 % c, lower 60-100 % c), so both options stay open. Mike also owes: the pyGeo tests and set
+    rebuild on his machine; push the raw XFOIL data (33 MB) or accept the 40-minute rebuild.

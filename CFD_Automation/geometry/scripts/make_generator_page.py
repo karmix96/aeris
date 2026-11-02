@@ -169,7 +169,7 @@ FIXES = [
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
     ("Study plan (Stage 0)", "Middle Re level", "Levels are now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Keep 1.5 × 10⁶, or move it to 1 × 10⁶ (log-middle of 3 × 10⁵ and 3 × 10⁶)?", "decide"),
-    ("Study plan (Stage 0)", "Transition model in the pipeline", "ADflow has no transition model (SA is its only differentiated, tested model). The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Add SU2 γ-Reθ (with a transition-ready mesh: y+ ≤ 1, fine chordwise cells over the bubbles) for drag on the reference wings, and keep ADflow SA for mesh studies? Logic check (1 Nov 2026): what a mesh must resolve depends on the model, so an SA mesh study alone does not qualify the mesh for γ-Reθ: build the mesh transition-ready from the start and repeat a reduced mesh study with γ-Reθ on 2–3 reference wings. Fix the SA inflow eddy viscosity (ν̃/ν about 3, Spalart &amp; Rumsey 2007); with a low value SA shows an uncontrolled apparent transition (Crivellini &amp; D'Alessandro 2014).", "decide"),
+    ("Study plan (Stage 0)", "Transition model in the pipeline", "Mike, 2 Nov 2026: the model choice is made in a later stage; until then the mesh is built transition-ready, so both options stay open. ADflow has no transition model (SA is its only differentiated, tested model). The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Add SU2 γ-Reθ (with a transition-ready mesh: y+ ≤ 1, fine chordwise cells over the bubbles) for drag on the reference wings, and keep ADflow SA for mesh studies? Logic check (1 Nov 2026): what a mesh must resolve depends on the model, so an SA mesh study alone does not qualify the mesh for γ-Reθ: build the mesh transition-ready from the start and repeat a reduced mesh study with γ-Reθ on 2–3 reference wings. Fix the SA inflow eddy viscosity (ν̃/ν about 3, Spalart &amp; Rumsey 2007); with a low value SA shows an uncontrolled apparent transition (Crivellini &amp; D'Alessandro 2014).", "later"),
     ("Flow maps", "Sweep and aspect ratio stay in every set", "The 2-D strips do not use sweep or aspect ratio, so the sensitivity study cannot rank them; their low scores mean 'not modelled'. Keep both fully sampled in every CFD and ML set, and justify similarity scaling by dimensional analysis, not by the sensitivity result.", "act"),
     ("Flow maps", "The SA rule", "The tool proposes SA when fully turbulent SA changes the profile drag by under 10 %, the upper surface turns turbulent near the nose (mean laminar run under 20 % chord; a small drag error with a long laminar run is a coincidence of two different flows) and no strip is below Re 10⁵. Both thresholds are our choice. Tie the first to the drag budget instead (the error in counts)?", "decide"),
     ("Flow maps", "N<sub>crit</sub> of the tool", "Default 9 (quiet air, as in flight at altitude). Low-level flight in gusty air is nearer 5–7; the check shows N<sub>crit</sub> 5 changes the SA error by __FD_N5__ points. Keep 9 and show 5 as a band?", "decide"),
@@ -1582,7 +1582,7 @@ table.inp td.what { min-width: 120px; }
 .tag, .basis, .flag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500; }
 .tag.cranked, .tag.tapered { color: var(--accent); } .tag.bwb { color: var(--bwb); } .tag.flying_wing { color: var(--amber); }
 .basis.req { color: var(--violet); } .basis.src { color: var(--accent); } .basis.meas { color: var(--bwb); } .basis.own { color: var(--amber); }
-.flag.fix { color: var(--warn); } .flag.open { color: var(--amber); } .flag.ok { color: var(--bwb); }
+.flag.fix { color: var(--warn); } .flag.open { color: var(--amber); } .flag.ok { color: var(--bwb); } .flag.later { color: var(--muted); }
 .legend { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
 .weak { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 6px; padding: 14px 18px; }
 .weak ul, .weak ol { margin: 6px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
@@ -2160,7 +2160,8 @@ def open_html() -> str:
         for _, t, q, k in items:
             for a_, b_ in rep.items():
                 q = q.replace(a_, b_)
-            flag = "<span class='flag open'>decide</span>" if k == "decide" else "<span class='flag ok'>act</span>"
+            flag = {"decide": "<span class='flag open'>decide</span>",
+                    "later": "<span class='flag later'>later stage</span>"}.get(k, "<span class='flag ok'>act</span>")
             out.append(f"<li>{flag} <strong>{t}.</strong> {q}</li>")
         out.append("</ul>")
     return "\n".join(out)

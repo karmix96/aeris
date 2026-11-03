@@ -223,3 +223,27 @@
     (resample the nose in arc length or fit the apex from the raw points; every geometry hash changes) before
     the first solves, or carry it as a stated geometry deviation. See
     `Stage_2_surface_mesh/decisions/surface_rules.md`, section 10, and `data/studies/nose_radius.json`.
+65. **Per-wing transition band from the flow dataset (candidate, 3 Nov 2026).** `cfdauto/mesh/refine_map.py`
+    reads the Stage 1 section tables through the flow-map engine for one wing on a Mach × angle grid and builds,
+    per strip and side, the envelope of (bubble start … bubble end, transition ± margin, separation start)
+    over the conditions the mesh must serve. Interactive page: `Stage_2_surface_mesh/docs/REFINE_MAP.html`
+    (`scripts/refine_map_data.py`, `scripts/make_refine_page.py`). What the 20 reference wings show at
+    Mach 0.03–0.13, 0–8°, margin 10 % c: the per-wing band is about as many cells as the generic one (the BWB
+    reference wing 0: 5,655 against 5,627 at Mach 0.08), but sits elsewhere: on washed-out outboard panels
+    the upper-surface transition lies beyond 85 % c at low angle and the lower surface transitions near the
+    leading edge, which the generic band misses (BWB 0: 15 % c on the upper side, 60 % c on the lower).
+    The dataset's shortest root bubbles (about 1.5 % c at Re above 10⁶) are shorter than the band-cell
+    table assumes (5 % c), so 20 cells per bubble is not met at the root by either band. Decide: keep the
+    generic band (cheap, covers crossflow at the leading edge, no 3-D check needed) or switch to the
+    per-wing envelope with a margin after a 3-D transition check (γ-Re_θ in SU2 on a few wings). Not a rule yet.
+66. **Upgrade the flow dataset with AVL and NeuralFoil (proposal, 3 Nov 2026).** Today: 2-D XFOIL strips with
+    one uniform induced angle (elliptic) for the whole wing, section tables with trilinear lookup, blends
+    of the parents' answers between sections, 1.5–4 % failed XFOIL points filled. AVL would give the
+    spanwise lift distribution (local angle per strip with sweep, taper and twist) in seconds; NeuralFoil
+    would give each strip's 2-D answer in milliseconds on the exact blended section, never failing, with
+    the transition location (MAE 0.007–0.044 x/c against XFOIL) and the boundary-layer shape factor at 64
+    points per surface, from which separation and reattachment can be read. Neither adds 3-D transition
+    physics (crossflow, tip relief); NeuralFoil inherits XFOIL's model and adds a fit error, and its 64 points
+    (1.6 % c apart) cannot measure bubbles shorter than about 3 % c. Decide: build the quasi-3D loop
+    (AVL downwash ↔ NeuralFoil strip lift) as flow-map method "avl+nf", validate against the existing tables
+    on a sample and against a few 3-D transition RANS runs, then revisit decision 65.

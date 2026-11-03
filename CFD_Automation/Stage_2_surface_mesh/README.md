@@ -14,6 +14,7 @@ python -m cfdauto.mesh --type bwb --set reference --index 0 --level C --re 3e5  
 python scripts/screen.py                                                         # every built wing, all types
 python scripts/make_figures.py                                                   # docs/*.png
 python -m pytest                                                                 # tests (test_family is slow)
+python scripts/refine_map_data.py && python scripts/make_refine_page.py          # the refine map: docs/REFINE_MAP.html
 ```
 
 ```
@@ -53,6 +54,7 @@ tests/mesh/                tests
 | Nose, along the span | nose spacing / chord changes by at most 1.15 between stations (checked; holds by construction with one distribution for the wing) | law 2 (S8) |
 | Trailing edge | 0.1 % of local chord at the corners; 8 cells across the base | laws 3, 6 (DPW; S8) |
 | Transition band | upper 0–85 % c, lower 60–100 % c: cell = bubble length / 20; bubble length from local Re (Stage 1 table) | Stage 1 handover; Ansys CFX transition-model grid guide (20 nodes per bubble) |
+| (candidate 65) | a per-wing band from the flow dataset: the envelope of bubbles, transition ± margin and separation over the conditions one mesh serves (`cfdauto/mesh/refine_map.py`, `docs/REFINE_MAP.html`); not a rule yet | Study 7; needs a 3-D transition check |
 | Elsewhere | cells grow by at most 1.2 (checked: 1.25), never above 2 % c | DPW; Stage 1 handover |
 | Stations | one exactly on every loft station; gap = 0.2 × local chord, at least 12 per panel; growth ≤ 1.2 (checked: 1.3) | laws 8, 9 |
 | Tip | stations squeezed so the last gap = tip first cell s0 (y⁺ = 1 at the tip Re, flat plate) | laws 9, 10, 13 |

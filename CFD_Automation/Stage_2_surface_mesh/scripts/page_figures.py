@@ -790,3 +790,54 @@ def fig_bubble_xfoil():
     a.legend(loc="upper right", fontsize=8)
     a.set_title(f"where the table sits in the Stage 1 data: {len(files)} airfoils, 0–8°, Mach 0.1, N_crit 9\n(box: middle half of the bubbles found; whiskers: the rest)", fontsize=9.5)
     save(fig, "bubble_xfoil.png")
+
+
+# --- 22. the refine map: one wing's transition, bubbles and separation, and the envelope band --------
+def fig_refine_map(wing_type="bwb", index=0, mach=0.08, alpha=4.0, machs=(0.03, 0.13), alphas=(0.0, 8.0), margin=0.10):
+    from matplotlib.patches import Polygon
+    from cfdauto.mesh.refine_map import GENERIC_BAND, envelope_band
+    doc = json.loads((STAGE2 / "data" / "studies" / "refine_map_reference.json").read_text())
+    sm = next(w for w in doc["wings"] if w["wing"]["type"] == wing_type and w["wing"]["index"] == index)
+    n, m = sm["shape"]
+    g = sm["grid"]; im = g["mach"].index(mach); ia = g["alpha_deg"].index(alpha); k = im * len(g["alpha_deg"]) + ia
+    F = {key: np.array([np.nan if v is None else v for v in sm["fields"][key]], float).reshape(n, m) for key in sm["fields"] if key != "answered"}
+    ans = np.array(sm["fields"]["answered"]).reshape(n, m)
+    E = envelope_band(sm, machs=machs, alphas=alphas, margin=margin)
+    S = sm["wing"]["stations"]; yS, xle, ch = (np.array(S[kk]) for kk in ("y", "x_le", "chord"))
+    ys = np.array(sm["strips"]["y"]); edges = np.concatenate([[0.0], 0.5 * (ys[1:] + ys[:-1]), [yS[-1]]])
+    lerp = lambda arr, y: np.interp(y, yS, arr)
+    cols = {"lam": "#CFE3F5", "turb": "#D9DEE4", "bub": "#E9B84A", "sep": "#E07B72", "band": "#E0C9A0", "none": "#F1F4F7"}
+
+    def quad(a, y0, y1, fa, fb, **kw):
+        pts = [(y0, lerp(xle, y0) + fa * lerp(ch, y0)), (y1, lerp(xle, y1) + fa * lerp(ch, y1)), (y1, lerp(xle, y1) + fb * lerp(ch, y1)), (y0, lerp(xle, y0) + fb * lerp(ch, y0))]
+        a.add_patch(Polygon(pts, closed=True, **kw))
+
+    fig, ax = plt.subplots(2, 2, figsize=(13, 6.2))
+    for row, side in enumerate(("upper", "lower")):
+        xk, bs, be, sp = (("xtr_u", "bub_u_s", "bub_u_e", "sep_u_x") if side == "upper" else ("xtr_l", "bub_l_s", "bub_l_e", "sep_l_x"))
+        a = ax[row, 0]
+        for i in range(n):
+            y0, y1 = edges[i], edges[i + 1]
+            if not ans[i, k]:
+                quad(a, y0, y1, 0, 1, fc=cols["none"], ec="none", hatch="///"); continue
+            x = F[xk][i, k]
+            quad(a, y0, y1, 0, x if np.isfinite(x) else 1, fc=cols["lam"], ec="none")
+            quad(a, y0, y1, x if np.isfinite(x) else 1, 1, fc=cols["turb"], ec="none")
+            if np.isfinite(F[bs][i, k]): quad(a, y0, y1, F[bs][i, k], F[be][i, k], fc=cols["bub"], ec="none")
+            if np.isfinite(F[sp][i, k]): quad(a, y0, y1, F[sp][i, k], 1, fc=cols["sep"], ec="none")
+            if np.isfinite(x): quad(a, y0, y1, x - 0.004, x + 0.004, fc=INK, ec="none")
+        a.set_title(f"{side} surface at Mach {mach:.2f}, {alpha:.0f}° at the root: laminar (blue), bubble (amber), turbulent (grey), transition (line)", fontsize=9)
+        a = ax[row, 1]
+        for i in range(n):
+            y0, y1 = edges[i], edges[i + 1]
+            if E["fallback"][i]:
+                quad(a, y0, y1, 0, 1, fc=cols["none"], ec="none", hatch="///"); continue
+            quad(a, y0, y1, E[side][i][0], E[side][i][1], fc=cols["band"], ec="none")
+        gb = GENERIC_BAND[side]
+        pts = [(y, x + gb[0] * c) for y, x, c in zip(yS, xle, ch)] + [(y, x + gb[1] * c) for y, x, c in zip(yS[::-1], xle[::-1], ch[::-1])]
+        a.add_patch(Polygon(pts, closed=True, fc="none", ec=VIOLET, lw=1.4, ls="--"))
+        a.set_title(f"{side} surface: the band this wing needs over Mach {machs[0]:.2f}–{machs[1]:.2f}, {alphas[0]:.0f}–{alphas[1]:.0f}°, margin {margin * 100:.0f} % c (tan);\nthe generic band (dashed)", fontsize=9)
+        for a in ax[row]:
+            a.plot(np.concatenate([yS, yS[::-1], yS[:1]]), np.concatenate([xle, (xle + ch)[::-1], xle[:1]]), color=INK, lw=1.0)
+            a.set_aspect("equal"); a.invert_yaxis(); a.set_xlabel("span position y [m] (root → tip)"); a.set_ylabel("x [m] (leading edge up)")
+    save(fig, "refine_map.png")

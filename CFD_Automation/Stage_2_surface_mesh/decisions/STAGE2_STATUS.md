@@ -65,7 +65,7 @@ drop (an 85° trailing-edge sweep): a property of those wings. Three earlier pas
 evidence: they found and fixed the tip-gap tolerance, kinked noses on the corner set, a 0.9 mm panel, sheared
 quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a nose held over one cell instead of four.
 
-## What was found and decided (OPEN_DECISIONS 56–64; `decisions/surface_rules.md`)
+## What was found and decided (OPEN_DECISIONS 56–66; `decisions/surface_rules.md`)
 
 - **Cells per bubble = 20 at level C** (Ansys CFX transition-model grid guide; the Stage 1 rule had no source).
   Costs 400–850 ring nodes against S8's 150. Open: whether the coarse level needs the full 20 (T6 decides).
@@ -80,6 +80,16 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   0.018 / 0.0048 (`data/studies/nose_radius.json`). Within the first ~0.1 % c. The mesh follows the loft as
   built. It matters for the suction peak and for a nose-radius law. Fix in Stage 1 (changes every hash) or
   carry as a stated deviation: Mike decides.
+- **The refine map (65, 66; 3 Nov 2026).** `cfdauto/mesh/refine_map.py` reads the Stage 1 flow dataset for one
+  wing and gives, per strip and side, the envelope of bubbles, transition ± margin and separation over the
+  conditions one mesh serves: the band that wing would need. Interactive page `docs/REFINE_MAP.html`
+  (https://claude.ai/artifact/KXra2FWoVEFYLHCoafhgye); Study 7 on the Stage 2 page. On the 20 reference wings
+  (Mach 0.03–0.13, 0–8°, margin 10 % c) the per-wing band costs −15 % to +20 % of the generic one (median
+  about +5 %): not smaller, elsewhere. The generic band is mis-placed on every wing: the upper surface stays
+  laminar beyond 85 % c at low angle outboard (missed by up to 15 % c), the lower surface transitions near the
+  leading edge on washed-out panels (missed by 52–60 % c). The shortest root bubbles (1.4–10.7 % c) are shorter
+  than the band-cell table assumes (5–14 % c) on all 20 wings. Candidate, not a rule (65): needs a 3-D
+  transition check first. Proposal (66): AVL for the local angle per strip, NeuralFoil for the 2-D answer.
 
 ## Weak points, said plainly
 
@@ -92,6 +102,9 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   the march will be tested first.
 - **The nose artefact (64)** is in every mesh of every wing; the mesher adapts, the geometry is wrong.
 - The station-count rule (0.2 × chord, 12 per panel) and the 2 % c cap are starting values without a ladder.
+- **The generic band is in the wrong place on washed-out panels** (refine map, Study 7): the mesh is fine where
+  the 2-D strips say the flow is already turbulent and coarse where they say it transitions. Whether the 3-D
+  flow agrees is unknown; the band-cell rule under-resolves the shortest root bubbles by 1.2–3.6 ×.
 
 ## Handover to Stage 3 (volume mesh, wake boxes, CGNS)
 

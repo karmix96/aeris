@@ -1,10 +1,13 @@
 """Figures for the executive summary of the geometry module.
 
     python scripts/summary_figs.py
-      docs/summary_vector.png        the design vector on one wing: stations, panels, the 18 numbers
+      docs/summary_vector.png        the design vector on one wing: stations, panels, the 17 numbers
       docs/summary_types.png         families and types, three focus wings each, and the rule that names the type
       docs/summary_spaces.png        full space vs focus space vs real wings, key parameters only
       docs/summary_pipeline.png      the five steps (rendered from the page, needs Playwright)
+
+Since decision 70 (7 Nov 2026) every wing is built at unit mean chord (mean chord = area / full span = 1):
+lengths are in mean chords, the full span is the aspect ratio, and the root chord (1 / K) is derived.
 """
 
 from __future__ import annotations
@@ -58,7 +61,7 @@ def fig_vector() -> None:
     poly = [(a, -b) for a, b in zip(y, xl)] + [(a, -(b + cc)) for a, b, cc in zip(y[::-1], xl[::-1], c[::-1])]
     ax.add_patch(Polygon(poly, closed=True, fc="#DCEBE2", ec=INK, lw=1.6))
     names = ["b0 (root)", "b1", "b2", "b3 (tip)"]
-    cl = ["c₀ = root chord", "c₁ = c2_ratio · c₀", "c₂ = c3_ratio · c₀", "c₃ = c4_ratio · c₀"]
+    cl = ["c₀ = 1 / K", "c₁ = c2_ratio · c₀", "c₂ = c3_ratio · c₀", "c₃ = c4_ratio · c₀"]
     for k in range(4):
         ax.plot([y[k], y[k]], [-xl[k], -(xl[k] + c[k])], color=COL["bwb"], lw=3.2, solid_capstyle="butt")
         ax.text(y[k], 0.10 * S + 0.02, names[k], ha="center", va="bottom", fontsize=10, fontweight="bold", color=INK)
@@ -79,7 +82,7 @@ def fig_vector() -> None:
         ax.text(0.5 * (y[k] + y[k + 1]), yb - 0.035 * S, lab[k], ha="center", va="top", fontsize=9, color=INK)
     yb2 = yb - 0.16 * S
     ax.add_patch(FancyArrowPatch((0, yb2), (S, yb2), arrowstyle="<->", mutation_scale=10, color=INK, lw=1.0))
-    ax.text(0.5 * S, yb2 - 0.035 * S, "semi-span S = b / 2  (from the aspect ratio AR and c₀)", ha="center", va="top",
+    ax.text(0.5 * S, yb2 - 0.035 * S, "semi-span S = b / 2 = AR / 2 mean chords  (unit mean chord)", ha="center", va="top",
             fontsize=9.5, color=INK)
     ax.text(0.5 * (y[2] + y[3]), yb + 0.05 * S, "b3_ratio = outer / S", ha="center", fontsize=8.5, color=MUTED)
     ax.text(0.5 * (y[0] + y[2]), yb + 0.05 * S, "split_ratio = inner / (inner + middle)", ha="center", fontsize=8.5,
@@ -124,13 +127,13 @@ def fig_vector() -> None:
     sx.set_aspect("equal"); sx.set_xlim(-0.05, 1.9); sx.set_ylim(-1.05, 0.38); sx.axis("off")
     # the 18 numbers
     tx = fig.add_axes((0.64, 0.02, 0.35, 0.50)); tx.axis("off")
-    rows = [("Size", "c₀ root chord, AR aspect ratio  → S derived", COL["bwb"]),
+    rows = [("Size", "AR aspect ratio → S = AR / 2; no root chord:\nevery wing at unit mean chord, c₀ = 1 / K", COL["bwb"]),
             ("Chords", "c2_ratio, c3_ratio, c4_ratio", COL["bwb"]),
             ("Layout", "b3_ratio, split_ratio  (where b1, b2 sit)", INK),
             ("Sweep", "Λ1, Λ2, Λ3  (leading edge, per panel)", ACC),
             ("Twist", "θ0, θ1, θ2, θ3  (per station)", AMBER),
             ("Dihedral", "Γ1, Γ2, Γ3  (per panel)", WARN)]
-    tx.text(0, 1.0, "The design vector: 18 numbers + 4 airfoil names", fontsize=11.5, fontweight="bold", color=INK, va="top")
+    tx.text(0, 1.0, "The design vector: 17 numbers + 4 airfoil names", fontsize=11.5, fontweight="bold", color=INK, va="top")
     for k, (g, t, col) in enumerate(rows):
         yy = 0.86 - 0.115 * k
         tx.text(0.0, yy, g, fontsize=10.5, fontweight="bold", color=col, va="top")
@@ -164,15 +167,15 @@ def fig_types() -> None:
             te = np.concatenate([(pf.x_le + pf.chord)[::-1], pf.x_le + pf.chord]) / s
             off = -1.15 * j
             ax.fill(np.concatenate([yy, yy[::-1]]), np.concatenate([-le, -te[::-1]]) + off, color=COL[t], alpha=0.75, lw=0)
-            ax.text(1.08, off - 0.2, f"b {2 * s:.1f} m\nAR {vecs[i]['aspect_ratio']:.1f}", fontsize=8.5, color=MUTED,
-                    va="center")
+            ax.text(1.08, off - 0.2, f"AR {vecs[i]['aspect_ratio']:.1f}\n(= full span in\nmean chords)", fontsize=8.5,
+                    color=MUTED, va="center")
         ax.set_aspect("equal"); ax.set_xlim(-1.05, 1.6); ax.set_ylim(-3.55, 0.25); ax.axis("off")
         fam = "Tailless" if t in ("bwb", "flying_wing") else "Conventional"
         import textwrap
         ax.set_title(f"{fam}: {NAME[t]}\n" + "\n".join(textwrap.wrap(RULES[t].split(": ", 1)[1], 40)),
                      color=COL[t], fontweight="bold", fontsize=11, loc="left")
     fig.suptitle("Two families (an input: must the wing trim itself?), two types each (set by our rules). "
-                 "Three focus wings per type, each drawn to its own span.", x=0.01, ha="left", fontsize=11)
+                 "Three focus wings per type, each scaled to its own full span.", x=0.01, ha="left", fontsize=11)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     fig.savefig(DOCS / "summary_types.png")
     plt.close(fig)
@@ -183,8 +186,8 @@ def fig_spaces() -> None:
     import design_space_figs as dsf
     from matplotlib.lines import Line2D
     from matplotlib.patches import Patch
-    rows = [("root_chord_m", "Root chord [m]", True, False), ("aspect_ratio", "Aspect ratio", False, False),
-            ("span_m", "Full span b [m]  (derived)", True, True), ("mean_chord_m", "Mean chord [m]  (derived)", True, True),
+    rows = [("aspect_ratio", "Aspect ratio  (= full span in mean chords)", False, False),
+            ("root_chord", "Root chord [mean chords]  (derived: 1 / K)", False, True),
             ("taper", "Overall taper, tip / root  (derived)", False, True), ("sweep1_deg", "LE sweep, inner panel [°]", False, False),
             ("washout_deg", "Washout, root − tip [°]  (derived)", False, True)]
     cfg = load_config()
@@ -200,10 +203,9 @@ def fig_spaces() -> None:
             ax.barh(yy, fr[1] - fr[0], left=fr[0], height=0.62, color=COL[t], alpha=0.18, lw=0)
             ax.barh(yy, fo[1] - fo[0], left=fo[0], height=0.62, color=COL[t], alpha=0.85, lw=0)
             lo_all += [fr[0], fo[0]]; hi_all += [fr[1], fo[1]]
-            if var in ("span_m", "mean_chord_m", "aspect_ratio"):
-                key = {"span_m": "span", "mean_chord_m": "mean_chord", "aspect_ratio": "aspect_ratio"}[var]
+            if var == "aspect_ratio":           # real wings: the aspect ratio only (size-free)
                 fam = "tailless" if t in ("bwb", "flying_wing") else "conventional"
-                vals = [r[key] for r in real if r["family"] == fam and r.get(key)]
+                vals = [r["aspect_ratio"] for r in real if r["family"] == fam and r.get("aspect_ratio")]
                 ax.plot(vals, [yy] * len(vals), marker="|", ms=11, mew=1.4, color=INK, ls="none", alpha=0.8)
                 lo_all += vals; hi_all += vals
         if log:
@@ -221,8 +223,8 @@ def fig_spaces() -> None:
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
     h = [Patch(color="#7A8794", alpha=0.18, label="full space: everything we support (sampled sparsely)"),
-         Patch(color="#7A8794", alpha=0.85, label="focus space: real Class I–II wings, b ≤ 7 m (sampled densely)"),
-         Line2D([], [], marker="|", ls="none", ms=11, mew=1.4, color=INK, label="a real UAV wing (published size)")]
+         Patch(color="#7A8794", alpha=0.85, label="focus space: shapes of real Class I–II wings (sampled densely)"),
+         Line2D([], [], marker="|", ls="none", ms=11, mew=1.4, color=INK, label="a real UAV wing (published aspect ratio)")]
     fig.legend(handles=h, loc="upper left", ncol=2, fontsize=8.5, frameon=False, bbox_to_anchor=(0.01, 0.998))
     fig.tight_layout(rect=(0, 0, 1, 1 - 0.75 / (0.82 * len(rows) + 1.0)), h_pad=0.6)
     fig.savefig(DOCS / "summary_spaces.png")
@@ -293,7 +295,7 @@ def fig_mesh_zones() -> None:
                                 boxstyle="round,pad=0,rounding_size=0.02", fc="#A9C4E6", ec="none", zorder=1))  # vortex tube
     poly = [(a, -b) for a, b in zip(y, xl)] + [(a, -(b + cc)) for a, b, cc in zip(y[::-1], xl[::-1], c[::-1])]
     ax.add_patch(Polygon(poly, closed=True, fc="#EEF2F5", ec=INK, lw=1.6, zorder=2))
-    ax.add_patch(Polygon(band(0.10, 0.85), closed=True, fc="#F6E7C8", ec=AMB, lw=0.0, hatch="///", zorder=3, alpha=0.9))
+    ax.add_patch(Polygon(band(0.0, 0.85), closed=True, fc="#F6E7C8", ec=AMB, lw=0.0, hatch="///", zorder=3, alpha=0.9))
     ax.add_patch(Polygon(band(0.0, 0.05), closed=True, fc=RED, ec="none", alpha=0.45, zorder=4))
     ax.add_patch(Polygon(band(0.95, 1.0), closed=True, fc=RED, ec="none", alpha=0.45, zorder=4))
     ax.add_patch(Polygon(band(0.0, 1.0, 0.86, 1.0), closed=True, fc=BLU, ec="none", alpha=0.18, zorder=4))
@@ -325,7 +327,7 @@ def fig_mesh_zones() -> None:
         bx.plot(o[:, 0], o[:, 1], color=VIO, lw=0.8, alpha=0.75)
     bx.fill(xs, ys, fc="#EEF2F5", ec=INK, lw=1.6, zorder=3)
     half = np.arange(len(pts)) < len(pts) // 2
-    up = half & (pts[:, 0] >= 0.10) & (pts[:, 0] <= 0.85)
+    up = half & (pts[:, 0] <= 0.85)                   # upper band from the leading edge (Stage 2 choice 58)
     lo = ~half & (pts[:, 0] >= 0.60)
     bx.plot(xs[up], ys[up] + 0.004, color=AMB, lw=5, solid_capstyle="butt", zorder=4)
     bx.plot(xs[lo], ys[lo] - 0.004, color=AMB, lw=5, solid_capstyle="butt", zorder=4)
@@ -341,11 +343,11 @@ def fig_mesh_zones() -> None:
     bx.set_xlim(-0.2, 2.05); bx.set_ylim(-0.25, 0.33); bx.set_aspect("equal"); bx.axis("off")
 
     # ---- key
-    rows = [(1, VIO, "Wall layers, all over: first cell from y⁺ ≤ 1 at each case's speed (about the same along the span); more layers at the root"),
+    rows = [(1, VIO, "Wall layers, all over: first cell from y⁺ ≤ 1 at each case's Re (about the same along the semi-span); more layers at the root"),
             (2, RED, "Leading edge: suction peak; at high angle the flow turns turbulent at the nose"),
-            (3, AMB, "Transition band: upper 10–85 % chord (swept panels: from the nose), lower 60–100 % (laminar run ends, bubbles; transition model)"),
-            (4, AMB, "Breaks b1, b2: kinks in the surface, jump in the span loading: a mesh station exactly on each"),
-            (5, BLU, "Tip: smallest chord and Re (below 10⁵ on small wings), tip vortex, first to stall on swept wings"),
+            (3, AMB, "Transition band: upper 0–85 % chord (from the nose on every wing), lower 60–100 % (laminar run ends, bubbles; transition model)"),
+            (4, AMB, "Breaks b1, b2: kinks in the surface, jump in the spanwise loading: a mesh station exactly on each"),
+            (5, BLU, "Tip: smallest chord and Re (below 10⁵ at the lowest Re level), tip vortex, first to stall on swept wings"),
             (6, RED, "Trailing edge and blunt base: base flow and the start of the wake; separation there only near stall"),
             (7, LBL, "Wake and tip vortex: downwash and induced drag; fine to about 2 chords behind the wing")]
     kx = fig.add_axes((0.02, 0.01, 0.96, 0.30)); kx.axis("off"); kx.set_xlim(0, 1); kx.set_ylim(0, 1)

@@ -47,6 +47,7 @@ def check(name: str, backend: str | None) -> dict:
             r["cad"] = verify.onera_m6_vs_cad(loft)
         except ImportError:
             r["cad"] = None          # gmsh not installed
+            r["cad_note"] = "CATIA IGES in repo; not run here: gmsh not installed"
     r["pass"] = (r["sections_max_pct"] <= LIMITS["sections"] and r["edges_max_pct"] <= LIMITS["edges"]
                  and r["ruled_max_pct"] <= LIMITS["ruled"]
                  and (not r.get("cad") or r["cad"]["max_pct_chord"] <= LIMITS["cad"]))
@@ -63,7 +64,7 @@ def to_md(rows: list[dict]) -> str:
     for r in rows:
         cad = r.get("cad")
         cad_s = (f"CATIA IGES: max {cad['max_pct_chord']:.4f}, rms {cad['rms_pct_chord']:.4f}"
-                 if cad else "none in repo")
+                 if cad else r.get("cad_note", "none in repo"))
         out.append(f"| {r['wing']} | {r['backend']} | {r['sections_max_pct']:.5f} | "
                    f"{r['edges_max_pct']:.1e} | {r['ruled_max_pct']:.1e} | {cad_s} | "
                    f"{'yes' if r['pass'] else 'NO'} |")

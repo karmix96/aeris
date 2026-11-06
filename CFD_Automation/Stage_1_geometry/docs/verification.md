@@ -4,13 +4,13 @@ Numbers, not pictures. All errors in % of local chord. Limits: sections 0.01, ed
 
 | wing | loft | sections max | edges max | ruled max | outside data | pass |
 |---|---|---|---|---|---|---|
-| onera_m6 | numpy | 0.00026 | 4.9e-14 | 4.8e-14 | CATIA IGES: max 0.0113, rms 0.0017 | yes |
-| ribes | numpy | 0.00049 | 2.3e-14 | 5.3e-14 | none in repo | yes |
-| nasa_crm | numpy | 0.00279 | 2.4e-13 | 1.2e-13 | none in repo | yes |
-| blendednet_low | numpy | 0.00268 | 9.8e-14 | 7.9e-14 | none in repo | yes |
-| blendednet_mid | numpy | 0.00268 | 1.5e-13 | 8.8e-14 | none in repo | yes |
-| blendednet_high | numpy | 0.00268 | 2.4e-13 | 1.4e-13 | none in repo | yes |
-| blendednetpp_mid | numpy | 0.00268 | 1.5e-13 | 1.4e-13 | none in repo | yes |
+| onera_m6 | numpy | 0.00032 | 3.1e-14 | 7.2e-14 | CATIA IGES in repo; not run here: gmsh not installed | yes |
+| ribes | numpy | 0.00054 | 2.3e-14 | 5.4e-14 | none in repo | yes |
+| nasa_crm | numpy | 0.00036 | 2.3e-13 | 1.5e-13 | none in repo | yes |
+| blendednet_low | numpy | 0.00036 | 6.3e-14 | 6.3e-14 | none in repo | yes |
+| blendednet_mid | numpy | 0.00036 | 1.0e-13 | 1.1e-13 | none in repo | yes |
+| blendednet_high | numpy | 0.00036 | 2.3e-13 | 1.6e-13 | none in repo | yes |
+| blendednetpp_mid | numpy | 0.00036 | 1.9e-13 | 2.1e-13 | none in repo | yes |
 
 Points in the airfoil files that look like typos (one point off a smooth line; left out of the error, the loft smooths over them):
 

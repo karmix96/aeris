@@ -2,10 +2,17 @@
 
     python scripts/design_space_figs.py
       docs/design_space.png        every variable: full bar, focus bar, published values
-      docs/pair_<name>.png         four key pairs, one panel per type
+      docs/pair_<name>.png         three key pairs, one panel per type
       docs/family_<type>.png       how each variable group changes the wing (full/focus min, mid, max)
+      docs/local_re.png            local Re along the semi-span at the lowest and the top Re level
 
-Published values: configs/shape_evidence.yaml (shapes) and configs/real_uavs.yaml (sizes).
+Published values: configs/shape_evidence.yaml (shapes) and configs/real_uavs.yaml (aspect ratios).
+
+Since decision 70 (7 Nov 2026) every wing is built at unit mean chord (mean chord = area / full span = 1), so
+lengths are in mean chords: the full span is the aspect ratio and the root chord is 1 / K (derived). The size
+pair (full span against mean chord in metres, with the real wings) belongs to the first approach (real size,
+before 7 Nov) and is no longer drawn: docs/first_approach/pair_size.png. local_re.png reads
+docs/size_extremes.json (run scripts/size_extremes.py first).
 """
 
 from __future__ import annotations
@@ -45,9 +52,9 @@ plt.rcParams.update({"font.size": 9, "axes.edgecolor": "#B8C0C8", "axes.labelcol
 def derived(spec, v: dict) -> dict:
     pf = build_planform(spec, v)
     span, area = 2 * pf.semi_span, pf.area()
-    return {"span_m": span, "mean_chord_m": area / span, "taper": pf.chord[-1] / pf.chord[0],
+    return {"span": span, "mean_chord": area / span, "taper": pf.chord[-1] / pf.chord[0],
             "aspect_ratio": span ** 2 / area, "washout_deg": v["twist0_deg"] - v["twist3_deg"],
-            "sweep1_deg": v["sweep1_deg"], "root_chord_m": v["root_chord_m"]}
+            "sweep1_deg": v["sweep1_deg"], "root_chord": float(pf.chord[0]), "tip_chord": float(pf.chord[-1])}
 
 
 def samples(cfg) -> dict:
@@ -66,11 +73,10 @@ def evidence() -> tuple[list[dict], list[dict]]:
     return ev, real
 
 
-ROWS = [  # (group, var, label, log scale, derived)
-    ("Size", "root_chord_m", "Root chord [m]", True, False),
-    ("Size", "aspect_ratio", "Aspect ratio", False, False),
-    ("Size", "span_m", "Span [m]  (derived)", True, True),
-    ("Size", "mean_chord_m", "Mean chord [m]  (derived)", True, True),
+ROWS = [  # (group, var, label, log scale, derived); lengths in mean chords (unit mean chord, decision 70)
+    ("Size", "aspect_ratio", "Aspect ratio  (= full span in mean chords)", False, False),
+    ("Size", "root_chord", "Root chord [mean chords]  (derived: 1 / K)", False, True),
+    ("Size", "tip_chord", "Tip chord [mean chords]  (derived)", True, True),
     ("Chords", "c2_ratio", "Chord at b1  (BWB × root; cranked × inboard)", False, False),
     ("Chords", "c3_ratio", "Chord at b2  (BWB × root; cranked × inboard)", False, False),
     ("Chords", "c4_ratio", "Tip chord  (BWB × root; cranked × inboard; taper)", False, False),
@@ -137,10 +143,10 @@ def fig_design_space(cfg, smp, ev, real) -> None:
                 else:
                     ax.plot(vv, y, marker="D", ms=5.5, mfc=INK if filled else "white", mec=INK, mew=1.1, ls="none", zorder=4)
                     lo_all.append(vv); hi_all.append(vv)
-            # real wings (sizes)
-            if var in ("span_m", "mean_chord_m", "aspect_ratio"):
-                vals = [r["span"] if var == "span_m" else r["mean_chord"] if var == "mean_chord_m" else r["aspect_ratio"]
-                        for r in real if r["family"] == FAMILY[t]]
+            # real wings: the aspect ratio only (size-free; their sizes in metres meant something only in the
+            # first approach, before decision 70)
+            if var == "aspect_ratio":
+                vals = [r["aspect_ratio"] for r in real if r["family"] == FAMILY[t]]
                 ax.plot(vals, [y] * len(vals), marker="|", ms=11, mew=1.4, color=INK, ls="none", zorder=4, alpha=0.8)
                 lo_all += vals; hi_all += vals
         for a, b, src in bounds:
@@ -171,7 +177,7 @@ def fig_design_space(cfg, smp, ev, real) -> None:
          Patch(color="#7A8794", alpha=0.85, label="focus space: where we put the emphasis (100 + 5 + 10 wings per type)"),
          Line2D([], [], marker="D", ls="none", mfc=INK, mec=INK, label="published value, checked"),
          Line2D([], [], marker="D", ls="none", mfc="white", mec=INK, label="published value, agent or second-hand"),
-         Line2D([], [], marker="|", ls="none", ms=11, mew=1.4, color=INK, label="real Class I–II wing (area published)"),
+         Line2D([], [], marker="|", ls="none", ms=11, mew=1.4, color=INK, label="real Class I–II wing (aspect ratio; area published)"),
          Line2D([], [], color=INK, lw=1.3, marker="|", ms=8, label="published range"),
          Line2D([], [], color=MUTED, lw=1.1, ls=":", label="design-space bound of another automated study")]
     fig.legend(handles=h, loc="upper left", ncol=2, fontsize=8, frameon=False, bbox_to_anchor=(0.01, 0.998))
@@ -181,8 +187,7 @@ def fig_design_space(cfg, smp, ev, real) -> None:
 
 
 # ---------------------------------------------------------------------------------------------
-PAIRS = [  # name, x, y, x label, y label, log x, log y
-    ("size", "span_m", "mean_chord_m", "Span [m]", "Mean chord [m]", True, True),
+PAIRS = [  # name, x, y, x label, y label, log x, log y  (the size pair went with decision 70: see the docstring)
     ("planform", "aspect_ratio", "taper", "Aspect ratio", "Overall taper (tip / root)", False, False),
     ("sweep", "aspect_ratio", "sweep1_deg", "Aspect ratio", "LE sweep, inner panel [°]", False, False),
     ("twist", "sweep1_deg", "washout_deg", "LE sweep, inner panel [°]", "Washout root − tip [°]", False, False),
@@ -215,10 +220,6 @@ def fig_pairs(cfg, smp, ev, real) -> None:
             fu, fo = smp[(t, "full")], smp[(t, "focus")]
             ax.scatter(fu[xv], fu[yv], s=3, color=COL[t], alpha=0.12, lw=0, label="full space")
             ax.scatter(fo[xv], fo[yv], s=3, color=COL[t], alpha=0.75, lw=0, label="focus space")
-            if name == "size":
-                rr = [r for r in real if r["family"] == FAMILY[t]]
-                ax.scatter([r["span"] for r in rr], [r["mean_chord"] for r in rr], s=26, marker="D", color=INK,
-                           edgecolor="white", lw=0.6, zorder=4, label="real wing")
             for x, y, k, ok in joint_points(ev, t, xv, yv):
                 ax.scatter([x], [y], s=34, marker="D", color=INK if ok else "white", edgecolor=INK, lw=1.1, zorder=5)
                 ax.annotate(k, (x, y), fontsize=6.5, xytext=(4, 3), textcoords="offset points", color=INK)
@@ -289,7 +290,7 @@ def fig_family(cfg) -> None:
                 ax.text(0.5, -0.02, value_text(vec, vars_, view), transform=ax.transAxes, ha="center", va="top",
                         fontsize=7, color=MUTED)
         fig.suptitle(f"{NAME[t]}: one variable group at a time (others at the focus mid-range). "
-                     "Solid = focus space, dashed outline = full space. Top views to equal span.",
+                     "Solid = focus space, dashed outline = full space. Top views scaled to equal full span.",
                      x=0.01, ha="left", fontsize=10, color=INK)
         fig.tight_layout(rect=(0.02, 0, 1, 0.97), h_pad=1.4)
         fig.savefig(DOCS / f"family_{t}.png")
@@ -351,16 +352,18 @@ BANDS = [(0, 1e5, "#C0392B", "below 10⁵: laminar separation, RANS poor"),
 
 
 def fig_local_re(cfg) -> None:
-    """Each type's smallest focus wing at its slowest and largest at its fastest: local chord Re along the span."""
+    """Local chord Re along the semi-span, at unit mean chord (decision 70): local Re = (Re on the mean chord) x
+    (local chord in mean chords). Top: each type's focus wing with the smallest tip chord at the lowest Re level.
+    Bottom: its focus wing with the largest root chord at the top Re level (docs/size_extremes.json)."""
     ext = json.loads((DOCS / "size_extremes.json").read_text())
-    air = yaml.safe_load((ROOT / "configs" / "real_uavs.yaml").read_text())["air"]
+    levels = ext["_meta"]["re_levels"]
     import matplotlib.patches as mp
+    sci = lambda x: f"{x:.1e}".replace("e+0", "e")  # noqa: E731
     fig, axes = plt.subplots(2, 4, figsize=(13.5, 5.6), dpi=110)
     for c, t in enumerate(WING_TYPES):
         r = ext[f"{t}/focus"]
-        lo, hi = r["speed_m_s"]
-        for row, (key, v, rho_mu, txt) in enumerate((("smallest", lo, air["3048_m"], f"smallest focus wing, {lo:g} m/s at 3,048 m"),
-                                                    ("largest", hi, air["sea_level"], f"largest focus wing, {hi:g} m/s at sea level"))):
+        for row, (key, re_c, txt) in enumerate((("smallest_tip", levels[0], f"smallest tip chord, Re {sci(levels[0])} on the mean chord"),
+                                                ("largest_root", levels[-1], f"largest root chord, Re {sci(levels[-1])} on the mean chord"))):
             ax = axes[row, c]
             spec = cfg.types[t]
             pf = build_planform(spec, r[key]["vector"])
@@ -368,27 +371,27 @@ def fig_local_re(cfg) -> None:
             ys = np.linspace(0, S, 120)
             xl, ch = pf.at(ys)
             for y0, y1, x0, x1, c0, c1 in zip(ys[:-1], ys[1:], xl[:-1], xl[1:], ch[:-1], ch[1:]):
-                re_ = rho_mu * v * 0.5 * (c0 + c1)
+                re_ = re_c * 0.5 * (c0 + c1)          # unit mean chord: the chord is in mean chords
                 colr = next(cc for a, b, cc, _ in BANDS if a <= re_ < b)
                 for sg in (1, -1):
                     poly = [(sg * y0 / S, -x0 / S), (sg * y1 / S, -x1 / S), (sg * y1 / S, -(x1 + c1) / S), (sg * y0 / S, -(x0 + c0) / S)]
                     ax.add_patch(mp.Polygon(poly, closed=True, fc=colr, ec=colr, lw=0.3))
-            re_root, re_tip = rho_mu * v * pf.chord[0], rho_mu * v * pf.chord[-1]
+            re_root, re_tip = re_c * pf.chord[0], re_c * pf.chord[-1]
             ax.set_xlim(-1.05, 1.05)
             ax.set_ylim(min(-1.0, -(pf.x_le + pf.chord).max() / S - 0.05), 0.12)
             ax.set_aspect("equal", adjustable="datalim")
             ax.set_xticks([]); ax.set_yticks([])
             for sp_ in ax.spines.values():
                 sp_.set_visible(False)
-            sci = lambda x: f"{x:.1e}".replace("e+0", "e")  # noqa: E731
-            ax.set_title(f"{NAME[t]}: span {2 * S:.2f} m" if row == 0 else f"span {2 * S:.1f} m", fontsize=9.5,
-                         color=COL[t], fontweight="bold" if row == 0 else "normal")
+            ar = (2 * S) ** 2 / pf.area()
+            ax.set_title((f"{NAME[t]}: " if row == 0 else "") + f"AR {ar:.1f}, tip chord {pf.chord[-1]:.2f}, root {pf.chord[0]:.2f}",
+                         fontsize=9.5, color=COL[t], fontweight="bold" if row == 0 else "normal")
             ax.text(0.5, -0.04, f"{txt}\nroot Re {sci(re_root)}, tip Re {sci(re_tip)}", transform=ax.transAxes,
                     ha="center", va="top", fontsize=7.5, color=MUTED)
     h = [mp.Patch(color=cc, label=lab) for _, _, cc, lab in BANDS]
     fig.legend(handles=h, loc="lower center", ncol=2, fontsize=8, frameon=False)
-    fig.suptitle("Local Reynolds number along the span (chord-based). Top: the worst low-Re case. Bottom: the highest-Re case.",
-                 x=0.01, ha="left", fontsize=10.5, color=INK)
+    fig.suptitle("Local Reynolds number along the semi-span (on the local chord), at unit mean chord: chords in mean chords. "
+                 "Top: the lowest Re level. Bottom: the top level.", x=0.01, ha="left", fontsize=10.5, color=INK)
     fig.tight_layout(rect=(0, 0.1, 1, 0.95), h_pad=2.2)
     fig.savefig(DOCS / "local_re.png")
     plt.close(fig)

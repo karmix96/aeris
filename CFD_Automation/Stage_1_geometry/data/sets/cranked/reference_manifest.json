@@ -2,7 +2,7 @@
  "wing_type": "cranked",
  "set": "reference",
  "code_version": "0.7.0",
- "code_hash": "e91dbc750982d6508d186f29b106ac1a3bc3bf1260ecf73afc6890390c165a4b",
+ "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "047ae3f5bbf1c13ac2faaeeda6313b8b59ee0544eeb038a23caf8680880d2bd6",
-   "surface_hash": "dea677c605b42e6c05892c3eea35e09322a49c6ae17c80f39ad15be59cda3496",
+   "input_hash": "6140253c4aa49f930ff5bd59434d66222d3ebcae8048dd162afbfa3f39673185",
+   "surface_hash": "1cdc3aa93b23f1ba1b6efed3bb6b32fec0a2643f904a5f5ab32c7e19369df181",
    "labels": [
     "conventional",
     "cranked",
@@ -50,8 +50,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5f426f08e048b059dd0a8ce6dab89a27e397d5087caa12f090301392016d8729",
-   "surface_hash": "ecbdcc46c7faf477ed64f19eb22bb492629a7d1908ca93c5bb461eea572a9228",
+   "input_hash": "56273986d5062d7417acf40b8f9eb6d7680e15324037ee16eab3c9f86c9a023e",
+   "surface_hash": "c074f73a946f0189062cc4fde42e4ed8df2abf38a77ee401587b84a475f8cb99",
    "labels": [
     "conventional",
     "cranked",
@@ -89,8 +89,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d12f25f9a78c1d0c0d73106a5083779dd6d25d617bb4c5160a75ae5d737fc36c",
-   "surface_hash": "23fc713f3388352f163e66a18663d8ca49a859493c0b80ef5a62f2deff37945d",
+   "input_hash": "bfa82218d2e61724ca6d0d5c27e1ed1378af589fa917321fb116e04c7bed859c",
+   "surface_hash": "5280ac9bb6fd7ffa9d10f4c99122dda9dc0a06867c3e70928519add322ba6121",
    "labels": [
     "conventional",
     "cranked",
@@ -131,8 +131,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "da92346f51e5aa7d511629ae33debca54f60c0ab62c68fdcd23e0af5b649e175",
-   "surface_hash": "31033599db77d65cfd09efa1d4bc21ec640c8ee864e734676494d502b08c27af",
+   "input_hash": "23f6e274c21507be202f49c3885cc5ba73b5fdcaa96057ef355e274690df8340",
+   "surface_hash": "9b9f233a1751fb4bf898b65d1cd8844ce928665c9ce6d2e5542cd7c7762391cb",
    "labels": [
     "conventional",
     "cranked",
@@ -172,8 +172,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7e256072cc59806a440ba6b70f863dc0aadd8da2a60a53b4e16e93a397164298",
-   "surface_hash": "700f74fd99e35f8127eaae23f749f9d475af74af19e09ac93967177a2a2e1857",
+   "input_hash": "930484e62e9ee3220d9a6acdd1b7f63b72838f77273e7477e15c52ea9b541108",
+   "surface_hash": "2d058707f29879b3a9e999cd6b672a7cd83e1828d8c4554c18d48afde6b2485f",
    "labels": [
     "conventional",
     "cranked",

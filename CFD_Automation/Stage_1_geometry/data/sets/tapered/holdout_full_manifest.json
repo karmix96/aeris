@@ -2,13 +2,13 @@
  "wing_type": "tapered",
  "set": "holdout_full",
  "code_version": "0.7.0",
- "code_hash": "e91dbc750982d6508d186f29b106ac1a3bc3bf1260ecf73afc6890390c165a4b",
+ "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
  "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "5b8ef69af8dcac1d3e8db6a6252508ad6ed00d04d9ae9f42ebbc4185895e129a",
+   "input_hash": "3de513cb4a66ae6244d68d731c60b5847aa69815dc00495e72465ae029c9f23c",
    "vector": {
     "c2_ratio": 0.8838883066875539,
     "c3_ratio": 0.8309639022868089,
@@ -38,7 +38,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "b58df55e5e5aa770ad437c48f0e089e1e43bdae76e9253be9f51d5998f512833",
+   "input_hash": "0534af89fdc9d037aa718803fa8008a445c6cee6a8c69c06380f3e1fbf598d69",
    "vector": {
     "c2_ratio": 0.869784908129251,
     "c3_ratio": 0.7300957617606042,
@@ -68,7 +68,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "f6819522c348e43fde41865b3196b583c90eeee09cb834b89ae95b40b3d04b3a",
+   "input_hash": "4b80d1891c29e90f4fbb53d0b7ac26850df64cd00524cfdf2cf933713d5f70cf",
    "vector": {
     "c2_ratio": 0.968538203436802,
     "c3_ratio": 0.9524524190305117,
@@ -98,7 +98,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "749b1626485a9796f6167b1278feeded3c3513d0fc4609e203517cbc802f4267",
+   "input_hash": "c81e846835941a779fe6b99be2142d7496ec4b515ee806db6ddb62d0b8e07de3",
    "vector": {
     "c2_ratio": 0.9484196201873333,
     "c3_ratio": 0.7817414488868557,
@@ -128,7 +128,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "9fb2daa1797069dd8657b99b1965cc663665674bc41692e95ab57d930d76572a",
+   "input_hash": "788dba5589e3785d4ea24dfe1899a06349e85cc817394a7f4a4c61c02e9a8e62",
    "vector": {
     "c2_ratio": 0.8259223103620592,
     "c3_ratio": 0.5615328633442946,

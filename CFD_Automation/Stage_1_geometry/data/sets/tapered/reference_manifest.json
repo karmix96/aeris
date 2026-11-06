@@ -2,7 +2,7 @@
  "wing_type": "tapered",
  "set": "reference",
  "code_version": "0.7.0",
- "code_hash": "e91dbc750982d6508d186f29b106ac1a3bc3bf1260ecf73afc6890390c165a4b",
+ "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4415f60c5a3240b12dbd7ce6f526e3b9f3c33202c51d29bf13daa594446229ee",
-   "surface_hash": "77b937a34a161c2838c8c54719842fdffa6c8f52c7e2e71796c4c0f0117bc938",
+   "input_hash": "d9e4d9059202bd2d11b4ffa1ef691e40be2b1684591f05601c9afdcd238547f3",
+   "surface_hash": "223e16f27d0ed7a4021735c4860ced64fafb1d404a387ef6e0a2059b043d64b1",
    "labels": [
     "conventional",
     "tapered",
@@ -51,8 +51,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c051a1544314fe671c09a69dee1ece19eff9a973e7c89b8b59f9f11a124c2cdd",
-   "surface_hash": "7057e20e7d09baa451f88f217982fc34342a4b136c5fca199b341103153466b6",
+   "input_hash": "594e1b67786efd8c852798f4cde95c1019b786ef862e20bd661836e4dc2f14b1",
+   "surface_hash": "9944a36a38b53979595dd3ef36149e49975a6f2e4b9bb76554bd3d5540a32d05",
    "labels": [
     "conventional",
     "tapered",
@@ -91,8 +91,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3632df5a8c33237084dfa9dfb4a66f505038e9b1d34dfffa500f94a5e45c14cb",
-   "surface_hash": "7559ffaaf400eb9c3616c1870bdd69cdbd2714bd71b04c128e56c4cae155a76c",
+   "input_hash": "f345fe6044a53aa7cfbb4406088b7d78436c734a086cc4f04a5273178d037c49",
+   "surface_hash": "3a154643f5baaf66de13e47de22bc8c1d9499d15bbb79700d20b91730e938166",
    "labels": [
     "conventional",
     "tapered",
@@ -132,8 +132,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "756d8e906a055e53e01e290ea55edb80887c315b2807e265d7cb9838664d57c8",
-   "surface_hash": "54b4270517b0ab513a10a9018aba0ed850e26006986ae02b673e4b35e812168e",
+   "input_hash": "19ea9bcd75f21a6ecad1c451434d8831576d16c8e3301e5f2fc9949428d42730",
+   "surface_hash": "8c0ac4ad2a09599e28dad7e50588f7f7e1ceba25d399a67aa4b7276a7e39cc9c",
    "labels": [
     "conventional",
     "tapered",
@@ -173,8 +173,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "bb945937d6cd0d416a3041f4387d5dab2623c703e139ff02543da7d74bb865c5",
-   "surface_hash": "37278a3d271fed81e6dc290bc7d7453d047632236cca5b274ae32325f4112f88",
+   "input_hash": "e31b519cfa6f3c0841e7ea738625b67ab823851e620a4cb238bac6980b5dee16",
+   "surface_hash": "a741390f9a336dcd33098ed5392ab57c65addc484d411cb52448c252f5828309",
    "labels": [
     "conventional",
     "tapered",

@@ -2,7 +2,7 @@
  "wing_type": "bwb",
  "set": "corner2",
  "code_version": "0.7.0",
- "code_hash": "e91dbc750982d6508d186f29b106ac1a3bc3bf1260ecf73afc6890390c165a4b",
+ "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0570b88dcc6b9e61584771abe87ffc0b062fc55bfbf26d5bd0ec96c7931f3173",
-   "surface_hash": "ad7dce4bd34e610ef743c05aa45b7f02e1d95b2af9df35886caa0d513fb0fbc8",
+   "input_hash": "efb48deb3d38851ee9bf8774149c1d436706e6107ed2b6fcf74dd2eac897c006",
+   "surface_hash": "d01461e39b3e9a5f16491f25aac9a697504f6661da6eb199425ef61fc7fbaf1f",
    "labels": [
     "tailless",
     "bwb",
@@ -52,13 +52,14 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "69729055ee07180b360afdd05803c9b36d91ab423590bbc06dd3ec74ff62146f",
-   "surface_hash": "4da7b24e37ae9fa479fb7ad539d3cda5a049a3af803932f4694636714930edec",
+   "input_hash": "ba51a2e28a2add9655f125b0982cc479aa929fee4413b65f165beff0eff4a91e",
+   "surface_hash": "615205e8c5477dc7062a415c8cfb4fb6710f074a2a28c35b0eabe7c47b9304a4",
    "labels": [
     "tailless",
     "flying_wing",
     "aft_swept",
     "cranked",
+    "wash_in",
     "dihedral",
     "high_aspect_ratio"
    ],
@@ -93,8 +94,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0e094d7f6e67528cd9316395e95e744ad7f445003a692a61c30f622444b9fed1",
-   "surface_hash": "57e89eeaf427b396eab90fb2e4927a4025571084b5791d7e4d8246872266c95d",
+   "input_hash": "f6fb47518c5eb0a28ba838c45c19c93fc8061548e9247619828568fa5b41b0c4",
+   "surface_hash": "c0d05210488001b31ea7df9eface4665e65c14cfae1e174e23b308b53723da59",
    "labels": [
     "tailless",
     "flying_wing",
@@ -135,13 +136,14 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b8b630894b85d93f79fb8303a525e718008c0b346a882012f20ba8a1d77b64fe",
-   "surface_hash": "64348f1bcde6e5552c8baa56eb670966ec1c817283f328bb9a1b51dd23b50a72",
+   "input_hash": "ecc14077a358f9b0c74f1e5172d45937df7e47a98a636f4905f0f2f21931191e",
+   "surface_hash": "04c0542d12d07332615421f7ca999d80a2c49bfc3ac1bfc431a30ef5c866386f",
    "labels": [
     "tailless",
     "flying_wing",
     "forward_swept",
     "cranked",
+    "wash_in",
     "dihedral",
     "varying_dihedral",
     "low_aspect_ratio"
@@ -177,8 +179,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c38692a1e06fd6bb380a88925087791b4f260060a2e5ff8108ed026ee99e1299",
-   "surface_hash": "2c265b09b639cf05211dc8de1411de51fed75520299f02924dbc6382ce189799",
+   "input_hash": "925eb2267453ac55deac0a2736300d7ccd30b87fb88fe08b4eacc93f5c3af5e3",
+   "surface_hash": "9c6197504586882330f4b98db7457d370c51dbbbabeece5c923cad2e9c9f6abd",
    "labels": [
     "tailless",
     "bwb",
@@ -220,8 +222,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3182ee64ba8cb744e6a9a028c338bb736324d56cd91c9003d9fc7cd7d70e92af",
-   "surface_hash": "09fefca53f7813beb1db0ccc4ff3946589d83b7eecd4e517df9e8745de2b4c5a",
+   "input_hash": "74227b145bd0b6cbb94f2afb8eb07ae2c0ea678570ac0a201a2e5dde6544f5a0",
+   "surface_hash": "a26fe6f4a583d4ca484af28a4521692f32e8cc0b0206c98242e024dd712ce669",
    "labels": [
     "tailless",
     "flying_wing",
@@ -263,8 +265,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "deeb455ffb53e58325d89e33d90b066d65b311b169759f400ccc3eef10d02eaf",
-   "surface_hash": "4ad9273404bcef564b536a3bd213c5a2606393d94337f91ebf75e4ce55fe6a35",
+   "input_hash": "05d8ab88dff0a01dea0c4c532200466fced4ca7799bad66dca3e18d695832016",
+   "surface_hash": "2bc08517a69921368b350a096989ec7fb95d3118985a66a19a89b3b2b245a156",
    "labels": [
     "tailless",
     "bwb",
@@ -305,8 +307,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "16dce0ca692a33da81735d468b47c15f4d94673b6339a6a6e2c5b5809a80787d",
-   "surface_hash": "dbed90b7f7d005ca8c101a32632972f96d14b58a7bbee5e45a1295f3cafd7858",
+   "input_hash": "e193c895ca3b6128f060b8ddb125774c220240c847654a46199c3cb809f0d8ec",
+   "surface_hash": "899f9c0af8b0d9c59c2cefee40a009e0f3593d3ba7a0243a7318076afd40a711",
    "labels": [
     "tailless",
     "bwb",

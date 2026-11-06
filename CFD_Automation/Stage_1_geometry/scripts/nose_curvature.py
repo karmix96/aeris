@@ -1,28 +1,28 @@
-"""Nose curvature: the raw airfoil files against the Stage 1 built sections (open decision 64).
+"""Nose curvature: the raw airfoil files against the Stage 1 built sections (decision 64).
 
 One curvature method for every curve, so the answer depends on no frame and no formula: the
 curvature kappa(sigma) along the arc length sigma, from each curve's own first and second
-derivatives. sigma = 0 is the Stage 1 leading-edge point (rule D25: the raw point farthest from
-the trailing-edge midpoint), + on the upper side, - on the lower side. Every curve is put in the
-D25 frame of the raw file (unit chord), so lengths are in that chord c.
+derivatives. sigma = 0 is the farthest raw point from the trailing-edge midpoint (the old rule D25
+leading edge), + on the upper side, - on the lower side. Every curve is put in the frame of that
+point (unit chord), so lengths are in that chord c.
 
 Curves:
   raw         cubic interpolating spline (not-a-knot) through the raw file points, x and y against
               the cumulative chord length;
   raw5        the same with a quintic spline (how much the reference itself depends on the spline);
-  built       the Stage 1 section as the loft holds it: load_airfoil(name), two copies lofted by
-              cfdauto.geometry.loft.build_loft (numpy backend), the loft's own B-splines in s = sqrt(x/c);
-  built_avg   the same section points with averaging knots (Piegl and Tiller, eq. 9.8), the other
+  old         the section by the rule before decision 64 (frozen copy below: LE at the farthest raw
+              point, PCHIP in sqrt(x) per side, 101 points per side), as the loft holds it;
+  new         the section by cfdauto now (load_airfoil: LE at the apex of one cubic spline through the
+              raw points, both sides sampled from it, 201 points per side), as the loft holds it;
+  new101      the new rule with 101 points per side (why 201 are needed);
+  new_avg     the new section points with averaging knots (Piegl and Tiller, eq. 9.8), the other
               usual knot rule;
+  apex_pchip  diagnostic: LE at the apex, but the sides still resampled by PCHIP as before;
   exact       NACA 4415 only: the formula (m 0.04, p 0.4, t 0.15, open trailing edge -0.1015,
               thickness normal to the camber line), exact derivatives, placed on the file by a
-              least-squares similarity fit (raw points with x < 0.6);
-  fixed       the prototype fix, in this script only: the leading edge at the point of the raw
-              spline farthest from the trailing-edge midpoint (not the farthest raw point), both sides
-              sampled from that spline at the cosine x (101 points per side, as now), the same loft;
-  fixed200    the same fix with 201 points per side;
-  apex_pchip  diagnostic: the leading edge at the spline apex, but the sides still resampled by PCHIP
-              in sqrt(x) through the raw points, as now (which half of the fix does what).
+              least-squares similarity fit (raw points with x < 0.6).
+"As the loft holds it": two copies lofted by cfdauto.geometry.loft.build_loft (numpy backend), the
+loft's own B-splines in s = sqrt(x/c).
 
 Mesh number: T(h) = the largest turning a cell of arc length h gets near the nose = the largest
 integral of kappa over a window [sigma, sigma + h] inside |sigma| <= 3 % c,
@@ -30,15 +30,21 @@ for h = 0.04, 0.10, 0.18, 0.30, 0.50 % c.
 
 Criterion (fixed before computing, 7 Nov 2026): if |T_built(h) - T_raw(h)| / T_raw(h) < 5 % for
 every h on all ten airfoils, decision 64 closes with no fix (the built nose is faithful at mesh
-scale). Otherwise the prototype fix is measured the same way.
+scale). Otherwise a fix is made and measured the same way.
 
 Stage 2 check: the nose solve of the Stage 2 page (tapered training wing 35, station 21, NACA 4415):
-the largest turning per ring node against the nose spacing, with the built section and with the
-fixed one (swapped in at run time; cfdauto is not changed).
+the largest turning per ring node against the nose spacing, on the wing built by the old rule and
+by the new one.
 
-    cd CFD_Automation && python Stage_1_geometry/scripts/nose_curvature.py      # under 30 s
+Database pass (--database): every airfoil file on the search path (about 2,180), built by the old
+and the new rule; T(h) at h = 0.04 and 0.18 % c against the file's raw spline; the leading-edge
+move and the chord turn of the new rule.
+
+    cd CFD_Automation && python Stage_1_geometry/scripts/nose_curvature.py              # under 1 min
+    cd CFD_Automation && python Stage_1_geometry/scripts/nose_curvature.py --database   # about 4 min more
 
 Writes Stage_1_geometry/data/studies/nose_curvature.json and Stage_1_geometry/docs/nose_curvature.png.
+Without --database the database results already in the JSON are kept.
 """
 
 from __future__ import annotations
@@ -48,6 +54,7 @@ import json
 import re
 import subprocess
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -55,7 +62,7 @@ import matplotlib
 import numpy as np
 import scipy
 from scipy.interpolate import CubicSpline, PchipInterpolator, make_interp_spline
-from scipy.optimize import brentq, least_squares
+from scipy.optimize import least_squares
 from scipy.signal import find_peaks
 from scipy.spatial import cKDTree
 
@@ -68,18 +75,20 @@ sys.path.insert(0, str(ROOT.parent))                # CFD_Automation: the cfdaut
 from cfdauto.geometry import airfoils as A  # noqa: E402
 from cfdauto.geometry import sections as S  # noqa: E402
 from cfdauto.geometry.loft import build_loft  # noqa: E402
-from cfdauto.geometry.sections import Airfoil, Station, cosine_x, load_airfoil  # noqa: E402
+from cfdauto.geometry.sections import Airfoil, Station, airfoil_from_points, cosine_x, load_airfoil  # noqa: E402
 from cfdauto.paths import REPO  # noqa: E402
 
 AIRFOILS = ("naca4415", "e387", "sd7032", "mh104", "mh61", "mh45", "mh60", "s5010", "la2573a", "naca25118")
 LABEL = {"naca4415": "NACA 4415", "e387": "E387", "sd7032": "SD7032", "mh104": "MH 104", "mh61": "MH 61",
          "mh45": "MH 45", "mh60": "MH 60", "s5010": "S5010", "la2573a": "LA2573A", "naca25118": "NACA 25118"}
 H_PCT = (0.04, 0.10, 0.18, 0.30, 0.50)    # cell arc lengths [% c]
+H_DB_PCT = (0.04, 0.18)                   # the database pass
 WIN_C = 0.03                              # windows and the curvature peak: within 3 % c of arc
 PROF_C = 0.02                             # stored profile: +-2 % c
 PROF_N = 401
 LIMIT_PCT = 5.0                           # the criterion
-N_SIDE_DENSE = 30001                      # evaluation points per side (arc step about 1e-6 c)
+N_DENSE = 30001                           # evaluation points per side (arc step about 1e-6 c)
+N_DENSE_DB = 8001                         # the same, for the database pass
 STAGE2_WING = ("tapered", "training_focus", 35, 21)   # Stage 2 page, nose solve, NACA 4415 panel
 OUT_JSON = ROOT / "data" / "studies" / "nose_curvature.json"
 OUT_PNG = ROOT / "docs" / "nose_curvature.png"
@@ -149,17 +158,16 @@ def rotation(a: float) -> np.ndarray:
     return np.array([[np.cos(a), -np.sin(a)], [np.sin(a), np.cos(a)]])
 
 
-# --- the raw file in the Stage 1 frame ----------------------------------------------------------
+# --- the raw file in the frame of its farthest point -----------------------------------------------
 
-def d25(pts: np.ndarray):
-    """The frame airfoil_from_points uses (sections.py): LE = raw point farthest from the
-    trailing-edge midpoint, chord along x, unit chord."""
+def d25(pts: np.ndarray, strict: bool = True):
+    """LE = raw point farthest from the trailing-edge midpoint, chord along x, unit chord."""
     te_mid = 0.5 * (pts[0] + pts[-1])
     i_le = int(np.argmax(np.linalg.norm(pts - te_mid, axis=1)))
     le = pts[i_le]
     d = te_mid - le
     p = (pts - le) @ rotation(-float(np.arctan2(d[1], d[0]))).T / float(np.linalg.norm(d))
-    if np.mean(p[: i_le + 1, 1]) < np.mean(p[i_le:, 1]):
+    if strict and np.mean(p[: i_le + 1, 1]) < np.mean(p[i_le:, 1]):
         raise RuntimeError("file lists the lower side first; this study assumes Selig order")
     return p, i_le
 
@@ -174,12 +182,12 @@ def raw_spline(p: np.ndarray, i_le: int, quintic: bool = False):
     return spl, t, i_le
 
 
-def nose_raw(spl, t: np.ndarray, i_le: int) -> Nose:
+def nose_raw(spl, t: np.ndarray, i_le: int, n: int = N_DENSE) -> Nose:
     """tau = -t, so the curve runs from the lower side to the upper side."""
     tl = t[i_le]
-    tt = np.concatenate([np.linspace(tl + 0.045, tl, N_SIDE_DENSE), np.linspace(tl, tl - 0.045, N_SIDE_DENSE)[1:]])
+    tt = np.concatenate([np.linspace(tl + 0.045, tl, n), np.linspace(tl, tl - 0.045, n)[1:]])
     tt = np.clip(tt, t[0], t[-1])
-    return nose_from(-tt, -spl(tt, 1), spl(tt, 2), N_SIDE_DENSE - 1)
+    return nose_from(-tt, -spl(tt, 1), spl(tt, 2), n - 1)
 
 
 def _arc(spl, a: float, b: float, n: int = 2001) -> float:
@@ -189,7 +197,7 @@ def _arc(spl, a: float, b: float, n: int = 2001) -> float:
     return float(np.sum(0.5 * (sp[1:] + sp[:-1]) * np.diff(q)))
 
 
-# --- the built section, as the loft holds it -------------------------------------------------------
+# --- the sections as the loft holds them ------------------------------------------------------------
 
 def loft_curves(af: Airfoil):
     """The loft's own B-splines (upper, lower) in s = sqrt(x/c) at a station: two copies of the
@@ -213,18 +221,27 @@ def avg_knot_curves(af: Airfoil):
     return (lambda q, nu=0: up(q, nu)), (lambda q, nu=0: lo(q, nu))
 
 
-def nose_two_sided(up, lo, s_max: float = 0.3, scale: float = 1.0, rot=np.eye(2)) -> Nose:
+def nose_two_sided(up, lo, s_max: float = 0.3, scale: float = 1.0, rot=np.eye(2), n: int = N_DENSE) -> Nose:
     """A curve given as two branches from the nose (parameter s >= 0 on each), joined at s = 0:
     tau = -s on the lower branch, +s on the upper. scale and rot map derivatives into the raw frame.
     sigma = 0 appears twice: the lower branch's kappa(0-), then the upper branch's kappa(0+)."""
-    s = np.linspace(0.0, s_max, N_SIDE_DENSE)
+    s = np.linspace(0.0, s_max, n)
     dP = similarity(np.vstack([-lo(s[::-1], 1), up(s, 1)]), scale, rot, 0.0)
     ddP = similarity(np.vstack([lo(s[::-1], 2), up(s, 2)]), scale, rot, 0.0)
-    return nose_from(np.concatenate([-s[::-1], s]), dP, ddP, N_SIDE_DENSE)
+    return nose_from(np.concatenate([-s[::-1], s]), dP, ddP, n)
+
+
+def one_sided_le(up, lo, scale: float = 1.0) -> dict:
+    """Curvature radius of each branch at the leading edge itself (s = 0)."""
+    out = {}
+    for name, c in (("upper", up), ("lower", lo)):
+        d1, d2 = c(np.array([0.0]), 1)[0], c(np.array([0.0]), 2)[0]
+        out[f"R_le_{name}_c"] = float(scale * np.hypot(*d1) ** 3 / abs(d1[0] * d2[1] - d1[1] * d2[0]))
+    return out
 
 
 def polyline_check(names=("naca4415", "sd7032", "mh60")) -> float:
-    """T(h) of the built section from a dense polyline of loft.upper / loft.lower points (the way the
+    """T(h) of the new section from a dense polyline of loft.upper / loft.lower points (the way the
     mesher samples the loft), against the analytic T(h): the largest difference [deg]."""
     worst = 0.0
     for name in names:
@@ -244,13 +261,85 @@ def polyline_check(names=("naca4415", "sd7032", "mh60")) -> float:
     return float(worst)
 
 
-def one_sided_le(up, lo, scale: float = 1.0) -> dict:
-    """Curvature radius of each branch at the leading edge itself (s = 0)."""
-    out = {}
-    for name, c in (("upper", up), ("lower", lo)):
-        d1, d2 = c(np.array([0.0]), 1)[0], c(np.array([0.0]), 2)[0]
-        out[f"R_le_{name}_c"] = float(scale * np.hypot(*d1) ** 3 / abs(d1[0] * d2[1] - d1[1] * d2[0]))
-    return out
+# --- the old rule (before decision 64), frozen here for the comparison ----------------------------------
+
+def old_airfoil(name: str, pts: np.ndarray | None = None, n_side: int = 100) -> Airfoil:
+    """cfdauto's airfoil_from_points up to commit 382274f0: LE at the farthest raw point, each side
+    resampled by PCHIP in sqrt(x) through the raw points, 101 points per side."""
+    pts = A.raw_points(name) if pts is None else pts
+    te_mid = 0.5 * (pts[0] + pts[-1])
+    i_le = int(np.argmax(np.linalg.norm(pts - te_mid, axis=1)))
+    le = pts[i_le]
+    d = te_mid - le
+    p = (pts - le) @ rotation(-float(np.arctan2(d[1], d[0]))).T / float(np.linalg.norm(d))
+    upper, lower = p[: i_le + 1][::-1], p[i_le:]
+    if np.mean(upper[:, 1]) < np.mean(lower[:, 1]):
+        upper, lower = lower, upper
+    x = cosine_x(n_side)
+    return Airfoil(name, x, _old_resample(upper, x), _old_resample(lower, x))
+
+
+def _old_resample(side: np.ndarray, x: np.ndarray) -> np.ndarray:
+    xs = np.clip(side[:, 0], 0.0, None)
+    ys = side[:, 1]
+    keep = np.concatenate([[True], xs[1:] > np.maximum.accumulate(xs)[:-1] + 1e-12])
+    xs, ys = xs[keep], ys[keep]
+    bad = A.suspect_points(np.column_stack([xs, ys]))
+    if len(bad):
+        xs, ys = np.delete(xs, bad), np.delete(ys, bad)
+    xs[0], ys[0] = 0.0, 0.0
+    xs[-1] = 1.0
+    return PchipInterpolator(np.sqrt(xs), ys)(np.sqrt(x))
+
+
+# --- the new rule's frame, from cfdauto's own helpers ----------------------------------------------
+
+def new_frame(pts: np.ndarray) -> dict:
+    """The frame airfoil_from_points uses now, in terms of the old one (farthest raw point): where
+    the apex sits (sigma along the cleaned spline, + upper side), the LE move, the chord turn, and
+    the map from the new frame into the old one (scale, angle)."""
+    te_mid = 0.5 * (pts[0] + pts[-1])
+    p = S._clean(pts, te_mid)
+    t = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(p, axis=0), axis=1))])
+    spl = CubicSpline(t, p, bc_type="natural")           # as airfoil_from_points
+    i = int(np.argmax(np.linalg.norm(p - te_mid, axis=1)))
+    t_le = S._apex(spl, t, i, te_mid)
+    d_old, d_new = te_mid - p[i], te_mid - spl(t_le)
+    c_old = float(np.linalg.norm(d_old))
+    a_old, a_new = (float(np.arctan2(d[1], d[0])) for d in (d_old, d_new))
+    sigma = float(np.sign(t[i] - t_le) * abs(_arc(spl, t_le, t[i]))) / c_old    # Selig: the upper side first
+    return {"apex_sigma_pct": 100 * sigma, "le_move_pct": 100 * abs(sigma),
+            "chord_turn_deg": float(np.degrees(a_new - a_old)), "scale": float(np.linalg.norm(d_new)) / c_old,
+            "angle": a_new - a_old, "points_dropped": int(len(pts) - len(p)),
+            "_check": (spl, t, t_le, te_mid, d_new, a_new)}
+
+
+def check_new_frame(af: Airfoil, fr: dict) -> float:
+    """Largest difference between the section rebuilt from new_frame and load_airfoil's (should be 0)."""
+    spl, t, t_le, te_mid, d, a = fr["_check"]
+    frame = lambda q: (spl(q) - spl(t_le)) @ rotation(-a).T / np.linalg.norm(d)  # noqa: E731
+    up, lo = S._resample(frame, t_le, t[0], t[1], af.x), S._resample(frame, t_le, t[-1], t[-2], af.x)
+    if np.mean(up) < np.mean(lo):
+        up, lo = lo, up
+    return float(max(np.abs(up - af.yu).max(), np.abs(lo - af.yl).max()))
+
+
+def apex_pchip_airfoil(name: str, pts: np.ndarray, fr: dict, n_side: int = 100) -> Airfoil:
+    """Diagnostic: LE at the apex, the sides still resampled by PCHIP through the raw points."""
+    spl, t, t_le, te_mid, d, a = fr["_check"]
+    q = (pts - spl(t_le)) @ rotation(-a).T / np.linalg.norm(d)
+    i = int(np.argmax(np.linalg.norm(pts - te_mid, axis=1)))
+    cut = i if fr["apex_sigma_pct"] > 0 else i + 1          # the first raw point on the lower side
+    x = cosine_x(n_side)
+    ys = [_old_resample(np.vstack([[0.0, 0.0], side]), x) for side in (q[:cut][::-1], q[cut:])]
+    return Airfoil(name, x, ys[0], ys[1])
+
+
+def nose_new(af: Airfoil, fr: dict, n: int = N_DENSE) -> Nose:
+    """A section built in the new frame, its loft mapped into the old frame, sigma = 0 at the
+    farthest raw point."""
+    n_ = nose_two_sided(*loft_curves(af), scale=fr["scale"], rot=rotation(fr["angle"]), n=n)
+    return Nose(n_.sigma + fr["apex_sigma_pct"] / 100, n_.kappa, n_.theta)
 
 
 # --- NACA 4415 from the formula ------------------------------------------------------------------
@@ -296,7 +385,7 @@ def check_naca_derivatives() -> float:
 
 
 def fit_exact(p: np.ndarray) -> dict:
-    """Similarity map formula frame -> D25 raw frame, fitted to the raw points with x < 0.6."""
+    """Similarity map formula frame -> raw frame, fitted to the raw points with x < 0.6."""
     u = np.linspace(0.0, np.sqrt(0.62), 40001)
     dense = np.vstack([naca4_branch(True)(u)[::-1], naca4_branch(False)(u)[1:]])
     tree = cKDTree(dense)
@@ -325,81 +414,17 @@ def fit_exact(p: np.ndarray) -> dict:
             "residual_max_within_2pct_c_of_le": float(r[near].max()), "points_used": int(sel.sum())}
 
 
-def nose_exact(fit: dict) -> tuple[Nose, float]:
-    """The formula in the raw D25 frame; sigma = 0 at the curve point nearest the raw LE point."""
+def nose_exact(fit: dict) -> tuple[Nose, float, float]:
+    """The formula in the raw frame; sigma = 0 at the curve point nearest the raw LE point.
+    Also returns the distance of that point from the raw LE point and the sigma of the formula's origin."""
     rot, sc, shift = rotation(np.radians(fit["rotation_deg"])), fit["scale"], np.array(fit["shift_c"])
     up, lo = naca4_branch(True), naca4_branch(False)
     n = nose_two_sided(up, lo, s_max=0.3, scale=sc, rot=rot)
-    s = np.linspace(0.0, 0.3, N_SIDE_DENSE)
+    s = np.linspace(0.0, 0.3, N_DENSE)
     P = similarity(np.vstack([lo(s[::-1]), up(s)]), sc, rot, shift)
     i0 = int(np.argmin(np.linalg.norm(P, axis=1)))
-    return Nose(n.sigma - n.sigma[i0], n.kappa, n.theta - n.theta[i0]), float(np.linalg.norm(P[i0]))
-
-
-# --- the prototype fix (this script only) --------------------------------------------------------
-
-def apex(spl, t: np.ndarray, i_le: int) -> float:
-    """Parameter of the spline point farthest from the trailing-edge midpoint (1, 0): there the
-    tangent is square to the chord, which the sqrt(x) section assumes."""
-    g = lambda q: float(np.dot(spl(q) - [1.0, 0.0], spl(q, 1)))  # noqa: E731
-    return brentq(g, t[i_le - 1], t[i_le + 1], xtol=1e-15)
-
-
-def apex_frame(spl, t: np.ndarray, i_le: int) -> dict:
-    """The D25 frame moved to the spline apex: map from the raw D25 frame to the new frame."""
-    ts = apex(spl, t, i_le)
-    le = spl(ts)
-    d = np.array([1.0, 0.0]) - le
-    sigma_le = float(np.sign(t[i_le] - ts) * abs(_arc(spl, ts, t[i_le])))   # + when the apex is on the upper side
-    return {"t": ts, "le": le, "scale": float(np.linalg.norm(d)), "angle": float(np.arctan2(d[1], d[0])),
-            "apex_sigma_pct": 100 * sigma_le}
-
-
-def fixed_airfoil(name: str, spl, t: np.ndarray, i_le: int, n_side: int = 100):
-    """Prototype: LE at the spline apex; both sides sampled from the raw spline at the cosine x.
-    The trailing-edge end is clamped (not studied here)."""
-    fr = apex_frame(spl, t, i_le)
-    to_new = lambda q: (spl(q) - fr["le"]) @ rotation(-fr["angle"]).T / fr["scale"]  # noqa: E731
-    x = cosine_x(n_side)
-    ys = []
-    for t_end in (t[0], t[-1]):                                    # upper side, then lower side
-        tt = np.linspace(fr["t"], t_end, 20001)
-        px = to_new(tt)[:, 0]
-        y = np.zeros_like(x)
-        for i, xi in enumerate(x[1:], start=1):
-            j = int(np.argmax(px >= xi)) if np.any(px >= xi) else -1
-            if j <= 0:                                             # beyond the side's end: clamp
-                y[i] = to_new(tt[-1:])[0, 1]
-                continue
-            lo_t, hi_t = sorted((tt[j - 1], tt[j]))
-            q = brentq(lambda v: to_new(np.array([v]))[0, 0] - xi, lo_t, hi_t, xtol=1e-15)
-            y[i] = to_new(np.array([q]))[0, 1]
-        ys.append(y)
-    return Airfoil(name, x, ys[0], ys[1]), fr
-
-
-def apex_pchip_airfoil(name: str, p: np.ndarray, spl, t: np.ndarray, i_le: int, n_side: int = 100):
-    """Diagnostic: LE at the spline apex, sides still resampled as now (PCHIP in sqrt(x) through
-    the raw points, x kept increasing, last point at x = 1)."""
-    fr = apex_frame(spl, t, i_le)
-    q = (p - fr["le"]) @ rotation(-fr["angle"]).T / fr["scale"]
-    x = cosine_x(n_side)
-    ys = []
-    for side in (np.vstack([[0.0, 0.0], q[t < fr["t"]][::-1]]), np.vstack([[0.0, 0.0], q[t > fr["t"]]])):
-        xs, yv = np.clip(side[:, 0], 0.0, None), side[:, 1]
-        keep = np.concatenate([[True], xs[1:] > np.maximum.accumulate(xs)[:-1] + 1e-12])
-        xs, yv = xs[keep], yv[keep]
-        xs[-1] = 1.0
-        ys.append(PchipInterpolator(np.sqrt(xs), yv)(np.sqrt(x)))
-    return Airfoil(name, x, ys[0], ys[1]), fr
-
-
-def nose_moved(af: Airfoil, fr: dict) -> Nose:
-    """A section built in the apex frame, its loft mapped back into the raw D25 frame,
-    sigma = 0 at the raw LE point."""
-    up, lo = loft_curves(af)
-    n = nose_two_sided(up, lo, scale=fr["scale"], rot=rotation(fr["angle"]))
-    return Nose(n.sigma + fr["apex_sigma_pct"] / 100, n.kappa, n.theta)
+    n = Nose(n.sigma - n.sigma[i0], n.kappa, n.theta - n.theta[i0])
+    return n, float(np.linalg.norm(P[i0])), float(100 * n.sigma[N_DENSE])
 
 
 # --- per airfoil ------------------------------------------------------------------------------------
@@ -414,35 +439,38 @@ def study(name: str) -> tuple[dict, dict]:
     spl, t, il = raw_spline(p, i_le)
     curves = {"raw": nose_raw(spl, t, il), "raw5": nose_raw(*raw_spline(p, i_le, quintic=True))}
 
-    af = load_airfoil(name)
-    assert np.allclose([af.yu[0], af.yl[0]], 0.0) and np.allclose(p[i_le], 0.0)
-    up, lo = loft_curves(af)
-    curves["built"] = nose_two_sided(up, lo)
-    curves["built_avg"] = nose_two_sided(*avg_knot_curves(af))
+    af_old = old_airfoil(name, pts)
+    up_old, lo_old = loft_curves(af_old)
+    curves["old"] = nose_two_sided(up_old, lo_old)
+
+    fr = new_frame(pts)
+    af_new = load_airfoil(name)
+    rebuilt = check_new_frame(af_new, fr)
+    assert rebuilt < 1e-13, f"{name}: new_frame does not reproduce load_airfoil ({rebuilt:.1e})"
+    curves["new"] = nose_new(af_new, fr)
+    curves["new101"] = nose_new(airfoil_from_points(name, pts, 100), fr)
+    n_avg = nose_two_sided(*avg_knot_curves(af_new), scale=fr["scale"], rot=rotation(fr["angle"]))
+    curves["new_avg"] = Nose(n_avg.sigma + fr["apex_sigma_pct"] / 100, n_avg.kappa, n_avg.theta)
+    curves["apex_pchip"] = nose_new(apex_pchip_airfoil(name, pts, fr), fr)
 
     out = {"source": str(Path(A.source(name)).relative_to(REPO)) if A.find_file(name) else A.source(name),
-           "n_points": int(len(pts))}
+           "n_points": int(len(pts)), "points_dropped_by_new_rule": fr["points_dropped"]}
     if name == "naca4415":
         fit = fit_exact(p)
-        curves["exact"], fit["raw_le_to_formula_curve_c"] = nose_exact(fit)
+        curves["exact"], fit["raw_le_to_formula_curve_c"], fit["formula_origin_sigma_pct"] = nose_exact(fit)
         out["exact_fit"] = fit
 
-    af_fix, fr = fixed_airfoil(name, spl, t, il, 100)
-    curves["fixed"] = nose_moved(af_fix, fr)
-    curves["fixed200"] = nose_moved(*fixed_airfoil(name, spl, t, il, 200))
-    curves["apex_pchip"] = nose_moved(*apex_pchip_airfoil(name, p, spl, t, il))
-
-    # the raw points next to the LE, the spline apex, and the turning between the apex and the LE
-    # point: the angle the built section forces into the first gaps (> 0: apex on the lower side)
+    # the raw points next to the LE point, the apex, and the turning between the apex and the LE point:
+    # the angle the old rule forced into the first gaps (> 0: apex on the lower side)
     r = curves["raw"]
     out["raw_gap_upper_pct"] = 100 * abs(_arc(spl, t[il - 1], t[il]))
     out["raw_gap_lower_pct"] = 100 * abs(_arc(spl, t[il], t[il + 1]))
     out["apex_sigma_pct"] = fr["apex_sigma_pct"]
     out["tangent_tilt_at_le_deg"] = float(-np.degrees(np.interp(fr["apex_sigma_pct"] / 100, r.sigma, r.theta)))
-    out["fix_moves_le_pct"] = float(100 * np.linalg.norm(fr["le"]))
-    out["fix_turns_chord_deg"] = float(np.degrees(fr["angle"]))
-    out["built_le_one_sided"] = one_sided_le(up, lo)
-    out["fixed_le_one_sided"] = one_sided_le(*loft_curves(af_fix), scale=fr["scale"])
+    out["le_move_pct"] = fr["le_move_pct"]
+    out["chord_turn_deg"] = fr["chord_turn_deg"]
+    out["old_le_one_sided"] = one_sided_le(up_old, lo_old)
+    out["new_le_one_sided"] = one_sided_le(*loft_curves(af_new), scale=fr["scale"])
 
     out["curves"] = {k: measures(v) for k, v in curves.items()}
     ref = out["curves"]["raw"]
@@ -452,22 +480,19 @@ def study(name: str) -> tuple[dict, dict]:
         if "exact" in out["curves"] and k != "exact":
             v["T_diff_vs_exact_pct"] = diff_pct(v, out["curves"]["exact"])
     out["peaks"] = {k: peaks(v) for k, v in curves.items()}
-    out["profile_kappa"] = {k: profile(v) for k, v in curves.items()}
-    for k in ("built", "fixed", "fixed200"):
+    out["profile_kappa"] = {k: profile(v) for k, v in curves.items() if k not in ("new_avg", "apex_pchip")}
+    for k in ("old", "new", "new101", "apex_pchip"):
         out[f"{k}_passes"] = bool(np.all(np.abs(out["curves"][k]["T_diff_vs_raw_pct"]) < LIMIT_PCT))
     return out, curves
 
 
-# --- the Stage 2 nose solve with the built and the fixed section --------------------------------------
+# --- the Stage 2 nose solve on the old and the new wing ----------------------------------------------
 
 @contextlib.contextmanager
-def fixed_sections(name: str):
-    """Swap the fixed section in for `name` while a wing is built (cfdauto itself is not changed)."""
-    p, i_le = d25(A.raw_points(name))
-    spl, t, il = raw_spline(p, i_le)
-    af, _ = fixed_airfoil(name, spl, t, il, 100)       # 101 points per side: the wing's other sections
+def old_sections():
+    """Build wings by the old rule while inside (every section: the loft needs one x for all)."""
     orig = S.load_airfoil
-    S.load_airfoil = lambda n, *a, **k: af if n == name else orig(n, *a, **k)
+    S.load_airfoil = lambda n, *a, **k: old_airfoil(n)
     try:
         yield
     finally:
@@ -483,15 +508,15 @@ def stage2_nose_line() -> dict:
 
     wtype, wset, idx, j = STAGE2_WING
     rc = rules("C")
-    w = wing_from_set(wtype, wset, idx)
-    st = build_surface(w.loft, 3.0e5, "C").stations[j]
-    with fixed_sections("naca4415"):
-        w_fix = wing_from_set(wtype, wset, idx)
+    with old_sections():
+        w_old = wing_from_set(wtype, wset, idx)
+        st = build_surface(w_old.loft, 3.0e5, "C").stations[j]
+    w_new = wing_from_set(wtype, wset, idx)
     hs = np.geomspace(2e-5, 5e-3, 40)
     out = {"wing": f"{wtype} {wset} {idx}, station {j}", "v": float(st["v"]), "chord_m": float(st["chord_m"]),
-           "h_band_c": float(st["h_band_c"]), "sections_either_side": [s.airfoil.name for s in w.loft.stations[:2]],
+           "h_band_c": float(st["h_band_c"]), "sections_either_side": [s.airfoil.name for s in w_old.loft.stations[:2]],
            "h_le_pct": [float(100 * h) for h in hs]}
-    for key, wing in (("built", w), ("fixed", w_fix)):
+    for key, wing in (("old", w_old), ("new", w_new)):
         sec = Section.at(wing.loft, st["v"], rc.dense_per_side)
         c = sec.chord
         worst, where, cells = [], [], []
@@ -513,10 +538,160 @@ def stage2_nose_line() -> dict:
     return out
 
 
+# --- every airfoil file: old and new rule ---------------------------------------------------------------
+
+def _t_pair(n: Nose) -> list[float]:
+    return [turning_max(n.sigma, n.theta, h / 100)[0] for h in H_DB_PCT]
+
+
+def _why(e: Exception) -> str:
+    return f"{type(e).__name__}: {str(e).splitlines()[0][:120] if str(e) else ''}"
+
+
+HOOK_KAPPA = -1000.0      # a "hook": curvature below -1000/c within 3 % c of the LE (a tiny loop or fold)
+
+
+def _config_sections() -> list[str]:
+    """Every section the wing families and the published wings name (wing.yaml, published_wings.yaml)."""
+    import yaml
+
+    names: set[str] = set()
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in ("airfoils", "full_airfoils"):
+                    for x in v:
+                        names.update(x if isinstance(x, list) else [x])
+                else:
+                    walk(v)
+        elif isinstance(o, list):
+            for x in o:
+                walk(x)
+
+    for f in ("wing.yaml", "published_wings.yaml"):
+        walk(yaml.safe_load((ROOT / "configs" / f).read_text()))
+    return sorted(n for n in names if isinstance(n, str))
+
+
+def database_pass() -> dict:
+    """Old and new rule on every file of the search path; T(h) at H_DB_PCT against the raw spline."""
+    names = A.available()
+    cols = ["name", "points", "dropped", "T_raw_004", "T_raw_018", "T_raw5_004", "T_raw5_018", "T_old_004", "T_old_018",
+            "T_new_004", "T_new_018", "le_move_pct", "chord_turn_deg", "kmin_old", "kmin_new", "crossing_old", "crossing_new"]
+    rows, fails = [], {"read": [], "old": [], "new": [], "measure": []}
+    for k, name in enumerate(names):
+        if k % 250 == 0:
+            print(f"  database {k}/{len(names)}", flush=True)
+        try:
+            pts = A.raw_points(name)
+        except Exception as e:  # noqa: BLE001
+            fails["read"].append([name, _why(e)])
+            continue
+        built = {}
+        for key, make in (("old", lambda: old_airfoil(name, pts)), ("new", lambda: airfoil_from_points(name, pts))):
+            try:
+                af = make()
+                if not np.all(np.isfinite(np.r_[af.yu, af.yl])):
+                    raise FloatingPointError("non-finite section points")
+                built[key] = af
+            except Exception as e:  # noqa: BLE001
+                fails[key].append([name, _why(e)])
+        rec = dict.fromkeys(cols)
+        rec["name"], rec["points"] = name, int(len(pts))
+        try:
+            p, i_le = d25(pts, strict=False)
+            spl, t, il = raw_spline(p, i_le)
+            rec["T_raw_004"], rec["T_raw_018"] = _t_pair(nose_raw(spl, t, il, N_DENSE_DB))
+            rec["T_raw5_004"], rec["T_raw5_018"] = _t_pair(nose_raw(*raw_spline(p, i_le, quintic=True), N_DENSE_DB))
+            for key in ("old", "new"):
+                if key not in built:
+                    continue
+                if key == "old":
+                    n = nose_two_sided(*loft_curves(built["old"]), n=N_DENSE_DB)
+                else:
+                    fr = new_frame(pts)
+                    rec["dropped"], rec["le_move_pct"], rec["chord_turn_deg"] = (
+                        fr["points_dropped"], fr["le_move_pct"], fr["chord_turn_deg"])
+                    n = nose_new(built["new"], fr, N_DENSE_DB)
+                rec[f"T_{key}_004"], rec[f"T_{key}_018"] = _t_pair(n)
+                rec[f"kmin_{key}"] = float(n.kappa[np.abs(n.sigma) <= WIN_C].min())
+                rec[f"crossing_{key}"] = bool(np.any(built[key].thickness[1:-1] <= 0))
+        except Exception as e:  # noqa: BLE001
+            fails["measure"].append([name, _why(e)])
+        rows.append([round(v, 6) if isinstance(v, float) else v for v in (rec[k] for k in cols)])
+    return {"columns": cols, "rows": rows, "fails": fails, "summary": database_summary(cols, rows, fails, len(names))}
+
+
+def _measured(c: dict, rows: list) -> tuple[list, list]:
+    """Rows with every T, and among the rest those whose raw spline gives no turning (a broken file)."""
+    have = [r for r in rows if None not in (r[c["T_raw_004"]], r[c["T_raw5_004"]], r[c["T_old_004"]], r[c["T_new_004"]])]
+    ok = [r for r in have if min(r[c["T_raw_004"]], r[c["T_raw_018"]], r[c["T_raw5_004"]], r[c["T_raw5_018"]]) > 1e-6]
+    return ok, [r[0] for r in have if r not in ok]
+
+
+def database_summary(cols, rows, fails, n_names) -> dict:
+    c = {k: i for i, k in enumerate(cols)}
+    full, degenerate = _measured(c, rows)
+
+    def dev(r, key, ref="raw"):
+        return max(abs(100 * (r[c[f"T_{key}_{h}"]] - r[c[f"T_{ref}_{h}"]]) / r[c[f"T_{ref}_{h}"]]) for h in ("004", "018"))
+
+    d_old, d_new = np.array([dev(r, "old") for r in full]), np.array([dev(r, "new") for r in full])
+    spread = np.array([dev(r, "raw5") for r in full])            # quintic against cubic: the reference's own spread
+    move = np.array([r[c["le_move_pct"]] for r in full])
+    turn = np.array([r[c["chord_turn_deg"]] for r in full])
+    hook = {k: {r[0] for r in rows if r[c[f"kmin_{k}"]] is not None and r[c[f"kmin_{k}"]] < HOOK_KAPPA} for k in ("old", "new")}
+    cross = {k: sorted(r[0] for r in rows if r[c[f"crossing_{k}"]]) for k in ("old", "new")}
+    fail_new = d_new >= LIMIT_PCT
+    pct = lambda a: {f"p{q}": float(np.percentile(a, q)) for q in (50, 90, 99)} | {"max": float(a.max())}  # noqa: E731
+    order = np.argsort(d_new)[::-1][:10]
+    by_name = {r[0]: (i, r) for i, r in enumerate(full)}
+    config = {}
+    for n in _config_sections():
+        if n in by_name:
+            i, r = by_name[n]
+            config[n] = {"dev_old_pct": float(d_old[i]), "dev_new_pct": float(d_new[i]), "le_move_pct": float(move[i]),
+                         "chord_turn_deg": float(turn[i]), "hook_new": n in hook["new"], "crossing_new": n in cross["new"]}
+        else:
+            config[n] = "no file: built from the NACA formula" if A.find_file(n) is None else "not measured"
+    return {
+        "files": n_names, "read_failures": len(fails["read"]),
+        "why_read_fails": dict(Counter(w.split(": ", 2)[-1] for _, w in fails["read"])),
+        "built_old": n_names - len(fails["read"]) - len(fails["old"]),
+        "built_new": n_names - len(fails["read"]) - len(fails["new"]),
+        "measured_both": len(full), "measure_failures": len(fails["measure"]),
+        "raw_spline_gives_no_turning": degenerate,
+        "why_old_fails": dict(Counter(w for _, w in fails["old"])),
+        "why_new_fails": dict(Counter(w for _, w in fails["new"])),
+        "criterion": f"|T_built - T_raw| / T_raw < {LIMIT_PCT} % at h = 0.04 and 0.18 % c",
+        "pass_old": int(np.sum(d_old < LIMIT_PCT)), "pass_new": int(np.sum(~fail_new)),
+        "pass_old_share_pct": float(100 * np.mean(d_old < LIMIT_PCT)),
+        "pass_new_share_pct": float(100 * np.mean(~fail_new)),
+        "new_fails_where_quintic_and_cubic_differ_by_5pct_or_more": int(np.sum(fail_new & (spread >= LIMIT_PCT))),
+        "new_fails_within_5pct_of_the_quintic": int(np.sum(fail_new & (np.array([dev(r, "new", "raw5") for r in full]) < LIMIT_PCT))),
+        "worst_dev_old_pct": pct(d_old), "worst_dev_new_pct": pct(d_new),
+        "worst_ten_new": [{"name": full[i][0], "points": full[i][1], "dev_new_pct": float(d_new[i]),
+                           "dev_old_pct": float(d_old[i]), "quintic_vs_cubic_pct": float(spread[i]),
+                           "hook_new": full[i][0] in hook["new"], "hook_old": full[i][0] in hook["old"],
+                           "le_move_pct": float(move[i]), "chord_turn_deg": float(turn[i])} for i in order],
+        "le_move_pct": pct(move) | {"over_0.1": int(np.sum(move > 0.1)), "over_0.2": int(np.sum(move > 0.2)),
+                                    "over_0.5": int(np.sum(move > 0.5))},
+        "chord_turn_abs_deg": pct(np.abs(turn)) | {"over_0.05": int(np.sum(np.abs(turn) > 0.05)),
+                                                   "over_0.1": int(np.sum(np.abs(turn) > 0.1)),
+                                                   "over_0.3": int(np.sum(np.abs(turn) > 0.3))},
+        "hooks_old": len(hook["old"]), "hooks_new": len(hook["new"]),
+        "hooks_new_not_old": sorted(hook["new"] - hook["old"]), "hooks_old_not_new": len(hook["old"] - hook["new"]),
+        "hooks_both": sorted(hook["old"] & hook["new"]),
+        "crossing_old": cross["old"], "crossing_new": cross["new"],
+        "config_sections": config,
+    }
+
+
 # --- the figure ------------------------------------------------------------------------------------
 
 INK, INK2, MUTED, GRID, SURF = "#0b0b0b", "#52514e", "#8a8984", "#e4e2dc", "#fcfcfb"
-C_FIX, C_BUILT = "#2a78d6", "#eb6834"          # reference palette slots 1 and 2 (validated, light)
+C_NEW, C_OLD = "#2a78d6", "#eb6834"            # reference palette slots 1 and 2 (validated, light)
 
 
 def figure(res: dict, keep: dict) -> None:
@@ -524,57 +699,54 @@ def figure(res: dict, keep: dict) -> None:
                          "ytick.color": INK2, "axes.titlesize": 10, "axes.titlecolor": INK, "legend.fontsize": 8,
                          "axes.spines.top": False, "axes.spines.right": False, "figure.facecolor": SURF,
                          "axes.facecolor": SURF, "savefig.facecolor": SURF})
-    fig = plt.figure(figsize=(15, 9.2), dpi=130)
-    gs = fig.add_gridspec(2, 12, height_ratios=[1, 1.05], hspace=0.42, wspace=1.6)
-    show = ("naca4415", "e387", "sd7032", "mh104")
-    for i, name in enumerate(show):
+    db = res.get("database")
+    fig = plt.figure(figsize=(15, 13.2 if db else 9.2), dpi=130)
+    gs = fig.add_gridspec(3 if db else 2, 12, height_ratios=[1, 1.05, 1.0][: 3 if db else 2], hspace=0.5, wspace=1.6,
+                          top=0.915 if db else 0.885)
+    for i, name in enumerate(("naca4415", "e387", "sd7032", "mh104")):
         a = fig.add_subplot(gs[0, 3 * i:3 * i + 3])
         cv, r = keep[name], res["airfoils"][name]
         ref = cv["raw"]
         top = 2.3 * np.max(ref.kappa[np.abs(ref.sigma) <= PROF_C])
-        lines = [("raw", "raw file (cubic spline)", INK2, "-", 1.6), ("exact", "formula", INK, ":", 1.4),
-                 ("built", "built now", C_BUILT, "-", 1.4), ("fixed200", "fix (apex, 201 points/side)", C_FIX, "--", 1.4)]
-        for key, lab, col, ls, lw in lines:
-            if key not in cv:
-                continue
-            n = cv[key]
-            m = np.abs(n.sigma) <= PROF_C
-            a.plot(100 * n.sigma[m], np.minimum(n.kappa[m], top * 1.2), ls=ls, color=col, lw=lw, label=lab)
+        for key, lab, col, ls, lw in (("raw", "raw file (cubic spline)", INK2, "-", 1.6), ("exact", "formula", INK, ":", 1.4),
+                                      ("old", "built, old rule", C_OLD, "-", 1.4), ("new", "built, new rule (201 points/side)", C_NEW, "--", 1.4)):
+            if key in cv:
+                n = cv[key]
+                m = np.abs(n.sigma) <= PROF_C
+                a.plot(100 * n.sigma[m], np.minimum(n.kappa[m], top * 1.2), ls=ls, color=col, lw=lw, label=lab)
         a.set_xlim(-2, 2)
         a.set_ylim(0, top)
         a.axvline(0, color=GRID, lw=0.8, zorder=0)
         a.grid(True, color=GRID, lw=0.5)
-        b = cv["built"]
+        b = cv["old"]
         k_le = float(np.max(b.kappa[np.abs(b.sigma) < 1e-9]))
         if k_le > top:
-            side = "upper" if r["built_le_one_sided"]["R_le_upper_c"] < r["built_le_one_sided"]["R_le_lower_c"] else "lower"
-            a.annotate(f"built at the LE ({side} side):\n{k_le:.0f}/c, R = {1 / k_le:.4f} c", xy=(0, top),
+            side = "upper" if r["old_le_one_sided"]["R_le_upper_c"] < r["old_le_one_sided"]["R_le_lower_c"] else "lower"
+            a.annotate(f"old rule at the LE ({side} side):\n{k_le:.0f}/c, R = {1 / k_le:.4f} c", xy=(0, top),
                        xytext=(0.12 if side == "upper" else -0.12, 0.93 * top), ha="left" if side == "upper" else "right",
                        va="top", fontsize=7.5, color=INK2, arrowprops={"arrowstyle": "->", "color": MUTED, "lw": 0.8})
         if name == "naca4415":
-            pk = max((q for q in r["peaks"]["built"] if q["sigma_pct"] < -0.3), key=lambda q: q["kappa"])
+            pk = max((q for q in r["peaks"]["old"] if q["sigma_pct"] < -0.3), key=lambda q: q["kappa"])
             a.annotate(f"bump {pk['kappa']:.1f}/c\n(raw {np.interp(pk['sigma_pct'] / 100, ref.sigma, ref.kappa):.1f}/c)",
                        xy=(pk["sigma_pct"], pk["kappa"]), xytext=(-1.95, 0.80 * top), fontsize=7.5, color=INK2,
                        arrowprops={"arrowstyle": "->", "color": MUTED, "lw": 0.8})
-        a.set_title(f"{LABEL[name]} ({r['n_points']} points): nose curvature\n"
-                    f"apex {r['apex_sigma_pct']:+.3f} % c from the LE point, tilt {r['tangent_tilt_at_le_deg']:+.1f}°",
-                    fontsize=9.5)
-        a.set_xlabel("arc from the LE point [% c]; − lower, + upper", fontsize=8.5)
+        a.set_title(f"{LABEL[name]} ({r['n_points']} points)\n"
+                    f"apex {r['apex_sigma_pct']:+.3f} % c, tilt {r['tangent_tilt_at_le_deg']:+.1f}°", fontsize=9.5)
+        a.set_xlabel("arc [% c]; − lower, + upper", fontsize=8.5)
         if i == 0:
             a.set_ylabel("curvature [1/c]")
             fig.legend(*a.get_legend_handles_labels(), loc="upper center", ncol=4, frameon=False,
-                       bbox_to_anchor=(0.5, 0.975), fontsize=8.5)
+                       bbox_to_anchor=(0.5, 0.963 if db else 0.95), fontsize=8.5)
 
     h = np.array(H_PCT)
-    # (e) the current build against the raw file
-    a = fig.add_subplot(gs[1, 0:4])
+    a = fig.add_subplot(gs[1, 0:4])                     # the old rule against the raw file
     a.axhspan(0.95, 1.05, color=GRID, alpha=0.8, lw=0, zorder=0)
     a.text(0.58, 0.895, "±5 % band (criterion)", ha="right", va="center", fontsize=7.5, color=INK2)
     quiet = []
     for name in AIRFOILS:
         c = res["airfoils"][name]["curves"]
-        ratio = np.array(c["built"]["T_deg"]) / np.array(c["raw"]["T_deg"])
-        a.plot(h, ratio, "-o", color=C_BUILT, lw=1.1, ms=3.5, alpha=0.9)
+        ratio = np.array(c["old"]["T_deg"]) / np.array(c["raw"]["T_deg"])
+        a.plot(h, ratio, "-o", color=C_OLD, lw=1.1, ms=3.5, alpha=0.9)
         if ratio[0] > 1.4 or name == "mh60":
             a.text(0.037, ratio[0], LABEL[name], ha="right", va="center", fontsize=7.5, color=INK2)
         else:
@@ -589,21 +761,20 @@ def figure(res: dict, keep: dict) -> None:
     a.grid(True, color=GRID, lw=0.5)
     a.set_xlabel("cell arc length h [% c]")
     a.set_ylabel("T built / T raw  (largest turning per cell)")
-    a.set_title("Built now, all ten: turning per cell against the raw file")
+    a.set_title("Old rule, all ten: turning per cell against the raw file")
     a.text(0.98, 0.97, "one line per airfoil; the lines near 1.15–1.25:\n" + ", ".join(quiet[:3]) + ",\n"
            + ", ".join(quiet[3:]), transform=a.transAxes, ha="right", va="top", fontsize=7.5, color=INK2)
 
-    # (f) the fix against the raw file
-    a = fig.add_subplot(gs[1, 4:8])
+    a = fig.add_subplot(gs[1, 4:8])                     # the new rule against the raw file
     a.axhspan(-LIMIT_PCT, LIMIT_PCT, color=GRID, alpha=0.8, lw=0, zorder=0)
-    for key, ls, lab in (("fixed", "--", "fix, 101 points per side (as now)"), ("fixed200", "-", "fix, 201 points per side")):
+    for key, ls, lab in (("new101", "--", "new rule, 101 points per side"), ("new", "-", "new rule, 201 points per side (built)")):
         for i, name in enumerate(AIRFOILS):
             d = res["airfoils"][name]["curves"][key]["T_diff_vs_raw_pct"]
-            a.plot(h, d, ls=ls, marker="o", color=C_FIX, lw=1.1 if key == "fixed200" else 0.9, ms=3.0,
-                   alpha=1.0 if key == "fixed200" else 0.55, label=lab if i == 0 else None)
-    for key, dy in (("fixed", 0.0), ("fixed200", 0.0)):
+            a.plot(h, d, ls=ls, marker="o", color=C_NEW, lw=1.1 if key == "new" else 0.9, ms=3.0,
+                   alpha=1.0 if key == "new" else 0.55, label=lab if i == 0 else None)
+    for key in ("new101", "new"):
         d = res["airfoils"]["mh60"]["curves"][key]["T_diff_vs_raw_pct"][0]
-        a.text(0.042, d + dy, f" MH 60: {d:+.1f} %", ha="left", va="center", fontsize=7.5, color=INK2)
+        a.text(0.042, d, f" MH 60: {d:+.1f} %", ha="left", va="center", fontsize=7.5, color=INK2)
     a.set_xscale("log")
     a.set_xticks(h, [f"{v:.2f}" for v in h])
     a.minorticks_off()
@@ -611,18 +782,17 @@ def figure(res: dict, keep: dict) -> None:
     a.set_ylim(-11, 6)
     a.grid(True, color=GRID, lw=0.5)
     a.set_xlabel("cell arc length h [% c]")
-    a.set_ylabel("(T fix − T raw) / T raw [%]")
-    a.set_title("With the fix (apex + spline), all ten")
+    a.set_ylabel("(T built − T raw) / T raw [%]")
+    a.set_title("New rule (cfdauto now), all ten")
     a.legend(loc="lower right", frameon=False)
     a.text(0.6, 4.6, "±5 % (criterion)", ha="right", va="center", fontsize=7.5, color=INK2)
 
-    # (g) the Stage 2 nose solve
-    a = fig.add_subplot(gs[1, 8:12])
+    a = fig.add_subplot(gs[1, 8:12])                    # the Stage 2 nose solve
     s2 = res["stage2_nose_line"]
     hl = np.array(s2["h_le_pct"])
     a.axhline(10.0, color=MUTED, lw=1.0, ls="--")
     a.text(0.0022, 10.15, "target 10°", fontsize=7.5, color=INK2, va="bottom")
-    for key, col, lab in (("built", C_BUILT, "built now"), ("fixed", C_FIX, "fix (apex + spline)")):
+    for key, col, lab in (("old", C_OLD, "old rule"), ("new", C_NEW, "new rule")):
         a.semilogx(hl, s2[key]["turning_deg"], "-o", color=col, lw=1.1, ms=3.0, label=lab)
     a.set_xlim(0.0015, 0.6)
     a.set_ylim(5, 12.5)
@@ -630,13 +800,66 @@ def figure(res: dict, keep: dict) -> None:
     a.set_xlabel("nose spacing [% c]")
     a.set_ylabel("largest turning per node [°]")
     a.set_title("Stage 2 nose solve, NACA 4415 station (wing 35, station 21)")
-    lo_b = [v for v, hh in zip(s2["built"]["worst_node_sigma_pct"], hl) if hh < 0.2]
+    lo_b = [v for v, hh in zip(s2["old"]["worst_node_sigma_pct"], hl) if hh < 0.2]
     a.text(0.03, 0.97, f"below 0.2 % c both lines are flat: the worst node sits\n"
            f"{-max(lo_b):.1f}–{-min(lo_b):.1f} % c down the lower side, where cells\n"
            f"are set by growth 1.2, not by the nose spacing",
            transform=a.transAxes, ha="left", va="top", fontsize=7.5, color=INK2)
     a.legend(loc="lower right", frameon=False)
-    fig.suptitle("Decision 64: the built nose against the raw file, one curvature method (7 Nov 2026)",
+
+    if db:
+        s = db["summary"]
+        cols = {k: i for i, k in enumerate(db["columns"])}
+        full, _ = _measured(cols, db["rows"])
+
+        def dev(r, key):
+            return max(abs(100 * (r[cols[f"T_{key}_{hh}"]] - r[cols[f"T_raw_{hh}"]]) / r[cols[f"T_raw_{hh}"]])
+                       for hh in ("004", "018"))
+
+        a = fig.add_subplot(gs[2, 0:4])
+        for key, col, lab in (("old", C_OLD, "old rule"), ("new", C_NEW, "new rule")):
+            d = np.sort([max(dev(r, key), 1e-3) for r in full])
+            a.step(d, 100 * np.arange(1, len(d) + 1) / len(d), where="post", color=col, lw=1.4,
+                   label=f"{lab}: {s[f'pass_{key}_share_pct']:.1f} % pass")
+        a.axvline(LIMIT_PCT, color=MUTED, lw=1.0, ls="--")
+        a.text(LIMIT_PCT * 1.08, 4, "5 %", fontsize=7.5, color=INK2)
+        a.set_xscale("log")
+        a.set_xlim(1e-2, 2e3)
+        a.set_ylim(0, 100)
+        a.grid(True, color=GRID, lw=0.5)
+        a.set_xlabel("worst |T built − T raw| / T raw at h = 0.04 and 0.18 % c [%]")
+        a.set_ylabel("share of files at or below [%]")
+        a.set_title(f"All {s['measured_both']} database files: old against new rule\n"
+                    f"hooks at the nose: old {s['hooks_old']}, new {s['hooks_new']}; "
+                    f"crossing surfaces: old {len(s['crossing_old'])}, new {len(s['crossing_new'])}", fontsize=9.5)
+        a.legend(loc="lower right", frameon=False)
+
+        move = np.array([r[cols["le_move_pct"]] for r in full])
+        turn = np.array([r[cols["chord_turn_deg"]] for r in full])
+        a = fig.add_subplot(gs[2, 4:8])
+        a.hist(move, bins=np.linspace(0, max(0.3, move.max() * 1.02), 61), color=C_NEW, alpha=0.9, rwidth=0.85)
+        a.set_yscale("log")
+        a.grid(True, color=GRID, lw=0.5)
+        a.set_xlabel("leading-edge move along the nose [% c]")
+        a.set_ylabel("files")
+        lm = s["le_move_pct"]
+        a.set_title("Side effect 1: the leading edge moves")
+        a.text(0.97, 0.95, f"median {lm['p50']:.3f} % c, 90 % {lm['p90']:.3f}, 99 % {lm['p99']:.3f}\n"
+               f"max {lm['max']:.3f} % c; over 0.1 % c: {lm['over_0.1']} files",
+               transform=a.transAxes, ha="right", va="top", fontsize=7.5, color=INK2)
+        a = fig.add_subplot(gs[2, 8:12])
+        lim = max(0.15, np.abs(turn).max() * 1.02)
+        a.hist(turn, bins=np.linspace(-lim, lim, 61), color=C_NEW, alpha=0.9, rwidth=0.85)
+        a.set_yscale("log")
+        a.grid(True, color=GRID, lw=0.5)
+        a.set_xlabel("chord turn [°] (+: chord tilts up toward the TE)")
+        a.set_ylabel("files")
+        ct = s["chord_turn_abs_deg"]
+        a.set_title("Side effect 2: the chord line turns")
+        a.text(0.03, 0.95, f"|turn|: median {ct['p50']:.3f}°\n90 % {ct['p90']:.3f}°, 99 % {ct['p99']:.3f}°\n"
+               f"max {ct['max']:.3f}°; over 0.1°:\n{ct['over_0.1']} files",
+               transform=a.transAxes, ha="left", va="top", fontsize=7.5, color=INK2)
+    fig.suptitle("Decision 64: the built nose against the raw file, old and new rule (7 Nov 2026)",
                  fontsize=11.5, color=INK, y=1.0)
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_PNG, bbox_inches="tight")
@@ -649,9 +872,11 @@ _NUM_LIST = re.compile(r"\[\s+(-?[\d.eE+-]+(?:,\s+-?[\d.eE+-]+)*)\s+\]")
 
 
 def dumps(obj) -> str:
-    """json with indent 1, but every list of plain numbers on one line."""
-    return _NUM_LIST.sub(lambda m: "[" + ", ".join(v.strip() for v in m.group(1).split(",")) + "]",
+    """json with indent 1, but every list of plain numbers on one line, and each database row too."""
+    text = _NUM_LIST.sub(lambda m: "[" + ", ".join(v.strip() for v in m.group(1).split(",")) + "]",
                          json.dumps(obj, indent=1))
+    return re.sub(r"\[\s+(\"[^\"\n]*\"(?:,\s+(?:-?[\d.eE+-]+|null|true|false|\"[^\"\n]*\"))+)\s+\]",
+                  lambda m: "[" + ", ".join(v.strip() for v in re.split(r",\s+(?=[-\d\"nft])", m.group(1))) + "]", text)
 
 
 def git_head() -> str:
@@ -662,15 +887,15 @@ def git_head() -> str:
         return "unknown"
 
 
-def main() -> None:
+def main(argv: list[str]) -> None:
     res = {"meta": {
         "date": "2026-11-07", "decision": 64, "git_base": git_head(),
         "criterion": f"|T_built(h) - T_raw(h)| / T_raw(h) < {LIMIT_PCT} % for every h on all ten airfoils",
         "h_pct": list(H_PCT), "window_pct": 100 * WIN_C, "profile_sigma_pct": [-100 * PROF_C, 100 * PROF_C, PROF_N],
-        "units": "lengths in the D25 chord of the raw file (c); kappa in 1/c; T in degrees",
-        "sigma": "arc length from the Stage 1 LE point (farthest raw point from the TE midpoint), + upper, - lower",
-        "tangent_tilt_at_le_deg": "turning of the raw spline between its apex and the LE point (> 0: apex on the lower side)",
-        "loft_backend": "numpy (pyGeo not installed); built_avg checks the other knot rule",
+        "units": "lengths in the chord from the farthest raw point to the TE midpoint (c); kappa in 1/c; T in degrees",
+        "sigma": "arc length from the raw point farthest from the TE midpoint (the old LE), + upper, - lower",
+        "tangent_tilt_at_le_deg": "turning of the raw spline between its apex and the farthest raw point (> 0: apex on the lower side)",
+        "loft_backend": "numpy (pyGeo not installed); new_avg checks the other knot rule",
         "numpy": np.__version__, "scipy": scipy.__version__,
         "naca_derivative_check_rel_err": check_naca_derivatives(),
         "polyline_check_max_diff_deg": polyline_check()},
@@ -679,21 +904,28 @@ def main() -> None:
     for name in AIRFOILS:
         res["airfoils"][name], keep[name] = study(name)
         c = res["airfoils"][name]["curves"]
-        print(f"{name:10s} R_min raw {c['raw']['R_min_c']:.4f} built {c['built']['R_min_c']:.4f} "
-              f"fix200 {c['fixed200']['R_min_c']:.4f} | built-raw % " +
-              " ".join(f"{v:+7.1f}" for v in c["built"]["T_diff_vs_raw_pct"]) +
-              " | fix200-raw % " + " ".join(f"{v:+5.1f}" for v in c["fixed200"]["T_diff_vs_raw_pct"]))
-    res["verdict"] = {k: [n for n, a in res["airfoils"].items() if not a[f"{k}_passes"]]
-                      for k in ("built", "fixed", "fixed200")}
-    res["verdict"] = {"fails_" + k: v for k, v in res["verdict"].items()}
-    res["verdict"]["decision_64_closes_without_fix"] = not res["verdict"]["fails_built"]
+        print(f"{name:10s} R_min raw {c['raw']['R_min_c']:.4f} old {c['old']['R_min_c']:.4f} "
+              f"new {c['new']['R_min_c']:.4f} | old-raw % " +
+              " ".join(f"{v:+7.1f}" for v in c["old"]["T_diff_vs_raw_pct"]) +
+              " | new-raw % " + " ".join(f"{v:+5.1f}" for v in c["new"]["T_diff_vs_raw_pct"]))
+    res["verdict"] = {"fails_" + k: [n for n, a in res["airfoils"].items() if not a[f"{k}_passes"]]
+                      for k in ("old", "new", "new101", "apex_pchip")}
+    res["verdict"]["decision_64_closes_without_fix"] = not res["verdict"]["fails_old"]
     res["stage2_nose_line"] = stage2_nose_line()
+    if "--database" in argv:
+        res["database"] = database_pass()
+    elif OUT_JSON.exists() and "database" in (prev := json.loads(OUT_JSON.read_text())):
+        res["database"] = prev["database"]
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    OUT_JSON.write_text(dumps(res))
+    text = dumps(res)
+    assert json.dumps(json.loads(text), sort_keys=True) == json.dumps(res, sort_keys=True), "compact json lost data"
+    OUT_JSON.write_text(text)
     figure(res, keep)
     print("wrote", OUT_JSON.relative_to(ROOT.parent), "and", OUT_PNG.relative_to(ROOT.parent))
     print(json.dumps(res["verdict"]))
+    if "database" in res:
+        print(json.dumps(res["database"]["summary"], indent=1))
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

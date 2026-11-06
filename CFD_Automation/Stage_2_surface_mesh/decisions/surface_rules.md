@@ -1,7 +1,8 @@
-# Stage 2 decisions — the surface mesh (2 Nov 2026, updated 6 Nov 2026)
+# Stage 2 decisions — the surface mesh (2 Nov 2026, updated 7 Nov 2026)
 
 What was decided while building the surface mesher, why, and what the first screen showed.
-The values are in `configs/surface.yaml`; the rules table is in `README.md`.
+Sections 1–11 are the first approach (values in `configs/surface_first.yaml`); section 13 is the new rules as built
+(values in `configs/surface.yaml`). The rules table is in `README.md`.
 
 ## 1. One spacing tool for everything
 
@@ -179,7 +180,7 @@ distributions) found the tip-gap tolerance, the kinked noses of the corner set, 
 0.08 quads; the second (one distribution) found the 1.25–1.26 growth on NACA 4415 noses; the third ran before
 the flat-nose fix (section 6). With the nose held over four cells the largest growth fell to 1.21.
 
-## 12. The new approach (decided 4–6 Nov 2026, not built yet)
+## 12. The new approach (decided 4–6 Nov 2026; built 7 Nov, section 13)
 
 What was first is sections 1–11: every rule met at level C, the coarsest of C, M, F, FF. The owner decided a new
 approach on 4–6 Nov; `CFD_Automation/OPEN_DECISIONS.md` 67–76 has each item with its reason.
@@ -207,3 +208,119 @@ approach on 4–6 Nov; `CFD_Automation/OPEN_DECISIONS.md` 67–76 has each item 
   0.025 % c on NACA 4415, about 7 × smaller than the 0.18 % c nose cell of the NACA 4415 reference wings at C).
   Re-measure raw and built with one curvature method; fix only if a real error remains.
 
+
+## 13. The new rules, built (7 Nov 2026)
+
+Decisions 71, 72 and 74 (option A, decided 7 Nov) are now in the code. Sections 1–11 are the first approach. It is
+kept in `configs/surface_first.yaml` and rebuilds the same meshes node for node (BWB reference wing 0, Re 3 × 10⁵,
+level C: the same node hash before and after the change).
+
+**What changed in the code.**
+
+- `configs/surface.yaml`: levels VC, C, M, F. Every value that changes with the level carries its anchor level, for
+  example `nose_turning_deg: {value: 10.0, at: M, why: "accuracy target, decision 71"}`. The lower band is 0–100 % c
+  (decision 74, option A); the upper band stays 0–85 % c. The first config is `configs/surface_first.yaml`, unchanged,
+  with a header that says how to use it.
+- `laws.py` moves each value from its anchor level a to level k in whole steps of r = 1.3: spacings and turning angles
+  × r^(a − k); counts (cells per bubble, base cells, gaps per panel) × r^(k − a); growth ratios, built and checked, to
+  the power r^(a − k). The power is a whole number, so a value is exact at its anchor (10° at M is 10.0). Whole numbers
+  are rounded as before: the base to the nearest even count, the gaps per panel up. A plain number keeps its first
+  meaning: set at the coarsest level; the spacings ÷ r^k, the counts × r^k, the growth g^(1/r^k); the nose angle, the
+  growth limits and the tolerances the same at every level. So `surface_first.yaml` and `surface_plan_VC.yaml` still
+  build as before.
+- `Rules.reason(name)` says in one line where each value comes from, for example "law 1: largest turning per ring cell
+  [deg]: 10 at M (accuracy target, decision 71); VC is 2 levels coarser: x 1.3^2 = 16.9". Each mesh writes every value,
+  anchor and reason to `quality.json`, and the rules file name and hash to `manifest.json`.
+- The 13 checks read the level's own values. The turning limit is the level's angle + 0.2°: 17.1° at VC, 13.2° at C,
+  10.2° at M, 7.89° at F (the first approach checked every level against 10.2°). The geometry-kink check uses the same
+  limit. The growth along the ring is checked against 1.25, 1.19, 1.14, 1.11 (within 1 %), the growth between station
+  gaps against 1.3, 1.22, 1.17, 1.13. The band, trailing-edge and tip-gap checks compare with what the level asked. No
+  tolerance changed. The nose repair (the whole wing's nose spacing × 0.9) also reads the level's own angle.
+- `build_surface`, `python -m cfdauto.mesh` and `scripts/screen.py` take a rules file (`config`, `--config`). The
+  default level is the coarsest, VC. The screen writes `screen_<level>.json` and refuses to overwrite `screen_C.json`
+  (the first approach's screen) unless `--out` names it. Mesh names keep `mesh_<level>_<hash8>_re<Re>`, with the new
+  level names (`mesh_VC_…`).
+
+**The values at each level** (from `laws.py`; `tests/mesh/test_laws.py` checks every one).
+
+| Rule | Anchor | VC | C | M | F |
+| --- | --- | --- | --- | --- | --- |
+| Nose: largest turning per ring cell (law 1) | 10° at M (accuracy) | 16.9° | 13.0° | 10.0° | 7.69° |
+| Turning check (the angle + 0.2°) | | 17.1° | 13.2° | 10.2° | 7.89° |
+| Trailing-edge cell (law 3) | 0.1 % c at M (accuracy) | 0.169 % c | 0.130 % c | 0.100 % c | 0.077 % c |
+| Largest ring cell | 2 % c at M (accuracy) | 3.38 % c | 2.60 % c | 2.00 % c | 1.54 % c |
+| Cells per bubble | 20 at F (transition) | 9.10 | 11.83 | 15.38 | 20 |
+| Band cell at local Re 10⁵ (bubble 0.30 c) | | 3.30 % c | 2.54 % c | 1.95 % c | 1.50 % c |
+| Band cell at local Re 3 × 10⁵ (bubble 0.126 c) | | 1.38 % c | 1.06 % c | 0.82 % c | 0.63 % c |
+| Band cell at local Re 4 × 10⁵ and above (bubble 0.10 c) | | 1.10 % c | 0.85 % c | 0.65 % c | 0.50 % c |
+| Base cells (law 6) | 8 at VC (hard minimum) | 8 | 10 | 14 | 18 |
+| Growth along the ring, built | 1.2 at VC (hard minimum) | 1.200 | 1.151 | 1.114 | 1.087 |
+| Growth along the ring, checked (within 1 %) | 1.25 at VC (hard minimum) | 1.250 | 1.187 | 1.141 | 1.107 |
+| Station gap / local chord (law 8) | 0.25 at M (accuracy) | 0.4225 | 0.325 | 0.25 | 0.192 |
+| Gaps per panel, at least | 12 at M (accuracy) | 8 | 10 | 12 | 16 |
+| Growth between station gaps, built | 1.2 at VC | 1.200 | 1.151 | 1.114 | 1.087 |
+| Growth between station gaps, checked | 1.3 at VC | 1.300 | 1.224 | 1.168 | 1.127 |
+| y⁺ of the first wall cell (law 13) | 1 at VC (hard minimum) | 1.00 | 0.77 | 0.59 | 0.46 |
+| Tip gap (law 10) | 2 × s0 at every level (decision 72) | 2 × s0 | 2 × s0 | 2 × s0 | 2 × s0 |
+
+The same at every level: the bands (upper 0–85 % c, lower 0–100 % c), the bubble table (0.40, 0.30, 0.10, 0.10 c at
+local Re 6 × 10⁴, 10⁵, 4 × 10⁵, 10⁶; log-log between the points, constant outside), the nose envelope (1.15), the
+turning tolerance (0.02°) and every check tolerance. At local Re 6 × 10⁴ the band cell is the largest cell on every
+level (0.40 c / 9.10 = 4.4 % c at VC is above 3.38 % c). The two counts are whole numbers, so they do not refine by
+exactly 1.3: the base 8, 10, 14, 18 (ratios 1.25, 1.4, 1.29), the gaps per panel 8, 10, 12, 16 (ratios 1.25, 1.2, 1.33).
+On a short panel whose gaps are set by the count, the gap refines by that ratio (1.25 from VC to C on the BWB root
+panel); `test_family.py` expects that ratio there.
+
+**The nose is solved at VC and at F.** The first code solved the nose spacing at the coarsest level and gave each
+finer level that spacing ÷ 1.3^k. With each level checked against its own angle, that failed. On BWB reference wing 0
+at Re 3 × 10⁵, the VC spacing ÷ 1.3^k turned the surface by 16.9°, 13.5° and 10.8° at VC, C and M (the angles: 16.9°,
+13°, 10°). C needed a repair (nose × 0.9), which broke the family rule there (VC / C = 1.44, not 1.3); `test_family.py`
+caught it. The cause is the built nose. On this section the lower side turns by about 35° between x/c ≈ 0.006 % and
+0.1 %, and the curvature has a peak at x/c ≈ 0.01 % (radius 0.31 % c, against about 0.52 % c around it). VC has about
+3 cells across that bend and averages it out. Each finer level resolves more of the peak, so the largest turning falls by about 1.25 per
+level, not 1.3. The first approach never showed this, because its finer levels were checked against C's 10°. Holding
+the nose cell over the same length on every level did not help (13.51° at C instead of 13.52°).
+
+Now the nose spacing is solved twice at every station: at F for 7.69° on the F ring, then at VC for 16.9° on the VC
+ring, starting from F's answer × 1.3³. When VC's turning there is already within 16.9°, that takes one measure and no
+bisection. The smaller spacing, written at VC, wins, and every level takes it ÷ 1.3^k, so the family rule stays exact.
+F wins on noses like this one. VC wins on round noses, where a cell's turning grows a little faster than the cell (on a
+circle, 7.69° at F is 16.95° at VC, above VC's repair limit of 16.92°). On BWB reference wing 0 at Re 3 × 10⁵ this costs:
+a VC nose cell of 0.060 % c instead of 0.079 % c, a largest VC turning of 13.4° instead of 16.9°, a ring of 240 nodes
+instead of 236, no repair at VC, C or M, and no extra build time (4.1 s at VC). `stations.csv` says which level set
+each station's nose (`nose_solved_at`). The config key is `chord.nose_solved_at: [VC, F]`; without it (the first
+approach, the plan file) the nose is solved at the coarsest level only, as before.
+
+**Light check (7 Nov; not the full screen, which comes after the geometry branches are merged).** The 20 reference
+wings × the four Re levels (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶) at VC: 80 builds, 80 passed every check, 0 refused,
+0 crashed, no nose repair. Ring nodes 120–224–240 (min–median–max), stations 54–70–96, surface quads
+6,890–16,288–23,696, build time 3.2–4.2–5.8 s. By Re: 10⁵, ring 120–178; 3 × 10⁵, 192–240; 1.5 × 10⁶ and 3 × 10⁶,
+224–240 (the same rings: the 0.10 c floor of the bubble table). Every station of the 80 builds took its nose from the
+F solve (5,554 of 5,554), so the largest VC turning is 13.4–14.8°, not 16.9°. Largest growth along the ring 1.201
+(limit 1.25 within 1 %), between station gaps 1.223 (limit 1.3); tip gap 0.97–1.00 × 2 s0; wing quads ≥ 0.57; cap
+quads ≥ 0.070; no geometry kinks. Two wings at F, both passed every check with no repair. BWB reference wing 0 at
+Re 3 × 10⁶: 514 ring nodes × 158 stations, 85,000 quads, 9.3 s; turning 7.67° (limit 7.89°); growth 1.090 along the
+ring (limit 1.107 within 1 %) and 1.089 between station gaps (limit 1.127). Flying-wing reference wing 0 at Re 10⁵:
+296 × 113, 35,492 quads, 6.9 s; turning 7.69°; growth 1.088 and 1.089; cap quads 0.064 (limit 0.05). (Study 8 built
+the same two wings at F with the plan file: 508 × 142 and 292 × 102.) With the nose solved at VC only, the same BWB
+wing at Re 3 × 10⁶ passes C only after one repair and F only after three (nose × 0.9³), which breaks the family rule.
+To rerun: `python scripts/screen.py --sets reference --out <file>` (the default level is VC).
+
+**The plan file, built the same way.** `configs/surface_plan_VC.yaml` at its coarsest level, the same 80 builds,
+through the new code: the same meshes as Study 8, node for node (80 of 80 node hashes equal; the old code built
+those). Against the new rules, the ring has 2–4 more nodes on every build (median 2; ratio 1.013 median, 1.025 max)
+and 7–14 more stations (+17 % median; surface quads +17.5 %). The ring difference comes from the nose solve at F:
+with the nose solved at VC only, the new rules give the plan's ring on 73 of 80 builds, and 2 more nodes on 7
+flying-wing builds (230 → 232), from 16.9° against the plan's 17.0° and 9.10 against 9.1 cells per bubble. The lower
+band (0–100 % c against 60–100 % c) changes nothing, as Study 8 found. The stations differ because the plan file
+builds the station gaps with growth 1.25 and 7 gaps per panel; the decided rules keep growth 1.2 and give 8 (12 at M
+÷ 1.69, rounded up). Neither 1.25 nor 7 is in a decision.
+
+**Three points for the owner to confirm.** The first two make the rules stricter than the first code, never looser.
+(1) The growth limits follow the family rule. Decision 71 lists growth ≤ 1.25 along the ring as a hard minimum at VC.
+The limit of 1.3 between station gaps is not in decisions 71–72; it is anchored at VC the same way (1.13 at F).
+(2) The nose is solved at VC and at F, as above: every level meets its own angle and the family rule stays exact,
+but VC, C and M get a finer nose than their own angle asks (VC 13.4–14.8° against 16.9° on the 80 builds; 2–4 ring
+nodes at VC).
+(3) The station rules: built as decided (growth 1.2, at least 12 gaps per panel at M), they give 17 % more stations
+than the plan file (growth 1.25, 7 gaps per panel at VC). If the plan file's values were meant, they need a decision.

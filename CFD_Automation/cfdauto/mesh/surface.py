@@ -1,17 +1,20 @@
 """The surface mesh of one wing at one level and one Re: rings at stations + the tip cap.
 
-    python -m cfdauto.mesh --type bwb --set reference --index 0 --level C --re 3e5
+    python -m cfdauto.mesh --type bwb --set reference --index 0 --level VC --re 3e5
 
 Steps (Grand Roadmap recipe R-S):
 1. stations along the span (on every loft station, chord-scaled, squeezed to the tip);
-2. at each station: the nose spacing solved for the turning target at level C (law 1);
-3. every spacing divided by r^k for this level;
+2. at each station: the nose spacing solved by bisection for the turning target (law 1) at each
+   solve level, on that level's own ring (VC for 16.9 deg and F for 7.7 deg: the 10 deg met at M,
+   moved by laws.py; the first approach: C only); the smallest, moved to VC, wins;
+3. this level's values from laws.py (each value moved from its anchor level by the family rule);
+   the nose spacing is the VC one divided by r^k, so the family rule stays exact;
 4. one node distribution in arc fraction for the whole wing: at every place the strictest
    station wins, so node i sits at the same arc fraction on every station (no sheared quads
    where the stations are squeezed at the tip) and no cell is ever coarser than asked; the
    spanwise envelope (law 2) holds by construction;
 5. the rings, every node asked from the loft; the tip cap from the tip ring;
-6. the checks; nothing is written unless all pass.
+6. the checks, each against this level's own value; nothing is written unless all pass.
 """
 
 from __future__ import annotations
@@ -71,9 +74,12 @@ def mesh_code_hash() -> str:
     return h.hexdigest()
 
 
-def build_surface(loft, re_mean: float, level: str = "C", config=None) -> SurfaceMesh:
-    rc: Rules = get_rules("C", config)
-    rl: Rules = get_rules(level, config)
+def build_surface(loft, re_mean: float, level: str | None = None, config=None) -> SurfaceMesh:
+    """level: a level of the config's ladder (VC, C, M, F; default the coarsest). config: a rules file
+    (default configs/surface.yaml; the first approach: configs/surface_first.yaml)."""
+    rc: Rules = get_rules(None, config)            # the coarsest level
+    rl: Rules = get_rules(level or rc.level, config)
+    solvers = [get_rules(lev, config) for lev in rc.nose_solve_levels]   # VC and F (the first approach: C)
     tab = SpanTable.of(loft, rl.dense_span)
 
     # 1. stations; the tip gap is the tip first cell at this Re (laws 9, 10, 13)
@@ -84,23 +90,35 @@ def build_surface(loft, re_mean: float, level: str = "C", config=None) -> Surfac
     tab = tab.refined_at_tip(loft, tip_gap)
     st = place_stations(tab, rl, tip_gap, loft.station_v)
 
-    # 2. sections and the nose solve at level C
+    # 2. sections and the nose solve at each solve level, for that level's own angle, on its own ring, the finest
+    # first. Each answer is moved to the coarsest level (x r^k) and the smallest wins: a coarser level starts from
+    # the finer answer (h_cap) and is solved only if its turning there misses its own angle. A solve that cannot
+    # meet its angle at any spacing is left out unless none can (then the turning check refuses the build).
     secs = [Section.at(loft, v, rl.dense_per_side) for v in st["v"]]
     rows = []
     for sec in secs:
         re_loc = re_mean * sec.chord / tab.mean_chord
         c = sec.chord
-        nose = solve_nose(sec, rc.band_spacing_c(re_loc) * c, rc.max_spacing_c * c, rc.te_spacing_c * c, rc)
+        best = None                                         # (h / c moved to the coarsest level, level, the solve)
+        for rs in sorted(solvers, key=lambda r: -r.k):
+            cap = best[0] * c / rs.scale if best and best[2]["solved"] else None
+            nose = solve_nose(sec, rs.band_spacing_c(re_loc) * c, rs.max_spacing_c * c, rs.te_spacing_c * c, rs, cap)
+            if nose["at_cap"]:
+                continue                                    # the finer answer already meets this level's angle
+            h = nose["h_le"] / c * rs.scale
+            if best is None or not best[2]["solved"] or (nose["solved"] and h < best[0]):
+                best = (h, rs.level, nose)
+        h, at, nose = best
         rows.append({"y_m": sec.y, "v": sec.v, "chord_m": c, "re_local": re_loc,
-                     "h_le_c_solved": nose["h_le"] / c, "turning_solved_deg": nose["turning_deg"],
+                     "h_le_c_solved": h, "nose_solved_at": at, "turning_solved_deg": nose["turning_deg"],
                      "nose_capped_at_band": nose["capped_at_band"], "nose_solved": nose["solved"],
                      "geometry_kink_deg": nose["kinks"]["max_deg"], "_kinks": nose["kinks"]})
 
     # 3-5. This level's spacings per station, then ONE node distribution in arc fraction for the
     # whole wing (the strictest station wins at every place), the rings, and the turning measured
-    # again on the rings as built. A station above the target tightens the nose spacing of the
-    # whole wing by 10 % (the union keeps every station's own band and trailing-edge cells).
-    target = rc.nose_turning_deg + rc.nose_turning_tol_deg
+    # again on the rings as built. A station above this level's target tightens the nose spacing of
+    # the whole wing by 10 % (the union keeps every station's own band and trailing-edge cells).
+    target = rl.nose_turning_deg + rl.nose_turning_tol_deg
     h_le_c = np.array([r["h_le_c_solved"] for r in rows])
 
     def make_specs(h_le_c):
@@ -132,16 +150,16 @@ def build_surface(loft, re_mean: float, level: str = "C", config=None) -> Surfac
     u = np.stack(us, axis=1)
     cap, cap_info = tip_cap(wing[:, -1], n_side, rl.n_base, rl.cap_smoothing)
 
-    mesh = SurfaceMesh(level, float(re_mean), wing, cap, u, rows, [], {
+    mesh = SurfaceMesh(rl.level, float(re_mean), wing, cap, u, rows, [], {
         "n_side": n_side, "n_base": rl.n_base, "n_ring": int(wing.shape[0]), "n_span": int(wing.shape[1]),
         "wing_quads": int((wing.shape[0]) * (wing.shape[1] - 1)),
         "cap_quads": int((cap.shape[0] - 1) * (cap.shape[1] - 1)),
         "semi_span_m": tab.semi_span, "mean_chord_m": tab.mean_chord, "tip_chord_m": c_tip,
-        "re_tip": re_tip, "s0_tip_m": s0_tip, "cells_per_panel": st["cells_per_panel"],
+        "re_tip": re_tip, "s0_tip_m": s0_tip, "tip_gap_asked_m": tip_gap, "cells_per_panel": st["cells_per_panel"],
         "loft_station_y_m": tab.loft_y.tolist(), "cap": cap_info, "rules": rl.values(),
         "turning_repairs": repair,
     })
-    mesh.checks = run_checks(mesh, secs, specs, st, tab, rc, rl)
+    mesh.checks = run_checks(mesh, secs, specs, st, tab, rl)
     return mesh
 
 
@@ -161,7 +179,10 @@ def _side_metrics(ring: Array, n_side: int, u: Array, band_up, band_lo) -> dict:
     return out
 
 
-def run_checks(m: SurfaceMesh, secs, specs, st, tab, rc: Rules, rl: Rules) -> list[Check]:
+def run_checks(m: SurfaceMesh, secs, specs, st, tab, rl: Rules) -> list[Check]:
+    """The 13 checks, each against this level's own value (rl): the turning check at VC is VC's nose target
+    (16.9 deg), at F it is F's (7.7 deg); the trailing-edge, band and tip-gap checks compare with what this level
+    asked; the growth checks with this level's limits."""
     n_side, ch = m.info["n_side"], rl.checks
     worst = {k: 0.0 for k in ("turn", "growth", "band", "te", "plane")}
     h_le_del = []
@@ -202,23 +223,28 @@ def run_checks(m: SurfaceMesh, secs, specs, st, tab, rc: Rules, rl: Rules) -> li
     jcap[0, [0, -1]] = np.inf
     jc = float(jcap.min())
     n_expected = 2 * n_side + m.info["n_base"] - 3
-    target = rc.nose_turning_deg + 10 * rc.nose_turning_tol_deg
+    target = rl.nose_turning_deg + 10 * rl.nose_turning_tol_deg
     lo, hi = ch["tip_gap_band"]
+    lev = rl.level
     return [
         Check("nose_turning", worst["turn"] <= target, worst["turn"],
-              f"<= {target:.2f} deg at every ring node but the trailing-edge corners and geometry kinks (law 1)"),
+              f"<= {target:.2f} deg ({lev}: {rl.nose_turning_deg:.4g} + {10 * rl.nose_turning_tol_deg:g}) at every ring "
+              "node but the trailing-edge corners and geometry kinks (law 1)"),
         Check("geometry_kinks", kink <= target, kink,
-              f"<= {target:.2f} deg: a kink of the section itself (trailing-edge opening on very small chords) "
-              "that no cell size can reduce"),
-        Check("nose_envelope", env <= rc.nose_envelope * 1.01, env, f"<= {rc.nose_envelope} between stations (law 2)"),
+              f"<= {target:.2f} deg ({lev}'s turning limit): a kink of the section itself (trailing-edge opening on "
+              "very small chords) that no cell size can reduce"),
+        Check("nose_envelope", env <= rl.nose_envelope * 1.01, env, f"<= {rl.nose_envelope} between stations (law 2)"),
         Check("chord_growth", worst["growth"] <= rl.chord_growth_limit * 1.01, worst["growth"],
-              f"<= {rl.chord_growth_limit} within 1 % (the lower side follows the upper side's arc fraction; where the "
-              "two noses differ, open decision 64, its first cells grow a little faster)"),
-        Check("band_spacing", worst["band"] <= 1.01, worst["band"], "<= 1 x band target (bubble length / nodes)"),
-        Check("te_spacing", worst["te"] <= 1.01, worst["te"], "<= 1 x 0.1 % c / r^k (law 3)"),
-        Check("span_growth", span_growth <= rl.span_growth_limit, span_growth, f"<= {rl.span_growth_limit}"),
+              f"<= {rl.chord_growth_limit:.4g} ({lev}) within 1 % (the lower side follows the upper side's arc fraction; "
+              "where the two noses differ, open decision 64, its first cells grow a little faster)"),
+        Check("band_spacing", worst["band"] <= 1.01, worst["band"],
+              f"<= 1 x the band cell asked at {lev} (bubble length / {rl.cells_per_bubble:.3g}), within 1 %"),
+        Check("te_spacing", worst["te"] <= 1.01, worst["te"],
+              f"<= 1 x the trailing-edge cell asked at {lev} ({100 * rl.te_spacing_c:.3g} % c; law 3), within 1 %"),
+        Check("span_growth", span_growth <= rl.span_growth_limit, span_growth, f"<= {rl.span_growth_limit:.4g} ({lev})"),
         Check("loft_stations_hit", hit <= 1e-12, hit, "a station exactly on every loft station [m]"),
-        Check("tip_gap", lo <= tip_ratio <= hi + 1e-9, tip_ratio, f"in [{lo}, {hi}] x tip first cell (law 10)"),
+        Check("tip_gap", lo <= tip_ratio <= hi + 1e-9, tip_ratio,
+              f"in [{lo}, {hi}] x the tip gap asked at {lev} ({rl.tip_gap_in_s0:g} x s0 at y+ {rl.yplus:.3g}; law 10)"),
         Check("planar_stations", worst["plane"] <= ch["on_loft_m"], worst["plane"], "every ring in its station plane [m]"),
         Check("wing_quads", jw >= ch["min_scaled_jacobian"], jw, f">= {ch['min_scaled_jacobian']} (scaled Jacobian)"),
         Check("cap_quads", jc >= ch["min_scaled_jacobian"], jc,
@@ -270,9 +296,11 @@ def write(mesh: SurfaceMesh, wing: Wing, out: Path) -> Path:
         shutil.rmtree(out)
     out.mkdir(parents=True)
     checks = [c.as_dict() for c in mesh.checks]
+    cfg = Path(mesh.info["rules"]["config"])
     head = {"name": mesh_name(mesh, wing), "wing_type": wing.wing_type, "set": wing.set_name, "index": wing.index,
             "wing_input_hash": wing.input_hash, "loft_surface_hash": wing.surface_hash,
             "loft_backend": wing.loft.backend, "level": mesh.level, "re_mean": mesh.re_mean,
+            "rules_config": cfg.name, "rules_hash": hashlib.sha256(cfg.read_bytes()).hexdigest(),
             "mesh_code_hash": mesh_code_hash(), "passed": mesh.passed}
     if not mesh.passed:
         (out / "refusal.json").write_text(json.dumps(head | {"failed": [c.as_dict() for c in mesh.failed()],

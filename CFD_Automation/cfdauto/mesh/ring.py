@@ -241,12 +241,15 @@ def nose_turning(ring: Array, n_side: int, ignore: Array | None = None) -> float
     return float(t.max())
 
 
-def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Rules) -> dict:
+def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Rules,
+               h_cap: float | None = None) -> dict:
     """law 1: the nose spacing whose nose cells turn the surface by the target, by bisection.
 
     The ring is rebuilt and measured at every step, so the delivered turning is the asked
     turning on any airfoil (S8: a nose-radius estimate gave 20 deg when 6 was asked).
-    The spacing is never coarser than the band spacing.
+    The spacing is never coarser than the band spacing, nor than h_cap (a spacing another level's
+    solve already asks, moved to this level): when this level's turning meets its target there,
+    h_cap is the answer after one measure (at_cap), with no bisection.
     """
     target, tol = rules.nose_turning_deg, rules.nose_turning_tol_deg
     kinks = geometry_kinks(sec)
@@ -257,11 +260,13 @@ def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Ru
         r = build_ring(sec, spec, rules, n)
         return nose_turning(r["ring"], n, kink_mask(r["u_upper"], r["u_lower"], kinks, n)), n
 
-    hi = min(h_band, h_max)
+    band = min(h_band, h_max)
+    at_cap = h_cap is not None and h_cap < band
+    hi = h_cap if at_cap else band
     got, n = measure(hi)
     if got <= target:
-        return {"h_le": hi, "turning_deg": got, "n_own": n, "capped_at_band": True, "iterations": 1,
-                "solved": True, "kinks": kinks}
+        return {"h_le": hi, "turning_deg": got, "n_own": n, "capped_at_band": not at_cap, "at_cap": at_cap,
+                "iterations": 1, "solved": True, "kinks": kinks}
     lo = 1.0e-7 * sec.chord
     best = None                                    # largest spacing found that stays at or below the target
     it = 1
@@ -280,8 +285,8 @@ def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Ru
         # steps; then the target is bracketed but never hit. Keep the side below the target.
         if hi / lo - 1.0 < 1e-9:
             if best is None:        # not even the smallest spacing meets the target: refused by the check
-                return {"h_le": mid, "turning_deg": got, "n_own": n, "capped_at_band": False, "iterations": it,
-                        "solved": False, "kinks": kinks}
+                return {"h_le": mid, "turning_deg": got, "n_own": n, "capped_at_band": False, "at_cap": False,
+                        "iterations": it, "solved": False, "kinks": kinks}
             mid, got, n = best
             break
     else:
@@ -296,7 +301,7 @@ def solve_nose(sec: Section, h_band: float, h_max: float, h_te: float, rules: Ru
         mid *= 0.95
         got, n = measure(mid)
         it += 1
-    return {"h_le": mid, "turning_deg": got, "n_own": n, "capped_at_band": False, "iterations": it,
+    return {"h_le": mid, "turning_deg": got, "n_own": n, "capped_at_band": False, "at_cap": False, "iterations": it,
             "solved": True, "kinks": kinks}
 
 

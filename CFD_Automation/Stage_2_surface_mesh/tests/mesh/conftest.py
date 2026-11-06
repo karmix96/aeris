@@ -9,5 +9,5 @@ def bwb():
 
 
 @pytest.fixture(scope="session")
-def mesh_c(bwb):
-    return build_surface(bwb.loft, 3.0e5, "C")
+def mesh_vc(bwb):
+    return build_surface(bwb.loft, 3.0e5, "VC")

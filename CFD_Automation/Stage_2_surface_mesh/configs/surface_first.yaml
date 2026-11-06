@@ -1,0 +1,58 @@
+# THE FIRST APPROACH (built and screened 2-3 Nov 2026): levels C, M, F, FF; every rule met at C, the coarsest.
+# Kept unchanged so the first meshes can be rebuilt (data/studies/screen_C.json, Studies 1-7). Use it with --config,
+# from the Stage 2 folder:  python -m cfdauto.mesh --config configs/surface_first.yaml --level C --type bwb --set reference --index 0
+# (in code: build_surface(loft, re, "C", config=...)). Its plain numbers keep their first meaning (see cfdauto/mesh/laws.py).
+# The mesher's own config is now configs/surface.yaml (the new approach, decisions 71, 72, 74).
+#
+# Stage 2 — surface mesh rules. Every value here is read by cfdauto/mesh/laws.py, which turns it into
+# one function per setting (input: the wing, the flow, the level; output: the setting, with a reason).
+# Values are for the coarse level C; every spacing is divided by r for each finer level.
+# "law n" = the row of the laws table in the Grand Roadmap (Annex G, section 04).
+
+levels:
+  names: [C, M, F, FF]            # level k = 0, 1, 2, 3
+  ratio: 1.3                      # r >= 1.3 in every direction and every spacing (law 23; Celik et al. 2008)
+
+chord:                            # around the section (one closed ring per station)
+  nose_turning_deg: 10.0          # law 1: no nose cell turns the surface by more than this (solved by bisection)
+  nose_turning_tol_deg: 0.02
+  nose_envelope: 1.15             # law 2: nose spacing / chord may change by at most this between stations (a check;
+                                  # one node distribution for the whole wing makes it hold by construction)
+  te_spacing_c: 0.001             # law 3: 0.1 % of local chord at the trailing-edge corners (DPW, Levy et al. 2013)
+  base_cells: 8                   # law 6: cells across the blunt base at C (n_base = 9 points; must stay even)
+  growth: 1.20                    # growth used to build the size field (the check below allows 1.25)
+  growth_limit: 1.25              # check: neighbouring cells along the ring (Stage 1 handover; DPW)
+  max_spacing_c: 0.02             # largest cell outside the band (our choice, starting value)
+  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c. Stage 1 asks 0.10-0.85, from the
+                                  # leading edge on panels swept over ~25 deg; we start it at the leading edge on
+                                  # every wing: simpler, and costs ~10 % of the chord at band spacing
+  band_lower: [0.60, 1.00]        # transition band, lower surface, x/c (Stage 1 handover)
+  nodes_per_bubble: 20            # at least 20 nodes across a laminar separation bubble (Ansys CFX Modeling
+                                  # Guide, gamma-Re_theta grid requirements); applied at level C
+  bubble_length:                  # bubble length / chord against local Re (Stage 1, 2-D XFOIL, N_crit 9);
+                                  # log-log between the points, constant outside them
+    re:  [6.0e4, 1.0e5, 4.0e5, 1.0e6]
+    l_c: [0.40,  0.30,  0.10,  0.05]
+
+span:                             # along the span (stations)
+  spacing_c: 0.20                 # law 8: target station gap = 0.2 x local chord (our choice, starting value)
+  min_cells_per_panel: 12         # at least this many gaps between two loft stations: each panel gets a whole
+                                  # number of gaps, so the gaps on the two sides of a break can differ by up to
+                                  # 1/12 (about 8 %); with growth 1.2 the worst step stays at 1.2 x 1.08 = 1.3
+  growth: 1.20                    # used to build the size field
+  growth_limit: 1.30              # check: neighbouring station gaps (Stage 1 handover)
+  tip_gap_in_s0: 1.0              # law 9/10: last gap at the tip = this x tip first cell s0 (start at 1, refuse above 3)
+
+wall:                             # first cell, needed here only for the last gap at the tip (law 13)
+  yplus: 1.0                      # y+ target at level C
+  # s0 / c = y+ / (Re_c * sqrt(Cf / 2)),  Cf = 0.026 Re_c^(-1/7)  (turbulent flat plate, White 2006)
+
+sampling:
+  dense_per_side: 6001            # dense points per surface, uniform in sqrt(x/c) (clusters at the nose)
+  dense_span: 4001
+  cap_smoothing: 400              # Laplacian sweeps on the tip cap, edges held (S8)
+
+checks:
+  on_loft_m: 1.0e-9               # every node on the loft
+  tip_gap_band: [0.8, 1.01]       # delivered last gap / asked: at most 1 % larger, at most 20 % smaller (integer counts)
+  min_scaled_jacobian: 0.05       # surface quads (wing and cap); <= 0 is a folded quad

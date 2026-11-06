@@ -1,4 +1,5 @@
-"""The family rule: every spacing of level M is the C spacing divided by r (law 23)."""
+"""The family rule: every spacing of level C is the VC spacing divided by r (law 23), and the C build is checked
+against C's own values."""
 
 import numpy as np
 import pytest
@@ -34,15 +35,19 @@ def _gap_at(m, y_at):
 
 
 @pytest.mark.slow
-def test_level_m_is_level_c_divided_by_r(bwb, mesh_c):
-    r = rules("C").ratio
-    m = build_surface(bwb.loft, 3.0e5, "M")
+def test_level_c_is_level_vc_divided_by_r(bwb, mesh_vc):
+    r = rules("VC").ratio
+    m = build_surface(bwb.loft, 3.0e5, "C")
     assert m.passed, [c.name for c in m.failed()]
-    c_sp, m_sp = spacings(mesh_c), spacings(m)
-    for k in c_sp:
-        if k == "base":
-            continue                       # integer cell count: 8 -> 10 cells (ratio 1.25), reported, not exact
-        assert abs(c_sp[k] / m_sp[k] / r - 1.0) < 0.03, (k, c_sp[k] / m_sp[k])
-    assert 1.2 <= c_sp["base"] / m_sp["base"] <= 1.5
+    limit = {c.name: c.limit for c in m.checks}                # C is checked against C's own values
+    assert limit["nose_turning"].startswith("<= 13.20 deg (C: 13 + 0.2)")
+    assert limit["chord_growth"].startswith("<= 1.187 (C)")
+    v_sp, c_sp = spacings(mesh_vc), spacings(m)
+    # whole numbers: the base (8 -> 10 cells) and the root panel, whose gaps are set by the gaps per panel
+    # (12 at M: 8 at VC, 10 at C, rounded up) on the short BWB root panel: both refine by 10 / 8 = 1.25, not 1.3
+    n_vc, n_c = mesh_vc.info["cells_per_panel"][0], m.info["cells_per_panel"][0]
+    want = {k: r for k in v_sp} | {"base": 10 / 8, "root_gap": n_c / n_vc if n_vc == 8 else r}
+    for k in v_sp:
+        assert abs(v_sp[k] / c_sp[k] / want[k] - 1.0) < 0.03, (k, v_sp[k] / c_sp[k], want[k])
     for k in ("n_ring", "n_span"):           # counts refine by r too (within the integer steps)
-        assert abs(m.info[k] / mesh_c.info[k] / r - 1.0) < 0.05, (k, m.info[k], mesh_c.info[k])
+        assert abs(m.info[k] / mesh_vc.info[k] / r - 1.0) < 0.05, (k, m.info[k], mesh_vc.info[k])

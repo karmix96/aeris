@@ -1,44 +1,69 @@
-# Stage 2 — surface mesh rules. Every value here is read by cfdauto/mesh/laws.py, which turns it into
-# one function per setting (input: the wing, the flow, the level; output: the setting, with a reason).
-# Values are for the coarse level C; every spacing is divided by r for each finer level.
+# Stage 2 — surface mesh rules: the new approach (decisions 71, 72, 74; decided 6–7 Nov 2026, built 7 Nov 2026).
+# Every value here is read by cfdauto/mesh/laws.py, which turns it into one function per setting (input: the wing,
+# the flow, the level; output: the setting, and Rules.reason(name) says why it has that value).
+# Anchors (decision 71): a value written {value: x, at: LEVEL} is met at LEVEL and follows the family rule on the
+# other levels. For level k and anchor a (VC = 0, C = 1, M = 2, F = 3): spacings and angles x · 1.3^(a − k);
+# counts x · 1.3^(k − a) (the base rounded to an even count, the gaps per panel rounded up); growth x^(1.3^(a − k)).
+# Hard minimums at VC, accuracy targets at M, transition targets at F. The plain numbers here are the same at
+# every level. The first approach (2–3 Nov, every rule met at C, the coarsest): configs/surface_first.yaml.
 # "law n" = the row of the laws table in the Grand Roadmap (Annex G, section 04).
 
 levels:
-  names: [C, M, F, FF]            # level k = 0, 1, 2, 3
+  names: [VC, C, M, F]            # level k = 0, 1, 2, 3; the same places on the ladder as the first C, M, F, FF.
+                                  # VC on the desktop; C, M, F on the university HPC (decision 71)
   ratio: 1.3                      # r >= 1.3 in every direction and every spacing (law 23; Celik et al. 2008)
 
 chord:                            # around the section (one closed ring per station)
-  nose_turning_deg: 10.0          # law 1: no nose cell turns the surface by more than this (solved by bisection)
+  nose_turning_deg: {value: 10.0, at: M, why: "accuracy target, decision 71"}
+                                  # law 1: no ring cell turns the surface by more than this: 16.9° at VC, 13° at C,
+                                  # 10° at M, 7.7° at F (each level is checked against its own angle)
+  nose_solved_at: [VC, F]         # the nose spacing is solved by bisection twice per station, at VC for 16.9° and at F
+                                  # for 7.7°, both moved to VC (x 1.3^k); the smaller wins and every level takes it
+                                  # ÷ 1.3^k, so the family rule stays exact. Round noses bind at VC (a cell's turning
+                                  # grows a little faster than the cell); the built noses with a tight bend a few cells
+                                  # wide bind at F (it grows slower: BWB reference wing 0 at Re 3e5 turns 16.9, 13.5,
+                                  # 10.8° at VC, C, M with the VC spacing ÷ 1.3^k). decisions/surface_rules.md, section 13
   nose_turning_tol_deg: 0.02
   nose_envelope: 1.15             # law 2: nose spacing / chord may change by at most this between stations (a check;
                                   # one node distribution for the whole wing makes it hold by construction)
-  te_spacing_c: 0.001             # law 3: 0.1 % of local chord at the trailing-edge corners (DPW, Levy et al. 2013)
-  base_cells: 8                   # law 6: cells across the blunt base at C (n_base = 9 points; must stay even)
-  growth: 1.20                    # growth used to build the size field (the check below allows 1.25)
-  growth_limit: 1.25              # check: neighbouring cells along the ring (Stage 1 handover; DPW)
-  max_spacing_c: 0.02             # largest cell outside the band (our choice, starting value)
-  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c. Stage 1 asks 0.10-0.85, from the
-                                  # leading edge on panels swept over ~25 deg; we start it at the leading edge on
-                                  # every wing: simpler, and costs ~10 % of the chord at band spacing
-  band_lower: [0.60, 1.00]        # transition band, lower surface, x/c (Stage 1 handover)
-  nodes_per_bubble: 20            # at least 20 nodes across a laminar separation bubble (Ansys CFX Modeling
-                                  # Guide, gamma-Re_theta grid requirements); applied at level C
+  te_spacing_c: {value: 0.001, at: M, why: "accuracy target, decision 71; DPW, Levy et al. 2013"}
+                                  # law 3: 0.1 % of local chord at the trailing-edge corners at M (0.169 % c at VC)
+  base_cells: {value: 8, at: VC, why: "hard minimum, decision 71"}
+                                  # law 6: cells across the blunt base: 8, 10, 14, 18 at VC, C, M, F (must stay even)
+  growth: {value: 1.20, at: VC, why: "hard minimum, decision 71"}
+                                  # growth used to build the size field: 1.2 at VC, 1.15 at C, 1.11 at M, 1.087 at F
+  growth_limit: {value: 1.25, at: VC, why: "hard minimum, decision 71; Stage 1 handover; DPW"}
+                                  # check: neighbouring cells along the ring: 1.25 at VC, 1.19 at C, 1.14 at M, 1.11 at F
+  max_spacing_c: {value: 0.02, at: M, why: "accuracy target, decision 71; our starting value"}
+                                  # largest cell outside the band: 2 % c at M (3.38 % c at VC)
+  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c, from the leading edge on every wing (decision 58)
+  band_lower: [0.0, 1.00]         # lower surface, x/c: from the leading edge, for angles down to −5° (decision 74,
+                                  # option A, 7 Nov). It costs no cells: both sides share one node list (decision 60)
+                                  # and the upper band already makes the front of the lower side fine (Study 8)
+  nodes_per_bubble: {value: 20, at: F, why: "transition target, decision 71; Ansys CFX guide, decision 56"}
+                                  # band cell = bubble length / 20 at F: 9.1, 11.8, 15.4, 20 cells per bubble at VC, C, M, F
   bubble_length:                  # bubble length / chord against local Re (Stage 1, 2-D XFOIL, N_crit 9);
-                                  # log-log between the points, constant outside them
+                                  # log-log between the points, constant outside them; floor 0.10 c from 4e5 (decision 72)
     re:  [6.0e4, 1.0e5, 4.0e5, 1.0e6]
-    l_c: [0.40,  0.30,  0.10,  0.05]
+    l_c: [0.40,  0.30,  0.10,  0.10]
 
-span:                             # along the span (stations)
-  spacing_c: 0.20                 # law 8: target station gap = 0.2 x local chord (our choice, starting value)
-  min_cells_per_panel: 12         # at least this many gaps between two loft stations: each panel gets a whole
-                                  # number of gaps, so the gaps on the two sides of a break can differ by up to
-                                  # 1/12 (about 8 %); with growth 1.2 the worst step stays at 1.2 x 1.08 = 1.3
-  growth: 1.20                    # used to build the size field
-  growth_limit: 1.30              # check: neighbouring station gaps (Stage 1 handover)
-  tip_gap_in_s0: 1.0              # law 9/10: last gap at the tip = this x tip first cell s0 (start at 1, refuse above 3)
+span:                             # along the semi-span (stations)
+  spacing_c: {value: 0.25, at: M, why: "accuracy target, decisions 71, 72"}
+                                  # law 8: target station gap 0.25 x local chord at M: 0.4225, 0.325, 0.25, 0.192 at VC, C, M, F
+  min_cells_per_panel: {value: 12, at: M, why: "accuracy target, decision 71"}
+                                  # at least this many gaps between two loft stations at M: 8, 10, 12, 16 at VC, C, M, F.
+                                  # Each panel gets a whole number of gaps, so the gaps on the two sides of a break can
+                                  # differ by up to one gap in the panel's count
+  growth: {value: 1.20, at: VC, why: "first approach's value, unchanged"}
+                                  # used to build the size field (as on the ring)
+  growth_limit: {value: 1.30, at: VC, why: "Stage 1 handover; unchanged"}
+                                  # check: neighbouring station gaps: 1.3 at VC, 1.22 at C, 1.17 at M, 1.13 at F
+  tip_gap_in_s0: 2.0              # law 9/10: last gap at the tip = 2 x tip first cell s0 at every level (decision 72);
+                                  # s0 itself follows the level's y+ below
 
 wall:                             # first cell, needed here only for the last gap at the tip (law 13)
-  yplus: 1.0                      # y+ target at level C
+  yplus: {value: 1.0, at: VC, why: "hard minimum, decision 71"}
+                                  # y+ = 1 at VC: 0.77, 0.59, 0.46 at C, M, F
   # s0 / c = y+ / (Re_c * sqrt(Cf / 2)),  Cf = 0.026 Re_c^(-1/7)  (turbulent flat plate, White 2006)
 
 sampling:

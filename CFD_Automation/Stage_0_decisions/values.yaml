@@ -1,4 +1,5 @@
-# Stage 0 starting values. Explained in decisions.md.
+# Stage 0 starting values. Explained in decisions.md. Updated 6 Nov 2026.
+# Only decided values are values. Items not decided yet sit next to them as `proposal:` notes (pending) or comments.
 drag_count: 0.0001
 
 D1_accuracy:
@@ -18,7 +19,7 @@ D1_accuracy:
   absolute_budget_CM:
     value: 0.002
     reason: Starting value.
-    sources: []   # our choice
+    sources: []   # our choice; still open (open decision 3)
   grid_split_by_direction:
     value: {chordwise: 35, spanwise: 15, wall_normal: 20, edges_and_base: 15, wake: 15}
     unit: percent of the grid part
@@ -28,18 +29,52 @@ D1_accuracy:
     value: {iterative_max: 10, domain_max: 10, numerical_settings_max: 15}
     unit: percent of the total
     reason: Keeps every error source bounded. Celik asks iterative error >= 1 order below grid error; Eca & Hoekstra ask 2-3 orders. The D3 stopping rule meets the iterative share (0.12 counts measured < 0.3 allowed).
-    sources: [celik2008, eca2006iterative]
+    sources: [celik2008, eca2006iterative]   # iterative share still open (open decision 4)
   grid_share_of_total:
     value: 65
     unit: percent of the total
     reason: "100 - 10 - 10 - 15."
-    sources: []
+    sources: []   # still open (open decision 1)
+  mesh_starting_values:   # the "starting value" column of the D1 table
+    chordwise:
+      edge_cells_c: 0.001          # leading and trailing edge, x local chord (DPW)
+      # Since Stage 2 the transition band also sets cells along the chord (see D3 turbulence_model).
+    spanwise:                      # Stage 2 (2 Nov 2026), decision 62; the first start was 0.1 % of semi-span at root and tip (DPW)
+      station_on_every_loft_station: true   # so a station on every break
+      station_gap_c: 0.20          # x local chord
+      min_gaps_per_panel: 12
+      growth: 1.2
+      tip_gap: tip first wall cell (s0)     # tip squeeze
+      proposal: {tip_gap: 2 x s0, station_gap_c_at_M: 0.25}   # pending
+    wall_normal:
+      first_cell_yplus: 1
+      growth_max: 1.25
+      proposal: {growth_max_with_transition_model: 1.1}   # pending; Stage 2 decision 57, Stage 3 decides (Ansys CFX guidance)
+    edges_and_base:
+      edge_cells_c: 0.001
+      base_cells: {C: 8, M: 10, F: 14, FF: 18}   # Stage 2 decision 61; even counts, so the steps are 1.25, 1.4, 1.29
+    wake:
+      value: rules set in the mesh stage
+      proposal: >-
+        Pending: one matched C-H multiblock mesh for both solvers, instead of the overset wake box and vortex
+        tube (SU2 has no overset). The wake lines may add about +45 % (30-60 %) cells on the wing blocks (rough count).
+    outer_boundary:
+      dpw_reference_chords: 100
+      start_chords: 80             # the project's starting value
+      ladder_chords: [40, 80, 160]
+      reason: 40 -> 60 chords moved drag 0.6-0.7 counts in earlier AERIS tests, so 40 is too close.
+    sources: [levy2013dpw, ansys_cfx_transition]
   turbulence_model_error:
     value: own band, never inside the grid budget
     reason: Mesh error and model error are different things.
     sources: [asme2009vv20]
 
 D2_wings_and_sets:
+  wing_types:
+    value: {tailless: [bwb, flying_wing], conventional: [cranked, tapered]}
+    n_variables: {bwb: 17, cranked: 17, flying_wing: 13, tapered: 13}
+    reason: Stage 1 closed 2 Nov 2026 with four types in two families; 730 of 730 sampled wings build.
+    sources: []
   reference_wings:
     value: [all mid-range, smallest area, largest area, most sweep + smallest tip chord, strongest twist]
     unit: 5 per wing type
@@ -51,30 +86,42 @@ D2_wings_and_sets:
     reason: Shows the five are spread out, not clustered.
     sources: [johnson1990minimax]
   training_set:
-    value: {wings_per_type: 100, design: latin_hypercube, seed: fixed}
+    value: {name: training_focus, wings_per_type: 100, design: latin_hypercube, seed: fixed, space: focus}
+    full_space: {name: training_full, wings_per_type: 40}
     reason: Spreads wings evenly over all variables at once.
     sources: [mckay1979lhs]
   corner_set_part1:
     value: "2 * n_variables (each variable at each bound, others mid-range)"
+    count: {bwb: 34, cranked: 34, flying_wing: 26, tapered: 26}   # set corner1
     reason: Shows where each variable alone breaks the mesh rules.
+    proposal: "Pending (similarity): the root chord leaves the design vector, so 32 (bwb, cranked) and 24 (flying_wing, tapered), 2 per free variable."
     sources: []
   corner_set_part2:
-    value: "smallest N with C(N-1, ceil(N/2)) >= n_variables; N = 8 for 17 variables"
+    value: "smallest N with C(N-1, ceil(N/2)) >= n_variables; N = 8 for 17 variables, N = 7 for 13"
+    count: {bwb: 8, cranked: 8, flying_wing: 7, tapered: 7}   # set corner2
     reason: Every pair of variables at all four low/high combinations, at the lowest cost.
     sources: [katona1973, kleitman1973]
   holdout_set:
-    value: {wings_per_type: 10, design: latin_hypercube, seed: different, opened: once at the end}
+    value: {name: holdout_focus, wings_per_type: 10, design: latin_hypercube, seed: different, opened: once at the end}
+    full_space: {name: holdout_full, wings_per_type: 5}
     reason: The only honest test on wings the rules were not tuned on.
     sources: [dwork2015science, dwork2017cacm]
   robustness_claim:
     value: {failures: 0, min_wings: 150, success_rate: ">= 0.98", confidence: 0.95}
-    reason: "1 - 0.05^(1/150) = 1.98 % upper bound on failure rate."
+    reason: "1 - 0.05^(1/150) = 1.98 % upper bound on failure rate. Per type, the built sets give 187 wings (bwb, cranked) or 178 (flying_wing, tapered); the hold-outs (10 + 5) run once at the end. The focus sets alone give 105 (115 with the focus hold-out), below 150, so the claim needs the full-space sets too."
     sources: [hanley1983]
 
 D3_conditions_and_measurement:
   mach_max:
-    value: 0.3
-    reason: Class I-II wings fly subsonic. Transonic later.
+    value: "open; the scope extends toward 0.5"   # owner, 4 Nov 2026 (was 0.3)
+    supersonic_flow: none          # no supersonic regime or phenomena, not even small pockets (owner, 4 Nov 2026)
+    stage1_data_max: 0.2           # Stage 1 section tables at Mach 0, 0.1 and 0.2
+    reason: The owner's scope. The focus wings fly at Mach 0.03-0.2.
+    proposal: >-
+      Pending: core data at Mach <= 0.2 now; Mach 0.3-0.5 later with a fast-UAV family (real fast UAVs,
+      thinner sections, section tables to Mach 0.5). At Mach 0.5 angles capped near 4 deg by a
+      supersonic-pocket gate (2-D estimate: pockets from 5.5-6.5 deg at Mach 0.5, 8-9.5 deg at 0.4, only
+      near stall at 0.3). Similarity fixes Mach at 0.1 for the solves.
     sources: []
   reynolds_levels:
     value: [1.0e5, 3.0e5, 1.5e6, 3.0e6]
@@ -91,11 +138,37 @@ D3_conditions_and_measurement:
       Hermes 450, Ranger, Seeker, Shadow 600) have mean chords 0.55-0.66 m and reach Re 2.1-2.7e6 at top
       speed, sea level.
       Mini Class I sit below 3e5: covered by the 1e5 level since 30 Oct 2026.
+      Since 31 Oct 2026 (decision 49; Stage 1 closed 2 Nov) real Class I-II wings with a published area fly at
+      Re 1.2e5 to 3.1e6. The top is the NTNU Aludra MK1 row at its listed top speed (3.1e6; area from full
+      span and aspect ratio), 3 % above the top level; its listed chord (0.60 m) disagrees with full span / AR
+      (0.74 m). Levels unchanged.
+    proposal: "Pending (similarity): Re on the mean chord becomes the input; check C4 adds a level near 7e5-1e6 only if needed."
     sources: [nato2009jcguav, icao1993isa, sutherland1893]
+  similarity:
+    value: not decided
+    proposal:   # pending
+      reference_length: unit mean chord
+      input: Re on the mean chord
+      mach: 0.1                    # Prandtl-Glauert correction on CL and CM
+      trailing_edge_c: 0.002
+      tu_percent: 0.07             # N_crit 9
+      temperature_K: 288.15
+      gamma: 1.4
+      prandtl: 0.71
+      wall: adiabatic
+      design_vector: "root chord leaves the vector (18 -> 17 numbers)"
+      meshes_per_wing: {now: 21, with_similarity: 4}
+      dataset_solves: {now: 42000, with_similarity: 8000, angles: 5, with_about_8_angles_from_minus5_to_stall: 12800}
+      corner_set_part1: {bwb: 32, cranked: 32, flying_wing: 24, tapered: 24}   # was 34 / 26
+      checks: [C1 scale, C2 Mach, C3 trailing edge, "C4 Re-level interpolation (add a level near 7e5-1e6 only if needed)"]
+    reason: CL, CD and CM depend on shape, Re and Mach, not on the size itself. Limit - Re does not carry surface roughness or air turbulence.
+    sources: [anderson2011]
   angles_of_attack:
-    value: {all: [0, 4, 8], leading_edge_and_wake: [0, 4, 8, 12]}
+    value: {range_deg: "-5 to post-stall", steady_rans: up to stall onset, post_stall_study: URANS or DDES on a few wings}   # owner, 6 Nov 2026
+    was: {all: [0, 4, 8], leading_edge_and_wake: [0, 4, 8, 12]}   # until 6 Nov 2026
     unit: deg
-    reason: Cruise, climb, high lift. The nose needs finer cells at high angle.
+    reason: Cruise, climb, high lift and negative angles. The nose needs finer cells at high angle; at negative angles the lower surface becomes the suction side. The Stage 1 dataset covers root angles 0-10 deg only.
+    proposal: {mesh_studies_deg: "-5, 4 and the highest steady angle", dataset: "-5 to stall in about 2.5 deg steps (about 8 angles)"}   # pending
     sources: []
   quantities_watched:
     value: [CL, CD_pressure, CD_friction, CD, CM, neutral_point, cp_at_sections, y_plus]
@@ -103,8 +176,19 @@ D3_conditions_and_measurement:
     sources: []
   mesh_family:
     value: {min_levels: 3, min_refinement_ratio: 1.3}
+    built_stage2: {levels: [C, M, F, FF], every_spacing_divided_by: 1.3, checked_within_percent: 3}   # the base cells are the one exception (D1)
     reason: Fewer than three meshes give a trend, not an error estimate.
-    sources: [celik2008]
+    proposal:   # pending
+      levels: [VC, C, M, F]
+      where: {VC: desktop, C: university HPC, M: university HPC, F: university HPC}
+      F_cells: about 9-11 M
+      anchoring: {VC: hard minimums, M: "accuracy targets (as DPW defines its medium grid)", F: transition targets}
+      cells_per_level: "about 2.2x (every spacing / 1.3)"
+      wall_layers_per_level: about 1.30x
+    # Measured in Stage 2 (surface x wall layers, 20 reference wings x 4 Re): fine level median 15.2 M cells with the
+    # planned rules; 10.9 M with a relaxed band (0.5 % c spacing where local Re >= 4e5); tip gap 2 x s0 and station gap
+    # 0.25 c at M also proposed. Desktop limit about 1.2 M cells (with F at 10.9 M, C is about 2.3 M: above it).
+    sources: [celik2008, dpw4_gridding]
   error_estimate:
     value: {method: GCI, safety_factor: 1.25, if_scatter: least_squares}
     reason: Standard published procedure.
@@ -129,13 +213,24 @@ D3_conditions_and_measurement:
     reason: Otherwise the cause of a difference cannot be named.
     sources: []
   turbulence_model:
-    value: SA for mesh studies now; final model and SA inflow value in a later stage (by G0, decision 54); mesh built transition-ready; every drag number carries a model band
-    transition_ready_mesh: {yplus_max: 1, min_cells_across_bl: 30, band_upper_c: [0.10, 0.85], band_lower_c: [0.60, 1.00], swept_panels_upper_band_from_le: true}
+    value: transition must be captured, with ADflow and SU2 (owner, 4 Nov 2026); transition from SU2 (SST + LM gamma-Re_theta), because our ADflow build has SA only (SST aborted) and no transition model; every drag number carries a model band
+    was: SA for mesh studies now; final model and SA inflow value in a later stage (by G0, decision 54)   # superseded 4 Nov 2026
+    transition_ready_mesh: {yplus_max: 1, min_cells_across_bl: 30, band_upper_c: [0.0, 0.85], band_lower_c: [0.60, 1.00], upper_band_from_le: every wing, band_cell: bubble length / 20 at level C}
+    # Band as built in Stage 2 (decisions 56, 58). Stage 1 asked band_upper_c [0.10, 0.85], from the leading edge on swept panels only.
+    # SA inflow value (nu~/nu about 3): still to fix and record, before the first ADflow solve.
+    proposal:   # pending
+      solver_split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first
+      cells_per_bubble: "about 20, as a fine-level target (Ansys CFX: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75-100 nodes leading to trailing edge)"
+      wall_normal_growth_with_transition_model: 1.1   # instead of 1.25; Stage 2 decision 57, Stage 3 decides
+      relaxed_band: 0.5 % c spacing where local Re >= 4e5
+    # SU2 smoke test (4 Nov 2026), not a result: SU2 8.6.0, SA and LM on one Stage 2 ring mesh (a section extruded
+    # between two symmetry planes, 97,920 cells, Re 3e5, Mach 0.15, 4 deg); after about 370 iterations, not converged:
+    # SA CL 0.860, CD 0.0184; LM CL 0.908, CD 0.0137. Shows the mesh path works; no wing has been run.
     reason: Stage 1 (2-D XFOIL strips) found long laminar runs and bubbles; fully turbulent SA overpredicts profile drag by a median +62 % (+69 % in level flight). What the mesh must resolve depends on the model.
-    sources: [spalart2007, crivellini2014]   # plus the Stage 1 flow study
+    sources: [spalart2007, crivellini2014, ansys_cfx_transition]   # plus the Stage 1 flow study
 
 D4_working_rules:
-  mesh_name: {value: "mesh_<level>_<wing_hash8>", reason: "One name means one mesh. Not family: that word means the wing families."}
+  mesh_name: {value: "mesh_<level>_<wing_hash8>_re<Re>", reason: "One name means one mesh. Re on the mean chord: one surface per wing and Re level, because the tip gap and the band cells depend on Re (Stage 2 decision 59). Not family: that word means the wing families."}
   run_outcomes: {value: [accepted, rejected, needs_review], reason: Countable results.}
   failures_counted: {value: failures stay in every count, reason: Otherwise success rates inflate.}
   thresholds_first: {value: thresholds written before results, reason: No tuning the test to the answer., sources: [nosek2018]}

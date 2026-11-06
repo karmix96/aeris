@@ -8,7 +8,7 @@ conditions the mesh must serve, plus a margin.
 
     from cfdauto.mesh.refine_map import strip_map, envelope_band
     sm = strip_map("bwb", "reference", 0)
-    band = envelope_band(sm, machs=(0.03, 0.13), alphas=(0, 8), margin=0.10)
+    band = envelope_band(sm, machs=(0.03, 0.13), alphas=(-5, 8), margin=0.10)
 
 Limits, inherited from the dataset: 2-D strips, e^N with N_crit 9 (calm air), a uniform (elliptic) induced
 angle, no crossflow transition on swept panels, no 3-D relief of bubbles, no tip effects. Where a strip has
@@ -23,7 +23,7 @@ import numpy as np
 
 GENERIC_BAND = {"upper": (0.0, 0.85), "lower": (0.60, 1.0)}
 MACHS = (0.03, 0.05, 0.08, 0.10, 0.13, 0.16, 0.20)
-ALPHAS = tuple(float(a) for a in range(-2, 13))
+ALPHAS = tuple(float(a) for a in range(-5, 13))      # root angle; from -5 deg since 6 Nov 2026 (was -2)
 ALTS = (0.0, 3000.0)
 FOCUS_MACH = {"tailless": (0.03, 0.13), "conventional": (0.03, 0.20)}
 
@@ -102,7 +102,7 @@ def condition_mask(sm: dict, machs: tuple[float, float], alphas: tuple[float, fl
     return keep
 
 
-def envelope_band(sm: dict, machs=(0.03, 0.13), alphas=(0.0, 8.0), margin: float = 0.10, alts=None) -> dict:
+def envelope_band(sm: dict, machs=(0.03, 0.13), alphas=(-5.0, 8.0), margin: float = 0.10, alts=None) -> dict:
     """Per strip and side, the stretch of chord the mesh must keep fine over the chosen conditions.
 
     lo = the earliest of (bubble start, transition − margin), hi = the latest of (bubble end, transition + margin,

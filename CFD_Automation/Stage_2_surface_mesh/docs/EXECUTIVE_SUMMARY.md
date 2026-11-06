@@ -1,8 +1,8 @@
 # Stage_2 — Executive summary: the surface mesh
 
-6 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
+6 Nov 2026, updated 7 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
 
-> **What changed since 3 Nov (updated 6 Nov).** Sections 5–8 hold the details.
+> **What changed since 3 Nov (updated 7 Nov).** Sections 4–8 hold the details.
 >
 > - **Decided (owner)**
 >   - Transition must be captured, with ADflow and SU2 (4 Nov).
@@ -10,14 +10,14 @@
 >   - Angles of attack from −5° to post-stall, plus a separate post-stall study (6 Nov).
 >   - The new approach (6 Nov): levels VC, C, M, F with each target met at the level that needs it; a lighter band, tip gap and station gap; one matched C-H volume mesh for ADflow and SU2; similarity (every wing at unit mean chord).
 > - **Pending**
->   - The lower band at negative angles: count two options on the 20 reference wings, then choose.
+>   - The lower band at negative angles: counted on 7 Nov (study 8). Option A, the lower band from the leading edge, costs no cells. Mike chooses.
 >   - The solver split: ADflow SA for the mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings.
 >   - The core Mach range: ≤ 0.2 now, 0.3–0.5 later with a fast-UAV family.
 > - **Open**
 >   - The nose (decision 64): the first reading was overstated; re-measure before any fix.
 >   - The new approach is not built: the code, a new screen and the pyGeo run are still to do.
 
-Stage 2 puts a structured surface mesh on every wing that Stage 1 makes. The **first approach** is built and screened: **790 of 790 builds pass all 13 checks**, on 730 wings of 4 types and 5 sets plus the 20 reference wings at all four Re levels, in 4–8 s per wing. On 4–6 Nov a **new approach** was decided. It keeps the mesher and changes where each rule is met, three rule values, the volume mesh around the surface and the wing size. It is not built yet. This summary says what Stage 2 is, how one mesh is made, what the seven studies showed, what was first and what changes, what is weak, what is left, and what Stage 3 gets. More detail on every figure: the page *Surface Mesh* (`docs/SURFACE_MESH.html`).
+Stage 2 puts a structured surface mesh on every wing that Stage 1 makes. The **first approach** is built and screened: **790 of 790 builds pass all 13 checks**, on 730 wings of 4 types and 5 sets plus the 20 reference wings at all four Re levels, in 4–8 s per wing. On 4–6 Nov a **new approach** was decided. It keeps the mesher and changes where each rule is met, three rule values, the volume mesh around the surface and the wing size. It is not built yet. This summary says what Stage 2 is, how one mesh is made, what the eight studies showed, what was first and what changes, what is weak, what is left, and what Stage 3 gets. More detail on every figure: the page *Surface Mesh* (`docs/SURFACE_MESH.html`).
 
 ![The surface mesh pipeline in six steps, from the loft to the files](page/pipeline.png)
 
@@ -163,13 +163,21 @@ None of them is a flow result: no solver has run on these surfaces.
 
 **Conclusion.** The earlier passes are development evidence; the fourth, on the committed code, is the result. Every failure appeared on the corner and full-space sets, as Stage 0 said it would.
 
-**Study 7 · The refine map: where to refine, per wing.** The Stage 1 flow dataset was read for each of the 20 reference wings (2-D XFOIL strips along the semi-span): where the flow turns turbulent, where the bubbles sit, where it separates, on both surfaces. The envelope over the conditions one mesh serves (Mach 0.03–0.13, 0–8°), plus a 10 % c margin, is the band that wing would need.
+**Study 7 · The refine map: where to refine, per wing.** The Stage 1 flow dataset was read for each of the 20 reference wings (2-D XFOIL strips along the semi-span): where the flow turns turbulent, where the bubbles sit, where it separates, on both surfaces. The envelope over the conditions one mesh serves (Mach 0.03–0.13, −5° to 8° since 7 Nov; 0–8° before), plus a 10 % c margin, is the band that wing would need.
 
 ![The refine map of the BWB reference wing](page/refine_map.png)
 
-*What it shows.* The BWB reference wing from above. Left: both surfaces at Mach 0.08 and 4° (laminar, bubble, turbulent, transition point). Right: the band this wing needs over the range, against the generic band.
+*What it shows.* The BWB reference wing from above. Left: both surfaces at Mach 0.08 and 4° (laminar, bubble, turbulent, transition point). Right: the band this wing needs over −5° to 8°, against the generic band.
 
-**Conclusion.** The per-wing band is not smaller than the generic one; it sits elsewhere. Its cost is −15 % to +20 % of the generic band's (median about +5 %). The generic band misses the upper laminar flow beyond 85 % c at low angle outboard (by up to 15 % c), and the lower-surface transition near the leading edge on washed-out panels (by 52–60 % c). The shortest root bubbles (1.4–10.7 % c) are shorter than the table assumes (5–14 % c) on all 20 wings. It is 2-D and calm air, so it is a candidate (decision 65), not a rule, until a 3-D transition check.
+**Conclusion.** The per-wing band is not smaller than the generic one; it sits elsewhere, and from −5° it is wider. Over −5° to 8° its cost is +8 % to +46 % of the generic band's (median +34 %); over 0–8° (first data, 3 Nov) it was −15 % to +20 % (median about +5 %). The generic band misses the upper laminar flow beyond 85 % c at low angle outboard (by 10.5–15 % c; up to 15 % c over 0–8° too), and the lower-surface transition near the leading edge: over −5° to 8° by the full 60 % c on all 20 wings (52–60 % c over 0–8°, on washed-out panels). These costs count each side on its own; in the built ring a lower band from the leading edge costs nothing (study 8). The shortest root bubbles (1.4–10.7 % c) are shorter than the table assumes (5–14 % c) on all 20 wings. It is 2-D and calm air, so it is a candidate (decision 65), not a rule, until a 3-D transition check.
+
+**Study 8 · The band count for negative angles (decision 74, 7 Nov).** New data, with the planned rules of the new approach at VC (read from a plan file; the mesher's config is unchanged). The refine map run down to −5° was read for the lower side. Then the 20 reference wings × 4 Re levels were built at VC twice: with the lower band of option B (60–100 % c) and of option A (0–100 % c), 160 builds. Only the band changes, so the wing-block cells scale with the ring nodes, and a finer level keeps the same ratio (checked at F on two wings).
+
+![The band count: the lower side at negative angles, and option A against option B](page/band_count.png)
+
+*What it shows.* Left: where the lower side turns turbulent, per wing type and root angle (2-D strips with an answer, Mach 0.03–0.13), against the generic lower band. Middle: the cells along the lower side of the BWB root ring at VC, Re 3 × 10⁵, with B and with A, and the lower side's own wish list with B. Right: ring nodes with A against ring nodes with B, all 80 pairs.
+
+**Conclusion.** At −5° the lower side turns turbulent near the nose (median 1–15 % c per type), in front of the generic lower band on every strip with an answer; at 0° still on 51–83 % of the strips. Yet option A costs no cells: A and B give the same ring, node for node, on all 80 pairs (ratio 1.000), so F stays at about 10.9 M cells. Both sides share one node list, and the upper band (0–85 % c) already makes the front of the lower side fine; the earlier "1.5 × longer band" counted each side on its own. So the cells no longer decide: A keeps transition runs from −5° at no mesh cost; B only saves the LM runs below 0°. Limits: 2-D strips in calm air; no answer on 42 % (BWB) and 30 % (flying wing) of the strips at −5°. Mike chooses.
 
 ## 5. What was first, and what changes with the new approach
 
@@ -180,7 +188,7 @@ The code still builds the first approach. Everything in sections 2–4 is first-
 | Levels | C, M, F, FF; every rule met at C, the coarsest | VC, C, M, F. Hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25, base ≥ 8, no kinks, tip gap); accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest cell); transition targets at F (20 cells per bubble, wall growth about 1.1). VC on the desktop; C, M, F on the university HPC | decided, to build |
 | Band cell | bubble length / 20 at C | bubble length / 20 at F; the bubble length stops at 0.10 c from local Re 4 × 10⁵ (0.5 % c at F) | decided, to build |
 | Stations, tip | gap 0.2 × chord at C; last gap = s0 | gap 0.25 × chord at M; last gap = 2 × s0 | decided, to build |
-| Lower band | 60–100 % c, for 0–8° | option A: from the leading edge; option B: transition runs only at ≥ 0° | pending: count both |
+| Lower band | 60–100 % c, for 0–8° | option A: from the leading edge; option B: transition runs only at ≥ 0°. Counted 7 Nov (study 8): A gives the same ring as B on the 20 reference wings × 4 Re (ratio 1.000); F stays about 10.9 M | pending: Mike chooses |
 | Volume mesh | O-H body mesh + overset wake box and tip-vortex tube (ADflow only) | one matched C-H mesh for ADflow and SU2; wake lines to the far field; tip vortex in the outboard blocks | decided; Stage 3 |
 | Wing size | real size; trailing edge max(0.5 / 1.0 mm, 0.2 % c) | unit mean chord; Re an input (4 levels); Mach 0.1 + Prandtl–Glauert; trailing edge 0.2 % c; root chord out (18 → 17) | decided; Stage 1 code first |
 | Flow, angles, Mach | ADflow SA; 0–8°; Mach 0.03–0.20 | transition with ADflow and SU2; −5° to post-stall; toward Mach 0.5, no supersonic flow | decided; split and core Mach pending |
@@ -209,7 +217,7 @@ The code still builds the first approach. Everything in sections 2–4 is first-
 
 *What it shows.* The transition band on one section: the first band, and the two options for negative angles.
 
-**Conclusion.** The first band was set for 0–8°. At −5° the lower side takes the suction peak near the nose, so its transition and bubbles move forward, out of the band. Option A covers them with one rule for both sides, at about 1.5 × the band length (125 → 185 % of the chord). Option B keeps the cost and gives up transition data below 0°. The count on the 20 reference wings decides; the refine map can be run down to −5°, because the section tables reach −10°.
+**Conclusion.** The first band was set for 0–8°. At −5° the lower side takes the suction peak near the nose, so its transition and bubbles move forward, out of the band (median 1–15 % c per type at −5°, study 8). Option A covers them with one rule for both sides. On paper its band is about 1.5 × longer (125 → 185 % of the chord), but counted on the 20 reference wings it costs no cells, because both sides share one node list. Option B keeps the same cells and gives up transition data below 0°. Mike chooses.
 
 **What stays the same.** The six steps and the code; the ring and the cap; the family rule (÷ 1.3 per level, growth g^(1/1.3)); the 13 checks; one surface per wing and Re level.
 
@@ -219,7 +227,7 @@ The code still builds the first approach. Everything in sections 2–4 is first-
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
 - **The new approach is not built.** Its cell counts are estimates (F about 10–11 M, the C-H wake lines about +45 %, rough).
 - **The band rule rests on one source.** 20 cells per bubble comes from one vendor guide, for one model. The lighter band gives the shortest high-Re root bubbles (about 1.5 % c) only about 3 cells: fine for SA, wrong for LM.
-- **The generic band sits in the wrong place** on washed-out panels (study 7), and nothing yet covers the lower suction side at −5°.
+- **The generic band sits in the wrong place** on washed-out panels (study 7), and at −5° its lower band misses the lower suction side on every strip with an answer. The shared node list already puts band cells there (study 8), so the mesh is fine there; only the stated lower band is wrong.
 - **The coarse levels do not resolve transition.** VC and C have about 9 and 12 cells per bubble, so transition results there must not be trusted.
 - **Starting values without a ladder:** the station gap, the 12 per panel, the tip gap and the 2 % c cap.
 - **The nose (64)** is still open, although the first reading was overstated.
@@ -228,7 +236,7 @@ The code still builds the first approach. Everything in sections 2–4 is first-
 
 1. **Nose re-measure (Stage 1, decision 64):** raw and built with one curvature method; fix only if a real error remains.
 2. **Similarity in the generator (Stage 1 code):** unit mean chord, trailing edge 0.2 % c, root chord out; rebuild the sets (every hash changes); update the Stage 1 files.
-3. **The band count (74):** option A against option B on the 20 reference wings, with the refine map run down to −5°. Mike chooses.
+3. **The lower band (74):** counted on 7 Nov (study 8): option A gives the same ring as option B, so it costs no cells. Mike chooses.
 4. **Stage 2 code, the new rules:** levels VC, C, M, F with the targets moved; the lighter band, tip gap and station gap; the chosen lower band.
 5. **New screen:** every set at VC and F; the reference wings at every level and Re level; the family ratios; the cell count against 9–11 M.
 6. **pyGeo run (Mike's machine):** the Stage 1 tests and `build --all`, then the Stage 2 tests and screen.

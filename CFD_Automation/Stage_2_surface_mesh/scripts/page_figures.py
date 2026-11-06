@@ -1,6 +1,7 @@
 """The pictures of the Stage 2 page (docs/page/*.png), every one drawn from the mesh arrays.
 
-    python scripts/page_figures.py          # about 3 minutes
+    python scripts/page_figures.py              # about 3 minutes
+    python scripts/page_figures.py refine_map   # only docs/page/refine_map.png (seconds)
 """
 
 from __future__ import annotations
@@ -486,10 +487,6 @@ def main() -> None:
     fig_four(meshes)
 
 
-if __name__ == "__main__":
-    main()
-
-
 # --- 14. why structured: the same section meshed both ways ----------------------------------------
 def fig_structured_vs_unstructured(w, m):
     from scipy.spatial import Delaunay
@@ -793,7 +790,8 @@ def fig_bubble_xfoil():
 
 
 # --- 22. the refine map: one wing's transition, bubbles and separation, and the envelope band --------
-def fig_refine_map(wing_type="bwb", index=0, mach=0.08, alpha=4.0, machs=(0.03, 0.13), alphas=(0.0, 8.0), margin=0.10):
+def fig_refine_map(wing_type="bwb", index=0, mach=0.08, alpha=4.0, machs=(0.03, 0.13), alphas=(-5.0, 8.0), margin=0.10):
+    """The envelope runs over -5 to 8 deg since 7 Nov 2026 (the new lowest angle; the first top), was 0-8 deg."""
     from matplotlib.patches import Polygon
     from cfdauto.mesh.refine_map import GENERIC_BAND, envelope_band
     doc = json.loads((STAGE2 / "data" / "studies" / "refine_map_reference.json").read_text())
@@ -836,8 +834,16 @@ def fig_refine_map(wing_type="bwb", index=0, mach=0.08, alpha=4.0, machs=(0.03, 
         gb = GENERIC_BAND[side]
         pts = [(y, x + gb[0] * c) for y, x, c in zip(yS, xle, ch)] + [(y, x + gb[1] * c) for y, x, c in zip(yS[::-1], xle[::-1], ch[::-1])]
         a.add_patch(Polygon(pts, closed=True, fc="none", ec=VIOLET, lw=1.4, ls="--"))
-        a.set_title(f"{side} surface: the band this wing needs over Mach {machs[0]:.2f}–{machs[1]:.2f}, {alphas[0]:.0f}–{alphas[1]:.0f}°, margin {margin * 100:.0f} % c (tan);\nthe generic band (dashed)", fontsize=9)
+        deg = lambda v: f"{v:.0f}°".replace("-", "−")
+        a.set_title(f"{side} surface: the band this wing needs over Mach {machs[0]:.2f}–{machs[1]:.2f}, {deg(alphas[0])} to {deg(alphas[1])}, margin {margin * 100:.0f} % c (tan);\nthe generic band (dashed)", fontsize=9)
         for a in ax[row]:
             a.plot(np.concatenate([yS, yS[::-1], yS[:1]]), np.concatenate([xle, (xle + ch)[::-1], xle[:1]]), color=INK, lw=1.0)
-            a.set_aspect("equal"); a.invert_yaxis(); a.set_xlabel("span position y [m] (root → tip)"); a.set_ylabel("x [m] (leading edge up)")
+            a.set_aspect("equal"); a.invert_yaxis(); a.set_xlabel("position along the semi-span, y [m] (root → tip)"); a.set_ylabel("x [m] (leading edge up)")
     save(fig, "refine_map.png")
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["refine_map"]:
+        fig_refine_map()
+    else:
+        main()

@@ -69,25 +69,25 @@ DECISIONS = [
         ("Span words", "<strong>Full span b</strong> = tip to tip, both halves. <strong>Semi-span S = b / 2</strong> = root to one tip: the half wing we build, mesh and mirror at y = 0. <code>semi_span_m</code> is always S. Every table and figure says which one.",
          "Your rule (31 Oct 2026): never write 'span' without saying which.", "req", ""),
         ("Focus ends at b = 7 m", "<code>focus: max_full_span_m: 7.0</code> for every type. The focus sets are drawn as a Latin hypercube and only wings with full span ≤ 7 m are kept (in draw order). The full space has no cap.",
-         "Your rule (31 Oct 2026). Effect: 32 of 34 real wings with an area are in the focus space; Hermes 450 (10.5 m) and Götten UAV 9 (8.7 m) are only in the full space, as are the span-only Class II wings above 7.7 m (Searcher, Aerostar, Seeker 400, Watchkeeper, Herti and others). Cost: near the cap the hypercube strata are no longer exactly balanced.", "req", ""),
-        ("Same 18 variables for every type", "Each type samples some and derives the rest (see <a href='#inputs'>Inputs and derived</a>).",
+         "Your rule (31 Oct 2026). Effect: 32 of 34 real wings with an area are in the focus space; Hermes 450 (10.5 m) and Götten UAV 9 (8.7 m) are only in the full space, as are the Class II wings above 7.7 m that list only a full span (Searcher, Aerostar, Seeker 400, Watchkeeper, Herti and others). Cost: near the cap the hypercube strata are no longer exactly balanced.", "req", ""),
+        ("Same 18 variables for every type", "Each type samples some and derives the rest (see <a href='#inputs'>Inputs and derived</a>). Proposal, pending (similarity): the root chord leaves the vector, 18 → 17 numbers (sampled 16 / 12 / 16 / 12 instead of 17 / 13 / 17 / 13); the sets would then be drawn again (corner 1: 32 or 24 wings instead of 34 or 26).",
          "One vector shape for sampling, hashing and ML.", "own", ""),
         ("Everything varies", "A value is fixed only through <code>pinned:</code>.", "A study may pin; the default never does.", "req", ""),
-        ("Size inputs: root chord and aspect ratio", "<code>span_mode: aspect_ratio</code> for every type. The semi-span follows: S = AR · c_root · K / 2, K = mean chord / root chord.",
-         "Drawing the span on its own let conventional wings reach AR 21 (13 % above 16.5, the highest real value). Drawing AR keeps every wing inside the real range by construction, with no refusals. Decided 29 Oct 2026.", "req", ""),
+        ("Size inputs: root chord and aspect ratio", "<code>span_mode: aspect_ratio</code> for every type. The semi-span follows: S = AR · c_root · K / 2, K = mean chord / root chord. Proposal, pending (similarity): every wing at unit mean chord, so the root chord leaves the vector and size enters only through Re.",
+         "Drawing the semi-span on its own let conventional wings reach AR 21 (13 % above 16.5, the highest real value). Drawing AR keeps every wing inside the real range by construction, with no refusals. Decided 29 Oct 2026.", "req", ""),
         ("Chord law", "<code>stations</code>: c2, c3, c4 as fractions of the root (BWB). <code>per_panel</code>: each panel's own taper, at most 1 (cranked). <code>linear_taper</code>: one taper, c2 and c3 follow (tapered, flying wing).",
          "Before, 46 of 100 conventional wings got wider toward the tip. With per-panel ratios no chord grows outboard, and the Latin hypercube stays intact.", "req", ""),
         ("Sweep law", "<code>panels</code>: one sweep per panel. <code>one</code>: sweep2 = sweep3 = sweep1 (tapered, flying wing).",
          "Straight leading edge for straight-edged wings. Variables a law computes need no range.", "req", ""),
         ("Size ranges from real wings", "Root chord: BWB 0.40–1.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m. AR: BWB 3–9; flying wing 3–13; conventional (cranked, tapered) 4.5–16.5.",
-         "All 34 real wings with a published area or aspect ratio (makers, papers, theses, the NTNU database; Class II from Götten et al. 2021, Essari 2015, the AUTh RX-3 BWB and the NTNU Shadow and Aludra rows) have a generated wing within 10 % in span and mean chord, and all 112 real spans are inside (CNAS and NTNU databases added 31 Oct 2026; flying-wing AR raised to 13 for the ScanEagle, AR 12.4) (see <a href='#real'>Real wings</a>). BWB root raised from 0.80 to 1.80 m on 30 Oct 2026: the old range was sized on small flying wings and missed real BWBs (RX-3: 4.9 m², 260 kg; Wang &amp; Zhou: root 1.80 m).", "meas", ""),
+         "All 34 real wings with a published area or aspect ratio (makers, papers, theses, the NTNU database; Class II from Götten et al. 2021, Essari 2015, the AUTh RX-3 BWB and the NTNU Shadow and Aludra rows) have a generated wing within 10 % in full span and mean chord, and all 112 real full spans are inside (CNAS and NTNU databases added 31 Oct 2026; flying-wing AR raised to 13 for the ScanEagle, AR 12.4) (see <a href='#real'>Real wings</a>). BWB root raised from 0.80 to 1.80 m on 30 Oct 2026: the old range was sized on small flying wings and missed real BWBs (RX-3: 4.9 m², 260 kg; Wang &amp; Zhou: root 1.80 m). Under the similarity proposal (pending) the real wings still set the Re range.", "meas", ""),
         ("Cranked differs from tapered", "Cranked focus = constant-chord centre and tapered outer panels: inner chord 0.95–1, middle 0.80–1, outer 0.50–0.85 of the chord inboard; sweep −3–3° inner, −5–10° middle, 0–15° outer. Full space unchanged.",
          "Your remark (30 Oct 2026): the two types looked alike, because the old per-panel ratios (0.85/0.75/0.65–1) made mostly straight-tapered wings with faint breaks. The layout follows Class II UAVs like Hermes 450 and Heron (from photos; no published chord table), so it is our choice.", "own", ""),
         ("Shape ranges from sources", "Every range has its basis in the <a href='#inputs'>Why this range</a> column and in <code>decisions/shape_ranges.md</code>. Changed on 29 Oct 2026: conventional sweep −5° to +15° (was −10° to +20°); conventional washout at most 5° (was 7°); dihedral 0–5° for every type (Raymer); flying-wing taper 0.3–0.9 and sweep 10–40°; BWB tip down to 0.06, first sweep from 15°.",
          "Each range now rests on a design rule (Raymer) or on a published small UAV (BWB: Wang &amp; Zhou 2022, Suewatanakul 2022, Lehmkuehler 2012, Hainline 2017; flying wing: Milenković-Babić 2024, Panknin, PUL-10, a flying-wing MAV). Layout shares (b3, split) remain our choice. BlendedNet is a larger Group 3 BWB and is not used for the ranges.", "src", ""),
         ("Two spaces: full and focus", "Per type, <code>ranges</code> + <code>airfoils</code> = the focus space (realistic, suggested); <code>full_ranges</code> + <code>full_airfoils</code> = the full space (everything supported). The focus box must lie inside the full box, and each suggested section must be a full candidate; the YAML is refused otherwise.",
          "Your rule (30 Oct 2026): design everything, but put the wings and the simulations densely where the real wings are. Full bounds are our choice: the widest value in any source, rounded out (e.g. BlendedNet sweeps 60°, Wang &amp; Zhou root 1.8 m, Prandtl-D washout 10°).", "req", ""),
-        ("Wing class", "<code>wing_class: I | II</code> sets the trailing-edge floor.", "Manufacturing differs by size.", "req", ""),
+        ("Wing class", "<code>wing_class: I | II</code> sets the trailing-edge floor.", "Manufacturing differs by size. Proposal, pending (similarity): 0.2 % c on every wing, so the floors, and this role of the class, go.", "req", ""),
     ]),
     ("Planform", [
         ("Exact straight panels", "Leading and trailing edges are straight lines through b0–b3. Chords and sweeps equal the vector exactly.",
@@ -99,7 +99,7 @@ DECISIONS = [
     ("Sections, twist, dihedral", [
         ("Vertical sections; root in y = 0", "Every section is parallel to the symmetry plane and only twisted about its leading edge. The validity gate refuses a wing whose root leaves y = 0 by more than 1e-9 m, or any point that crosses y = 0.",
          "The two mirrored halves then meet exactly in the root section and never cross. AERIS (and its AVL path) rolled the root section with the first panel's dihedral, so the halves crossed and the root dihedral had to be pinned at zero. pyGeo only receives our section points, never a dihedral angle. Cost: on a panel with dihedral Γ the true thickness is cos Γ smaller (1.5 % at 10°).", "req", ""),
-        ("One dihedral per panel", "Inputs <code>dihedral_p1, p2, p3</code>. Station heights: z<sub>i</sub> = Σ tan(Γ<sub>panel</sub>) · panel span.",
+        ("One dihedral per panel", "Inputs <code>dihedral_p1, p2, p3</code>. Station heights: z<sub>i</sub> = Σ tan(Γ<sub>panel</sub>) · f<sub>panel</sub> S (the panel's share of the semi-span).",
          "Four station values gave only three panel slopes, so one input did nothing ([0, 3, 3, 6], [3, 0, 6, 3] and [1.5, 1.5, 4.5, 4.5] built the same wing). The gate now checks each panel dihedral against the vector. Fixed 29 Oct 2026.", "req", ""),
         ("Twist", "Exact at the four stations; between them it follows the straight panel.",
          "Straight panels and linear twist cannot both hold. Difference 0.1–0.3 % of chord at the trailing edge.", "meas", ""),
@@ -114,13 +114,13 @@ DECISIONS = [
         ("Default sections", "BWB: MH 104 body (15 %), MH 61 wing (10 %). Cranked and tapered: NACA 4415, 4415, 4412, 4412. Flying wing: MH 60 inboard, MH 45 outboard.",
          "BWB pair from a small BWB UAV (Suewatanakul et al. 2022). The old AERIS MH 91 is a paraglider section and NLF(1)-1015 a HALE section (Re 0.7–2 × 10⁶), so both were dropped. NACA 4415 flies on the Pioneer and the Shadow 200 (Lednicer). MH 45 and MH 60 are Hepperle's tailless sections; MH 60 suits Re ≥ 1.5 × 10⁵ (root), MH 45 lower Re (tip). Changed 29 Oct 2026.", "src", ""),
         ("One way to read every file", "Leading edge = the point farthest from the trailing-edge midpoint; unit chord; both sides resampled on cosine x, in √x.",
-         "The nose tangent is square to the chord, and every section has the same points, so the loft can join them.", "own", ""),
+         "The nose tangent is square to the chord, and every section has the same points, so the loft can join them. <strong>Open (decision 64):</strong> this rule may change the nose shape inside the first gap between raw points; a first check measured it with a one-sided fit that shows nearly the same mismatch on the raw files. Re-measure first (see <a href='#fix'>Fixes</a>).", "own", "open"),
         ("Typo points dropped", "A single point that spikes off a smooth line is removed (18 database files, e.g. sc20412 at x/c 0.73).",
          "One bad point would put a bump in the surface. Kept by your decision on 29 Oct 2026; each dropped point is logged.", "req", ""),
     ]),
     ("Trailing edge", [
         ("Thickness rule", "Class I: max(0.5 mm, 0.2 % of local chord). Class II: max(1.0 mm, 0.2 %).",
-         "Real wings are blunt. In AERIS, 0.5 % carried about a fifth of the pressure drag; 0.2 % with 8 base cells carried 2–4 %. 0.2 % is also pyGeo's default. The floors still need a builder's confirmation.", "meas", "open"),
+         "Real wings are blunt. In AERIS, 0.5 % carried about a fifth of the pressure drag; 0.2 % with 8 base cells carried 2–4 %. 0.2 % is also pyGeo's default. The floors still need a builder's confirmation. Proposal, pending (similarity): 0.2 % c on every wing; the 0.5 / 1.0 mm floors go (check C3 covers the thicker edges of small real wings, about 0.42 % c).", "meas", "open"),
         ("Made in the generator", "On the 2-D airfoil, before the loft. Not in the mesher.",
          "AVL, CFD and CAD see one wing. The AERIS mesher made 4.3 mm at one root, 2.4 times the rule, and moved lift 11–30 counts.", "meas", ""),
         ("How it opens", "pyGeo's method: linear ramp from x/c = 0.90 to the edge, half up, half down. Camber line unchanged.",
@@ -128,29 +128,29 @@ DECISIONS = [
         ("The rule wins over the file", "A file with its own blunt edge is set to the rule (NACA 4415: 0.32 % → rule). Published wings keep theirs (<code>as_is</code>).",
          "Sampled wings follow one rule; copies of real wings stay real.", "own", ""),
         ("Extra section at the switch", "Where the chord equals 0.25 m (Class I) or 0.5 m (Class II), a section is added.",
-         "The loft blends thickness linearly; without it the edge would dip below the floor.", "own", ""),
+         "The loft blends thickness linearly; without it the edge would dip below the floor. The switch goes if the floors go (similarity proposal, pending).", "own", ""),
     ]),
     ("Loft (the surface the mesher reads)", [
         ("Straight panels: kSpan = 2", "Sections only at b0–b3 plus switch points.",
-         "kSpan 3 cut the corners at panel breaks by up to 4.8 % of chord; kSpan 2 is exact. It leaves a sharp kink at b1 and b2: see the one fix left.", "meas", "fix"),
+         "kSpan 3 cut the corners at panel breaks by up to 4.8 % of chord; kSpan 2 is exact. It leaves a sharp kink at b1 and b2; the Stage 2 surface mesher puts a station exactly on each (fix 3, done).", "meas", ""),
         ("Built with pySpline, one parameter s = √(x/c)", "Same construction as pyGeo's <code>liftingSurface</code>, held in a pyGeo object.",
          "<code>liftingSurface</code> split upper and lower 0.2–0.5 % of chord away from the nose. Here the split is exact and u = x/c on every station.", "meas", ""),
-        ("Ask, never interpolate", "The mesher asks <code>upper(u, v)</code> and <code>lower(u, v)</code>; a 401-point table maps v to span.",
+        ("Ask, never interpolate", "The mesher asks <code>upper(u, v)</code> and <code>lower(u, v)</code>; a 401-point table maps v to the position along the semi-span.",
          "In AERIS, straight lines between stored sections missed the surface by up to 7.25 % of chord (ADR-0015).", "meas", ""),
         ("Tip", "Flat and open (<code>tip='none'</code>).", "Rounded tips are a later study.", "own", ""),
         ("Two backends, one export", "pyGeo (production, IGES) and numpy (same surface, no pyGeo). No STEP: pyGeo has no STEP writer.",
          "Tests and pictures run anywhere.", "own", ""),
     ]),
     ("Measure, label, hash", [
-        ("Measured on the loft", "Chord, twist, LE position, sweep, dihedral, area, span, MAC, AR, thickness, trailing-edge thickness → <code>measured.json</code>. The gate checks chords, sweeps, twists, panel dihedrals and the aspect ratio against the vector.",
+        ("Measured on the loft", "Chord, twist, LE position, sweep, dihedral, area, semi-span and full span, MAC, AR, thickness, trailing-edge thickness → <code>measured.json</code>. The gate checks chords, sweeps, twists, panel dihedrals and the aspect ratio against the vector.",
          "Later stages and any ML model use the measured wing; the vector is only its label.", "req", ""),
         ("Labels by rule", "First the family (from the input) and the type (by the rules above), then shape labels: swept, cranked, rectangular, straight-tapered, washout, dihedral, aspect ratio. BWB threshold 2.2.", 
-         "A tail is not part of the wing surface, so it cannot be measured; the family comes from the type. Before 29 Oct 2026 every tailless wing without a centre body was called 'conventional'. Checked on 20 hand-labelled wings and a flying-wing test.", "req", ""),
+         "Whether the wing must trim itself is a property of the aircraft, so it cannot be measured on the wing; the family comes from the input (the type or the user). Before 29 Oct 2026 every tailless wing without a centre body was called 'conventional'. Checked on 20 hand-labelled wings and a flying-wing test.", "req", ""),
         ("Hash from the code itself", "sha256 of the vector (with its four section names), the type's laws and pinned values (not its ranges), the trailing-edge rule, the airfoil coordinates and the content of every geometry source file.",
-         "Any code change now changes every input hash, so stored meshes and results are never reused for a wing the code builds differently. A version string set by hand could be forgotten. Fixed 29 Oct 2026.", "req", ""),
+         "Any code change now changes every input hash, so stored meshes and results are never reused for a wing the code builds differently. A version string set by hand could be forgotten. Fixed 29 Oct 2026. Cost: a pure rename changes every hash too. After the 2 Nov 2026 rename (no geometry change) every stored hash and manifest is stale until one <code>build --all</code>, and Stage 2 mesh names carry the wing hash (<code>mesh_&lt;level&gt;_&lt;wing_hash8&gt;_re&lt;Re&gt;</code>).", "req", ""),
     ]),
     ("Sets", [
-        ("Seven sets per type, two spaces", "Focus: training 100 (Latin hypercube, seeds 1001–1004), reference 5 (by rule), hold-out 10 (seeds 2001–2004). Full: training 40 (seeds 1101–1104), hold-out 5 (seeds 2101–2104), corner 1 (each free variable at each full bound: 34 or 26 wings) and corner 2 (every pair at all four low/high combinations: 8 or 7).",
+        ("Seven sets per type, two spaces", "Focus: training 100 (Latin hypercube, seeds 1001–1004), reference 5 (by rule), hold-out 10 (seeds 2001–2004). Full: training 40 (seeds 1101–1104), hold-out 5 (seeds 2101–2104), corner 1 (each free variable at each full bound: 34 or 26 wings) and corner 2 (every pair at all four low/high combinations: 8 or 7). Files (renamed 2 Nov 2026): <code>training_focus</code>, <code>reference</code>, <code>holdout_focus</code>, <code>training_full</code>, <code>holdout_full</code>, <code>corner1</code>, <code>corner2</code>.",
          "Dense where real wings are, sparse over everything we support; the corners test the edges of what we claim. The hold-outs are the honest tests. Decided 30 Oct 2026.", "req", ""),
         ("Failures stay in the list", "A refused wing keeps its row with the gate and the reason. Corners are never nudged inside.",
          "A failure marks the edge of the space.", "req", ""),
@@ -161,37 +161,44 @@ DECISIONS = [
 ]
 
 FIXES = [
-    ("The loft has sharp kinks at b1, b2 and the switch sections.",
-     "Correct for straight panels, but the S8 mesher does not place stations at the breaks. Flat mesh faces would then cut the corner, about 0.5 % of chord (a rough estimate).",
-     "Stage 2 must put a mesh station exactly at every <code>station_v</code>. No change here; put it in the Stage 2 prompt."),
+    ("Open: the nose shape of cambered sections (decision 64).",
+     "A first check found the upper and lower nose radius of cambered sections differ 3–13×, but measured the same way the raw files show nearly the same mismatch (NACA 4415 raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c), so it mostly reflects how a cambered, tilted nose looks to that one-sided fit. What may remain is a small change inside the first gap between raw points (under 0.025 % c on NACA 4415), smaller than one nose cell.",
+     "Re-measure raw and built with the same curvature fit before any fix; a fix changes every geometry hash."),
 ]
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
     ("Study plan (Stage 0)", "Middle Re level", "Levels are now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Keep 1.5 × 10⁶, or move it to 1 × 10⁶ (log-middle of 3 × 10⁵ and 3 × 10⁶)?", "decide"),
-    ("Study plan (Stage 0)", "Transition model in the pipeline", "Mike, 2 Nov 2026: the model choice is made in a later stage; until then the mesh is built transition-ready, so both options stay open. ADflow has no transition model (SA is its only differentiated, tested model). The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Add SU2 γ-Reθ (with a transition-ready mesh: y+ ≤ 1, fine chordwise cells over the bubbles) for drag on the reference wings, and keep ADflow SA for mesh studies? Logic check (1 Nov 2026): what a mesh must resolve depends on the model, so an SA mesh study alone does not qualify the mesh for γ-Reθ: build the mesh transition-ready from the start and repeat a reduced mesh study with γ-Reθ on 2–3 reference wings. Fix the SA inflow eddy viscosity (ν̃/ν about 3, Spalart &amp; Rumsey 2007); with a low value SA shows an uncontrolled apparent transition (Crivellini &amp; D'Alessandro 2014).", "later"),
+    ("Flow conditions", "Transition and solver split", "Decided (4 Nov 2026): transition must be captured, with ADflow and SU2. Our ADflow build has SA only and no transition model, so transition comes from SU2 (SST + LM γ-Reθ). Proposal, pending: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first. The flow dataset (<a href='#flowdata'>Flow dataset</a>) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Logic check (1 Nov 2026): what a mesh must resolve depends on the model, so an SA mesh study alone does not qualify the mesh for γ-Reθ: build the mesh transition-ready from the start and repeat a reduced mesh study with γ-Reθ. Fix the SA inflow eddy viscosity (ν̃/ν about 3, Spalart &amp; Rumsey 2007); with a low value SA shows an uncontrolled apparent transition (Crivellini &amp; D'Alessandro 2014). First SU2 smoke test (4 Nov): SU2 ran SA and LM on one Stage 2 ring mesh (a section extruded between two symmetry planes, 97,920 cells, Re 3 × 10⁵, Mach 0.15, 4°); after about 370 iterations, not converged: SA CL 0.860, CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works; no wing has been run.", "decide"),
+    ("Flow conditions", "Mach cap", "The Mach scope extends toward 0.5, with no supersonic flow (decided 4 Nov 2026); the cap is open. The section tables and the flow dataset stop at Mach 0.2. Recommendation (pending): core data at Mach ≤ 0.2 now, Mach 0.3–0.5 later; at Mach 0.5 the angles would be capped near 4° by a supersonic-pocket gate.", "decide"),
+    ("Flow conditions", "Fast-UAV family", "Proposal, pending: Mach 0.3–0.5 needs a fast-UAV family in Stage 1, with real fast UAVs, thinner sections and section tables up to Mach 0.5. Today fast wings such as the Vindicator and the CPJ 100-LE are left out as 'outside phase 1'.", "decide"),
+    ("Flow conditions", "Data for the new angle range", "Angles now run from −5° to post-stall, plus a separate post-stall study (decided 6 Nov 2026; Stage 0 had 0 / 4 / 8° plus 12° for the nose and wake studies). Missing here: the flow dataset covers root angles 0–10°; the section tables reach −10° and stop at 14°, so stall is never reached.", "act"),
+    ("Flow conditions", "Lower band at negative angles", "At negative angles the lower surface becomes the suction side, so the lower transition band (60–100 % c, set for 0–10°) must reach forward (proposal, pending). The refine map (decision 65, candidate) already finds lower-surface transition near the leading edge on washed-out outboard panels.", "decide"),
+    ("Flow conditions", "Volume mesh topology", "Proposal, pending: one matched C-H multiblock mesh for both solvers instead of the overset wake box, vortex tube, overlap and background boxes, because SU2 has no overset. The wake band is sized for the whole angle range, the outboard blocks must resolve the tip vortex, and the far field stays at 80 c. Rough cost: the C-H wake lines add about +45 % (30–60 %) cells on the wing blocks (not measured).", "decide"),
     ("Flow maps", "Sweep and aspect ratio stay in every set", "The 2-D strips do not use sweep or aspect ratio, so the sensitivity study cannot rank them; their low scores mean 'not modelled'. Keep both fully sampled in every CFD and ML set, and justify similarity scaling by dimensional analysis, not by the sensitivity result.", "act"),
     ("Flow maps", "The SA rule", "The tool proposes SA when fully turbulent SA changes the profile drag by under 10 %, the upper surface turns turbulent near the nose (mean laminar run under 20 % chord; a small drag error with a long laminar run is a coincidence of two different flows) and no strip is below Re 10⁵. Both thresholds are our choice. Tie the first to the drag budget instead (the error in counts)?", "decide"),
-    ("Flow maps", "N<sub>crit</sub> of the tool", "Default 9 (quiet air, as in flight at altitude). Low-level flight in gusty air is nearer 5–7; the check shows N<sub>crit</sub> 5 changes the SA error by __FD_N5__ points. Keep 9 and show 5 as a band?", "decide"),
+    ("Flow maps", "N<sub>crit</sub> of the tool", "Default 9 (quiet air, as in flight at altitude). Low-level flight in gusty air is nearer 5–7; the check shows N<sub>crit</sub> 5 changes the SA error by __FD_N5__ points. Keep 9 and show 5 as a band? The similarity proposal (pending) fixes Tu 0.07 % (N<sub>crit</sub> 9) for the CFD.", "decide"),
     ("Flow maps", "Level-flight band", "A grid point counts as level flight when its wing loading is within × / ÷ 2 of the fit to 37 real wings (35 of them are). Keep, or narrow it per class?", "decide"),
-    ("Flow maps", "Checks of the flow results", "Mike, 2 Nov 2026: no check is needed before the mesh stage; the mesh rules come from ranges, which the checks would not move. Needed before the paper quotes flow numbers: a few SU2 γ-Reθ runs on 2–3 reference wings (BWB centre body first), the first runs of the mesh stage. Only if the paper states SA's error as a number: 2-D SA against tripped XFOIL at Re 10⁵, 3 × 10⁵ and 1.5 × 10⁶ (about 1 day). Optional: retry the failed XFOIL points, a hinge-line case, a vortex-lattice span loading, a source for the crossflow threshold, E387 against wind-tunnel data.", "act"),
+    ("Flow maps", "Checks of the flow results", "Mike, 2 Nov 2026: no check is needed before the mesh stage; the mesh rules come from ranges, which the checks would not move. Since then the ranges have moved (angles −5° to post-stall, Mach toward 0.5: see Flow conditions). Needed before the paper quotes flow numbers: SU2 SST + LM runs (proposal, pending: on about 20 % of the wings first, BWB centre body first), the first runs of the mesh stage; so far only a smoke test on one ring mesh has run (see Transition and solver split). Only if the paper states SA's error as a number: 2-D SA against tripped XFOIL at Re 10⁵, 3 × 10⁵ and 1.5 × 10⁶ (about 1 day). Optional: retry the failed XFOIL points, a hinge-line case, a vortex-lattice spanwise loading, a source for the crossflow threshold, E387 against wind-tunnel data.", "act"),
+    ("Flow maps", "Raw XFOIL data", "Push the raw XFOIL data to GitHub, or accept the 40-minute rebuild of the section tables. Still open.", "act"),
     ("Study plan (Stage 0)", "Grid share 65 %", "Of the 3-count drag budget, 65 % goes to the mesh. Keep?", "decide"),
     ("Study plan (Stage 0)", "Iterative error", "≤ 10 % of the budget is loose; Eça &amp; Hoekstra ask 0.1–1 %. Tighten to 1 %?", "decide"),
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
     ("Study plan (Stage 0)", "Turbulence-model source", "Crivellini 2014 is weak support. Find a better source or call it our choice.", "decide"),
-    ("Study plan (Stage 0)", "Stage 0 D5", "The Grand Roadmap lists a D5 (prior work, transition route, tunnel, cloud budget). Add it?", "decide"),
-    ("Geometry", "Size by similarity", "At Mach ≤ 0.3 a wing's size enters the flow only through Re (and the trailing-edge thickness over chord). Proposal: build and mesh every wing at unit mean chord, drop the root chord from the shape vector, and give each CFD case its Re (1 × 10⁵ – 3.5 × 10⁶) and TE/c instead. One mesh family per shape then serves every size; the 7 m cap becomes an Re cap. BlendedNet++ does the same (all runs at C₁ = 1 m, other sizes by flow similarity). Adopt?", "decide"),
+    ("Study plan (Stage 0)", "Stage 0 D5", "The Grand Roadmap lists a D5 (prior work, transition route, tunnel, cloud budget). Add it? Its transition route is now partly decided: transition must be captured (4 Nov 2026).", "decide"),
+    ("Geometry", "Nose shape (decision 64)", "A first check found the upper and lower nose radius of cambered sections differ 3–13×, but measured the same way the raw files show nearly the same mismatch (NACA 4415 raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c), so it mostly reflects how a cambered, tilted nose looks to that one-sided fit. What may remain is a small change inside the first gap between raw points (under 0.025 % c on NACA 4415), smaller than one nose cell. Re-measure raw and built with the same curvature fit before any fix; a fix changes every geometry hash.", "decide"),
+    ("Geometry", "Size by similarity", "Agreed in principle; proposal, pending. Build and mesh every wing at unit mean chord; the Re on the mean chord becomes an input (1 × 10⁵ – 3.5 × 10⁶ in the first proposal; the real-wing database still sets the range). Mach fixed at 0.1 with a Prandtl–Glauert correction on CL and CM; trailing edge 0.2 % c on every wing (the 0.5 / 1.0 mm floors depend on real size, so they go; check C3 covers the thicker edges of small real wings, about 0.42 % c); Tu 0.07 % (N<sub>crit</sub> 9), T 288.15 K, γ 1.4, Pr 0.71, adiabatic wall. The root chord drops out of the vector (18 → 17 numbers; sampled 17 / 13 / 17 / 13 → 16 / 12 / 16 / 12). One mesh family per shape then serves every size; the 7 m cap becomes an Re cap. Meshes per wing 21 → 4; dataset 42,000 → 8,000 solves. Checks: C1 (scale), C2 (Mach), C3 (trailing edge), C4 (Re-level interpolation). BlendedNet++ does the same (all runs at C₁ = 1 m, other sizes by flow similarity).", "decide"),
     ("Geometry", "Full-space edges", "The full space reaches a full span of 20 m (beyond Class II) and Re 7.6 × 10⁶ on the largest BWB root (above the top level). Keep, or cap it too (e.g. 12 m, the largest real Class II in our tables)?", "decide"),
-    ("Geometry", "Trailing-edge floor", "Confirm 0.5 mm (Class I) / 1.0 mm (Class II) with a builder; run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works.", "decide"),
+    ("Geometry", "Trailing-edge floor", "Superseded if the similarity proposal (pending) is adopted: 0.2 % c on every wing, the floors go (check C3). Until then: confirm 0.5 mm (Class I) / 1.0 mm (Class II) with a builder; run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works.", "decide"),
     ("Geometry", "Airfoil search order", "Project folder → AERIS database → NACA formula; 22 database files are refused. Keep?", "decide"),
-    ("Geometry", "pyGeo run", "Run the 11 pyGeo tests and <code>build --all</code> on your machine; manifests must then say pygeo.", "act"),
+    ("Geometry", "pyGeo run", "Decide the nose first (decision 64), then run the pyGeo tests and one <code>build --all</code> on your machine: the 2 Nov rename made every stored hash stale. The manifests must then say pygeo. Without pyGeo: __TESTS__. The Stage 2 tests and screen with pyGeo are owed too.", "act"),
     ("Sources", "Second-hand values", "Raymer's taper 0.4, washout 3° and 0° c/4 sweep come from a course page; PUL-10 and the flying-wing MAV were read by the agent only. Check in print.", "act"),
     ("Sources", "AUTh BWB papers", "Airfoils and station chords of their BWBs are in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Patras library or the authors.", "act"),
     ("Sources", "Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas cite unread Jane's-style data; the Hermes 450 entry is inconsistent. Confirm with Jane's.", "act"),
-    ("Sources", "Database rows (NTNU, CNAS)", "Added 31 Oct 2026: 7 NTNU rows with an aspect ratio (set ranges) and 45 span-only rows. Families (tailless or conventional) are from photos; aspect ratios and speeds are as the databases list them. Some look wrong (RQ-7A cruise 58 m/s; Aludra MK1 chord). Check the rows you will quote.", "act"),
-    ("Sources", "Tailless Class II areas", "Fury, Albatroz, Shahed 191 have spans only; the RX-3 is the one tailless Class II with an area.", "act"),
+    ("Sources", "Database rows (NTNU, CNAS)", "Added 31 Oct 2026: 7 NTNU rows with an aspect ratio (set ranges) and 45 rows with only a full span. Families (tailless or conventional) are from photos; aspect ratios and speeds are as the databases list them. Some look wrong (RQ-7A cruise 58 m/s; Aludra MK1 chord). Check the rows you will quote.", "act"),
+    ("Sources", "Tailless Class II areas", "Fury, Albatroz, Shahed 191 list only a full span; the RX-3 is the one tailless Class II with an area.", "act"),
     ("Published wings", "BlendedNet twist and dihedral", "Set to zero because neither paper states them. Accept?", "decide"),
-    ("Published wings", "Which published wing first", "RIBES is the only in-regime case; M6 and CRM are transonic.", "decide"),
-    ("Published wings", "NASA CRM", "Four stations and stand-in sections: a shape check only, or add a many-station mode?", "decide"),
+    ("Published wings", "Which published wing first", "RIBES is the only in-regime case, and it is tripped at 1.4 % chord, so it checks fully turbulent RANS only: no published case here checks transition (candidate: the E387 wind-tunnel data). M6 and CRM are transonic, and the scope has no supersonic flow (decided 4 Nov 2026): shape and mesh checks only.", "decide"),
+    ("Published wings", "NASA CRM", "Four stations and stand-in sections: a shape check only, or add a many-station mode? With no supersonic flow in the scope it cannot be a validation case.", "decide"),
     ("Published wings", "RIBES trailing edge", "Fitted section 0.26 %, model 0.38–0.66 %. Rebuild before any drag comparison?", "decide"),
     ("Published wings", "Outside proof", "Only the M6 is checked against its own CAD. BlendedNet, CRM, RIBES need their surface files; NACA 25118 edge needs a BlendedNet STEP.", "act"),
     ("Study plan (Stage 0)", "Code-to-code checks", "BlendedNet / BlendedNet++ (FUN3D, SA, fully turbulent, Group 3 BWB, mesh error up to 5 % CL / 8 % CD) and SHIFT-Wing (transonic, CRM-based) are surrogate datasets, not verification data. Use BlendedNet++ only for a few same-model (SA) code-to-code points inside our full space; verify our own meshes by grid convergence (GCI) and NASA TMR cases.", "act"),
@@ -203,9 +210,11 @@ LIMITS = [
     "<strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 10–15 %).",
     "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Panel dihedral: focus 0–5°, full ±10°.",
     "<strong>Some shape sources are thin.</strong> The layout shares (where b1 and b2 sit) are our choice. A few rules are second-hand (Raymer via a course page). BWB shapes rest on four small-UAV papers, two of them larger than Class I.",
-    "<strong>Class II areas are uncertain.</strong> They rest on Götten et al. (from photos, about 10–15 %) and a thesis citing unread Jane's-style data. Tailless Class II have no area at all.",
-    "<strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).",
-    "<strong>Published wings:</strong> M6 and CRM are transonic (phase 1 stops at Mach 0.3). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.",
+    "<strong>Class II areas are uncertain.</strong> Most rest on Götten et al. (from photos, about 10–15 %) and a thesis citing unread Jane's-style data. The AUTh RX-3 is the only tailless Class II wing with an area (4.9 m²), and its full span is derived (√(AR · S)).",
+    "<strong>0 refusals at the corners</strong>, here and in the Stage 2 surface mesher (790 of 790 builds pass). The corners still show the mesher's weak spot: its lowest quad quality (scaled Jacobian 0.09, limit 0.05) is on corner wings with a 4–6 mm first panel and a trailing edge swept about 85°. Lofts it has never seen (the hold-outs; primer Track 5) are still untested.",
+    "<strong>Published wings:</strong> M6 and CRM are transonic, and the scope has no supersonic flow (it extends toward Mach 0.5; decided 4 Nov 2026), so they are shape and mesh checks only. RIBES is tripped at 1.4 % chord, so no published case here checks transition (candidate: the E387 wind-tunnel data). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.",
+    "<strong>Nose shape (decision 64).</strong> The built nose may differ from the airfoil inside the first gap between raw points (under 0.025 % c on NACA 4415); re-measure first (see <a href='#fix'>Fixes</a>).",
+    "<strong>No fast-UAV family yet.</strong> Mach 0.3–0.5 needs real fast UAVs, thinner sections and section tables up to Mach 0.5 (proposal, pending); the data here stop at Mach 0.2.",
 ]
 
 BASIS = {"req": ("Your rule", "req"), "src": ("Source", "src"), "meas": ("Measured", "meas"), "own": ("Our choice", "own")}
@@ -335,7 +344,7 @@ def real_table() -> tuple[str, dict]:
     """Rows of the real-UAV table and its summary, from docs/real_uavs.json."""
     d = json.loads((DOCS / "real_uavs.json").read_text())
     fam = {"tailless": "Tailless", "conventional": "Conventional", "delta": "Delta"}
-    use = {"ranges": "<span class='flag ok'>sets range</span>", "span": "<span class='muted'>span only</span>",
+    use = {"ranges": "<span class='flag ok'>sets range</span>", "span": "<span class='muted'>full span only</span>",
            "none": "<span class='flag open'>not used</span>"}
     out = []
     for r in sorted(d["rows"], key=lambda r: (r["family"], r["span"])):
@@ -375,7 +384,7 @@ def hcdi_cell(h: dict | None) -> str:
     if not h:
         return "—"
     parts = [f"Class {h['class']}"]
-    parts += [f"{k} {h[k]:g}{u}" for k, u in (("mtow", " kg"), ("payload", " kg pl"), ("span", " m")) if h.get(k)]
+    parts += [f"{w} {h[k]:g}{u}" for k, w, u in (("mtow", "mtow", " kg"), ("payload", "payload", " kg pl"), ("span", "full span", " m")) if h.get(k)]
     return "<br>".join(parts)
 
 
@@ -1214,43 +1223,50 @@ def fig_section() -> str:
 
 # zone | phenomena it captures | rule (starting value) | budget share (Stage 0) | where the rule comes from | today in S8
 REFINE = [
-    ("Wall-normal, every wall", "Boundary layer, skin friction, separation; transition if a transition model is run",
-     "First cell from y⁺ ≤ 1 at the flight speed of each case (law 13 per station; along the span it changes only about 20 %, because Re and chord change together, and the smallest chord sets it); growth ≤ 1.25 inside the boundary layer, ≤ 1.3 outside; ≥ 30 cells across the boundary layer at every station (on a small BWB the root boundary layer is up to about 10 × thicker than the tip's)",
-     "wall-normal 20 %", "Roadmap R-V.1, R-V.2 (laws 13, 14); DPW gridding guidelines",
-     "One first cell (4.71 µm) for every station; growth 1.253; 29 cells across the boundary layer"),
-    ("Leading edge (nose)", "Suction peak, start of the laminar run, stall at 12°",
+    ("Wall-normal, every wall", "Boundary layer, skin friction, separation and transition (transition must be captured: decided 4 Nov 2026)",
+     "First cell from y⁺ ≤ 1 at the flight speed of each case (law 13 per station; along the semi-span it changes only about 20 %, because Re and chord change together, and the smallest chord sets it); growth ≤ 1.25 inside the boundary layer, ≤ 1.3 outside (about 1.1 with a transition model: decision 57, Stage 3, pending); ≥ 30 cells across the boundary layer at every station (on a small BWB the root boundary layer is up to about 10 × thicker than the tip's)",
+     "wall-normal 20 %", "Roadmap R-V.1, R-V.2 (laws 13, 14); DPW gridding guidelines; Ansys CFX transition-model grid guidance (growth about 1.1)",
+     "Volume mesh: Stage 3, not built. Stage 2 uses the tip first cell s0 (y⁺ = 1 at the tip Re) for the last station gap. S8 for reference: one first cell (4.71 µm) for every station; growth 1.253; 29 cells across the boundary layer"),
+    ("Leading edge (nose)", "Suction peak, start of the laminar run, leading-edge stall (angles now −5° to post-stall)",
      "Chordwise spacing solved so no cell turns the surface by more than 10° (ladder 12 / 10 / 8 / 6°); nose cells of neighbouring stations differ by at most 15 %",
-     "chordwise 35 %", "Roadmap R-S.5, R-S.6 (laws 1, 2)", "In place"),
-    ("Transition band: upper surface 10–85 % chord (from the leading edge on swept panels), lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 11 % to 78 % of the chord), and the lower surface turns turbulent near the trailing edge. On swept panels crossflow transition, which the 2-D strips cannot see, would start at the leading edge",
-     "Only with a transition model: fine chordwise cells over the band and a cap on growth along the ring (≤ 1.25). With fully turbulent SA there is no bubble to resolve",
-     "chordwise 35 %", "Our choice; depends on the transition route (Stage 0 D5)", "Not done"),
+     "edges and base 15 % (Stage 0 counts the nose cells there)", "Roadmap R-S.5, R-S.6 (laws 1, 2)",
+     "Built: no ring node turns the surface by more than 10° (largest delivered 10.02°); the nose spacing changes by at most 1.15 between stations. It meshes the nose as built (decision 64)"),
+    ("Transition band: upper surface 0–85 % chord (from the leading edge on every wing), lower surface 60–100 %", "End of the laminar run and laminar bubbles; they move with the angle (on top from about 11 % to 78 % of the chord at 0–10°), and the lower surface turns turbulent near the trailing edge. At negative angles the lower surface becomes the suction side. On swept panels crossflow transition, which the 2-D strips cannot see, would start at the leading edge",
+     "Required (transition must be captured: decided 4 Nov 2026): fine chordwise cells over the band, cell = bubble length / 20 at the coarse level (bubble length from our XFOIL table at the local Re), growth along the ring ≤ 1.25. Proposals, pending: 20 cells per bubble as a fine-level target, not a coarse-level minimum; a relaxed band (0.5 % c spacing where the local Re ≥ 4 × 10⁵); the lower band reaching forward for negative angles; a per-wing band from the refine map (decision 65, candidate)",
+     "chordwise 35 %", "Ansys CFX transition-model grid guidance (about 20 nodes per bubble, growth about 1.1, y⁺ about 1, 75–100 streamwise nodes); band edges from our 2-D strips (root angles 0–10°)",
+     "Built at level C, with the upper band from the leading edge on every wing (Stage 2 choice 58). Refine map (decision 65, candidate): on washed-out outboard panels the generic band misses lower-surface transition near the leading edge (by 52–60 % c) and upper transition past 85 % c at low angle (by up to 15 % c); the shortest root bubbles (1.4–10.7 % c) get fewer than 20 cells (1.2–3.6× short)"),
     ("Trailing edge and blunt base", "Base drag, base flow, start of the wake",
      "Chordwise spacing 0.1 % of local chord at the edge; 8 cells (9 points) across the base at the coarse level",
-     "edges and base 15 %", "Roadmap R-S.3, R-S.4 (laws 3, 6); DPW (8/12/16/24 cells), SPICES (≥ 8 at the fine level)", "In place (family 3)"),
-    ("Panel breaks b1, b2 (and switch sections)", "Local suction peak, jump in the span loading, slope break of the loft",
-     "A mesh station exactly on every break; spanwise growth ≤ 1.3 away from it",
-     "spanwise 15 %", "Fix 3 on this page; primer Track 2 (spanwise law with anchors)", "Not done: stations ignore the breaks"),
+     "edges and base 15 %", "Roadmap R-S.3, R-S.4 (laws 3, 6); DPW (8/12/16/24 cells), SPICES (≥ 8 at the fine level)",
+     "Built: 0.1 % c at the corners; 8 base cells at level C (10, 14, 18 at M, F, FF)"),
+    ("Panel breaks b1, b2 (and switch sections)", "Local suction peak, jump in the spanwise loading, slope break of the loft",
+     "A mesh station exactly on every break; spanwise growth ≤ 1.3 away from it. Station count (Stage 2 starting values): gap 0.2 × local chord, at least 12 gaps per panel, growth 1.2",
+     "spanwise 15 %", "Fix 3 (done in Stage 2); primer Track 2 (spanwise law with anchors); station count: law 8, our starting values",
+     "Built: a station exactly on every loft station (b0–b3 and the trailing-edge switch station); growth 1.2 (checked 1.3)"),
     ("Tip and tip cap", "Smallest chord and Re, first stall on aft sweep, birth of the vortex",
      "Stations squeezed toward the tip so the last gap equals the cap's first cell; cap first cell = the tip station's first cell (refuse above 3×); outboard blocks 1.5 root chords beyond the tip, growth ≤ 1.15",
-     "spanwise 15 %", "Roadmap R-S.1, R-V.3, R-V.5 (laws 9–12)", "Squeeze in place; cap first cell to be tied to the tip"),
+     "spanwise 15 %", "Roadmap R-S.1, R-V.3, R-V.5 (laws 9–12)",
+     "Built: the last station gap = the tip first wall cell s0 (y⁺ = 1 at the tip Re). Tying the cap's first cell to it is a volume item (Stage 3). With C-H (proposal, pending) the outboard blocks must also resolve the tip vortex"),
     ("Near wake, trailing edge to 2 chords", "Wake sheet (velocity deficit), base flow, start of roll-up",
-     "Overset wake box with cells of 0.0075 c (about 20 across the wake), tall and tilted to hold the wake at 0–12°; starts inside the near-body mesh",
-     "wake 15 %", "Roadmap R-V.6 (laws 17, 18); Chan et al. 2002", "No designed wake (O-mesh)"),
+     "Overset plan, under review: wake box with cells of 0.0075 c (about 20 across the wake), tall and tilted to hold the wake from −5° to post-stall; starts inside the near-body mesh. C-H proposal (pending): one matched mesh for both solvers (SU2 has no overset), with the wake band sized for the whole angle range; its wake lines add about +45 % (30–60 %) cells on the wing blocks (rough, not measured)",
+     "wake 15 %", "Roadmap R-V.6 (laws 17, 18); Chan et al. 2002", "Stage 3, not built (S8 had no designed wake: O-mesh)"),
     ("Far wake, 2 to 10 chords", "Downwash, induced drag, wake convection",
-     "Wake-box cells grow from 0.0075 c to the background size",
-     "wake 15 %", "Roadmap R-V.6", "No designed wake"),
+     "Overset plan, under review (C-H proposal, pending): wake-box cells grow from 0.0075 c to the background size",
+     "wake 15 %", "Roadmap R-V.6", "Stage 3, not built"),
     ("Tip vortex core", "Roll-up and path of the tip vortex",
-     "Tube with 15–20 near-cubic cells across the core, starting about 2 chords behind the tip (the vortex forms within about 1 chord, inside the near-body mesh)",
-     "wake 15 %", "Roadmap R-V.6 (law 19); primer section 05", "None"),
+     "Overset plan, under review: a tube with 15–20 near-cubic cells across the core, starting about 2 chords behind the tip (the vortex forms within about 1 chord, inside the near-body mesh). With C-H (proposal, pending) there is no tube: the outboard blocks must resolve the core",
+     "wake 15 %", "Roadmap R-V.6 (law 19); primer section 05", "Stage 3, not built"),
     ("Overlap between meshes", "Nothing leaks: the wake and the boundary layer pass between grids cleanly",
-     "≥ 5 cells from each mesh, cell-size ratio ≤ 1.5, no overlap inside the boundary layer or at the tip, 0 orphan cells",
-     "—", "Roadmap R-V.7 (law 21); Chan et al. 2002; Kenway et al. 2017", "Not built yet (Stage 2, M3)"),
+     "Overset plan, under review: ≥ 5 cells from each mesh, cell-size ratio ≤ 1.5, no overlap inside the boundary layer or at the tip, 0 orphan cells. With C-H (proposal, pending) there is no overlap",
+     "—", "Roadmap R-V.7 (law 21); Chan et al. 2002; Kenway et al. 2017", "Stage 3 (step M3), not built"),
     ("Background and far field", "Domain error",
-     "Background 0.03 c around the wing, coarsening outward; far field from 80 chords (ladder 40 / 80 / 160)",
-     "domain 10 % (of the total)", "Roadmap R-V.6 (laws 15, 16); DPW about 100 chords", "40 chords; 40 → 60 moved drag 0.6–0.7 counts"),
+     "Background 0.03 c around the wing (overset plan, under review: C-H proposal, pending), coarsening outward; far field from 80 chords (ladder 40 / 80 / 160; unchanged with C-H)",
+     "domain 10 % (of the total)", "Roadmap R-V.6 (laws 15, 16); DPW about 100 chords",
+     "Stage 3, not built. S8 for reference: 40 chords; 40 → 60 moved drag 0.6–0.7 counts"),
     ("Every zone together", "Grid convergence (the error bar)",
      "Every spacing in every mesh refined by one ratio r ≥ 1.3; distances fixed",
-     "—", "Roadmap R-V.8 (law 23); Celik et al. 2008", "Outboard blocks did not refine with the family"),
+     "—", "Roadmap R-V.8 (law 23); Celik et al. 2008",
+     "Surface (Stage 2): every spacing ÷ 1.3 per level (C, M, F, FF), within 3 %; exception: the base cells 8 / 10 / 14 / 18 (ratios 1.25, 1.4, 1.29), so C → M is below 1.3 (decision 61). Volume: Stage 3. (S8: the outboard blocks did not refine with the family.)"),
 ]
 
 
@@ -1266,7 +1282,7 @@ def fig_refine_side() -> str:
     up = [(X0 + C * x, YC - C * yu) for x, yu, yl in pts]
     lo = [(X0 + C * x, YC - C * yl) for x, yu, yl in pts]
     poly = " ".join(f"{a:.1f},{b:.1f}" for a, b in up + lo[::-1])
-    o = ['<svg class="dg" viewBox="0 0 1000 380" role="img" aria-label="Side view of the mesh zones around one section: wall layers on the whole surface, fine cells at the nose, at the trailing edge and across the blunt base, the near-body mesh reaching about two chords, a tilted wake box with cells of 0.0075 chord to two chords behind the trailing edge then growing to ten chords, and the background box of 0.03 chord">',
+    o = ['<svg class="dg" viewBox="0 0 1000 380" role="img" aria-label="Side view of the mesh zones around one section: wall layers on the whole surface, fine cells at the nose, at the trailing edge and across the blunt base, the near-body mesh reaching about two chords, a tilted wake box with cells of 0.0075 chord to two chords behind the trailing edge then growing to ten chords, and the background box of 0.03 chord. The wake box and the background box are the overset plan, under review: C-H proposal, pending">',
          '<defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>']
     # background box
     o.append('<rect class="zone-bg" x="40" y="40" width="930" height="300"/>')
@@ -1281,7 +1297,7 @@ def fig_refine_side() -> str:
     o.append(f'<polygon class="wakebox far" points="{x2:.0f},{YC + 14} 960,{YC + 40} 960,{YC + 110} {x2:.0f},{YC + 22}"/>')
     o.append(f'<text class="lab acc" x="{te + 10}" y="{YC - 26}">wake box 0.0075 c, to 2 c</text>')
     o.append(f'<text class="lab acc" x="{x2 + 30:.0f}" y="{YC - 14}">then cells grow to the background, to 10 c</text>')
-    o.append(f'<text class="lab muted" x="{x2 + 30:.0f}" y="{YC + 2}">tall and tilted: holds the wake at 0–12°</text>')
+    o.append(f'<text class="lab muted" x="{x2 + 30:.0f}" y="{YC + 2}">tall and tilted: holds the wake from −5° to post-stall</text>')
     # wall layers (offset outlines)
     for k, d in enumerate((3, 6, 10)):
         offs = " ".join(f"{a:.1f},{b - d:.1f}" for a, b in up) + " " + " ".join(f"{a:.1f},{b + d:.1f}" for a, b in lo[::-1])
@@ -1293,9 +1309,9 @@ def fig_refine_side() -> str:
     # labels
     o.append(f'<line class="leader" x1="{X0 - 12}" y1="{YC - 8}" x2="{X0 - 60}" y2="{YC + 70}"/><text class="lab" x="{X0 - 110}" y="{YC + 88}">nose: ≤ 10° turning per cell</text>')
     o.append(f'<line class="leader" x1="{te + 6}" y1="{YC + 10}" x2="{te + 40}" y2="{YC + 80}"/><text class="lab" x="{te + 20}" y="{YC + 98}">edge 0.1 % c · 8 cells across the base</text>')
-    o.append(f'<line class="leader" x1="{X0 + 0.5 * C}" y1="{YC - 30}" x2="{X0 + 0.45 * C}" y2="{YC - 70}"/><text class="lab" x="{X0 + 0.1 * C:.0f}" y="{YC - 76}">wall layers: y⁺ ≤ 1, growth ≤ 1.25, ≥ 30 cells</text>')
-    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">transition band: upper 10–85 % c (swept panels: from the nose), lower 60–100 % c</text>')
-    o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed)</text>')
+    o.append(f'<line class="leader" x1="{X0 + 0.5 * C}" y1="{YC - 30}" x2="{X0 + 0.45 * C}" y2="{YC - 70}"/><text class="lab" x="{X0 + 0.1 * C:.0f}" y="{YC - 76}">wall layers: y⁺ ≤ 1, growth ≤ 1.25 (about 1.1 with transition: pending), ≥ 30 cells</text>')
+    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">transition band (built): upper 0–85 % c (from the nose on every wing), lower 60–100 % c</text>')
+    o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed); wake box and background box: overset plan, under review (C-H proposal, pending)</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -1305,7 +1321,7 @@ def fig_refine_top() -> str:
     st = [(90, 80, 220), (270, 160, 125), (430, 215, 75), (600, 262, 30)]
     le = " ".join(f"{y},{x}" for y, x, c in st)
     te = " ".join(f"{y},{x + c}" for y, x, c in reversed(st))
-    o = ['<svg class="dg" viewBox="0 0 1000 470" role="img" aria-label="Top view of the mesh zones: span stations nearly even from the root and squeezed toward the tip, a station on each break b1 and b2, outboard blocks reaching 1.5 root chords beyond the tip, the wake box behind the whole trailing edge, and a vortex tube starting about two chords behind the tip">']
+    o = ['<svg class="dg" viewBox="0 0 1000 470" role="img" aria-label="Top view of the mesh zones: stations nearly even from the root and squeezed toward the tip, a station on each break b1 and b2, outboard blocks reaching 1.5 root chords beyond the tip, the wake box behind the whole trailing edge, and a vortex tube starting about two chords behind the tip. The wake box and the tube are the overset plan, under review: C-H proposal, pending">']
     # wake box behind TE
     o.append('<polygon class="wakebox" points="90,300 610,292 640,440 90,440"/>')
     o.append('<text class="lab acc" x="110" y="430">wake box behind the whole trailing edge</text>')
@@ -1334,11 +1350,12 @@ def fig_refine_top() -> str:
     for y, x, c in st[1:3]:
         o.append(f'<line class="station brk" x1="{y}" y1="{x}" x2="{y}" y2="{x + c}"/>')
         o.append(f'<line class="leader" x1="{y}" y1="{x - 2}" x2="350" y2="102"/>')
-    o.append('<text class="lab amber" x="350" y="96" text-anchor="middle">a station exactly on each break (b1, b2)</text>')
+    o.append('<text class="lab amber" x="350" y="96" text-anchor="middle">a station exactly on each break (b1, b2; built)</text>')
     o.append('<line class="leader" x1="560" y1="268" x2="720" y2="120"/><text class="lab" x="726" y="118">stations squeezed toward the tip:</text>')
-    o.append('<text class="lab" x="726" y="134">last gap = the cap\'s first cell</text>')
+    o.append('<text class="lab" x="726" y="134">last gap = tip first cell (built)</text>')
     o.append('<text class="lab muted" x="96" y="60">stations nearly even from the root</text>')
     o.append('<line class="dash" x1="90" y1="40" x2="90" y2="450"/>')
+    o.append('<text class="lab muted" x="96" y="464">wake box and tube: overset plan, under review (C-H proposal, pending)</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -1476,6 +1493,15 @@ def verification_sets_html() -> str:
                      + "".join(f"<td class='num'>{g(r[k])}</td>" for k in keys) + "</tr>" for t, r in sm.items())
 
 
+def vsets_max() -> dict:
+    """Worst section and aspect-ratio errors over every type, for the text under the table."""
+    f = DOCS / "verification_sets.json"
+    if not f.is_file():
+        return {"__VS_SEC__": "—", "__VS_AR__": "—"}
+    sm = json.loads(f.read_text())["summary"].values()
+    return {"__VS_SEC__": f"{max(r['sections_pct'] for r in sm):.2g}", "__VS_AR__": f"{max(r['ar_pct'] for r in sm):.5f}"}
+
+
 def decisions_html() -> str:
     out = []
     n = 0
@@ -1500,14 +1526,14 @@ def rows() -> str:
     for name in published_wings.names():
         spec, vec, te, meta = published_wings.get(name)
         pf, st = build_wing_sections(spec, vec, te)
-        kind = "BWB" if meta["kind"] == "bwb" else "Conventional"
+        kind = "Tailless (BWB)" if meta["kind"] == "bwb" else "Conventional"
         use = meta.get("use", "BWB dataset design (FUN3D RANS, Spalart–Allmaras), 12,490 published solutions in BlendedNet++.")
         secs = ", ".join(dict.fromkeys(s.airfoil.name for s in st))
         src = "<br>".join(html.escape(s) for s in meta["sources"])
         out.append(
             f"<tr><td class='what'>{html.escape(meta['title'])}<span class='id'>{name}</span></td>"
             f"<td><span class='tag {meta['kind']}'>{kind}</span></td>"
-            f"<td class='num'>{pf.semi_span:.3g} m<br>AR {aspect_ratio(pf):.2f}<br>MAC {mean_aero_chord(pf):.3g} m</td>"
+            f"<td class='num'>semi-span {pf.semi_span:.3g} m<br>AR {aspect_ratio(pf):.2f}<br>MAC {mean_aero_chord(pf):.3g} m</td>"
             f"<td>{html.escape(use)}</td>"
             f"<td>{html.escape(meta['fidelity'])}<br><span class='muted'>Sections: {html.escape(secs)}</span></td>"
             f"<td class='src'>{src}</td></tr>")
@@ -2015,24 +2041,25 @@ python -m cfdauto.flowmap ... --method xfoil | --ncrit 5 | --no-induced | --stri
 
 <section id="refine">
   <h2>Where the mesh must be fine</h2>
-  <p>Each phenomenon above lives in one region of the flow; each region gets its own rule. The rules are the Grand Roadmap recipes (R-S, R-V) and the Stage 0 error budget: the share is how much of the 65 % grid error each direction may use. The last column says where S8 stands today.</p>
+  <p>Each phenomenon above lives in one region of the flow; each region gets its own rule. The rules are the Grand Roadmap recipes (R-S, R-V) and the Stage 0 error budget: the share is how much of the 65 % grid error each direction may use. The last column says what the Stage 2 surface mesher does today (6 Nov 2026: 790 of 790 builds pass its 13 checks, numpy loft); the volume mesh is Stage 3 and not built, so S8's values stay there for reference. Angles now run from −5° to post-stall (decided 6 Nov 2026), and transition must be captured (decided 4 Nov 2026).</p>
   <figure class="fig"><div class="svgwrap">__FIG_RSIDE__</div>
-    <figcaption class="cap">Side view: fine cells at the wall (all around), at the nose and at the trailing edge, then a wake box that stays fine for 2 chords and coarsens to 10 chords, all inside the background box.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>Cells must be small where the flow changes fast: at the wall, the nose, the trailing edge and the near wake. Further away they can grow.</div>
+    <figcaption class="cap">Side view: fine cells at the wall (all around), at the nose and at the trailing edge, then a wake box that stays fine for 2 chords and coarsens to 10 chords, all inside the background box. Under review: C-H proposal (pending): the wake box and the background box belong to the overset plan; one matched C-H mesh for both solvers would replace them (SU2 has no overset).</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Cells must be small where the flow changes fast: at the wall, the nose, the trailing edge and the near wake. Further away they can grow. The near wake must hold the wake from −5° to post-stall.</div>
   <figure class="fig"><div class="svgwrap">__FIG_RTOP__</div>
-    <figcaption class="cap">Top view: stations nearly even from the root, squeezed toward the tip, and one exactly on each break; outboard blocks past the tip; the wake box behind the whole trailing edge; the vortex tube from about 2 chords behind the tip.</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>Along the span: more stations near the tip, where the flow changes fastest, and one exactly on each break, where the surface has a kink. The tip vortex gets its own fine tube.</div>
+    <figcaption class="cap">Top view: stations nearly even from the root, squeezed toward the tip, and one exactly on each break; outboard blocks past the tip; the wake box behind the whole trailing edge; the vortex tube from about 2 chords behind the tip. Under review: C-H proposal (pending): no wake box and no tube; the outboard blocks would resolve the tip vortex.</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>Along the semi-span: more stations near the tip, where the flow changes fastest, and one exactly on each break, where the surface has a kink; the Stage 2 surface mesher builds both. The tip vortex needs fine cells along its path: a tube in the overset plan; with C-H (proposal, pending) the outboard blocks must resolve it.</div>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Zone</th><th>Captures</th><th>Rule (starting value)</th><th>Budget share</th><th>Source</th><th>S8 today</th></tr></thead>
+    <thead><tr><th>Zone</th><th>Captures</th><th>Rule (starting value)</th><th>Budget share</th><th>Source</th><th>Stage 2 today (6 Nov)</th></tr></thead>
     <tbody>__REFINE__</tbody>
   </table></div>
   <p class="muted">Budget shares from Stage 0: chordwise 35 %, spanwise 15 %, wall-normal 20 %, edges and base 15 %, wake 15 % of the grid error; domain 10 % of the total. All values are starting values; the mesh studies (Grand Roadmap stage 4) confirm or replace them.</p>
-  <div class="cbox"><span class="ctag">Conclusion</span>Each mesh direction gets its share of the allowed grid error. These are starting rules; the mesh studies will confirm or replace them.</div>
+  <p><strong>Mesh cost (Stage 2, 6 Nov 2026).</strong> At the fine level: median 15.2 M cells with the planned rules; 10.9 M with the relaxed band (0.5 % c spacing where the local Re ≥ 4 × 10⁵; proposal, pending). The owner's target is about 9–11 M cells, so the planned rules miss it. With C-H (proposal, pending) the wake lines would add about +45 % (30–60 %) cells on the wing blocks (rough, not measured).</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Each mesh direction gets its share of the allowed grid error. These are starting rules; the mesh studies will confirm or replace them. The planned rules cost more than the 9–11 M target, so the band rule is the first to test.</div>
 </section>
 
 <section id="fix" class="weak">
-  <h2>Fix left (for Stage 2)</h2>
-  <p class="muted">Done on 29 Oct 2026: the unrealistic conventional set (tapered type and per-panel chords), the dihedral input (three panel values) and the hash (from the code itself). One fix is left, and it belongs to Stage 2.</p>
+  <h2>Fixes: done and left</h2>
+  <p class="muted">Done on 29 Oct 2026: the unrealistic conventional set (tapered type and per-panel chords), the dihedral input (three panel values) and the hash (from the code itself). Done on 2 Nov 2026 (fix 3): a mesh station on every break. The Stage 2 surface mesher puts a station exactly on every loft station, so its flat faces never cut a kink; 790 of 790 builds pass its 13 checks (numpy loft). One item is left, and it is a Stage 1 item: the nose shape.</p>
   <ol>
 __FIXES__
   </ol>
@@ -2061,43 +2088,43 @@ __DECISIONS__
   <h2>Real wings and the Reynolds number</h2>
   <p>Your rule (29 Oct 2026): take the sizes from real Class I and II UAVs, compute the Re they fly at, and if it does not reach 5 × 10⁶, lower the top Re level instead of stretching the wings. Data and links: <code>configs/real_uavs.yaml</code>; check: <code>scripts/real_uav_check.py</code>.</p>
   <div class="three">
-    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: EMT Aladin and Black Swift S0 cruising at 3,048 m. Highest: CTRM Aludra MK1 at its listed top speed, sea level (NTNU; 3.1 × 10⁶, at the top study level). Mean chord = wing area / span.</p></div>
-    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 3 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer (a delta) and the Vindicator (a target drone above Mach 0.3) do. Levels now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (3 × 10⁶ was the RUAG Ranger's 2.74 × 10⁶ rounded up; the NTNU Aludra MK1 row since reaches 3.1 × 10⁶).</p></div>
-    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. Every Class I span is inside too (sourced and HCDI database). Focus space: BWB __ENV_BWB__; cranked __ENV_CONV__.</p></div>
-    <div class="box"><h3>Class II</h3><div class="big">Chords 0.55–0.66 m</div><p>Nine Class II wings with an area: Götten et al. 2021 (from images and three-views, about 10–15 %) and Essari 2015 (Jane's-style: Hermes 450, Ranger, Seeker, Shadow 600). AR 7.8–16. At top speed, Re 2.1–2.7 × 10⁶. Gap: tailless Class II has no area.</p></div>
+    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: EMT Aladin and Black Swift S0 cruising at 3,048 m. Highest: CTRM Aludra MK1 at its listed top speed, sea level (NTNU; 3.1 × 10⁶, at the top study level). Mean chord = wing area / full span.</p></div>
+    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 3 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer (a delta, 6.0 × 10⁶) does; the Vindicator (a target drone above Mach 0.3) comes close (4.8 × 10⁶). Levels now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (3 × 10⁶ was the RUAG Ranger's 2.74 × 10⁶ rounded up; the NTNU Aludra MK1 row since reaches 3.1 × 10⁶).</p></div>
+    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>In the full space, each real wing with a published area has a generated wing within 10 % in full span and mean chord. Every Class I full span is inside too (sourced and HCDI database). Focus space: BWB __ENV_BWB__; flying wing __ENV_FW__; cranked __ENV_CONV__; tapered __ENV_TAP__.</p></div>
+    <div class="box"><h3>Class II</h3><div class="big">Chords 0.54–0.78 m</div><p>13 Class II wings with an area set ranges: Götten et al. 2021 (5; from images and three-views, about 10–15 %), Essari 2015 (4, Jane's-style: Hermes 450, Ranger, Seeker, Shadow 600), the NTNU RQ-7A Shadow and Aludra MK1 rows, the Pioneer (Bray 1991) and the tailless AUTh RX-3 (4.9 m²). AR 7.0–16. At top speed, where listed, Re 2.0–3.1 × 10⁶. Gap: the RX-3 is the only tailless Class II wing with an area.</p></div>
   </div>
   <div class="card">__PNG_REAL__</div>
-  <p class="cap">Clouds: 2,000 generated wings per type (green BWB, blue conventional and tapered). Red: real wings with a published area. Dotted lines: real wings with a published span only.</p>
-  <div class="cbox"><span class="ctag">Conclusion</span>The generated clouds cover the real wings: in the focus space 32 of the 34 real wings with an area have a generated wing within 10 % in span and mean chord; the full space covers all 34.</div>
+  <p class="cap">Clouds: 2,000 generated wings per type (tailless panel: green BWB, brown flying wing; conventional panel: blue cranked, light blue tapered). Red: real wings with a published area or aspect ratio. Ticks on the full-span axis: real wings with only a full span listed (brown: sources and the NTNU / CNAS databases; violet: HCDI UAS database).</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>The generated clouds cover the real wings: in the focus space 32 of the 34 real wings with an area have a generated wing within 10 % in full span and mean chord; the full space covers all 34.</div>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>Area m²</th><th>Mean chord m</th><th>AR</th><th>Cruise / max m/s</th><th>Re low – high</th><th>MTOW kg</th><th>HCDI database</th><th>Use</th><th>Source (type)</th></tr></thead>
+    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Full span m</th><th>Area m²</th><th>Mean chord m</th><th>AR</th><th>Cruise / max m/s</th><th>Re low – high</th><th>MTOW kg</th><th>HCDI database</th><th>Use</th><th>Source (type)</th></tr></thead>
     <tbody>
 __REAL__
     </tbody>
   </table></div>
-  <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges; they rest on: __STYPES__. HCDI database column: the same aircraft in your UAS dashboard, where listed.</p>
-  <div class="cbox"><span class="ctag">Conclusion</span>Real Class I–II wings fly at Re 1.2 × 10⁵ – 3.1 × 10⁶ on the mean chord. None of our families reaches 5 × 10⁶, so 3 × 10⁶ is the right top study level.</div>
-  <h2 style="font-size:22px">Spans from the HCDI UAS database (v13)</h2>
-  <p>794 entries; 76 fixed-wing Class I–II; 22 give a span; <strong>none gives a wing area</strong>, so these rows test the span range only ("inside": within 10 % of the focus span range of its family). Every tailless span is inside, up to 7.3 m. Four conventional Class II wings (8–10 m) are outside the focus space, which stops at 7 m; the full space covers them.</p>
-  <div class="weak amber"><strong>Database weak points.</strong> No source per row. 28 rows share cruise 35 m/s, endurance 6 h and range 100 km (look like defaults); on 8 rows cruise is above top speed. Orlan-10 is listed as Class II at 18 kg, Puma LE as a flying wing, XQ-58 Valkyrie (a jet) as Class II; Zala Z-16's maker field names a microchip company. Only span, class, MTOW and payload are used here.</div>
+  <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges; they rest on: __STYPES__. HCDI database column: the same aircraft in your UAS dashboard, where listed. Notes that say "above Mach 0.3" or "outside phase 1" (Vindicator, CPJ 100-LE) predate 4 Nov 2026: the Mach scope now extends toward 0.5 with no supersonic flow, and such wings wait on a fast-UAV family (proposal, pending).</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>Real Class I–II wings fly at Re 1.2 × 10⁵ – 3.1 × 10⁶ on the mean chord. None of our families reaches 5 × 10⁶, so 3 × 10⁶ is the right top study level for the core data (Mach ≤ 0.2). A fast-UAV family (proposal, pending) would reach higher: the Vindicator flies at up to 4.8 × 10⁶.</div>
+  <h2 style="font-size:22px">Full spans from the HCDI UAS database (v13)</h2>
+  <p>794 entries; 76 fixed-wing Class I–II; 22 give a full span; <strong>none gives a wing area</strong>, so these rows test the full-span range only ("inside": within 10 % of the focus full-span range of its family). Every tailless full span is inside, up to 7.3 m. Four conventional Class II wings (8–10 m) are outside the focus space, which stops at 7 m; the full space covers them.</p>
+  <div class="weak amber"><strong>Database weak points.</strong> No source per row. 28 rows share cruise 35 m/s, endurance 6 h and range 100 km (look like defaults); on 8 rows cruise is above top speed. Orlan-10 is listed as Class II at 18 kg, Puma LE as a flying wing, XQ-58 Valkyrie (a jet) as Class II; Zala Z-16's maker field names a microchip company. Only full span, class, MTOW and payload are used here.</div>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>MTOW kg</th><th>Payload kg</th><th>Role</th><th>Span vs generator</th><th>Check</th></tr></thead>
+    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Full span m</th><th>MTOW kg</th><th>Payload kg</th><th>Role</th><th>Full span vs generator</th><th>Check</th></tr></thead>
     <tbody>
 __HCDI__
     </tbody>
   </table></div>
-  <div class="cbox"><span class="ctag">Conclusion</span>The HCDI database gives spans only. Every Class I span and every tailless span fits the focus space; only four conventional Class II wings (8–10 m) need the full space.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The HCDI database gives full spans only. Every Class I and every tailless full span fits the focus space; only four conventional Class II wings (8–10 m) need the full space.</div>
 </section>
 
 <section id="checks">
   <h2>Checks and results</h2>
   <div class="three">
-    <div class="box"><h3>Gate 1 · vector → loft</h3><p>Measured on the loft: chords within 0.1 %, sweeps 0.1°, twist 0.2°, dihedral 0.2°.</p></div>
+    <div class="box"><h3>Gate 1 · vector → loft</h3><p>Measured on the loft: chords within 0.1 %, sweeps 0.1°, twist 0.2°, dihedral 0.2°, aspect ratio 0.1 %.</p></div>
     <div class="box"><h3>Gate 2 · trailing edge</h3><p>Thickness equals the rule at every section, within 1 µm.</p></div>
     <div class="box"><h3>Gate 3 · validity</h3><p>Sections closed, upper never below lower, root flat in y = 0 within 1e-9 m, chords positive.</p></div>
     <div class="box"><h3>Gate 4 · repeatability</h3><p>Two builds give the same surface hash.</p></div>
   </div>
-  <p class="muted">A wing that fails any gate is not written; its row keeps the gate and the reason. The fifth check, mesh on the loft within 1e-9 m, belongs to Stage 2.</p>
+  <p class="muted">A wing that fails any gate is not written; its row keeps the gate and the reason. The fifth check, mesh on the loft within 1e-9 m, is done in Stage 2: the surface mesher asks every node from the loft and checks that every ring lies in its station plane within 1e-9 m; 790 of 790 builds pass its 13 checks (numpy loft; the pyGeo run is still owed).</p>
   <h2 style="font-size:22px">Sample sets</h2>
   <div class="tbl"><table class="mid">
     <thead><tr><th>Type</th><th>Set</th><th>Wings</th><th>Result</th><th>Type by the rules</th></tr></thead>
@@ -2105,30 +2132,30 @@ __HCDI__
 __SETS__
     </tbody>
   </table></div>
-  <div class="cbox"><span class="ctag">Conclusion</span>All 730 sampled wings build and pass the four checks; none is refused. The type rules usually agree with the sampled type, but not always: 14 of the 100 focus BWBs read as flying wings by the rule, and many corner wings read as the neighbouring type.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>All 730 sampled wings build and pass the four checks; none is refused. The type rules usually agree with the sampled type, but not always: 14 of the 100 focus BWBs read as flying wings by the rule, and many corner wings read as the neighbouring type. The Stage 2 surface mesher meshes all 730 (790 builds, with the 20 reference wings at all four Re levels) with 0 refusals. These builds predate the 2 Nov rename, so their stored hashes are stale until one <code>build --all</code>.</div>
   <h2 style="font-size:22px">Is the loft the designed wing? (every sampled wing)</h2>
-  <p class="muted">Worst value over every training, corner and reference wing (<code>scripts/verify_sets.py</code>, numpy loft). Stations, chords, twists, sweeps, panel dihedrals and the straightness of each panel match the inputs to machine precision. AR: the loft measures the true chord, which is a little shorter between two stations of different twist (up to 0.035 %; 0 without twist). Sections: up to 0.012 % of chord, at the smallest tips, where the 0.5 mm trailing-edge floor is a large share of a 3 cm chord. Root: every point of the root section at y = 0, and no point of a half wing below y = 0, so the mirrored halves meet only there.</p>
+  <p class="muted">Worst value over every training, corner and reference wing (<code>scripts/verify_sets.py</code>, numpy loft). Stations, chords, twists, sweeps, panel dihedrals and the straightness of each panel match the inputs to machine precision. AR: the loft measures the true chord, which is a little shorter between two stations of different twist; the aspect ratio still matches within __VS_AR__ %. Sections: up to __VS_SEC__ % of chord, on the smallest corner wings (every input at its low bound; tips of 1.2–2 cm), where the 0.5 mm trailing-edge floor is a large share of the chord. Root: every point of the root section at y = 0, and no point of a half wing below y = 0, so the mirrored halves meet only there.</p>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Wings</th><th>Stations % c</th><th>Chord %</th><th>Twist °</th><th>Sweep °</th><th>Dihedral °</th><th>Straight panels % c</th><th>AR %</th><th>Sections % c</th><th>Ruled % c</th><th>Root |y| m</th><th>Min y m</th></tr></thead>
     <tbody>
 __VSETS__
     </tbody>
   </table></div>
-  <div class="cbox"><span class="ctag">Conclusion</span>The loft is the designed wing: stations, chords, twists, sweeps and dihedrals match the inputs to machine precision, and the sections within 0.012 % of the chord (at the smallest tips).</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The loft is the designed wing: stations, chords, twists, sweeps and dihedrals match the inputs to machine precision, and the sections within __VS_SEC__ % of the chord (at the smallest tips).</div>
   <h2 style="font-size:22px">Is the surface the intended wing? (published wings)</h2>
-  <p class="muted">Errors in % of local chord. Sections: the loft cut at each station against the original airfoil points (limit 0.01). Edges: against the exact straight lines (limit 1e-6). Outside CAD: only the M6 has one (limit 0.05).</p>
+  <p class="muted">Errors in % of local chord. Sections: the loft cut at each station against the original airfoil points (limit 0.01). This compares only at the file's own points, so it cannot see a nose change between the nose point and the next point (decision 64, see <a href='#fix'>Fixes</a>). Edges: against the exact straight lines (limit 1e-6). Outside CAD: only the M6 has one (limit 0.05).</p>
   <div class="tbl"><table class="mid">
     <thead><tr><th>Wing</th><th>Sections max</th><th>Edges max</th><th>Outside CAD</th><th>Result</th></tr></thead>
     <tbody>
 __VERIFY__
     </tbody>
   </table></div>
-  <div class="cbox"><span class="ctag">Conclusion</span>Every published wing passes: sections within 0.003 % of the chord, edges exact, and the ONERA M6 within 0.011 % of the chord of its CAD model.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Every published wing passes: sections within 0.003 % of the chord at the file's points, edges exact, and the ONERA M6 within 0.011 % of the chord of its CAD model. The nose between the first points is not checked here (decision 64).</div>
 </section>
 
 <section id="open" class="weak amber">
   <h2>Open decisions</h2>
-  <p class="muted"><span class="flag open">decide</span> needs your call. <span class="flag ok">act</span> a task with no choice left. Full history: <code>CFD_Automation/OPEN_DECISIONS.md</code>.</p>
+  <p class="muted"><span class="flag open">decide</span> needs your call. <span class="flag ok">act</span> a task with no choice left. Full history: <code>CFD_Automation/OPEN_DECISIONS.md</code> (it does not list the 4–6 Nov 2026 decisions and proposals yet; the project doc "Status and plan (6 Nov 2026)" does).</p>
 __OPEN__
 </section>
 
@@ -2146,11 +2173,12 @@ __LIMITS__
   <div class="cbox"><span class="ctag">Conclusion</span>The same generator rebuilds the ONERA M6, RIBES, NASA CRM and BlendedNet wings, so our meshes and results can be compared with published data.</div>
   <div class="card">__PNG_TOP__</div>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Wing</th><th>Type</th><th>Size</th><th>What it is for</th><th>How close the copy is</th><th>Sources</th></tr></thead>
+    <thead><tr><th>Wing</th><th>Family</th><th>Size</th><th>What it is for</th><th>How close the copy is</th><th>Sources</th></tr></thead>
     <tbody>
 __ROWS__
     </tbody>
   </table></div>
+  <p class="muted">The "What it is for" and "How close" texts come from <code>configs/published_wings.yaml</code>. Read "outside phase 1" and "kept for the transonic stage" as out of date: the scope has no supersonic flow and extends toward Mach 0.5 (decided 4 Nov 2026), so the M6 and the CRM are shape and mesh checks only. The M6's Re 11.72 × 10⁶ is on its MAC (0.646 m); its mean chord (area / full span) is 0.630 m. RIBES is tripped at 1.4 % chord: it checks fully turbulent RANS, not transition. Its "span 1.600 m" is the semi-span of the half model.</p>
   <div class="card">__PNG_CRM__</div>
   <p class="cap">NASA CRM against its published 21-station table. Chords match exactly; with four stations the twist is off by at most 0.51°.</p>
   <div class="cbox"><span class="ctag">Conclusion</span>Four stations give the CRM chords exactly but not its smooth twist (up to 0.51° off): good for mesh tests, not for matching CRM force data exactly.</div>
@@ -2237,7 +2265,7 @@ def main() -> None:
     env = real["envelope"]
     fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__FIG_PIPE__": fig_pipeline(), "__FIG_RUNS__": fig_runs(), "__FIG_SURF__": fig_surfaces(), "__FMTABLE__": flowmap_table(), "__SUMMARY__": summary_html(),
                                 "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
-                                "__VSETS__": verification_sets_html()} | params_tables_html() | flowdata_html()
+                                "__VSETS__": verification_sets_html()} | vsets_max() | params_tables_html() | flowdata_html()
     page = PAGE
     for k, v in fr.items():
         page = page.replace(k, v)
@@ -2250,6 +2278,8 @@ def main() -> None:
                 .replace("__COVER__", cover_text())
                 .replace("__ENV_BWB__", f"full span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
                 .replace("__ENV_CONV__", f"full span {env['cranked']['span_m'][0]:.1f}–{env['cranked']['span_m'][1]:.1f} m, mean chord {env['cranked']['mean_chord_m'][0]:.2f}–{env['cranked']['mean_chord_m'][1]:.2f} m")
+                .replace("__ENV_FW__", f"full span {env['flying_wing']['span_m'][0]:.1f}–{env['flying_wing']['span_m'][1]:.1f} m, mean chord {env['flying_wing']['mean_chord_m'][0]:.2f}–{env['flying_wing']['mean_chord_m'][1]:.2f} m")
+                .replace("__ENV_TAP__", f"full span {env['tapered']['span_m'][0]:.1f}–{env['tapered']['span_m'][1]:.1f} m, mean chord {env['tapered']['mean_chord_m'][0]:.2f}–{env['tapered']['mean_chord_m'][1]:.2f} m")
                 .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
                 .replace("__PNG_LOCALRE__", img("local_re.png", "Local chord Reynolds number along the semi-span of the smallest and largest wing of each type"))
                 .replace("__PNG_XFCF__", img("xfoil_cf.png", "XFOIL upper-surface skin friction, free transition vs tripped, at the four study Re levels"))

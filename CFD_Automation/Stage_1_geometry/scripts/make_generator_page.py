@@ -32,7 +32,7 @@ from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
 SETS = ROOT / "data" / "sets"
-TESTS_LINE = "173 pass without pyGeo, 11 more need pyGeo (run 2 Nov 2026)"
+TESTS_LINE = "169 pass, 16 skipped (they need pyGeo or gmsh; run 6 Nov 2026)"
 
 # --------------------------------------------------------------------------------------
 # Content written by hand. Keep it short and plain.
@@ -235,9 +235,9 @@ def fmex_caption() -> str:
     return (f"BWB mid wing at {fm['conditions']['speed_m_s']:.0f} m/s, {fm['conditions']['altitude_m']:,.0f} m, "
             f"{fm['conditions']['alpha_deg']:g}°. The root runs at {max(re_) / min(re_):.1f} × the tip Re; the upper surface turns "
             f"turbulent at {100 * min(xt):.0f}–{100 * max(xt):.0f} % chord, later toward the tip as Re falls. Fully turbulent SA would "
-            f"raise the profile drag by {100 * b:+.0f} %: the tool proposes {fm['model']['category']}. "
+            f"raise the profile drag by {100 * b:+.0f} %: the tool proposes: {fm['model']['category']}. "
             + (f"Level flight here carries {lf['wing_loading_n_m2']:.0f} N/m² ({'within' if lf['ok'] else 'outside'} the real band "
-               f"{lf['real_band_n_m2'][0]:.0f}–{lf['real_band_n_m2'][1]:.0f} N/m² for its span)." if lf else ""))
+               f"{lf['real_band_n_m2'][0]:.0f}–{lf['real_band_n_m2'][1]:.0f} N/m² for its full span)." if lf else ""))
 
 
 def img_opt(name: str, alt: str) -> str:
@@ -396,54 +396,54 @@ def hcdi_table(d: dict) -> str:
 
 PHENOMENA = [
     ("Laminar flow, transition and laminar separation bubbles",
-     "Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our low-Re sections (MH 45, MH 60, MH 61, MH 104) are designed for long laminar runs.",
+     "Every type. Mean-chord Re 5.4 × 10⁴ – 3.5 × 10⁶ (focus); most BWB and mini Class I wings sit below 10⁶. Our low-Re sections (MH 45, MH 60, MH 61, MH 104) are designed for long laminar runs.",
      "Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.",
-     "No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose. In 2-D (XFOIL) that raises profile drag by 37–128 % (median 76 %) at Re ≥ 3 × 10⁵. Carried as a model band (Stage 0); SU2 γ-Reθ is the proposed check.",
+     "ADflow SA: no. Spalart–Allmaras without transition makes the wall flow turbulent from the nose. In 2-D (XFOIL, 2°) that raises profile drag by 40–128 % (median 77 %) at Re ≥ 3 × 10⁵. Carried as a model band (Stage 0). Transition must be captured too (decided 4 Nov 2026): our ADflow build has SA only, so it comes from SU2 (SST + LM γ-Reθ).",
      "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35); our XFOIL runs (Drela 1989)"),
     ("Very low Re at the tips",
-     "BWB tip chords 3.5–16 cm: tip Re down to about 1.4 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.",
+     "BWB tip chords from 2.4 cm (focus; up to 35 cm): tip Re down to about 1.4 × 10⁴. Cranked and tapered tips down to about 3 × 10⁴ on the smallest wings.",
      "Thick laminar boundary layers and early separation at the tip, where the vortex forms.",
-     "Weakly. Same model limit as above, at its worst. The first wall cell barely changes along the span (Re and chord change together), but the thicker root boundary layer needs more wall layers.",
+     "Weakly. Same model limit as above, at its worst. The first wall cell barely changes along the semi-span (Re and chord change together), but the thicker root boundary layer needs more wall layers.",
      "Same as above; first-cell law: Grand Roadmap R-V.1"),
     ("Wake behind the trailing edge",
-     "Every wing, the whole span. At 12° the wake leaves the edge at an angle; behind a blunt base it starts wide.",
+     "Every wing, along the whole trailing edge. At high angle the wake leaves the edge at an angle (angles now run to post-stall); behind a blunt base it starts wide.",
      "A thin sheet of slow air: the boundary layers of both surfaces leave the edge and carry the profile drag downstream. It sets the pressure at the trailing edge and base, and it rolls up toward the tips.",
-     "Only if the wake has its own cells. The S8 O-mesh has none: its cells grow fast behind the edge, so the wake smears. In AERIS, refining the near wake alone moved base drag by 23 counts. Plan: an overset wake box.",
+     "Only if the wake has its own cells. The S8 O-mesh has none: its cells grow fast behind the edge, so the wake smears. In AERIS, refining the near wake alone moved base drag by 23 counts. Plan (proposal, pending): one matched C-H mesh for both solvers (SU2 has no overset), with wake cells sized for the whole angle range.",
      "Primer section 05; Chan et al. 2002"),
     ("Tip vortex, roll-up and induced drag",
-     "Every wing; strongest at low aspect ratio (BWB down to 2.7) and high lift.",
+     "Every wing; strongest at low aspect ratio (BWB down to AR 3 in the focus space, 2.5 in the full space) and high lift.",
      "The wake sheet rolls up into one vortex per tip within about one chord. It causes the downwash and the induced drag, a large share of the total.",
-     "Yes, if the vortex keeps fine cells along its path. Plan: the roll-up inside the near-body mesh, then a vortex tube from about 2 chords behind the tip.",
+     "Yes, if the vortex keeps fine cells along its path. Plan (proposal, pending): with one C-H mesh there is no separate vortex tube; the outboard blocks must resolve the vortex.",
      "Primer section 05"),
     ("Sweep: spanwise flow, tip or root stall, pitch-up",
      "BWB 5–40° and flying wing 10–40° (aft); cranked and tapered −5° to +15° (forward to aft).",
      "Aft sweep pushes the boundary layer outboard, so the tip stalls first and the nose can pitch up. Forward sweep stalls the root first.",
-     "Spanwise flow: yes. Stall onset and pitch-up: less reliable with steady RANS near maximum lift.",
+     "Spanwise flow: yes. Stall onset and pitch-up: less reliable with steady RANS near maximum lift; the post-stall part gets its own study (decided 6 Nov 2026).",
      "Standard swept-wing aerodynamics"),
     ("Panel breaks (kinks) at b1 and b2",
-     "Every BWB and cranked wing; tapered wings have no break in the edges.",
-     "Local suction peaks and a jump in the span loading at the break; a ruled loft has a slope break there.",
-     "Yes, if a mesh station sits exactly on each break (fix 3). Otherwise flat faces cut the corner.",
+     "Every BWB and cranked wing; tapered and flying wings have no break in the edges.",
+     "Local suction peaks and a jump in the spanwise loading at the break; a ruled loft has a slope break there.",
+     "Yes: the Stage 2 surface mesher puts a station on every loft station, so one sits exactly on each break (fix 3, done). Without it, flat faces would cut the corner.",
      "Loft decision (kSpan 2)"),
     ("Separation and stall at high angle",
-     "The 12° study angle, and 8° on thin or strongly cambered sections at low Re.",
+     "High angles up to post-stall (now in scope: −5° to post-stall, decided 6 Nov 2026); already at 8° on thin or strongly cambered sections at low Re.",
      "Trailing-edge or leading-edge separation, unsteady flow, maximum lift.",
-     "Steady RANS gives a number but is not reliable near maximum lift; convergence is harder. Keep 12° for the nose and wake studies only.",
-     "Stage 0 angles 0 / 4 / 8 / 12°"),
+     "Steady RANS gives a number but is not reliable near maximum lift; convergence is harder. The post-stall part gets its own study (URANS or DDES on a few wings).",
+     "Stage 0 angles 0 / 4 / 8 / 12°; owner decision 6 Nov 2026 (−5° to post-stall)"),
     ("Blunt trailing edge: base flow",
-     "Every wing: thickness max(0.5 mm, 0.2 % of chord) (Class I).",
+     "Every wing: thickness max(0.5 mm, 0.2 % of chord) (Class I). Proposal, pending: 0.2 % of chord on every wing, mm floors dropped; check C3 covers the thicker edges of small real wings (about 0.42 % c).",
      "A base pressure drag and, in reality, vortex shedding behind the base.",
      "Partly. Steady RANS damps the shedding. At 0.2 % with 8 cells the base was 2–4 % of pressure drag (measured in AERIS).",
      "Primer section 03; Papadakis & Manolesos 2020 (flatback, RANS damps shedding)"),
     ("Low Mach number",
-     "Top speed 67 m/s: Mach ≤ 0.20 (BWB ≤ 0.12).",
-     "The air is nearly incompressible.",
+     "Top speed 67 m/s: Mach ≤ 0.20 (tailless ≤ 0.13). Scope since 4 Nov 2026: Mach extends toward 0.5, with no supersonic flow; the data on this page stop at 0.2.",
+     "The air is nearly incompressible at these speeds.",
      "The compressible solver needs low-speed preconditioning; without it ADflow did not converge in AERIS.",
      "Primer track 3"),
     ("Slender, flexible wings",
      "Cranked and tapered aspect ratio up to 16.5.",
-     "Long thin wings bend and twist in flight, which changes the span loading.",
-     "No. The CFD wing is rigid. Many span stations are needed.",
+     "Long thin wings bend and twist in flight, which changes the spanwise loading.",
+     "No. The CFD wing is rigid. Many spanwise stations are needed.",
      "Outside this study (no aeroelasticity)"),
 ]
 
@@ -451,11 +451,11 @@ PHENOMENA = [
 SUMMARY_TEXT = {
     "what": {"bwb": "Long centre body, strong taper, cranked", "cranked": "Constant-chord centre, tapered outer panels",
              "tapered": "Straight edges root to tip (rectangular at taper 1)", "flying_wing": "Straight edges, moderate taper, swept"},
-    "flow": {"bwb": "Two regimes on one wing (centre body ~10× the tip Re); spanwise flow and tip stall from sweep; kinks at b1, b2; thick 15 % centre body",
+    "flow": {"bwb": "Two regimes on one wing (centre body 5–17× the tip Re); spanwise flow and tip stall from sweep; kinks at b1, b2; thick 15 % centre body",
              "cranked": "Kinks at the breaks (suction peaks, loading jump); low sweep; small wings fly almost wholly below 10⁵",
-             "tapered": "Smooth loading; low sweep; tips at lower Re as taper grows; strong tip vortex at high AR",
+             "tapered": "Smooth loading; low sweep; tips at lower Re as taper grows; tip vortex weaker at high AR",
              "flying_wing": "Trim by sweep and washout with reflexed sections; spanwise flow; tip stalls first at high angle"},
-    "mesh": {"bwb": "LE and TE everywhere; a station on each kink; tip; wake and tip vortex; fine first cell at the centre-body Re",
+    "mesh": {"bwb": "LE and TE everywhere; a station on each kink; tip; wake and tip vortex; one first cell (the smallest chord sets it), more wall layers at the centre body",
              "cranked": "LE and TE; a station on each break; tip vortex; wake",
              "tapered": "LE and TE; tip vortex; wake",
              "flying_wing": "LE and TE; tip (stall, vortex); wake behind a swept TE"},
@@ -476,9 +476,14 @@ def summary_html() -> str:
                 for t in WING_TYPES]
 
     def taper(sp, space):
-        pts = [build_planform(sp, v) for v in lhs(sp, 400, 5)]
-        tp = [q.chord[-1] / q.chord[0] for q in pts]
-        return r(round(min(tp), 2), round(max(tp), 2))
+        """The tip / root range the inputs allow (cranked: the product of the three panel ratios)."""
+        if sp.chord_law == "per_panel":
+            lo = hi = 1.0
+            for v in ("c2_ratio", "c3_ratio", "c4_ratio"):
+                lo, hi = lo * sp.ranges[v][0], hi * sp.ranges[v][1]
+        else:
+            lo, hi = sp.ranges["c4_ratio"]
+        return r(round(lo, 2), round(hi, 2))
 
     def sweeps(sp, space):
         if sp.sweep_law == "one":
@@ -527,10 +532,10 @@ def summary_html() -> str:
 def fig_pipeline() -> str:
     """The plan in five steps: full space -> what we can make -> focus -> flow maps -> the tool."""
     steps = [
-        ("1  Full design space", ["18 inputs, 4 types", "full span to 14–20 m", "every sourced section", "sparse: 40 + 5 per type"], "acc"),
+        ("1  Full design space", ["18 inputs, 4 types", "full span up to 16.8–20 m", "every sourced section", "40 + 5 hold-out, sparse"], "acc"),
         ("2  What we can make", ["straight panels (≤ 3)", "vertical sections", "any database section", "730 of 730 built wings pass"], "acc"),
-        ("3  Focus (Class I–II)", ["full span ≤ 7 m", "sourced shape ranges", "dense: 100 + 5 + 10 per type", "32 of 34 real wings inside"], "bwbc"),
-        ("4  Flow maps", ["local Re along the span", "transition and bubbles", "effect of the sections", "phenomena per family"], "amber"),
+        ("3  Focus", ["Class I, small Class II", "full span ≤ 7 m", "sourced shape ranges", "dense: 100 + 5 + 10 per type", "32 of 34 real wings inside"], "bwbc"),
+        ("4  Flow maps", ["local Re, root to tip", "transition and bubbles", "effect of the sections", "phenomena per family"], "amber"),
         ("5  The tool", ["wing in", "family and type by rule", "flow map at V, altitude, α", "proposed turbulence model"], "warn"),
     ]
     w, gap, h = 176, 22, 150
@@ -555,7 +560,7 @@ def fig_runs() -> str:
     o = ['<svg class="dg" viewBox="0 0 1000 700" role="img" aria-label="What was run. 2-D XFOIL runs on single airfoils: '
          'an airfoil study and the section tables, plus direct checks. Strip theory turns the tables into 3-D wing results for '
          'the flow maps, the flow dataset and the checks. The geometry generator and the real UAV database feed it. No 3-D CFD '
-         'has been run yet.">',
+         'on a wing has been run yet.">',
          '<defs><marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
          '<path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>']
 
@@ -590,27 +595,28 @@ def fig_runs() -> str:
         "3  local Re = (ρ / μ) · V · chord",
         "    local angle = root + twist − induced",
         "4  read free + tripped answers (B)",
-        "5  add up along the span, chord-",
+        "5  add up along the semi-span, chord-",
         "    weighted → the wing's results",
         "not included: crossflow,",
         "3-D bubble relief, tip vortex"], "bwbc", muted_from=7)
     arrow([(300, 290), (338, 290)])
     # column 3: inputs from real wings and the outputs
-    box(680, 40, 310, 96, "Real UAV database", ["34 wings with area, 112 spans", "speeds and wing loadings", "(no flow computed here)"], "acc")
+    box(680, 40, 310, 96, "Real UAV database", ["34 with area, 112 full spans", "speeds and wing loadings", "(no flow computed here)"], "acc")
     arrow([(835, 136), (835, 228)])
     o.append('<text class="lab muted" x="845" y="186" style="font-size:11px">speeds, wing loadings</text>')
     box(680, 230, 310, 60, "Flow maps (the tool)", ["1 example + 24 focus maps"], "bwbc")
     box(680, 300, 310, 80, "Flow dataset", ["400 wings × 4 sets × 126 conditions", "= 201,600 cases → statistics"], "bwbc")
-    box(680, 390, 310, 60, "Assumption checks", ["8 re-runs × 40,320 cases"], "bwbc")
+    box(680, 390, 310, 60, "Assumption checks", ["6 re-runs × 40,320 cases"], "bwbc")
     for y in (260, 340, 420):
         arrow([(640, y), (678, y)])
     arrow([(300, 506), (920, 506), (920, 452)])
     # 3-D CFD
-    box(10, 572, 980, 76, "3-D CFD: none run yet", [
-        "Next: ADflow SA mesh studies on the reference wings; then SU2 γ-Reθ on 2–3 of them, to check in 3-D what the strips "
-        "predict here."], "warn", dashed=True)
+    box(10, 572, 980, 76, "3-D CFD on a wing: none run yet", [
+        "First SU2 smoke test (4 Nov 2026): SA and LM ran on one Stage 2 ring mesh, not converged; it shows the mesh path works.",
+        "Next (proposal, pending): ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM γ-Reθ on about 20 % "
+        "of the wings."], "warn", dashed=True)
     o.append('<text class="lab muted" x="10" y="684" style="font-size:12px">Every flow number on this page comes from 2-D XFOIL '
-             'runs on single airfoils, used directly (A) or combined along the span by strip theory (B → wing results).</text>')
+             'runs on single airfoils, used alone (A) or added up along the semi-span by strip theory (B).</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -676,7 +682,9 @@ def flowdata_html() -> dict:
         f"Each row is one wing at one condition with 10 strips along the half wing, each strip a 2-D section answer from the "
         f"section tables (XFOIL, free and tripped), with a uniform induced angle. {a['rows_realistic']:,} rows fly at speeds real "
         f"wings of the family fly, with a section set that can trim the wing; the statistics below use those, unless marked (the "
-        f"NACA set on tailless wings cannot trim: it is shown, not counted).")
+        f"NACA set on tailless wings cannot trim: it is shown, not counted). The scope has since grown: angles −5° to post-stall "
+        f"(decided 6 Nov 2026) and Mach toward 0.5 with no supersonic flow (4 Nov 2026); this dataset covers root angles "
+        f"{min(ds['alpha_deg']):g}–{max(ds['alpha_deg']):g}° and Mach {min(ds['mach']):g}–{max(ds['mach']):g} only.")
     ba, lf = a["bias_all"], a["level_flight"]
     low = sum(a["low_re_share_by_type"].values()) / 4
     out["__FD_KPI__"] = "\n".join([
@@ -707,7 +715,8 @@ def flowdata_html() -> dict:
     ci = a.get("median_ci", {})
     half = max((v["hi"] - v["lo"]) / 2 for v in ci.values()) if ci else None
     out["__FD_STATS_NOTE__"] = (
-        "Realistic speeds only (tailless Mach ≤ 0.14, conventional ≤ 0.20), all angles 0–10° and altitudes; every set is shown. "
+        "Realistic speeds only (tailless Mach ≤ 0.14, the grid level just above their top speed at Mach 0.13; conventional ≤ 0.20), "
+        "all angles 0–10° and altitudes; every set is shown. "
         "Means and medians over rows; each wing counts once per condition."
         + (f" Precision: resampling the 100 wings of a type moves its median SA error by at most ±{100 * half:.1f} points (95 %)."
            if half is not None else ""))
@@ -737,8 +746,8 @@ def flowdata_html() -> dict:
                 f"<td class='num'>{sum(v['n'] for v in bl.values()):,}</td></tr>")
     out["__FD_CHECKS__"] = "\n".join(rows)
     gname = {"wing shape": "wing shape", "sections": "sections", "flight condition": "flight condition"}
-    oname = {"sa_bias": "SA drag error", "lam_upper": "laminar run (upper)", "bubble_span": "span with a bubble",
-             "te_sep_span": "span with TE separation", "span_re_lt_1e5": "span below Re 10⁵"}
+    oname = {"sa_bias": "SA drag error", "lam_upper": "laminar run (upper)", "bubble_span": "half wing with a bubble",
+             "te_sep_span": "half wing with TE separation", "span_re_lt_1e5": "half wing below Re 10⁵"}
     iname = {"mean_chord_m": "size (mean chord)", "aspect_ratio": "aspect ratio", "taper": "taper", "max_sweep_deg": "sweep",
              "washout_deg": "washout", "twist0_deg": "root twist", "dihedral_p1_deg": "dihedral", "b3_ratio": "outer-panel share",
              "split_ratio": "panel split", "set": "section set", "mach": "Mach", "alpha_deg": "angle", "altitude_m": "altitude"}
@@ -791,6 +800,7 @@ def flowdata_conclusions(a: dict) -> str:
     sets = sorted(((v["median"], v["label"].replace(" (suggested)", "")) for k, v in a["bias"].items()
                    if k.split("|")[0] in ("cranked", "tapered")))
     lo_set, hi_set = sets[0], sets[-1]
+    hi_names = " and ".join(dict.fromkeys(lb for m_, lb in reversed(sets) if round(100 * m_) == round(100 * hi_set[0])))
     cat = a["categories"]
     tm = cat.get("transition model", 0) + cat.get("transition model; part below 10⁵", 0)
     n5, n11 = ck["ncrit_5"]["sa_bias"]["median"], ck["ncrit_11"]["sa_bias"]["median"]
@@ -833,7 +843,7 @@ def flowdata_conclusions(a: dict) -> str:
         f"{100 * gf['conventional']['sections']:.0f} % of the spread, {100 * gt['conventional']['sections']:.0f} % with its "
         f"interactions; on LA2573A the error grows with the angle, on the others it falls. Lowest median: "
         f"{html.escape(lo_set[1])} ({_pc(lo_set[0])}, its bubbles already cost drag in the real flow); highest: "
-        f"{html.escape(hi_set[1])} ({_pc(hi_set[0])}). SA would rank airfoils wrongly.",
+        f"{html.escape(hi_names)} ({_pc(hi_set[0])}). SA would rank airfoils wrongly.",
         f"<strong>Below Re 10⁵ the sign flips.</strong> Where most of the half wing is below 10⁵ ({lr['n']:,} rows), the median error is "
         f"{_pc(lr['bias_median'])} and {_pc(lr['share_negative'], False)} are negative: long laminar bubbles give the real flow more drag than "
         f"fully turbulent CFD. Part of the half wing is below 10⁵ in {_pc(low['bwb'], False)} of BWB rows, {_pc(low['flying_wing'], False)} "
@@ -845,7 +855,9 @@ def flowdata_conclusions(a: dict) -> str:
         f"from about {_pc(be['start_q05'], False)} and end by about {_pc(be['end_q95'], False)} of the chord "
         f"({_pc(be['share_outside_30_70'], False)} of them lie partly outside 30–70 %); the lower surface stays laminar to about "
         f"{_pc(be['lam_lower_median'], False)} of the chord. A transition-model mesh needs fine streamwise cells over the upper "
-        f"surface from about 10 to 85 % and the lower surface from 60 to 100 %, and y⁺ ≤ 1.",
+        f"surface from about 10 to 85 % and the lower surface from 60 to 100 %, and y⁺ ≤ 1. These bands hold for root angles "
+        f"{min(by_a):g}–{max(by_a):g}°: at negative angles (now in scope, down to −5°) the lower surface becomes the suction side, "
+        f"so its band must start further forward.",
         f"<strong>Size acts through Re; sweep does not enter the strips.</strong> The mean chord is the strongest shape input (larger "
         f"chord, higher Re, larger SA error up to about Re 10⁶). Aspect ratio acts through the uniform induced angle, washout and taper "
         f"through the local angle and chord. Sweep scores like dihedral (a built-in placebo): 'not modelled', not 'unimportant'. In 3-D, "

@@ -275,7 +275,7 @@ def fig_pipeline() -> str:
         ("1 · Stations", ["slices along the semi-span:", "one on every loft station,", "one every 0.2 chord, ≥ 12 per panel,", "squeezed to s0 at the tip"], "acc"),
         ("2 · Size fields", ["per station and side: how big a cell", "may be at every place (nose, band,", "curvature, trailing edge, 2 % c max),", "growing ≤ 1.2 per cell"], "acc"),
         ("3 · Nose solve", ["the nose cell found by trial on the", "built ring: no node turns the", "surface by more than 10°"], "acc"),
-        ("4 · One node list for all stations", ["every station must carry the same ring,", "so the wish lists of step 2 are merged:", "at each place along the section the smallest", "cell any station asks for is the one used"], "acc"),
+        ("4 · One node list for all stations", ["every station carries the same ring,", "so the wish lists of step 2 are", "merged: at each place, the smallest", "cell any station asks for is used"], "acc"),
         ("5 · Rings and cap", ["every node asked from the loft", "(never interpolated); one H patch", "closes the flat tip"], "acc"),
         ("6 · Thirteen checks", ["turning, growth, spacings, breaks,", "tip gap, quad quality; any failure:", "only refusal.json is written"], "warn"),
         ("OUT · the files", ["surface.npz, surface.xyz (Plot3D),", "stations.csv, quality.json,", "manifest.json (four hashes)"], "out"),

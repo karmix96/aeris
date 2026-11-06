@@ -247,3 +247,41 @@
     (1.6 % c apart) cannot measure bubbles shorter than about 3 % c. Decide: build the quasi-3D loop
     (AVL downwash ↔ NeuralFoil strip lift) as flow-map method "avl+nf", validate against the existing tables
     on a sample and against a few 3-D transition RANS runs, then revisit decision 65.
+
+## The new approach — decided 4–6 Nov 2026 (owner), not built yet
+
+What was first is items 56–66 (every surface rule met at level C). Pages: `Stage_2_surface_mesh/docs/SURFACE_MESH.html`
+(section "What was first, and what changes"), `Stage_2_surface_mesh/decisions/STAGE2_STATUS.md`.
+
+67. **Transition must be captured, with ADflow and SU2** (owner, 4 Nov). Stage 1: SA overpredicts the profile
+    drag by a median +62 %. Which solver does what: 76.
+68. **Mach toward 0.5, no supersonic flow** (owner, 4 Nov). The Stage 1 data stop at Mach 0.2. Pending: core
+    Mach ≤ 0.2 now, 0.3–0.5 later with a fast-UAV family. Under similarity (70) the dataset runs at Mach 0.1.
+69. **Angles of attack −5° to post-stall** (owner, 6 Nov), plus a separate post-stall study (URANS or DDES on a
+    few wings); steady RANS up to stall onset. The Stage 1 dataset covers root angles 0–10°.
+70. **Similarity** (owner, 6 Nov): every wing at unit mean chord; the Re on the mean chord is an input (4 levels);
+    Mach 0.1 with a Prandtl–Glauert correction on CL and CM; trailing edge 0.2 % c; the root chord leaves the
+    vector (18 → 17 numbers). About 5 × fewer solves (8,000, not 42,000). Checks C1 (scale), C2 (Mach), C3
+    (trailing edge, with the real floor 0.42 % c), C4 (Re levels). Stage 1 code first; every hash changes.
+71. **Levels VC, C, M, F with the targets anchored** (owner, 6 Nov): hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25,
+    base ≥ 8, no kinks, tip gap); accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest
+    cell), as DPW defines its medium grid; transition targets at F (20 cells per bubble; wall growth ≈ 1.1).
+    VC on the desktop (about 1.0 M cells median, desktop limit about 1.2 M); C, M, F on the university HPC.
+    Replaces "at level C" in 56 and settles 57 at F (1.25 at VC is 1.107 at F).
+72. **Lighter rules** (owner, 6 Nov): the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell
+    0.5 % c at F); tip gap 2 × s0; station gap 0.25 × local chord at M (replaces 62's 0.2 × chord at C).
+    Fine level about 10–11 M cells median on the wing blocks (10.9 M with the band change alone; 15.2 M with
+    the planned rules). Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c) get about 3 cells.
+73. **One matched C-H volume mesh for ADflow and SU2** (owner, 6 Nov), instead of the overset wake box and the
+    tip-vortex tube. SU2 8.6.0 has no overset and refuses structured CGNS (structured meshes converted to
+    unstructured hexes run). The ring and the cap of Stage 2 stay; Stage 3: open-line march, wake lines to the
+    far field (rough +30–60 % cells on the wing blocks), tip vortex in the outboard blocks, no overlap gate.
+74. **Lower band at negative angles** (pending): option A, the lower band from the leading edge (band length
+    125 → 185 % of the chord); option B, keep 60–100 % c and run transition (LM) only at angles ≥ 0°. Count both
+    on the 20 reference wings (the refine map run down to −5°), then the owner chooses.
+75. **Nose (64), corrected** (6 Nov): the first reading was overstated (raw files measured the same way show
+    nearly the same split). Re-measure raw and built with one curvature method; fix only if a real error remains,
+    before the pyGeo `build --all` (a fix changes every hash). Plan agreed 6 Nov.
+76. **Solver split** (proposal, pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST +
+    LM on about 20 % of the wings. Needs an ADflow against SU2 SA code-to-code check and the SU2 cost per solve.
+

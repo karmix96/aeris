@@ -1,7 +1,13 @@
 # Stage 2 — Surface mesh
 
+> **6 Nov 2026: a new approach is decided, not built.** Levels VC, C, M, F (hard minimums at VC, accuracy targets
+> at M, transition targets at F), a lighter band (bubble length floor 0.10 c from local Re 4 × 10⁵), tip gap
+> 2 × s0, station gap 0.25 × chord at M, one matched C-H volume mesh for ADflow and SU2, similarity (unit mean
+> chord). The rules and commands below are the first approach, which the code still builds. What was first and
+> what changes: `decisions/STAGE2_STATUS.md` and the page `docs/SURFACE_MESH.html`.
+
 One wing surface (the Stage 1 loft) in, one structured surface mesh out: a closed ring of points
-around the section at every span station, root to tip, plus one patch that closes the flat tip.
+around the section at every spanwise station, root to tip, plus one patch that closes the flat tip.
 Every node is asked from the loft; nothing is interpolated between stored sections. The volume
 mesh, the wake boxes and the CGNS file are Stage 3.
 
@@ -51,7 +57,7 @@ tests/mesh/                tests
 | Where | Rule | Source |
 | --- | --- | --- |
 | Nose | no node turns the surface by more than 10° (solved by bisection on the ring as built); away from the nose the same angle caps the cell from the local curvature | law 1 (S8) |
-| Nose, along the span | nose spacing / chord changes by at most 1.15 between stations (checked; holds by construction with one distribution for the wing) | law 2 (S8) |
+| Nose, along the semi-span | nose spacing / chord changes by at most 1.15 between stations (checked; holds by construction with one distribution for the wing) | law 2 (S8) |
 | Trailing edge | 0.1 % of local chord at the corners; 8 cells across the base | laws 3, 6 (DPW; S8) |
 | Transition band | upper 0–85 % c, lower 60–100 % c: cell = bubble length / 20; bubble length from local Re (Stage 1 table) | Stage 1 handover; Ansys CFX transition-model grid guide (20 nodes per bubble) |
 | (candidate 65) | a per-wing band from the flow dataset: the envelope of bubbles, transition ± margin and separation over the conditions one mesh serves (`cfdauto/mesh/refine_map.py`, `docs/REFINE_MAP.html`); not a rule yet | Study 7; needs a 3-D transition check |

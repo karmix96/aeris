@@ -72,14 +72,17 @@ td.num { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabula
 details summary { cursor: pointer; font-family: var(--display); font-size: 18px; font-weight: 600; }
 code { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; white-space: normal; }
 section, details, .tbl { min-width: 0; max-width: 100%; }
+.chg { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 6px; padding: 10px 14px; font-size: 14.5px; line-height: 1.5; }
+.chg .ctag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); margin-bottom: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
 <div class="wrap">
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 flow dataset</div>
+  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 flow dataset · 3 Nov 2026 · updated 6 Nov 2026</div>
   <h1>Where to refine: transition, bubbles and separation, per wing</h1>
   <p class="lede">The transition band of the mesh is generic today: upper surface 0–85 % c, lower 60–100 % c, on every wing. This page reads the flow dataset for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip, at one flight condition and over a range of conditions. The envelope over the range, plus a margin, is the band this wing would need.</p>
+  <div class="chg"><span class="ctag">What changes (decided 6 Nov 2026)</span>This map was made on 3 Nov for the first approach: flight conditions at real wing size, root angles −2° to 12° on the grid (0–8° in the envelope by default), the generic band set for positive angles. Since then: (1) the angles run from −5° to post-stall, so at negative angles the lower surface becomes the suction side and the generic lower band (60–100 % c) may miss it; this map will be run down to −5° (the section tables reach −10°) to count the two options: the lower band from the leading edge, or transition runs only at angles ≥ 0° (decision 74, pending). (2) Similarity: every wing is built at unit mean chord at Mach 0.1, so the map will be read per Re level on the mean chord, not per flight speed. (3) The band cell becomes bubble length / 20 at the fine level F, with the bubble length stopped at 0.10 c from local Re 4 × 10⁵ up (decisions 71, 72). What the map shows below is unchanged: it is the 2-D XFOIL strip answer in calm air, a candidate (decision 65), not a rule.</div>
 </header>
 
 <section class="controls" aria-label="Controls">

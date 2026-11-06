@@ -10,12 +10,15 @@ import subprocess
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
-HEAD = """# Stage_2 — Surface mesh page (text copy, 2 Nov 2026)
+HEAD = """# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 6 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs/SURFACE_MESH.html` (repo karmix96/aeris,
-branch `stage2-surface-mesh`). The 14 figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
-line with its caption. Companion files: 'Stage_2 Surface mesh status and handover' (short), 'Stage_1 Handover to the surface
-mesh' (the input). If this copy and the repository ever differ, the repository wins.
+branch `stage2-surface-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
+line with its caption. Since 6 Nov 2026 the page says what was first (built and screened 2–3 Nov) and what the new
+approach changes (decided 4–6 Nov, not built yet): the section "What was first, and what changes", and a
+"What changes" note in every section it touches. Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
+handover' (short), 'Stage_1 Handover to the surface mesh' (the input). If this copy and the repository ever differ,
+the repository wins.
 
 """
 
@@ -29,6 +32,7 @@ def main() -> None:
         s = re.sub(pat, "", s, flags=re.S)
     s = re.sub(r'<span class="k">(.*?)</span>', r"<p><strong>\1</strong></p>", s)
     s = re.sub(r'<div class="big">(.*?)</div>', r"<p><strong>\1</strong></p>", s, flags=re.S)
+    s = re.sub(r'<span class="ctag">(.*?)</span>', r"<strong>\1.</strong> ", s)
     tmp = DOCS / "_page_text.html"
     tmp.write_text(s)
     md = subprocess.run(["pandoc", "-f", "html", "-t", "gfm", "--wrap=none", str(tmp)], capture_output=True, text=True, check=True).stdout

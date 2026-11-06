@@ -1,11 +1,11 @@
-# Stage 2 decisions — the surface mesh (2 Nov 2026)
+# Stage 2 decisions — the surface mesh (2 Nov 2026, updated 6 Nov 2026)
 
 What was decided while building the surface mesher, why, and what the first screen showed.
 The values are in `configs/surface.yaml`; the rules table is in `README.md`.
 
 ## 1. One spacing tool for everything
 
-The ring (around the section) and the stations (along the span) use the same three steps: a target
+The ring (around the section) and the stations (along the semi-span) use the same three steps: a target
 cell size along the line (the smallest of every rule that applies there), a growth limit, and points
 placed so every cell holds the same share of ∫ ds / h. S8 used a two-sided tanh stretching per side,
 which can set only the two end cells; the transition band needs a set size in the middle of the side.
@@ -123,7 +123,7 @@ Counts for the reference wings at Re 3 × 10⁵ (ring nodes × stations): BWB 60
 1016 × 139 (F); flying wing 430 × 74, 556 × 96, 720 × 125; cranked 398 × 75, 514 × 98, 668 × 127;
 tapered 408 × 75, 526 × 98, 684 × 127.
 
-## 10. Finding for Stage 1: the nose of the built sections is not round
+## 10. Finding for Stage 1: the nose of the built sections is not round (first reading; corrected in section 12)
 
 While solving the nose spacing, the turning did not fall steadily as the nose spacing was reduced
 (10.0° → 10.3° → 9.5° for spacings × 1, 0.9, 0.8 on BWB training wing 36). The cause is in the loft:
@@ -178,3 +178,32 @@ The three earlier passes of the screen are development evidence, not results: th
 distributions) found the tip-gap tolerance, the kinked noses of the corner set, the 0.9 mm panel and the
 0.08 quads; the second (one distribution) found the 1.25–1.26 growth on NACA 4415 noses; the third ran before
 the flat-nose fix (section 6). With the nose held over four cells the largest growth fell to 1.21.
+
+## 12. The new approach (decided 4–6 Nov 2026, not built yet)
+
+What was first is sections 1–11: every rule met at level C, the coarsest of C, M, F, FF. The owner decided a new
+approach on 4–6 Nov; `CFD_Automation/OPEN_DECISIONS.md` 67–76 has each item with its reason.
+
+- **Levels VC, C, M, F (71).** Hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25, base ≥ 8, no kinks, tip gap);
+  accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest cell 2 % c), as the DPW
+  guidelines define their medium grid; transition targets at F (20 cells per bubble; wall growth 1.25 at VC is
+  1.107 at F, which meets the 1.1 of the transition-model guide). The four levels keep their places on the ladder;
+  the first C, M, F, FF sit where VC, C, M, F sit. VC (about 1.0 M cells median) is the desktop level.
+- **Lighter rules (72).** The bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell 0.5 % c at
+  F); tip gap 2 × s0; station gap 0.25 × local chord at M. Fine level about 10–11 M cells median on the wing
+  blocks (10.9 M with the band change alone, 15.2 M with the planned rules); the shortest high-Re root bubbles
+  (about 1.5 % c) get about 3 cells: fine for SA, not for LM, so the 3-D check decides whether a local band is needed.
+- **Lower band at negative angles (74, pending).** Angles now run from −5° (69). Option A: the lower band from the
+  leading edge (one rule for both sides; band length 125 → 185 % of the chord). Option B: keep 60–100 % c and run
+  transition (LM) only at angles ≥ 0°. Count both on the 20 reference wings, with the refine map run to −5°.
+- **Matched C-H for ADflow and SU2 (73).** The surface ring and the cap stay; Stage 3 builds the C-H blocks
+  (open-line march, wake lines to the far field, tip vortex in the outboard blocks) instead of the overset boxes.
+- **Similarity (70).** Every wing at unit mean chord, Re an input, Mach 0.1, trailing edge 0.2 % c: the 0.5 mm
+  floor that made the corner set's 12 mm tip 4 % c thick (section 6) goes.
+- **The nose, corrected (75).** The first reading compared a circle through three raw points with a one-sided
+  formula on the built section. Measured the same one-sided way, the raw files show nearly the same split (NACA
+  4415 raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c; SD7032 raw 0.0287 / 0.0023, built 0.0318 / 0.0023): mostly
+  how the formula sees a cambered, tilted nose. What may remain lies inside the first raw-point gap (under
+  0.025 % c on NACA 4415, about 7 × smaller than the 0.18 % c nose cell of the NACA 4415 reference wings at C).
+  Re-measure raw and built with one curvature method; fix only if a real error remains.
+

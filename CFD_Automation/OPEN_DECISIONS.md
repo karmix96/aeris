@@ -277,8 +277,17 @@ What was first is items 56–66 (every surface rule met at level C). Pages: `Sta
     unstructured hexes run). The ring and the cap of Stage 2 stay; Stage 3: open-line march, wake lines to the
     far field (rough +30–60 % cells on the wing blocks), tip vortex in the outboard blocks, no overlap gate.
 74. **Lower band at negative angles** (pending): option A, the lower band from the leading edge (band length
-    125 → 185 % of the chord); option B, keep 60–100 % c and run transition (LM) only at angles ≥ 0°. Count both
-    on the 20 reference wings (the refine map run down to −5°), then the owner chooses.
+    125 → 185 % of the chord, each side counted alone); option B, keep 60–100 % c and run transition (LM) only at
+    angles ≥ 0°. **Counted on 7 Nov** (Stage 2 Study 8; `scripts/band_count.py`, `data/studies/band_count.json`):
+    the 20 reference wings × 4 Re levels at VC with the planned rules (`configs/surface_plan_VC.yaml`), 160 builds.
+    A and B give the same ring, node for node (ratio A / B 1.000, median and max; the same at F on two wings), so
+    F stays at about 10.9 M cells (median, wing blocks) with A. Why: both sides share one node list (60), and the
+    upper band (0–85 % c) already makes the front of the lower side fine. A per-wing lower band from the refine map
+    (A′, −5° to 8°, 10 % c margin) is the same as A: its union over the strips starts at 0 % c on all 20 wings.
+    The refine map from −5° puts the lower transition at a median of 1–15 % c per type at −5°, in front of 60 % c
+    on every strip with an answer (at 0° on 51–83 %); 42 % (BWB) and 30 % (flying wing) of the strips have no
+    answer at −5°. The cells no longer decide: A keeps transition runs from −5° at no mesh cost; B only saves the
+    LM runs below 0°. Still pending: the owner chooses.
 75. **Nose (64), corrected** (6 Nov): the first reading was overstated (raw files measured the same way show
     nearly the same split). Re-measure raw and built with one curvature method; fix only if a real error remains,
     before the pyGeo `build --all` (a fix changes every hash). Plan agreed 6 Nov.

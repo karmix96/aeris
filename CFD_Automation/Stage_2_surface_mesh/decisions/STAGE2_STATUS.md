@@ -1,4 +1,4 @@
-# Stage_2 — Surface mesh: status and handover (2 Nov 2026, updated 6 Nov 2026)
+# Stage_2 — Surface mesh: status and handover (2 Nov 2026, updated 7 Nov 2026)
 
 Text copy for chats in this project. Repo: karmix96/aeris, branch `stage2-surface-mesh`,
 `CFD_Automation/Stage_2_surface_mesh/` (configs, decisions, docs, tests, scripts, studies) and the code in
@@ -15,7 +15,7 @@ the numpy twin of the loft; not yet run with pyGeo (Mike's machine).
 > | Levels | C, M, F, FF; every rule met at C, the coarsest | VC, C, M, F; hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25, base ≥ 8, no kinks, tip gap), accuracy targets at M (nose 10°, TE 0.1 % c, station gap, largest cell), transition targets at F (20 cells per bubble, wall growth ≈ 1.1); VC on the desktop, C/M/F on the HPC | decided (71), to build |
 > | Band cell | bubble length / 20 at C; 0.40 / 0.30 / 0.10 / 0.05 c at local Re 6e4 / 1e5 / 4e5 / 1e6 | bubble length / 20 at F; bubble length floor 0.10 c from local Re 4e5 (0.5 % c at F) | decided (72), to build |
 > | Stations, tip | gap 0.2 × chord at C, ≥ 12 per panel; last gap = s0 | gap 0.25 × chord at M, ≥ 12 per panel at M; last gap = 2 × s0 | decided (72), to build |
-> | Lower band | 60–100 % c (angles 0–8°) | angles −5° to post-stall: option A lower band from the leading edge (band ≈ 1.5 × longer), option B transition (LM) runs only at ≥ 0° | pending (74): count both on the 20 reference wings |
+> | Lower band | 60–100 % c (angles 0–8°) | angles −5° to post-stall: option A lower band from the leading edge, option B transition (LM) runs only at ≥ 0°. Counted 7 Nov (Study 8, `scripts/band_count.py`): at VC with the planned rules, A gives the same ring as B, node for node, on the 20 reference wings × 4 Re (ratio 1.000; F stays ≈ 10.9 M), because both sides share one node list and the upper band already covers the lower front; the "≈ 1.5 × longer band" counted each side alone. At −5° the lower transition sits at a median of 1–15 % c (2-D strips) | pending (74): Mike chooses |
 > | Volume mesh | O-H body mesh + overset wake box + tip-vortex tube (ADflow only) | one matched C-H mesh for ADflow and SU2 (SU2: converted to unstructured hexes); wake lines to the far field; tip vortex in the outboard blocks; the ring and cap unchanged | decided (73), Stage 3 |
 > | Similarity | real size; TE max(0.5 / 1.0 mm, 0.2 % c) | unit mean chord; Re an input (4 levels); Mach 0.1 + Prandtl–Glauert; TE 0.2 % c; root chord out (18 → 17) | decided (70); Stage 1 code first (every hash) |
 > | Flow model, angles, Mach | ADflow SA; 0–8°; Mach 0.03–0.20 | transition with ADflow and SU2 (67; split pending, 76); −5° to post-stall + post-stall study (69); toward Mach 0.5, no supersonic, core ≤ 0.2 (68) | decided; split and core pending |
@@ -107,6 +107,8 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   leading edge on washed-out panels (missed by 52–60 % c). The shortest root bubbles (1.4–10.7 % c) are shorter
   than the band-cell table assumes (5–14 % c) on all 20 wings. Candidate, not a rule (65): needs a 3-D
   transition check first. Proposal (66): AVL for the local angle per strip, NeuralFoil for the 2-D answer.
+  Run again from −5° on 7 Nov (envelope −5° to 8°): the per-wing band costs +8 % to +46 % (median +34 %), the
+  generic lower band misses the full 60 % c in front of it on all 20 wings, and the root bubbles do not change.
 
 ## Weak points, said plainly
 

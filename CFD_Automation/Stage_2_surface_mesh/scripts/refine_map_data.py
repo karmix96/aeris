@@ -2,8 +2,8 @@
 
     python scripts/refine_map_data.py        # writes data/studies/refine_map_reference.json (about 10 s)
 
-Every reference wing (4 types × 5) on the grid Mach 0.03–0.20 (7 values) × angle −2…12° (1° steps) at sea
-level, 3 strips per panel. The numbers are the Stage 1 section tables through the flow-map engine; nothing
+Every reference wing (4 types × 5) on the grid Mach 0.03–0.20 (7 values) × root angle −5…12° (1° steps; from
+−5° since 6 Nov 2026, was −2°) at sea level, 3 strips per panel. The numbers are the Stage 1 section tables through the flow-map engine; nothing
 new is computed, only read out per wing and per condition.
 """
 

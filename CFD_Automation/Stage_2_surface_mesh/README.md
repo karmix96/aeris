@@ -21,6 +21,7 @@ python scripts/screen.py                                                        
 python scripts/make_figures.py                                                   # docs/*.png
 python -m pytest                                                                 # tests (test_family is slow)
 python scripts/refine_map_data.py && python scripts/make_refine_page.py          # the refine map: docs/REFINE_MAP.html
+python scripts/band_count.py                                                     # Study 8: the lower band A against B (decision 74)
 ```
 
 ```

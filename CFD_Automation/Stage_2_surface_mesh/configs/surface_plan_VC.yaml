@@ -1,0 +1,48 @@
+# Stage 2 — the PLANNED rules of the new approach (decided 6 Nov 2026, not built), written at the coarsest level.
+# NOT the mesher's config (that is surface.yaml, still the first approach). Read only by scripts/band_count.py
+# (Study 8, the band count for decision 74), which writes the lower-band variants A, B and A' from it.
+# The level names stay C, M, F, FF because build_surface solves the nose at the level named "C": here "C" is the
+# coarsest level, the new VC (C, M, F, FF here = the new VC, C, M, F). Every spacing ÷ 1.3 per level, as before.
+# Values at the coarsest level: a target met at M is the M value × 1.3² (1.69), a target met at F × 1.3³ (2.197).
+
+levels:
+  names: [C, M, F, FF]            # = the new VC, C, M, F (k = 0, 1, 2, 3)
+  ratio: 1.3                      # r >= 1.3 in every direction and every spacing (law 23; Celik et al. 2008)
+
+chord:                            # around the section (one closed ring per station)
+  nose_turning_deg: 17.0          # law 1: 10 deg met at M (10 x 1.69 = 16.9 at VC); solved by bisection
+  nose_turning_tol_deg: 0.02
+  nose_envelope: 1.15             # law 2: nose spacing / chord may change by at most this between stations (a check)
+  te_spacing_c: 0.00169           # law 3: 0.1 % c met at M (DPW, Levy et al. 2013)
+  base_cells: 8                   # law 6: cells across the blunt base at VC (n_base = 9; must stay even)
+  growth: 1.20                    # growth used to build the size field (the check below allows 1.25)
+  growth_limit: 1.25              # check: neighbouring cells along the ring (a hard minimum at VC)
+  max_spacing_c: 0.0338           # largest cell outside the band: 2 % c met at M
+  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c (decision 58)
+  band_lower: [0.60, 1.00]        # lower surface: option B; scripts/band_count.py writes A [0, 1] and A' (per wing)
+  nodes_per_bubble: 9.1           # 20 cells per bubble met at F (20 / 1.3^3 = 9.1 at VC; Ansys CFX guide, decision 56)
+  bubble_length:                  # bubble length / chord against local Re (Stage 1, 2-D XFOIL, N_crit 9);
+                                  # log-log between the points, constant outside them; floor 0.10 c from 4e5 (decision 72)
+    re:  [6.0e4, 1.0e5, 4.0e5, 1.0e6]
+    l_c: [0.40,  0.30,  0.10,  0.10]
+
+span:                             # along the span (stations)
+  spacing_c: 0.4225               # law 8: station gap 0.25 x local chord met at M (0.25 x 1.69 at VC; decision 72)
+  min_cells_per_panel: 7          # 12 per panel at M (12 / 1.69 = 7.1 at VC)
+  growth: 1.25                    # used to build the size field
+  growth_limit: 1.30              # check: neighbouring station gaps (Stage 1 handover)
+  tip_gap_in_s0: 2.0              # law 9/10: last gap at the tip = 2 x tip first cell s0 (decision 72)
+
+wall:                             # first cell, needed here only for the last gap at the tip (law 13)
+  yplus: 1.0                      # y+ = 1 at VC (a hard minimum; 0.46 at F)
+  # s0 / c = y+ / (Re_c * sqrt(Cf / 2)),  Cf = 0.026 Re_c^(-1/7)  (turbulent flat plate, White 2006)
+
+sampling:
+  dense_per_side: 6001            # dense points per surface, uniform in sqrt(x/c) (clusters at the nose)
+  dense_span: 4001
+  cap_smoothing: 400              # Laplacian sweeps on the tip cap, edges held (S8)
+
+checks:
+  on_loft_m: 1.0e-9               # every node on the loft
+  tip_gap_band: [0.8, 1.01]       # delivered last gap / asked: at most 1 % larger, at most 20 % smaller (integer counts)
+  min_scaled_jacobian: 0.05       # surface quads (wing and cap); <= 0 is a folded quad

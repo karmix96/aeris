@@ -99,18 +99,18 @@ section, details, .tbl { min-width: 0; max-width: 100%; }
 BODY = """
 <div class="wrap">
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 flow dataset · 3 Nov 2026 · updated 6 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 flow dataset · 3 Nov 2026 · updated 7 Nov 2026</div>
   <h1>Where to refine: transition, bubbles and separation, per wing</h1>
   <p class="lede">The transition band of the mesh is generic today: upper surface 0–85 % c, lower 60–100 % c, on every wing. This page reads the flow dataset for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip, at one flight condition and over a range of conditions. The envelope over the range, plus a margin, is the band this wing would need.</p>
-  <div class="chg"><span class="ctag">What changes (decided 6 Nov 2026)</span>This map was made on 3 Nov for the first approach: flight conditions at real wing size, root angles −2° to 12° on the grid (0–8° in the envelope by default), the generic band set for positive angles. Since then: (1) the angles run from −5° to post-stall, so at negative angles the lower surface becomes the suction side and the generic lower band (60–100 % c) may miss it; this map will be run down to −5° (the section tables reach −10°) to count the two options: the lower band from the leading edge, or transition runs only at angles ≥ 0° (decision 74, pending). (2) Similarity: every wing is built at unit mean chord at Mach 0.1, so the map will be read per Re level on the mean chord, not per flight speed. (3) The band cell becomes bubble length / 20 at the fine level F, with the bubble length stopped at 0.10 c from local Re 4 × 10⁵ up (decisions 71, 72). What the map shows below is unchanged: it is the 2-D XFOIL strip answer in calm air, a candidate (decision 65), not a rule.</div>
+  <div class="chg"><span class="ctag">Updated 7 Nov 2026: the map runs from −5°</span>The angles now run from −5° to post-stall (decided 6 Nov). So the map was run again for root angles −5° to 12° (it started at −2°). The envelope now starts at −5° by default and still stops at 8°: only the low end changes, so its effect is seen alone, and the top of the steady range (stall onset) is not set yet. The sliders reach 12°. <strong>What it shows for the lower side:</strong> at −5° the lower side turns turbulent close to the nose (median 1–15 % c over the strips, per wing type), and its transition or bubble sits in front of the generic lower band (60 % c) on every strip that has an answer. Already at 0° that is so on 51–83 % of the strips. At −5° many outboard strips of the BWBs and flying wings (MH 61, MH 45, at local angles of −6° to −11°) have no XFOIL answer: 42 % and 30 % of their strips (hatched). The two options for the lower band are counted in Study 8 of the Stage 2 page (decision 74). As before: the map is the 2-D XFOIL strip answer in calm air at real wing size, a candidate (decision 65), not a rule, and the cost card uses the first approach's band cell (bubble length / 20).</div>
 </header>
 
 <section class="controls" aria-label="Controls">
   <div class="ctl"><span class="lab">Wing type</span><div class="seg" id="typeSeg"></div></div>
   <div class="ctl"><span class="lab">Reference wing</span><div class="seg" id="idxSeg"></div></div>
   <div class="ctl"><label for="mach">Flight Mach (one condition, and the Re the mesh is built for)</label><input type="range" id="mach" min="0" max="6" step="1" value="2"><span class="val" id="machV"></span></div>
-  <div class="ctl"><label for="alpha">Angle of attack at the root (one condition)</label><input type="range" id="alpha" min="0" max="14" step="1" value="6"><span class="val" id="alphaV"></span></div>
-  <div class="ctl"><span class="lab">Envelope: angle range</span><div class="range2"><input type="range" id="aLo" min="0" max="14" step="1" value="2" aria-label="lowest angle"><input type="range" id="aHi" min="0" max="14" step="1" value="10" aria-label="highest angle"></div><span class="val" id="aRangeV"></span></div>
+  <div class="ctl"><label for="alpha">Angle of attack at the root (one condition)</label><input type="range" id="alpha" min="0" max="__A_MAX__" step="1" value="__A_ONE__"><span class="val" id="alphaV"></span></div>
+  <div class="ctl"><span class="lab">Envelope: angle range</span><div class="range2"><input type="range" id="aLo" min="0" max="__A_MAX__" step="1" value="__A_LO__" aria-label="lowest angle"><input type="range" id="aHi" min="0" max="__A_MAX__" step="1" value="__A_HI__" aria-label="highest angle"></div><span class="val" id="aRangeV"></span></div>
   <div class="ctl"><span class="lab">Envelope: Mach range</span><div class="range2"><input type="range" id="mLo" min="0" max="6" step="1" value="0" aria-label="lowest Mach"><input type="range" id="mHi" min="0" max="6" step="1" value="4" aria-label="highest Mach"></div><span class="val" id="mRangeV"></span></div>
   <div class="ctl"><label for="margin">Margin around the transition point</label><input type="range" id="margin" min="0" max="25" step="1" value="10"><span class="val" id="marginV"></span></div>
 </section>
@@ -141,7 +141,7 @@ BODY = """
     <li>2-D strips: each strip is an XFOIL run of its section, free transition with N_crit 9 (calm air). Gusty air (N_crit 5) moves transition forward and shortens the laminar run; add margin for it.</li>
     <li>One induced angle for the whole wing (elliptic): the local angle of attack along the span is root angle + twist − that one number. On swept and tapered wings the real local angle differs along the span; the tip is usually unloaded more than this says.</li>
     <li>No crossflow transition on swept panels, no 3-D relief of bubbles, no tip vortex. Panels swept over about 25° with Re normal to the edge above 10⁶ can transition near the leading edge; the generic band's 0 % c start on the upper surface covers that, this map does not.</li>
-    <li>Hatched strips had no XFOIL answer (past the section's 2-D stall): the band falls back to the generic one there.</li>
+    <li>Hatched strips had no XFOIL answer: past the section's 2-D stall, at high angle or at negative angle. At −5° these are mostly the washed-out outboard strips of the BWBs and flying wings (local angles −6° to −11°; some are below the tables' −10°). A strip with no answer anywhere in the range falls back to the generic band; a strip with some answers keeps only those.</li>
     <li>The dataset is the Stage 1 section tables (14 Re × 3 Mach × 49 angles per section, trilinear lookup); a strip between two sections takes the blend of its parents' answers.</li>
   </ul></div>
   <div class="box goodb"><h3>What would make it better, and stay cheap</h3><ul>
@@ -151,7 +151,7 @@ BODY = """
   </ul></div>
 </section>
 
-<footer style="color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px">Data: <code>Stage_2_surface_mesh/data/studies/refine_map_reference.json</code> from <code>cfdauto.mesh.refine_map</code> (the Stage 1 section tables through <code>cfdauto.flowmap.engine</code>), the 20 reference wings, Mach 0.03–0.20, −2…12°, sea level, 3 strips per panel. Band cell = bubble length (Stage 1 table at the local Re) / 20, at the Mach of the slider. Page: <code>scripts/make_refine_page.py</code>.</footer>
+<footer style="color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px">Data: <code>Stage_2_surface_mesh/data/studies/refine_map_reference.json</code> from <code>cfdauto.mesh.refine_map</code> (the Stage 1 section tables through <code>cfdauto.flowmap.engine</code>), the 20 reference wings, Mach 0.03–0.20, −5…12° at the root, sea level, 3 strips per panel. Band cell = bubble length (Stage 1 table at the local Re) / 20, at the Mach of the slider. Page: <code>scripts/make_refine_page.py</code>.</footer>
 </div>
 <div id="tip" hidden></div>
 <script id="data" type="application/json">__DATA__</script>
@@ -165,7 +165,8 @@ BODY = """
   const wingOf = () => D.wings.find(w => w.wing.type === st.type && w.wing.index === st.idx);
   const grid = D.wings[0].grid;
   const NM = grid.mach.length, NA = grid.alpha_deg.length;
-  const fmt = (v, d) => (v == null || !isFinite(v)) ? '–' : Number(v).toFixed(d);
+  const fmt = (v, d) => (v == null || !isFinite(v)) ? '–' : Number(v).toFixed(d).replace(/^-/, '−');
+  const deg = v => fmt(v, 0) + '°';
   const pct = v => (v == null || !isFinite(v)) ? '–' : (100 * v).toFixed(0) + ' %';
   const sci = v => { if (v == null || !isFinite(v)) return '–'; const e = Math.floor(Math.log10(v)); return (v / Math.pow(10, e)).toFixed(1) + ' × 10' + String(e).replace(/\\d/g, c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c]); };
 
@@ -187,13 +188,14 @@ BODY = """
 
   // the envelope per strip and side (the same rule as cfdauto.mesh.refine_map.envelope_band)
   function envelope(w, im0, im1, ia0, ia1, margin) {
-    const n = w.shape[0]; const out = {upper: [], lower: [], shortest: {upper: [], lower: []}, fallback: []};
+    const n = w.shape[0]; const out = {upper: [], lower: [], shortest: {upper: [], lower: []}, fallback: [], missing: 0, total: 0};
     for (let i = 0; i < n; i++) {
       let any = false;
       for (const side of ['upper', 'lower']) {
         const xk = side === 'upper' ? 'xtr_u' : 'xtr_l', bs = side === 'upper' ? 'bub_u_s' : 'bub_l_s', be = side === 'upper' ? 'bub_u_e' : 'bub_l_e', sp = side === 'upper' ? 'sep_u_x' : 'sep_l_x';
         let lo = Infinity, hi = -Infinity, shortest = Infinity;
-        for (let im = im0; im <= im1; im++) for (let ia = ia0; ia <= ia1; ia++) { const k = im * NA + ia; if (!w.fields.answered[i * w.shape[1] + k]) continue; any = true;
+        for (let im = im0; im <= im1; im++) for (let ia = ia0; ia <= ia1; ia++) { const k = im * NA + ia; const ok = w.fields.answered[i * w.shape[1] + k];
+          if (side === 'upper') { out.total++; if (!ok) out.missing++; } if (!ok) continue; any = true;
           const x = val(w, xk, i, k), s = val(w, bs, i, k), e = val(w, be, i, k), q = val(w, sp, i, k);
           if (isFinite(x)) { lo = Math.min(lo, x - margin); hi = Math.max(hi, x + margin); }
           if (isFinite(s)) lo = Math.min(lo, s); if (isFinite(e)) hi = Math.max(hi, e); if (isFinite(q)) hi = Math.max(hi, q);
@@ -263,8 +265,8 @@ BODY = """
     let im0 = +$('mLo').value, im1 = +$('mHi').value, ia0 = +$('aLo').value, ia1 = +$('aHi').value; if (im0 > im1) [im0, im1] = [im1, im0]; if (ia0 > ia1) [ia0, ia1] = [ia1, ia0];
     const margin = +$('margin').value / 100;
     $('machV').textContent = `Mach ${grid.mach[im].toFixed(2)} · Re on the mean chord ${sci(w.per_condition.re_mean[k])}`;
-    $('alphaV').textContent = `${grid.alpha_deg[ia].toFixed(0)}° at the root · induced ${fmt(w.per_condition.alpha_induced_deg[k], 1)}° · wing CL ${fmt(w.per_condition.cl_wing[k], 2)}`;
-    $('aRangeV').textContent = `${grid.alpha_deg[ia0].toFixed(0)}° to ${grid.alpha_deg[ia1].toFixed(0)}°`;
+    $('alphaV').textContent = `${deg(grid.alpha_deg[ia])} at the root · induced ${fmt(w.per_condition.alpha_induced_deg[k], 1)}° · wing CL ${fmt(w.per_condition.cl_wing[k], 2)}`;
+    $('aRangeV').textContent = `${deg(grid.alpha_deg[ia0])} to ${deg(grid.alpha_deg[ia1])}`;
     $('mRangeV').textContent = `Mach ${grid.mach[im0].toFixed(2)} to ${grid.mach[im1].toFixed(2)}` + (grid.mach[im1] > D.focus_mach[w.wing.family][1] + 1e-9 ? ' (above the focus range of this family)' : '');
     $('marginV').textContent = `± ${(margin * 100).toFixed(0)} % of the chord`;
     document.querySelectorAll('#typeSeg button').forEach((b, j) => b.setAttribute('aria-pressed', String(TYPES[j] === st.type)));
@@ -279,8 +281,8 @@ BODY = """
       if (!E.fallback[i]) segs.push({a: b[0], b: b[1], fill: 'var(--band)'});
       return segs; };
     planform($('pUc'), w, condPaint('upper')); planform($('pLc'), w, condPaint('lower')); const G0 = D.rules.generic_band; planform($('pUe'), w, envPaint('upper'), [{a: G0.upper[0], b: G0.upper[1], stroke: 'var(--gen)'}]); planform($('pLe'), w, envPaint('lower'), [{a: G0.lower[0], b: G0.lower[1], stroke: 'var(--gen)'}]);
-    const cl = `Mach ${grid.mach[im].toFixed(2)}, ${grid.alpha_deg[ia].toFixed(0)}°`; $('condLabU').textContent = cl; $('condLabL').textContent = cl;
-    const el_ = `Mach ${grid.mach[im0].toFixed(2)}–${grid.mach[im1].toFixed(2)}, ${grid.alpha_deg[ia0].toFixed(0)}–${grid.alpha_deg[ia1].toFixed(0)}°, margin ${(margin * 100).toFixed(0)} % c`; $('envLabU').textContent = el_; $('envLabL').textContent = el_;
+    const cl = `Mach ${grid.mach[im].toFixed(2)}, ${deg(grid.alpha_deg[ia])}`; $('condLabU').textContent = cl; $('condLabL').textContent = cl;
+    const el_ = `Mach ${grid.mach[im0].toFixed(2)}–${grid.mach[im1].toFixed(2)}, ${deg(grid.alpha_deg[ia0])} to ${deg(grid.alpha_deg[ia1])}, margin ${(margin * 100).toFixed(0)} % c`; $('envLabU').textContent = el_; $('envLabL').textContent = el_;
     // cost: band cells per strip at the Re of the slider's Mach, generic against this wing's envelope
     let gen = 0, own = 0, nFall = 0, missedU = 0, missedL = 0; const rows = [];
     for (let i = 0; i < n; i++) { const re = val(w, 're', i, k); const h = bandCell(re); const G = D.rules.generic_band;
@@ -292,7 +294,7 @@ BODY = """
     const cards = [
       {cls: own < gen ? 'good' : 'amber', h: 'band cells along the chord, summed over the strips', big: `${Math.round(own)} vs ${Math.round(gen)}`, p: `this wing's envelope against the generic band, at the Re of Mach ${grid.mach[im].toFixed(2)} (band cell 0.25–2 % c by local Re). ${own < gen ? 'Saves ' + Math.round(100 * (1 - own / gen)) + ' %.' : 'Costs ' + Math.round(100 * (own / gen - 1)) + ' % more: the envelope is wider than the generic band on some strips.'}`},
       {cls: (missedU > 0.02 || missedL > 0.02) ? 'warn' : 'good', h: 'what the generic band would miss', big: `upper ${pct(missedU)} c · lower ${pct(missedL)} c`, p: 'the widest stretch of any strip\\'s envelope that lies outside the generic band. Above zero means the generic band is wrong in place, not only in size, for this wing and these conditions.'},
-      {cls: nFall ? 'warn' : 'good', h: 'strips without an XFOIL answer', big: `${nFall} of ${n}`, p: nFall ? 'past the section\\'s 2-D stall somewhere in the range: those strips keep the generic band (hatched).' : 'every strip answered at every condition in the range.'},
+      {cls: (nFall || E.missing) ? 'warn' : 'good', h: 'strips without an XFOIL answer', big: `${nFall} of ${n}`, p: nFall ? 'past the section\\'s 2-D stall everywhere in the range: those strips keep the generic band (hatched).' : (E.missing ? `every strip has an answer somewhere in the range, but ${pct(E.missing / E.total)} of the strip-conditions have none (past the 2-D stall, at high or at negative angle): they are left out of the envelope.` : 'every strip answered at every condition in the range.')},
       {cls: 'amber', h: 'shortest bubble on the root strip', big: shortRoot != null ? `${pct(shortRoot)} c vs table ${pct(tabRoot)} c` : `none vs table ${pct(tabRoot)} c`, p: 'the shortest upper-surface bubble the dataset predicts at the root over the range, against the bubble length the band-cell rule assumes at the root\\'s Re. Shorter than the table means 20 cells per bubble is not met there; the rule is per Re, not per wing.'},
     ];
     $('cards').innerHTML = cards.map(c => `<div class="card ${c.cls}"><h3>${c.h}</h3><div class="big">${c.big}</div><p>${c.p}</p></div>`).join('');
@@ -308,9 +310,16 @@ BODY = """
 """
 
 
+ONE_ALPHA, ENVELOPE_ALPHAS = 4.0, (-5.0, 8.0)     # the default condition, and the default envelope: from the new
+                                                  # lowest angle (-5 deg, decided 6 Nov) to the first top (8 deg)
+
+
 def main() -> None:
     data = DATA.read_text()
-    html = HEAD + BODY.replace("__DATA__", data.replace("</", "<\\/"))
+    alphas = json.loads(data)["wings"][0]["grid"]["alpha_deg"]
+    body = (BODY.replace("__A_MAX__", str(len(alphas) - 1)).replace("__A_ONE__", str(alphas.index(ONE_ALPHA)))
+            .replace("__A_LO__", str(alphas.index(ENVELOPE_ALPHAS[0]))).replace("__A_HI__", str(alphas.index(ENVELOPE_ALPHAS[1]))))
+    html = HEAD + body.replace("__DATA__", data.replace("</", "<\\/"))
     OUT.write_text(html)
     print("wrote", OUT, f"{OUT.stat().st_size / 1e6:.2f} MB")
 

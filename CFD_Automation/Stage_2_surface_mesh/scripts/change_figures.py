@@ -4,7 +4,7 @@
                                             # cost_first_new.png, band_negative.png (seconds)
 
 The numbers are the ones written down on 6 Nov 2026 (Stage 0 decisions, the status report): they are not
-recomputed here. The new approach is decided but not built; these figures say what it will change.
+recomputed here. The band count in band_negative.png is Study 8 (7 Nov, scripts/band_count.py). The new approach is decided but not built; these figures say what it will change.
 """
 
 from __future__ import annotations
@@ -252,7 +252,7 @@ def fig_band_negative():
     ax[0].annotate("", xy=(0.12, -0.07), xytext=(0.45, -0.07), arrowprops=dict(arrowstyle="->", color=WARN, lw=1.2))
     ax[0].text(0.12, -0.105, "at −5°", color=WARN, fontsize=8)
     draw(ax[1], "option A: lower band from the leading edge", (0.0, 1.0),
-         "One rule for both sides. Band length: 85 + 100 = 185 % of the chord\n(about 1.5 × longer); cells not counted yet.", col=WARN)
+         "One rule for both sides. On paper 85 + 100 = 185 % of the chord\n(about 1.5 × longer). Counted (Study 8, 7 Nov): no extra ring nodes\non the 20 reference wings × 4 Re: both sides share one node list.", col=WARN)
     draw(ax[2], "option B: keep the band; transition runs at ≥ 0° only", (0.6, 1.0),
          "SU2 with LM (transition) only at angles of 0° and above;\nADflow SA (fully turbulent) covers −5° to 0°. No extra cells.")
     save(fig, "band_negative.png")

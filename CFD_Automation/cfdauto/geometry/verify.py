@@ -21,6 +21,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+from scipy.interpolate import CubicSpline
 
 from . import airfoils
 from .loft import Loft, edge_error_pct, section_points
@@ -34,15 +35,23 @@ AERIS_EXTERNAL = REPO / "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/e
 def _unit_chord(pts: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Raw Selig points -> (upper, lower), each x/c ascending, leading edge at 0, TE midpoint at (1, 0).
 
-    The same normalisation load_airfoil applies, done here on its own.
+    The same normalisation load_airfoil applies (rule D25, decision 64), done here on its own: the
+    leading edge is the point of a cubic spline through the points (chord-length parameter) farthest
+    from the trailing-edge midpoint, found by dense sampling between the farthest raw point's neighbours.
     """
     te = 0.5 * (pts[0] + pts[-1])
-    i = int(np.argmax(np.linalg.norm(pts - te, axis=1)))
-    d = te - pts[i]
+    q = pts[np.concatenate([[True], np.linalg.norm(np.diff(pts, axis=0), axis=1) > 1e-12])]
+    t = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))])
+    spl = CubicSpline(t, q, bc_type="natural")
+    i = int(np.argmax(np.linalg.norm(q - te, axis=1)))
+    s = np.linspace(t[max(i - 1, 0)], t[min(i + 1, len(t) - 1)], 20001)
+    t_le = s[int(np.argmax(np.linalg.norm(spl(s) - te, axis=1)))]
+    le = spl(t_le)
+    d = te - le
     ang = np.arctan2(d[1], d[0])
     rot = np.array([[np.cos(ang), np.sin(ang)], [-np.sin(ang), np.cos(ang)]])
-    p = (pts - pts[i]) @ rot.T / np.linalg.norm(d)
-    up, lo = p[: i + 1][::-1], p[i:]
+    p = (q - le) @ rot.T / np.linalg.norm(d)
+    up, lo = np.vstack([[0.0, 0.0], p[t < t_le][::-1]]), np.vstack([[0.0, 0.0], p[t > t_le]])
     if np.mean(up[:, 1]) < np.mean(lo[:, 1]):
         up, lo = lo, up
     return up, lo

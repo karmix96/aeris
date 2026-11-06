@@ -6,13 +6,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from scipy.interpolate import PchipInterpolator
+from scipy.interpolate import CubicSpline, make_interp_spline
+from scipy.optimize import brentq
 
 from . import airfoils as _airfoils
 from .params import TERule, TypeSpec, resolve, station_airfoils
 from .planform import Planform, build_planform
 
-N_SIDE = 100  # points per surface; a section has 2 * N_SIDE + 1 points
+N_SIDE = 200  # points per surface; a section has 2 * N_SIDE + 1 points (201 per side: decision 64)
 STATION_NAMES = ("b0", "b1", "b2", "b3")
 
 
@@ -77,43 +78,113 @@ def load_airfoil(name: str, n_side: int = N_SIDE, folder: Path | None = None) ->
 
 
 def airfoil_from_points(name: str, pts: np.ndarray, n_side: int = N_SIDE) -> Airfoil:
-    """Selig-ordered points -> unit-chord Airfoil on cosine x."""
+    """Selig-ordered points -> unit-chord Airfoil on cosine x (rule D25).
+
+    One cubic spline runs through the raw points (chord-length parameter). The leading edge is
+    the point of that spline farthest from the trailing-edge midpoint: its apex, where the tangent
+    is square to the chord, as the sqrt(x) loft needs. Both sides are sampled from that one spline.
+    Decision 64: the farthest raw point, used before, is not the apex (up to 0.21 % c of arc away on
+    the ten study sections), and the tangent there is turned (up to 19 deg); forcing it square bent
+    the built nose (up to 5.5 x the true turning per cell). See Stage_1_geometry/decisions/nose_curvature.md.
+    A section whose loft nose folds back (nose_hook below HOOK_KAPPA within HOOK_ARC) is refused
+    with a ValueError that gives the reason.
+    """
     te_mid = 0.5 * (pts[0] + pts[-1])
-    i_le = int(np.argmax(np.linalg.norm(pts - te_mid, axis=1)))
-    le = pts[i_le]
+    p = _clean(pts, te_mid)
+    t = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(p, axis=0), axis=1))])
+    spl = CubicSpline(t, p, bc_type="natural")   # the ends are the trailing edge: no overshoot at a closed one
+    t_le = _apex(spl, t, int(np.argmax(np.linalg.norm(p - te_mid, axis=1))), te_mid)
+    le = spl(t_le)
     d = te_mid - le
     scale = np.linalg.norm(d)
     ang = np.arctan2(d[1], d[0])
     rot = np.array([[np.cos(ang), np.sin(ang)], [-np.sin(ang), np.cos(ang)]])
-    p = (pts - le) @ rot.T / scale
-
-    upper = p[: i_le + 1][::-1]
-    lower = p[i_le:]
-    if np.mean(upper[:, 1]) < np.mean(lower[:, 1]):
-        upper, lower = lower, upper
+    frame = lambda q: (spl(q) - le) @ rot.T / scale  # noqa: E731  spline points in the unit-chord frame
 
     x = cosine_x(n_side)
-    return Airfoil(name, x, _resample(upper, x), _resample(lower, x))
+    upper = _resample(frame, t_le, t[0], t[1], x)       # Selig order: the upper side comes first
+    lower = _resample(frame, t_le, t[-1], t[-2], x)
+    if np.mean(upper) < np.mean(lower):
+        upper, lower = lower, upper
+    af = Airfoil(name, x, upper, lower)
+    kappa, arc, side = nose_hook(af)
+    if kappa < HOOK_KAPPA:
+        raise ValueError(f"{name}: refused, the nose folds back (curvature {kappa:.3g}/c on the {side} side, "
+                         f"{100 * arc:.3f} % c of arc from the leading edge; limit {HOOK_KAPPA:.0f}/c within "
+                         f"{100 * HOOK_ARC:.0f} % c): the nose is too sharp or too flat for {n_side + 1} points "
+                         f"per side (decision 64)")
+    return af
 
 
-def _resample(side: np.ndarray, x: np.ndarray) -> np.ndarray:
-    """y on the given x points, from one surface running LE -> TE.
+HOOK_KAPPA = -1000.0   # decision 64: a section whose nose curves back harder than this [1/c] ...
+HOOK_ARC = 0.03        # ... within this arc length of the leading edge [c], on either side, is refused
 
-    Interpolates in sqrt(x), where the round nose becomes smooth.
-    """
-    xs = np.clip(side[:, 0], 0.0, None)
-    ys = side[:, 1]
-    # Some files repeat or step back a point near an edge: keep x increasing.
-    keep = np.concatenate([[True], xs[1:] > np.maximum.accumulate(xs)[:-1] + 1e-12])
-    xs, ys = xs[keep], ys[keep]
-    # A single point off a smooth line is a typo in the file (e.g. sc20412, lower
-    # surface at x/c 0.73): drop it rather than build a bump into the wing.
-    bad = _airfoils.suspect_points(np.column_stack([xs, ys]))
-    if len(bad):
-        xs, ys = np.delete(xs, bad), np.delete(ys, bad)
-    xs[0], ys[0] = 0.0, 0.0
-    xs[-1] = 1.0
-    return PchipInterpolator(np.sqrt(xs), ys)(np.sqrt(x))
+
+def nose_hook(af: Airfoil) -> tuple[float, float, str]:
+    """The smallest curvature [1/c] within HOOK_ARC of arc from the leading edge, its arc position [c] and
+    side, on the cubic spline in s = sqrt(x) that the loft puts through the section points. A round
+    nose is positive everywhere; a hook (a tiny fold or loop the loft makes when a very sharp or
+    flat-faced nose falls between a few section points) goes far below zero."""
+    q = np.linspace(0.0, 0.18, 8001)         # x up to 0.0324: more than HOOK_ARC of arc on either side
+    worst = (np.inf, 0.0, "")
+    for side, y, sign in (("upper", af.yu, -1.0), ("lower", af.yl, 1.0)):
+        spl = make_interp_spline(np.sqrt(af.x), np.column_stack([af.x, y]), k=3)
+        d1, d2 = spl(q, 1), spl(q, 2)
+        speed = np.hypot(d1[:, 0], d1[:, 1])
+        arc = np.concatenate([[0.0], np.cumsum(0.5 * (speed[1:] + speed[:-1]) * np.diff(q))])
+        with np.errstate(divide="ignore", invalid="ignore"):
+            kappa = sign * (d1[:, 0] * d2[:, 1] - d1[:, 1] * d2[:, 0]) / speed ** 3
+        kappa = np.where((arc <= HOOK_ARC) & np.isfinite(kappa), kappa, np.inf)
+        k = int(np.argmin(kappa))
+        if kappa[k] < worst[0]:
+            worst = (float(kappa[k]), float(arc[k]), side)
+    return worst
+
+
+def _clean(pts: np.ndarray, te_mid: np.ndarray) -> np.ndarray:
+    """The raw points without the ones a side must not use, judged in the frame of the farthest
+    raw point. Some files repeat or step back a point near an edge: keep x increasing. A single
+    point off a smooth line is a typo in the file (e.g. sc20412, lower surface at x/c 0.73): drop
+    it rather than build a bump into the wing."""
+    i_le = int(np.argmax(np.linalg.norm(pts - te_mid, axis=1)))
+    d = te_mid - pts[i_le]
+    ang = np.arctan2(d[1], d[0])
+    rot = np.array([[np.cos(ang), np.sin(ang)], [-np.sin(ang), np.cos(ang)]])
+    p = (pts - pts[i_le]) @ rot.T / np.linalg.norm(d)
+    drop = []
+    for idx in (np.arange(i_le, -1, -1), np.arange(i_le, len(p))):      # each side, LE -> TE
+        xs = np.clip(p[idx, 0], 0.0, None)
+        keep = np.concatenate([[True], xs[1:] > np.maximum.accumulate(xs)[:-1] + 1e-12])
+        bad = _airfoils.suspect_points(np.column_stack([xs[keep], p[idx[keep], 1]]))
+        drop += list(idx[~keep]) + list(idx[keep][bad])
+    return np.delete(pts, drop, axis=0)
+
+
+def _apex(spl: CubicSpline, t: np.ndarray, i: int, te_mid: np.ndarray) -> float:
+    """Parameter of the spline point farthest from te_mid, between raw point i's neighbours."""
+    q = np.linspace(t[max(i - 1, 0)], t[min(i + 1, len(t) - 1)], 201)
+    k = int(np.argmax(np.linalg.norm(spl(q) - te_mid, axis=1)))
+    g = lambda s: float(np.dot(spl(s) - te_mid, spl(s, 1)))  # noqa: E731  zero at the apex
+    a, b = q[max(k - 1, 0)], q[min(k + 1, len(q) - 1)]
+    return brentq(g, a, b, xtol=1e-15) if g(a) * g(b) < 0 else float(q[k])
+
+
+def _resample(frame, t_le: float, t_end: float, t_last: float, x: np.ndarray) -> np.ndarray:
+    """y on the given x points of one side, sampled from the spline between the apex (t_le) and
+    the side's trailing-edge end (t_end). As before, the side's last raw interval (from t_last) is
+    stretched in x so that its end lands on x = 1."""
+    stretch = 1.0 - frame(np.array([t_end]))[0, 0]
+    xt = lambda q: frame(q)[:, 0] + stretch * np.clip((q - t_last) / (t_end - t_last), 0.0, 1.0)  # noqa: E731
+    dense = t_le + (t_end - t_le) * np.linspace(0.0, 1.0, 2001) ** 2      # dense at the nose
+    j = np.clip(np.searchsorted(np.maximum.accumulate(xt(dense)), x), 1, len(dense) - 1)
+    a, b = dense[j - 1], dense[j]                                         # x(a) < x_i <= x(b)
+    for _ in range(60):                                                   # bisection to round-off
+        m = 0.5 * (a + b)
+        right = xt(m) >= x
+        a, b = np.where(right, a, m), np.where(right, m, b)
+    y = frame(0.5 * (a + b))[:, 1]
+    y[0] = 0.0
+    return y
 
 
 # --- vertical position -------------------------------------------------------

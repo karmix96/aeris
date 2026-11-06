@@ -24,7 +24,7 @@ TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 
 
 def main() -> None:
-    rc = rules("C")
+    rc = rules("C", STAGE2 / "configs" / "surface_first.yaml")    # Study 7 reads the first approach's band rule
     ch = rc.raw["chord"]
     wings = []
     for t in TYPES:

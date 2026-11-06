@@ -1,8 +1,12 @@
-# Stage 2 — the PLANNED rules of the new approach (decided 6 Nov 2026, not built), written at the coarsest level.
-# NOT the mesher's config (that is surface.yaml, still the first approach). Read only by scripts/band_count.py
-# (Study 8, the band count for decision 74), which writes the lower-band variants A, B and A' from it.
-# The level names stay C, M, F, FF because build_surface solves the nose at the level named "C": here "C" is the
-# coarsest level, the new VC (C, M, F, FF here = the new VC, C, M, F). Every spacing ÷ 1.3 per level, as before.
+# Stage 2 — the PLANNED rules of the new approach (decided 6 Nov 2026), written at the coarsest level, kept as Study 8 ran it.
+# NOT the mesher's config (that is surface.yaml: the new rules, built 7 Nov with each value at its anchor level). Read
+# only by scripts/band_count.py (Study 8, the band count for decision 74), which writes the lower-band variants A, B and A'.
+# The level names stay C, M, F, FF: here "C" is the coarsest level, the new VC (C, M, F, FF here = the new VC, C, M, F);
+# build_surface solves the nose at the coarsest level (no nose_solved_at here). Every spacing ÷ 1.3 per level, as before.
+# Differs from the built rules (surface.yaml): nose 17.0° at VC (built 16.9°), 9.1 cells per bubble (9.10), 7 gaps per
+# panel (8 = 12 / 1.69 rounded up), station-gap growth 1.25 (1.2, unchanged), lower band 60–100 % c (option B; built 0–100 %),
+# the nose solved at VC only (built: at VC and F, the smaller wins), and plain numbers: the nose angle and the growth
+# limits stay the same on the finer levels here (built: they follow the family rule).
 # Values at the coarsest level: a target met at M is the M value × 1.3² (1.69), a target met at F × 1.3³ (2.197).
 
 levels:

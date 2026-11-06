@@ -27,6 +27,11 @@ T = {
 }
 
 
+
+# A designed value exactly at a threshold (e.g. a twist change of exactly 1.0 deg) must get the label;
+# the measured value can miss it by about 1e-15 from rounding (35 wings did after the similarity rebuild).
+EPS = 1e-9
+
 def _line_slope(y, f, y0, y1):
     """Slope of f between y0 and y1 (from the end values)."""
     return (np.interp(y1, y, f) - np.interp(y0, y, f)) / (y1 - y0)
@@ -111,9 +116,9 @@ def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
     bwb = wtype == "bwb"
 
     sw = v["qc_sweep_outer_deg"]
-    if sw >= T["sweep_deg"]:
+    if sw >= T["sweep_deg"] - EPS:
         out.append("aft_swept")
-    elif sw <= -T["sweep_deg"]:
+    elif sw <= -T["sweep_deg"] + EPS:
         out.append("forward_swept")
     elif bwb or tailless:
         out.append("unswept_outer")
@@ -128,16 +133,16 @@ def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
     elif not bwb and straight and v["taper"] < T["rect_taper"]:
         out.append("straight_tapered")
 
-    if v["twist_change_deg"] <= -T["twist_deg"]:
+    if v["twist_change_deg"] <= -T["twist_deg"] + EPS:
         out.append("washout")
-    elif v["twist_change_deg"] >= T["twist_deg"]:
+    elif v["twist_change_deg"] >= T["twist_deg"] - EPS:
         out.append("wash_in")
 
-    if v["mean_dihedral_outer_deg"] >= T["dihedral_deg"]:
+    if v["mean_dihedral_outer_deg"] >= T["dihedral_deg"] - EPS:
         out.append("dihedral")
-    elif v["mean_dihedral_outer_deg"] <= -T["dihedral_deg"]:
+    elif v["mean_dihedral_outer_deg"] <= -T["dihedral_deg"] + EPS:
         out.append("anhedral")
-    if v["dihedral_range_outer_deg"] >= T["varying_dihedral_deg"]:
+    if v["dihedral_range_outer_deg"] >= T["varying_dihedral_deg"] - EPS:
         out.append("varying_dihedral")
 
     if v["aspect_ratio"] >= T["high_ar"]:

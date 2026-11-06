@@ -35,8 +35,7 @@ def spec_hash(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str)
         "vector": canonical(resolve(spec, vec)),
         "type": type_name,
         "type_block": spec.block(),
-        "te_rule": {"floor_m": te.floor_m, "chord_fraction": te.chord_fraction,
-                    "open_from_xc": te.open_from_xc, "mode": te.mode},
+        "te_rule": {"chord_fraction": te.chord_fraction, "open_from_xc": te.open_from_xc, "mode": te.mode},
         "airfoils": [_airfoils.digest(a) for a in station_airfoils(spec, resolve(spec, vec))],
         "code": code_hash(),
     }

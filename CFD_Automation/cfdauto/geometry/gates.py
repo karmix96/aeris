@@ -1,6 +1,7 @@
 """The four geometry checks that refuse a wing. A refused wing is not written; the reason is.
 
-(The fifth, "mesh on the loft within 1e-9 m", belongs to Stage 2.)
+(The fifth, "mesh on the loft within 1e-9", belongs to Stage 2.) Lengths, and the length tolerances
+below, are in mean chords: every wing is built at unit mean chord (decision 70).
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ TOL = {
     "sweep_deg": 0.1,
     "twist_deg": 0.2,
     "dihedral_deg": 0.2,
-    "te_m": 1e-6,            # 1 micron
+    "te_m": 1e-6,            # 1e-6 mean chords (was 1 micron on the real-size wings)
     "flat_root_m": 1e-9,
     "closed_m": 1e-9,
 }
@@ -64,8 +65,8 @@ def trailing_edge(measured: dict, stations: list[Station], te: TERule) -> GateRe
     for sec, st in zip(measured["sections"], stations):
         want = te.target_m(st.chord, st.airfoil.te_thickness)
         if abs(sec["te_thickness_m"] - want) > TOL["te_m"]:
-            return GateResult("trailing_edge", False,
-                              f"{sec['name']}: {sec['te_thickness_m'] * 1e3:.4f} mm, rule {want * 1e3:.4f} mm")
+            return GateResult("trailing_edge", False, f"{sec['name']}: {100 * sec['te_thickness_m'] / st.chord:.4f} % c, "
+                                                      f"rule {100 * want / st.chord:.4f} % c")
     return GateResult("trailing_edge", True)
 
 

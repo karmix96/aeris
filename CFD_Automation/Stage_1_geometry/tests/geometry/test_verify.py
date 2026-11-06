@@ -39,8 +39,7 @@ def test_any_airfoil_at_any_station():
     vec = {v: 0.5 * (lo + hi) for v, (lo, hi) in spec.ranges.items()}
     vec["airfoils"] = ["naca23015", "e387", "sc20412", "naca0009"]
     _, st = build_wing_sections(spec, vec, cfg.te)
-    # (an extra blended section may sit where the trailing-edge rule switches; it has "|" in its name)
-    assert [s.airfoil.name for s in st if "|" not in s.airfoil.name] == vec["airfoils"]
+    assert [s.airfoil.name for s in st] == vec["airfoils"]       # no switch section since decision 70
 
 
 def test_onera_m6_matches_catia_model():

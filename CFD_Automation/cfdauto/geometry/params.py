@@ -18,11 +18,16 @@ AIRFOIL_DIR = _airfoils.LOCAL_DIR   # project sections; the AERIS database is se
 STATIONS = ("b0", "b1", "b2", "b3")
 TE_MODES = ("rule", "as_is")
 
-# The 18 variables. Each type samples some and derives the rest (see TypeSpec.derived):
+# Similarity (decision 70, 6 Nov 2026): every wing is built at unit mean chord, c_mean = area / span = 1
+# (the chord the Re levels are quoted on), so every length is in mean chords (a length named _m is in metres
+# for a wing whose mean chord is 1 m). The wing has no size: the Re on the mean chord replaces it, as an input
+# of each solve (Stage 0 levels), not of the generator. The root chord follows from the shape: 1 / K.
+#
+# The 17 variables. Each type samples some and derives the rest (see TypeSpec.derived):
 # a chord law may derive c2, c3; a sweep law may derive sweep2, sweep3; the span mode derives
 # either the semi-span (from the aspect ratio) or the aspect ratio (from the semi-span).
 VARIABLES = (
-    "root_chord_m", "c2_ratio", "c3_ratio", "c4_ratio",
+    "c2_ratio", "c3_ratio", "c4_ratio",
     "semi_span_m", "aspect_ratio", "b3_ratio", "split_ratio",
     "sweep1_deg", "sweep2_deg", "sweep3_deg",
     "twist0_deg", "twist1_deg", "twist2_deg", "twist3_deg",
@@ -42,9 +47,9 @@ FAMILY_OF = {t: f for f, ts in FAMILIES.items() for t in ts}
 CHORD_LAWS = ("stations", "per_panel", "linear_taper")
 # panels: one leading-edge sweep per panel.  one: sweep2 = sweep3 = sweep1 (straight leading edge).
 SWEEP_LAWS = ("panels", "one")
-# aspect_ratio:          aspect_ratio is sampled; semi_span_m [m] = AR * c_root * K / 2 (K = mean chord / root chord)
-# semi_span:             semi_span_m [m] is given; aspect_ratio follows
-# root_chord_fractions:  semi_span_m is given in root chords (published BlendedNet wings); aspect_ratio follows
+# aspect_ratio:          aspect_ratio is sampled; semi_span_m = AR / 2 mean chords (K = mean chord / root chord)
+# semi_span:             semi_span_m is given in mean chords; aspect_ratio = 2 x semi_span_m follows
+# root_chord_fractions:  semi_span_m is given in root chords (published wings); aspect_ratio follows
 SPAN_MODES = ("aspect_ratio", "semi_span", "root_chord_fractions")
 # Variables that linear_taper computes instead of sampling.
 TAPER_DERIVED = ("c2_ratio", "c3_ratio")
@@ -62,8 +67,6 @@ class TypeSpec:
     #: candidate sections per station; a station with more than one is drawn by the sampler
     airfoil_choices: tuple[tuple[str, ...], ...] = ()
     sweep_law: str = "panels"
-    #: sampling only: largest full span b = 2 S [m] a sampled wing may have (focus space); None = no cap
-    max_full_span_m: float | None = None
 
     @property
     def free_variables(self) -> tuple[str, ...]:
@@ -99,15 +102,15 @@ class TypeSpec:
 
 @dataclass(frozen=True)
 class TERule:
-    floor_m: float
     chord_fraction: float
     open_from_xc: float
-    #: "rule": thickness = max(floor, fraction x chord). "as_is": keep each section's own
-    #: blunt trailing edge (for published wings whose real edge must not change).
+    #: "rule": thickness = fraction x local chord (decision 70: the first rule's mm floors by class went,
+    #: a wing without size has no mm). "as_is": keep each section's own blunt trailing edge (for
+    #: published wings whose real edge must not change).
     mode: str = "rule"
 
     def thickness_m(self, chord_m: float) -> float:
-        return max(self.floor_m, self.chord_fraction * chord_m)
+        return self.chord_fraction * chord_m
 
     def target_m(self, chord_m: float, own_te_over_c: float) -> float:
         """Built trailing-edge thickness for a section of this chord."""
@@ -115,16 +118,11 @@ class TERule:
             return own_te_over_c * chord_m
         return self.thickness_m(chord_m)
 
-    def switch_chord_m(self) -> float:
-        """Chord at which the rule changes from the floor to the fraction."""
-        return self.floor_m / self.chord_fraction
-
 
 @dataclass(frozen=True)
 class Config:
     wing_type: str
     shares: dict[str, float]
-    wing_class: str
     te: TERule
     types: dict[str, TypeSpec]     # focus space: realistic ranges and suggested sections
     sets: dict
@@ -143,12 +141,13 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
         if not set(shares) <= set(WING_TYPES) or not math.isclose(sum(shares.values()), 1.0):
             raise ValueError(f"mixed needs shares for {', '.join(WING_TYPES)} (any subset) that sum to 1")
 
-    wing_class = str(raw["wing_class"])
     te_raw = raw["trailing_edge"]
-    if wing_class not in te_raw["floor_m"]:
-        raise ValueError(f"no trailing-edge floor for wing_class {wing_class!r}")
+    # Decision 70: no absolute size in the config (refused, not ignored, so an old file cannot be misread).
+    sized = [k for k, block in (("wing_class", raw), ("max_full_span_m", raw.get("focus") or {}),
+                                ("floor_m", te_raw)) if k in block]
+    if sized:
+        raise ValueError(f"{sized} were removed by decision 70 (every wing at unit mean chord)")
     te = TERule(
-        floor_m=float(te_raw["floor_m"][wing_class]),
         chord_fraction=float(te_raw["chord_fraction"]),
         open_from_xc=float(te_raw["open_from_xc"]),
         mode=str(te_raw.get("mode", "rule")),
@@ -160,11 +159,9 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
 
     types = {name: _read_type(name, raw["types"][name]) for name in WING_TYPES}
     full = {name: _read_full(types[name], raw["types"][name]) for name in WING_TYPES}
-    cap = (raw.get("focus") or {}).get("max_full_span_m")
-    if cap is not None:                     # the focus space ends at this full span (tip to tip)
-        import dataclasses
-        types = {n: dataclasses.replace(t, max_full_span_m=float(cap)) for n, t in types.items()}
-    return Config(wing_type, shares, wing_class, te, types, raw.get("sets", {}), raw, full)
+    # (The focus space had a 7 m full-span cap. At unit mean chord the full span is the aspect ratio,
+    # which has its own range, so the cap went with decision 70.)
+    return Config(wing_type, shares, te, types, raw.get("sets", {}), raw, full)
 
 
 def _read_full(focus: TypeSpec, block: dict) -> TypeSpec:
@@ -316,14 +313,21 @@ def resolve(spec: TypeSpec, vec: dict[str, float]) -> dict[str, float]:
     if spec.sweep_law == "one":
         out["sweep2_deg"] = out["sweep1_deg"]
         out["sweep3_deg"] = out["sweep1_deg"]
-    # span and aspect ratio: AR = (2 S)^2 / (2 S c_root K) = 2 S / (c_root K)
-    c0, k = out["root_chord_m"], mean_chord_ratio(spec.chord_law, out)
+    # span and aspect ratio at unit mean chord: AR = (2 S)^2 / (2 S c_mean) = 2 S, with c_root = 1 / K
     if spec.span_mode == "aspect_ratio":
-        out["semi_span_m"] = out["aspect_ratio"] * c0 * k / 2.0
+        out["semi_span_m"] = out["aspect_ratio"] / 2.0
     else:
-        s = out["semi_span_m"] * (c0 if spec.span_mode == "root_chord_fractions" else 1.0)
-        out["aspect_ratio"] = 2.0 * s / (c0 * k)
+        s = out["semi_span_m"] * (root_chord(spec.chord_law, out) if spec.span_mode == "root_chord_fractions" else 1.0)
+        out["aspect_ratio"] = 2.0 * s
     return out
+
+
+def root_chord(chord_law: str, vec: dict[str, float]) -> float:
+    """Root chord of the wing at unit mean chord: 1 / K (decision 70; it is no longer a variable)."""
+    k = mean_chord_ratio(chord_law, vec)
+    if not k > 0:
+        raise ValueError(f"the mean chord must be positive, got {k} root chords")
+    return 1.0 / k
 
 
 def derived_variables(chord_law: str, sweep_law: str, span_mode: str) -> tuple[str, ...]:
@@ -349,13 +353,13 @@ def span_fractions(vec: dict[str, float]) -> tuple[float, float, float]:
 
 
 def mean_chord_ratio(chord_law: str, vec: dict[str, float]) -> float:
-    """K = mean chord / root chord of the built (ruled) wing.
+    """K = mean chord / root chord of the built (ruled) wing; mean chord = area / span.
 
     Inside a straight panel the chord line runs from the straight leading edge to the straight
     trailing edge, so the chord VECTOR is linear in y. Without a twist change its length is linear
     too and K = sum f_i (r_i + r_i+1) / 2. With a twist change the chord turns along the panel and
     is a little shorter in the middle (0.6 % at mid-panel for a 13 deg change); the integral below
-    is exact for both cases, so the built wing has exactly the aspect ratio asked for."""
+    is exact for both cases, so the built wing has exactly unit mean chord and the aspect ratio asked for."""
     r = chord_ratios(chord_law, vec)
     f = span_fractions(vec)
     th = [math.radians(vec[f"twist{i}_deg"]) for i in range(4)]

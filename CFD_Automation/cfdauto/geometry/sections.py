@@ -183,10 +183,10 @@ def open_te(airfoil: Airfoil, te_over_c: float, x_start: float) -> Airfoil:
 def build_wing_sections(spec: TypeSpec, vec: dict[str, float], te: TERule) -> tuple[Planform, list[Station]]:
     """Station sections with the trailing-edge rule built in.
 
-    The loft interpolates thickness linearly between sections. Where the rule
-    switches from the floor to the chord fraction inside a panel, a section is
-    added at the switch point, so the rule holds there too. The added section
-    lies on the straight panel (position, chord, twist and shape interpolated).
+    The rule is a fraction of the local chord (decision 70). Between two vertical sections the ruled
+    loft blends the chord vector and the trailing-edge gap (normal to the chord) linearly, so the gap
+    stays that fraction of the chord all along the span, twist or not: no section is added. (The first
+    rule, max(mm floor, fraction), needed a section where it switched.)
     """
     pf, stations = build_stations(spec, vec)
     if te.mode == "as_is":
@@ -195,42 +195,12 @@ def build_wing_sections(spec: TypeSpec, vec: dict[str, float], te: TERule) -> tu
                 raise ValueError(f"{st.name}: section {st.airfoil.name!r} has a closed trailing edge; "
                                  f"trailing_edge mode 'as_is' needs a blunt one")
         return pf, stations
-    c_sw = te.switch_chord_m()
-    out = [stations[0]]
-    for i, (a, b) in enumerate(zip(stations[:-1], stations[1:]), start=1):
-        lo, hi = sorted((a.chord, b.chord))
-        if lo < c_sw < hi:
-            out.append(switch_station(a, b, c_sw, f"te_switch_p{i}"))
-        out.append(b)
     opened = [
         Station(st.name, st.y, st.x_le, st.z_le, st.chord, st.twist_deg,
                 open_te(st.airfoil, te.target_m(st.chord, st.airfoil.te_thickness) / st.chord, te.open_from_xc))
-        for st in out
+        for st in stations
     ]
     return pf, opened
-
-
-def chord_vector(st: Station) -> np.ndarray:
-    """Leading edge to trailing edge in the x-z plane (sections are vertical, twisted about the LE)."""
-    t = np.radians(st.twist_deg)
-    return st.chord * np.array([np.cos(t), -np.sin(t)])
-
-
-def switch_station(a: Station, b: Station, c_sw: float, name: str) -> Station:
-    """The section where the true chord equals c_sw, ON the straight (ruled) panel a-b.
-
-    Inside a ruled panel the chord vector is linear in the panel parameter s, so the true chord
-    |(1 - s) ca + s cb| is shorter than the linear chord where the twist changes. The section is put
-    where that true chord equals c_sw, with the twist of the chord vector there. Then its leading
-    and trailing edges lie on the panel's straight edges, and the aspect ratio stays exact."""
-    from scipy.optimize import brentq
-
-    va, vb = chord_vector(a), chord_vector(b)
-    f = lambda t: float(np.linalg.norm((1 - t) * va + t * vb)) - c_sw  # noqa: E731
-    s = brentq(f, 0.0, 1.0, xtol=1e-15, rtol=4 * np.finfo(float).eps)
-    v = (1 - s) * va + s * vb
-    return Station(name, a.y + s * (b.y - a.y), a.x_le + s * (b.x_le - a.x_le), a.z_le + s * (b.z_le - a.z_le),
-                   float(np.linalg.norm(v)), float(np.degrees(np.arctan2(-v[1], v[0]))), a.airfoil.blend(b.airfoil, s))
 
 
 def insert_sections(stations: list[Station], per_panel: int, te: TERule) -> list[Station]:

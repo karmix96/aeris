@@ -11,7 +11,8 @@ Any BlendedNet or BlendedNet++ design can be made from its own parameters:
                                      S1=50, S2=50, S3=32)
 
 The definitions, sources and how close each copy is live in
-configs/published_wings.yaml.
+configs/published_wings.yaml, at the real size. Like every wing, the copy is built at unit mean chord
+(decision 70); meta["real_mean_chord_m"] is the scale back to the real wing (lengths x it = metres).
 """
 
 from __future__ import annotations
@@ -22,7 +23,8 @@ from pathlib import Path
 
 import yaml
 
-from .params import GEOMETRY_ROOT, VARIABLES, TERule, TypeSpec, load_config, read_airfoil_choices, resolve
+from .params import (GEOMETRY_ROOT, VARIABLES, TERule, TypeSpec, load_config, mean_chord_ratio, read_airfoil_choices,
+                     resolve)
 
 PUBLISHED_FILE = GEOMETRY_ROOT / "configs" / "published_wings.yaml"
 OUT_DIR = GEOMETRY_ROOT / "data" / "wings" / "published_wings"
@@ -39,7 +41,19 @@ def names() -> list[str]:
 
 def _te(mode: str) -> TERule:
     base = load_config().te
-    return TERule(base.floor_m, base.chord_fraction, base.open_from_xc, mode)
+    return TERule(base.chord_fraction, base.open_from_xc, mode)
+
+
+def _similar(vec: dict, span_mode: str) -> tuple[dict, str, float]:
+    """A wing given at real size (root_chord_m [m]; with span_mode semi_span, the semi-span in metres) as
+    the generator's similar wing: the semi-span in root chords, no root chord. Returns it, its span
+    mode and the real root chord [m]."""
+    vec = dict(vec)
+    c_root = float(vec.pop("root_chord_m"))
+    if span_mode == "semi_span":
+        vec["semi_span_m"] = float(vec["semi_span_m"]) / c_root
+        span_mode = "root_chord_fractions"
+    return vec, span_mode, c_root
 
 
 def _spec(name: str, chord_law: str, span_mode: str, airfoils, vec: dict) -> TypeSpec:
@@ -67,8 +81,8 @@ def blendednet(C2: float, C3: float, C4: float, B1: float, B2: float, B3: float,
     if S2 is None:
         S2 = math.degrees(math.atan((X3 - B1 * math.tan(math.radians(S1))) / B2))
     total = B1 + B2 + B3
+    c1 = float(c1_m if c1_m is not None else bn["c1_m"])        # the real scale only (decision 70)
     vec = {
-        "root_chord_m": float(c1_m if c1_m is not None else bn["c1_m"]),
         "c2_ratio": C2, "c3_ratio": C3, "c4_ratio": C4,
         "semi_span_m": total,                 # in root chords (span_mode root_chord_fractions)
         "b3_ratio": B3 / total,
@@ -79,14 +93,16 @@ def blendednet(C2: float, C3: float, C4: float, B1: float, B2: float, B3: float,
     }
     af = airfoils or bn["airfoils"]
     spec = _spec(name, "stations", "root_chord_fractions", af, vec)
+    vec = resolve(spec, vec)
     meta = {"name": name, "title": f"BlendedNet design {name}", "kind": "bwb",
+            "real_mean_chord_m": c1 * mean_chord_ratio(spec.chord_law, vec),
             "sources": bn["sources"], "trailing_edge": bn["trailing_edge"],
             "blendednet_parameters": {"C2": C2, "C3": C3, "C4": C4, "B1": B1, "B2": B2, "B3": B3,
                                       "S1": S1, "S2": S2, "S3": S3, **({"X3": X3} if X3 is not None else {})},
             "fidelity": ("Planform exact in the BlendedNet parameters (straight panels, as OpenVSP builds them). "
                          "Airfoils as BlendedNet++ Table 4; NACA 25118 made from the NACA formula. "
                          "Twist and dihedral zero (not stated in the papers).")}
-    return spec, resolve(spec, vec), _te(bn["trailing_edge"]), meta
+    return spec, vec, _te(bn["trailing_edge"]), meta
 
 
 def get(name: str) -> tuple[TypeSpec, dict, TERule, dict]:
@@ -94,9 +110,11 @@ def get(name: str) -> tuple[TypeSpec, dict, TERule, dict]:
     raw = _raw()
     if name in raw["wings"]:
         w = raw["wings"][name]
-        spec = _spec(name, w["chord_law"], w["span_mode"], w["airfoils"], w["vector"])
-        vec = resolve(spec, {v: float(w["vector"].get(v, spec.ranges[v][0])) for v in VARIABLES})
-        meta = {k: w[k] for k in ("title", "kind", "use", "sources", "fidelity", "trailing_edge")} | {"name": name}
+        given, span_mode, c_root = _similar(w["vector"], w["span_mode"])
+        spec = _spec(name, w["chord_law"], span_mode, w["airfoils"], given)
+        vec = resolve(spec, {v: float(given.get(v, spec.ranges[v][0])) for v in VARIABLES})
+        meta = {k: w[k] for k in ("title", "kind", "use", "sources", "fidelity", "trailing_edge")} | {
+            "name": name, "real_mean_chord_m": c_root * mean_chord_ratio(spec.chord_law, vec)}
         return spec, vec, _te(w["trailing_edge"]), meta
     cases = raw["blendednet"]["cases"]
     if name in cases:

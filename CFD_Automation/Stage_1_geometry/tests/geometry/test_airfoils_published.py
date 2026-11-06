@@ -92,7 +92,7 @@ def test_as_is_needs_a_blunt_edge():
     spec = params.load_config().types["cranked"]
     vec = params.mid_vector(spec) | {"airfoils": ["mh91", "mh91", "mh91", "mh91"]}
     cfg = params.load_config()
-    te = params.TERule(cfg.te.floor_m, cfg.te.chord_fraction, cfg.te.open_from_xc, "as_is")
+    te = params.TERule(cfg.te.chord_fraction, cfg.te.open_from_xc, "as_is")
     if load_airfoil("mh91").te_thickness > 1e-6:
         pytest.skip("mh91 file has a blunt edge")
     with pytest.raises(ValueError):
@@ -107,6 +107,11 @@ def _measured(name):
     return pf, st, te, measure(table_from_stations(st), st)
 
 
+def _scale(name):
+    """Real mean chord [m]: the copy is at unit mean chord (decision 70), lengths x this = metres."""
+    return published_wings.get(name)[3]["real_mean_chord_m"]
+
+
 @pytest.mark.parametrize("name", published_wings.names())
 def test_published_wings_pass_the_geometry_checks(name):
     pf, st, te, m = _measured(name)
@@ -114,19 +119,21 @@ def test_published_wings_pass_the_geometry_checks(name):
     assert gates.trailing_edge(m, st, te).passed
     for s in st:                                              # as_is: each section keeps its own edge
         assert s.airfoil.te_thickness == pytest.approx(load_airfoil(s.airfoil.name).te_thickness, abs=1e-12)
+    assert pf.area() / (2 * pf.semi_span) == pytest.approx(1.0, rel=1e-12)      # unit mean chord
 
 
 def test_onera_m6_matches_published_numbers():
     pf, _, _, _ = _measured("onera_m6")
-    assert pf.chord[0] == pytest.approx(0.8059, abs=5e-4) and pf.chord[-1] == pytest.approx(0.4533, abs=5e-4)
-    assert mean_aero_chord(pf) == pytest.approx(0.64607, abs=5e-4)
+    c = _scale("onera_m6")
+    assert pf.chord[0] * c == pytest.approx(0.8059, abs=5e-4) and pf.chord[-1] * c == pytest.approx(0.4533, abs=5e-4)
+    assert mean_aero_chord(pf) * c == pytest.approx(0.64607, abs=5e-4)
     assert aspect_ratio(pf) == pytest.approx(3.80, abs=0.01)
     assert np.allclose(pf.sweep_le_deg, 30.0)
 
 
 def test_ribes_matches_published_numbers():
     pf, _, _, _ = _measured("ribes")
-    assert pf.area() / 2 == pytest.approx(0.816, abs=0.001)
+    assert pf.area() / 2 * _scale("ribes") ** 2 == pytest.approx(0.816, abs=0.001)
     assert pf.chord[-1] / pf.chord[0] == pytest.approx(0.700, abs=0.001)
 
 
@@ -141,12 +148,13 @@ CRM_TABLE = np.array([  # 2y/b, chord [m], twist [deg]; Characterization of the 
 
 def test_crm_chords_exact_and_twist_close():
     pf, st, _, _ = _measured("nasa_crm")
+    c = _scale("nasa_crm")
     eta = np.array([s.y for s in st]) / pf.semi_span
-    chord = np.interp(CRM_TABLE[:, 0], eta, [s.chord for s in st])
+    chord = np.interp(CRM_TABLE[:, 0], eta, [s.chord * c for s in st])
     twist = np.interp(CRM_TABLE[:, 0], eta, [s.twist_deg for s in st])
     assert np.max(np.abs(chord - CRM_TABLE[:, 1])) < 2e-3        # chord linear between the stations
     assert np.max(np.abs(twist - CRM_TABLE[:, 2])) < 0.52         # stated fidelity
-    assert pf.area() == pytest.approx(412.1, rel=0.002)           # published gross area
+    assert pf.area() * c ** 2 == pytest.approx(412.1, rel=0.002)  # published gross area
 
 
 def test_blendednet_conversion():
@@ -154,9 +162,10 @@ def test_blendednet_conversion():
                                                     S1=50, S2=50, S3=32)
     from cfdauto.geometry.planform import build_planform
     pf = build_planform(spec, vec)
-    assert pf.semi_span == pytest.approx(0.725)                   # (B1 + B2 + B3) x C1, C1 = 1 m
-    assert np.allclose(np.diff(pf.y), [0.15, 0.125, 0.45])
-    assert np.allclose(pf.chord, [1.0, 0.7, 0.23, 0.075])
+    c = meta["real_mean_chord_m"]                                 # lengths x c = metres (C1 = 1 m)
+    assert pf.semi_span * c == pytest.approx(0.725)               # (B1 + B2 + B3) x C1
+    assert np.allclose(np.diff(pf.y) * c, [0.15, 0.125, 0.45])
+    assert np.allclose(pf.chord * c, [1.0, 0.7, 0.23, 0.075])
     assert np.allclose(pf.sweep_le_deg, [50, 50, 32])
 
 
@@ -165,6 +174,6 @@ def test_blendednetpp_x3_gives_the_middle_sweep():
                                                     X3=0.575, S1=50, S3=30)
     from cfdauto.geometry.planform import build_planform
     pf = build_planform(spec, vec)
-    assert pf.x_le[2] == pytest.approx(0.575)                     # station 3 leading edge at X3
+    assert pf.x_le[2] / pf.chord[0] == pytest.approx(0.575)       # station 3 leading edge at X3 (in C1)
     with pytest.raises(ValueError):
         published_wings.blendednet(C2=0.7, C3=0.23, C4=0.075, B1=0.15, B2=0.125, B3=0.5, S1=50, S3=30)

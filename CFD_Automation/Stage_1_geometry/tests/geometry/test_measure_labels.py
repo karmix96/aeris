@@ -21,7 +21,7 @@ def hand_wing(name):
     spec = CFG.types[base["type"]]
     if "chord_law" in base:      # the vectors are written as fractions of the root chord
         spec = dataclasses.replace(spec, chord_law=base["chord_law"])
-    if "span_mode" in base:      # the vectors give the semi-span in metres
+    if "span_mode" in base:      # the vectors give the semi-span in root chords
         spec = dataclasses.replace(spec, span_mode=base["span_mode"])
     vec = params.mid_vector(spec) if base["vector"] == "mid" else dict(base["vector"])
     vec |= {k: float(v) for k, v in (w.get("set") or {}).items()}

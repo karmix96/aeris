@@ -1,4 +1,6 @@
-"""Exact panels: straight leading and trailing edges through the four stations."""
+"""Exact panels: straight leading and trailing edges through the four stations.
+
+Lengths in mean chords: every wing is built at unit mean chord (decision 70)."""
 
 from __future__ import annotations
 
@@ -6,14 +8,14 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .params import TypeSpec, chord_ratios, panel_mean_chord, resolve
+from .params import TypeSpec, chord_ratios, panel_mean_chord, resolve, root_chord
 
 
 @dataclass(frozen=True)
 class Planform:
-    y: np.ndarray           # station span positions b0..b3 [m]
-    x_le: np.ndarray        # station leading-edge x [m]
-    chord: np.ndarray       # station chords [m]
+    y: np.ndarray           # station span positions b0..b3 [mean chords]
+    x_le: np.ndarray        # station leading-edge x [mean chords]
+    chord: np.ndarray       # station chords [mean chords]
     sweep_le_deg: np.ndarray  # panel leading-edge sweeps (signed, + aft)
     twist_deg: np.ndarray | None = None  # station twists (for the exact ruled-panel area)
 
@@ -39,9 +41,9 @@ class Planform:
 
 
 def semi_span_m(spec: TypeSpec, vec: dict[str, float]) -> float:
-    """Semi-span in metres of a resolved vector."""
+    """Semi-span in mean chords of a resolved vector."""
     if spec.span_mode == "root_chord_fractions":
-        return vec["semi_span_m"] * vec["root_chord_m"]
+        return vec["semi_span_m"] * root_chord(spec.chord_law, vec)
     return vec["semi_span_m"]
 
 
@@ -56,8 +58,7 @@ def build_planform(spec: TypeSpec, vec: dict[str, float]) -> Planform:
     if s <= 0 or np.any(spans <= 0):
         raise ValueError(f"every panel needs a positive span, got {spans.tolist()}")
 
-    c0 = vec["root_chord_m"]
-    chord = c0 * np.array(chord_ratios(spec.chord_law, vec))
+    chord = root_chord(spec.chord_law, vec) * np.array(chord_ratios(spec.chord_law, vec))
     if np.any(chord <= 0):
         raise ValueError(f"every chord must be positive, got {chord.tolist()}")
 

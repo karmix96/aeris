@@ -208,12 +208,15 @@ def test_eta2_and_spearman():
 @pytest.mark.skipif(shutil.which("xfoil") is None, reason="xfoil not installed")
 def test_tool_tables_path_matches_direct_xfoil_on_a_wing():
     """Whole wing: the table path (interpolation + blend rule) against direct XFOIL on every strip."""
-    from cfdauto.flowmap.core import flow_map
+    from cfdauto.flowmap.core import flow_map, rho_over_mu
     from cfdauto.geometry.build import load_set
     spec = CFG.types["bwb"]
     vec = load_set("bwb", "reference")["vectors"][0]
-    a = flow_map(spec, vec, True, None, 1000.0, 4.0, mach=0.08, method="tables", compare_sets=False)
-    b = flow_map(spec, vec, True, None, 1000.0, 4.0, mach=0.08, method="xfoil", compare_sets=False)
+    # The first case in similarity form (decision 70): this shape at Re 9.3e5 on the mean chord (it was the
+    # real-size wing, mean chord 0.546 m, at Mach 0.08 and 1,000 m). At unit mean chord that Re needs this speed.
+    v = 9.3e5 / rho_over_mu(1000.0)
+    a = flow_map(spec, vec, True, v, 1000.0, 4.0, method="tables", compare_sets=False)
+    b = flow_map(spec, vec, True, v, 1000.0, 4.0, method="xfoil", compare_sets=False)
     assert a["metrics"]["sa_bias"] == pytest.approx(b["metrics"]["sa_bias"], abs=0.05)
     assert a["metrics"]["lam_upper"] == pytest.approx(b["metrics"]["lam_upper"], abs=0.02)
     assert a["model"]["category"] == b["model"]["category"]

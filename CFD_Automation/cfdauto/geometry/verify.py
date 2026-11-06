@@ -122,7 +122,8 @@ def planform_edges(loft: Loft, stations: list[Station]) -> dict[str, float]:
 
 def compare_points(loft: Loft, pts: np.ndarray, span_limit: float = 0.99, x_from: float = 0.0,
                    x_to: float = 1.0, n_u: int = 20001) -> dict:
-    """Distance from outside surface points (x chordwise, y span, z up, metres) to the loft.
+    """Distance from outside surface points (x chordwise, y span, z up, in the loft's length unit:
+    mean chords) to the loft.
 
     Points are matched at their own span y. Points past span_limit x semi-span are left
     out (our tip is a flat cut). Distances are % of local chord; x_from/x_to keep a
@@ -187,5 +188,9 @@ def onera_m6_vs_cad(loft: Loft, path: Path = M6_CAD) -> dict:
 
     Surfaces 1 and 4 are the main upper and lower skins; the others are the
     sharp-trailing-edge closure and the rounded tip, which our wing does not have.
+    Our copy is at unit mean chord (decision 70): mm -> mean chords of the real wing.
     """
-    return compare_points(loft, cad_points(path, scale=1e-3, surfaces=[1, 4]))
+    from .published_wings import get
+
+    c_mean_m = get("onera_m6")[3]["real_mean_chord_m"]
+    return compare_points(loft, cad_points(path, scale=1e-3 / c_mean_m, surfaces=[1, 4]))

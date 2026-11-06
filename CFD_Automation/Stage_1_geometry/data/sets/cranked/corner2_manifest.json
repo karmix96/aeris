@@ -1,8 +1,8 @@
 {
  "wing_type": "cranked",
  "set": "corner2",
- "code_version": "0.6.0",
- "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
+ "code_version": "0.7.0",
+ "code_hash": "e91dbc750982d6508d186f29b106ac1a3bc3bf1260ecf73afc6890390c165a4b",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b34c891567921021d862a115760e9d4266c7ccef0ce8f519284930fee9cf5816",
-   "surface_hash": "9a98f6385922b4c225961b7dfbd523fc26c9e28569f7db56f3146b84020232ba",
+   "input_hash": "c2c0ead56936ebcf19f2adc8d231fa6e93ebac04037af71997c3c92c991fe15a",
+   "surface_hash": "f196b50f74fad90855487445415f26db4220c483cabdb311d1dd05d569921cfa",
    "labels": [
     "conventional",
     "cranked",
@@ -21,11 +21,10 @@
     "low_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.08,
     "c2_ratio": 0.7,
     "c3_ratio": 0.6,
     "c4_ratio": 0.4,
-    "semi_span_m": 0.06832368179143324,
+    "semi_span_m": 1.5,
     "aspect_ratio": 3.0,
     "b3_ratio": 0.15,
     "split_ratio": 0.2,
@@ -52,8 +51,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "942f654bb0783dbfb8535c4ac50e512c71e429ce3c5163053590e65205bbccb0",
-   "surface_hash": "7f5e844973cd5a4fcdd688274c0982e196ff3b3e52efcbcec8a2809184d40247",
+   "input_hash": "be4a7043203d0478416e79745115cc1a6f2f752c1dc5ff1b922ab91f56b388b1",
+   "surface_hash": "39e72f2cd8c54e8564103708e6fe20fbea00cae2b197b88980c9a6c0598a6701",
    "labels": [
     "conventional",
     "tapered",
@@ -63,11 +62,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.0,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 9.99930955941795,
+    "semi_span_m": 10.0,
     "aspect_ratio": 20.0,
     "b3_ratio": 0.6,
     "split_ratio": 0.8,
@@ -94,8 +92,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cfaf285ad68efbf1d67bdc23a6efdc2a5245d5a62ff5154d29173a5232d8dca8",
-   "surface_hash": "2cb5eaed7d9e03557eee99813c239a56fa8d1ec84f6ddee086aa11142d68cb31",
+   "input_hash": "052ca7ca4e393fc1bade30a90077bbf31b5db6681fa8bc0b597834b22ae2aef7",
+   "surface_hash": "fd5445e5b4b6fada6633b361049f0b5a3e27e8ee3d5b0a3c583c698808d29bcb",
    "labels": [
     "conventional",
     "tapered",
@@ -105,11 +103,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.0,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 9.998659774908756,
+    "semi_span_m": 10.0,
     "aspect_ratio": 20.0,
     "b3_ratio": 0.6,
     "split_ratio": 0.8,
@@ -136,8 +133,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "98f3554367290777a810035780ffbe8fe772cab21899da870d78ac9d3d1312e7",
-   "surface_hash": "564bec6044ed3e943db55aaa7dd19ce64c9a479f016b0c38bf3a2c241dde6222",
+   "input_hash": "5d5af2bcace9a862a149c3f168dab44eaf78c7a595e0b404452cb2949e8ae773",
+   "surface_hash": "0a073949a1c2b27772c9bd615b68c63f6dc387bcf3e5d628475160bc660f4939",
    "labels": [
     "conventional",
     "tapered",
@@ -148,11 +145,10 @@
     "low_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.0,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 1.4999706815669975,
+    "semi_span_m": 1.5,
     "aspect_ratio": 3.0,
     "b3_ratio": 0.15,
     "split_ratio": 0.2,
@@ -179,8 +175,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6b75ee2229a1978a997e9fda1d4ae5095390c4f34ba9a384201c0b864ce12f18",
-   "surface_hash": "942d64ac996cd986f9cfcbb21aea5a6ab92c38ce11070ee7489245cea2430a95",
+   "input_hash": "fe958a3e09ce93839ddd08a62d711cb16b78b17e4bc60ed264ff772a88be793b",
+   "surface_hash": "7e63b55a06d79d5ee6fefbc4d3a07c06a9a4cb74f8a449f96db5a38d0e3d7fc6",
    "labels": [
     "conventional",
     "cranked",
@@ -191,11 +187,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.0,
     "c2_ratio": 0.7,
     "c3_ratio": 0.6,
     "c4_ratio": 0.4,
-    "semi_span_m": 4.926467381796141,
+    "semi_span_m": 10.0,
     "aspect_ratio": 20.0,
     "b3_ratio": 0.6,
     "split_ratio": 0.8,
@@ -222,8 +217,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8f77ef7c37f1038ae48854b079b675a98847b118ed17c56b61b4adda050b594f",
-   "surface_hash": "1a0766f6abd3357d6e5a0e96feb48e746d4de9e29df6c234b685d0d0e7462aea",
+   "input_hash": "1e2cc40835260cf48dc46b4359f5a2c4496677125304e488c0a7035f563eb4c3",
+   "surface_hash": "fe8772817fc5c65ae4e4684a4db31e277c21a0e6ff5b610804d39a0cd8751c51",
    "labels": [
     "conventional",
     "cranked",
@@ -234,11 +229,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.08,
     "c2_ratio": 1.0,
     "c3_ratio": 0.6,
     "c4_ratio": 0.4,
-    "semi_span_m": 0.621164439801634,
+    "semi_span_m": 10.0,
     "aspect_ratio": 20.0,
     "b3_ratio": 0.15,
     "split_ratio": 0.2,
@@ -265,8 +259,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d62fa0152745682f657b6d26fd7097b6a7fa7923f3094e99b445bbfa3aec618a",
-   "surface_hash": "ad1555a722547d2fb5e7479bb2eab2e28740e340b3e3979fac797352ca1cf5b7",
+   "input_hash": "bb5a89a96420c27b666cd3d1a83a6a45d5d8df7cf811ef03fdef40c13bdcc7b8",
+   "surface_hash": "9128a84e6b1ab671187ee3da60bc41e93172d2173f493d522d4cc80b66baa931",
    "labels": [
     "conventional",
     "cranked",
@@ -276,11 +270,10 @@
     "low_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.08,
     "c2_ratio": 0.7,
     "c3_ratio": 1.0,
     "c4_ratio": 0.4,
-    "semi_span_m": 0.07013263814764878,
+    "semi_span_m": 1.5,
     "aspect_ratio": 3.0,
     "b3_ratio": 0.6,
     "split_ratio": 0.2,
@@ -307,8 +300,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0a66309e8a95101b20bb84e44179dc4070050ad4099f9d6b255c273891f3117e",
-   "surface_hash": "dccc5595d5caa04a324e2e5ad39c473d220e1fb3afcf262c037fd11a8f0e046d",
+   "input_hash": "6fad4fa837128e3225434ab7ce52ec84a3b68f254f2cb340a6c8bc3c828cabcc",
+   "surface_hash": "92c398982e01252220c8b8a3bacddcddbaec9327df9e4635daef857a3958d0ad",
    "labels": [
     "conventional",
     "cranked",
@@ -319,11 +312,10 @@
     "low_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.08,
     "c2_ratio": 0.7,
     "c3_ratio": 0.6,
     "c4_ratio": 1.0,
-    "semi_span_m": 0.08827344983630218,
+    "semi_span_m": 1.5,
     "aspect_ratio": 3.0,
     "b3_ratio": 0.15,
     "split_ratio": 0.8,

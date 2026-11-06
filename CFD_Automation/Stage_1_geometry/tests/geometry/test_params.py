@@ -7,6 +7,7 @@ from cfdauto.geometry import params
 def test_config_loads_both_types():
     cfg = params.load_config()
     assert set(cfg.types) == set(params.WING_TYPES) == {"bwb", "cranked", "tapered", "flying_wing"}
+    assert len(params.VARIABLES) == 17 and "root_chord_m" not in params.VARIABLES    # decision 70
     for spec in cfg.types.values():
         assert set(spec.ranges) == set(params.VARIABLES)
         # everything varies by default, except what a law computes
@@ -26,18 +27,32 @@ def test_forward_sweep_allowed_by_ranges():
     assert vec["sweep2_deg"] < 0
 
 
-def test_te_rule_by_class():
+def test_te_rule_is_a_chord_fraction():
+    """Decision 70: 0.2 % of the local chord on every wing (no mm floor, no wing class)."""
     cfg = params.load_config()
-    assert cfg.wing_class == "I"
-    assert cfg.te.thickness_m(0.10) == pytest.approx(0.0005)
+    assert not hasattr(cfg, "wing_class") and not hasattr(cfg.te, "floor_m")
+    assert cfg.te.thickness_m(0.10) == pytest.approx(0.0002)
     assert cfg.te.thickness_m(1.00) == pytest.approx(0.0020)
-    assert cfg.te.switch_chord_m() == pytest.approx(0.25)
 
 
 def _write(tmp_path, raw):
     p = tmp_path / "wing.yaml"
     p.write_text(yaml.safe_dump(raw))
     return p
+
+
+@pytest.mark.parametrize("edit", [
+    lambda raw: raw.update(wing_class="I"),
+    lambda raw: raw.update(focus={"max_full_span_m": 7.0}),
+    lambda raw: raw["trailing_edge"].update(floor_m={"I": 0.0005, "II": 0.0010}),
+    lambda raw: raw["types"]["bwb"]["ranges"].update(root_chord_m=[0.4, 1.8]),
+])
+def test_sizes_of_the_first_approach_are_refused(tmp_path, edit):
+    """A config with a size (wing class, span cap, mm floor, root chord) is refused, not misread."""
+    raw = yaml.safe_load(params.DEFAULT_CONFIG.read_text())
+    edit(raw)
+    with pytest.raises(ValueError):
+        params.load_config(_write(tmp_path, raw))
 
 
 def test_pinned_and_linear_taper(tmp_path):
@@ -57,7 +72,6 @@ def test_pinned_and_linear_taper(tmp_path):
 
 @pytest.mark.parametrize("key,value", [
     ("wing_type", "box"),
-    ("wing_class", "III"),
 ])
 def test_bad_top_level_values_refused(tmp_path, key, value):
     raw = yaml.safe_load(params.DEFAULT_CONFIG.read_text())
@@ -102,4 +116,8 @@ def test_aspect_ratio_is_an_input_and_the_span_follows(wing_type):
     assert spec.span_mode == "aspect_ratio" and "semi_span_m" in spec.derived
     for u in (0.0, 0.5, 1.0):
         vec = params.from_unit(spec, {"aspect_ratio": u})
-        assert aspect_ratio(build_planform(spec, vec)) == pytest.approx(vec["aspect_ratio"], rel=1e-12)
+        pf = build_planform(spec, vec)
+        assert aspect_ratio(pf) == pytest.approx(vec["aspect_ratio"], rel=1e-12)
+        # decision 70: unit mean chord (area / span = 1), so the semi-span is AR / 2 mean chords
+        assert pf.area() / (2 * pf.semi_span) == pytest.approx(1.0, rel=1e-12)
+        assert pf.semi_span == pytest.approx(vec["aspect_ratio"] / 2, rel=1e-12)

@@ -5,7 +5,7 @@
  "re_levels": [
   100000.0,
   300000.0,
-  1000000.0,
+  1500000.0,
   3000000.0
  ],
  "lower_bands": {
@@ -1403,7 +1403,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.65,
+    "seconds": 4.01,
     "node_hash": "84b750c45fd58533c7272312c7ccd41efbb35b3c010d59d0406d2b25df8dbb67"
    },
    "A": {
@@ -1412,7 +1412,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.65,
+    "seconds": 4.17,
     "node_hash": "84b750c45fd58533c7272312c7ccd41efbb35b3c010d59d0406d2b25df8dbb67"
    },
    "ratio": 1.0,
@@ -1428,7 +1428,7 @@
     "n_span": 55,
     "passed": true,
     "failed": [],
-    "seconds": 2.96,
+    "seconds": 4.39,
     "node_hash": "22515c04ad19a5718b74a4bbb58a1363bb115f049a33cb7eca8240cfcba46f88"
    },
    "A": {
@@ -1437,7 +1437,7 @@
     "n_span": 55,
     "passed": true,
     "failed": [],
-    "seconds": 2.92,
+    "seconds": 4.67,
     "node_hash": "22515c04ad19a5718b74a4bbb58a1363bb115f049a33cb7eca8240cfcba46f88"
    },
    "ratio": 1.0,
@@ -1446,24 +1446,24 @@
   {
    "type": "bwb",
    "index": 0,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 115,
     "n_ring": 236,
-    "n_span": 60,
+    "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.27,
-    "node_hash": "932c9bfb52dd7613ca0f5a42901f598f5974b1b46effab0df3654a8196289928"
+    "seconds": 4.85,
+    "node_hash": "a4bd4f1b3c39f23d0acee7513c2e439bc4c5fb4852c6578f7929e72a62decd00"
    },
    "A": {
     "n_side": 115,
     "n_ring": 236,
-    "n_span": 60,
+    "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.5,
-    "node_hash": "932c9bfb52dd7613ca0f5a42901f598f5974b1b46effab0df3654a8196289928"
+    "seconds": 5.16,
+    "node_hash": "a4bd4f1b3c39f23d0acee7513c2e439bc4c5fb4852c6578f7929e72a62decd00"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -1478,7 +1478,7 @@
     "n_span": 65,
     "passed": true,
     "failed": [],
-    "seconds": 3.08,
+    "seconds": 5.02,
     "node_hash": "e19865a9ca743275bf80c8f6213edb99b2ebf2fe51097eed6191a54262c3ebaf"
    },
    "A": {
@@ -1487,7 +1487,7 @@
     "n_span": 65,
     "passed": true,
     "failed": [],
-    "seconds": 3.14,
+    "seconds": 4.75,
     "node_hash": "e19865a9ca743275bf80c8f6213edb99b2ebf2fe51097eed6191a54262c3ebaf"
    },
    "ratio": 1.0,
@@ -1503,7 +1503,7 @@
     "n_span": 65,
     "passed": true,
     "failed": [],
-    "seconds": 3.5,
+    "seconds": 5.31,
     "node_hash": "b5f9379a14911ca913f41b7f3e7d7af5d047f13e2a7169e879d2fed6e1c11ad3"
    },
    "A": {
@@ -1512,7 +1512,7 @@
     "n_span": 65,
     "passed": true,
     "failed": [],
-    "seconds": 3.45,
+    "seconds": 5.74,
     "node_hash": "b5f9379a14911ca913f41b7f3e7d7af5d047f13e2a7169e879d2fed6e1c11ad3"
    },
    "ratio": 1.0,
@@ -1528,7 +1528,7 @@
     "n_span": 70,
     "passed": true,
     "failed": [],
-    "seconds": 3.71,
+    "seconds": 6.36,
     "node_hash": "fd4deb208845cee5bab38fb675711dbdc182799cea21550e9f784164ac328060"
    },
    "A": {
@@ -1537,7 +1537,7 @@
     "n_span": 70,
     "passed": true,
     "failed": [],
-    "seconds": 3.84,
+    "seconds": 5.67,
     "node_hash": "fd4deb208845cee5bab38fb675711dbdc182799cea21550e9f784164ac328060"
    },
    "ratio": 1.0,
@@ -1546,24 +1546,24 @@
   {
    "type": "bwb",
    "index": 1,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 115,
     "n_ring": 236,
-    "n_span": 75,
+    "n_span": 76,
     "passed": true,
     "failed": [],
-    "seconds": 3.78,
-    "node_hash": "8f30e8d92d571b8acb07cf44c1e863fd7a3ff9d507b542609e93945671cdce3b"
+    "seconds": 5.53,
+    "node_hash": "e0bdf2a4e54ccf912ee491662a1bae6354edd7db3d9091c26647a8fc231fe64f"
    },
    "A": {
     "n_side": 115,
     "n_ring": 236,
-    "n_span": 75,
+    "n_span": 76,
     "passed": true,
     "failed": [],
-    "seconds": 3.74,
-    "node_hash": "8f30e8d92d571b8acb07cf44c1e863fd7a3ff9d507b542609e93945671cdce3b"
+    "seconds": 7.33,
+    "node_hash": "e0bdf2a4e54ccf912ee491662a1bae6354edd7db3d9091c26647a8fc231fe64f"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -1578,7 +1578,7 @@
     "n_span": 79,
     "passed": true,
     "failed": [],
-    "seconds": 3.82,
+    "seconds": 9.31,
     "node_hash": "14d4e3e55ed5541e3c1150e08ee1136da4ece1a874a45619ca66309707cc8423"
    },
    "A": {
@@ -1587,7 +1587,7 @@
     "n_span": 79,
     "passed": true,
     "failed": [],
-    "seconds": 3.78,
+    "seconds": 8.61,
     "node_hash": "14d4e3e55ed5541e3c1150e08ee1136da4ece1a874a45619ca66309707cc8423"
    },
    "ratio": 1.0,
@@ -1603,7 +1603,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.92,
+    "seconds": 5.71,
     "node_hash": "e0f37f2a6ea02c354f976f953a36cc197042ec938c62fabe8e374ecc462cabd5"
    },
    "A": {
@@ -1612,7 +1612,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.57,
+    "seconds": 3.8,
     "node_hash": "e0f37f2a6ea02c354f976f953a36cc197042ec938c62fabe8e374ecc462cabd5"
    },
    "ratio": 1.0,
@@ -1628,7 +1628,7 @@
     "n_span": 54,
     "passed": true,
     "failed": [],
-    "seconds": 3.05,
+    "seconds": 4.12,
     "node_hash": "bd1f8898a22380d8be7aaf138e94640cd009f21e5a318de0cb670a6c6c5e5351"
    },
    "A": {
@@ -1637,7 +1637,7 @@
     "n_span": 54,
     "passed": true,
     "failed": [],
-    "seconds": 3.1,
+    "seconds": 4.78,
     "node_hash": "bd1f8898a22380d8be7aaf138e94640cd009f21e5a318de0cb670a6c6c5e5351"
    },
    "ratio": 1.0,
@@ -1646,424 +1646,424 @@
   {
    "type": "bwb",
    "index": 2,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 115,
     "n_ring": 236,
-    "n_span": 59,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.16,
-    "node_hash": "2afe5a6f87bc2407eff1a1771e09014cdca35187dedd21dca4a24825977f4746"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 59,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.11,
-    "node_hash": "2afe5a6f87bc2407eff1a1771e09014cdca35187dedd21dca4a24825977f4746"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 2,
-   "re_mean": 3000000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 64,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.0,
-    "node_hash": "48a8b52bd8994de5ceb58110dbfa7a88eaa80b0d3019aacf033c1379db8420a5"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 64,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.96,
-    "node_hash": "48a8b52bd8994de5ceb58110dbfa7a88eaa80b0d3019aacf033c1379db8420a5"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 3,
-   "re_mean": 100000.0,
-   "B": {
-    "n_side": 80,
-    "n_ring": 166,
-    "n_span": 54,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.91,
-    "node_hash": "3a7fa3e460e6feddae6b9b1d20d66175203d73e059f96b0243b2af30049779aa"
-   },
-   "A": {
-    "n_side": 80,
-    "n_ring": 166,
-    "n_span": 54,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.91,
-    "node_hash": "3a7fa3e460e6feddae6b9b1d20d66175203d73e059f96b0243b2af30049779aa"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 3,
-   "re_mean": 300000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 58,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.03,
-    "node_hash": "14b6a1fa558971c533fdef19654a82cc28fe18ca3e97b88155baa6e69eff753b"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 58,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.04,
-    "node_hash": "14b6a1fa558971c533fdef19654a82cc28fe18ca3e97b88155baa6e69eff753b"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 3,
-   "re_mean": 1000000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 63,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.45,
-    "node_hash": "c75c9fc0d15487e60f401a573ad77d117b30fe5fab5a1148a4f7c66ab9b81dda"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 63,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.44,
-    "node_hash": "c75c9fc0d15487e60f401a573ad77d117b30fe5fab5a1148a4f7c66ab9b81dda"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 3,
-   "re_mean": 3000000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 68,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.25,
-    "node_hash": "ac613d3b85629971e22e0f3e66bf0737e8cc7edd8096fed5427e6d0e4e425935"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 68,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.17,
-    "node_hash": "ac613d3b85629971e22e0f3e66bf0737e8cc7edd8096fed5427e6d0e4e425935"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 4,
-   "re_mean": 100000.0,
-   "B": {
-    "n_side": 82,
-    "n_ring": 170,
-    "n_span": 68,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.48,
-    "node_hash": "555a0c7e77d8bec504bc00c53653b0bae403ffe906983c9661eceebf578e63cf"
-   },
-   "A": {
-    "n_side": 82,
-    "n_ring": 170,
-    "n_span": 68,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.79,
-    "node_hash": "555a0c7e77d8bec504bc00c53653b0bae403ffe906983c9661eceebf578e63cf"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 4,
-   "re_mean": 300000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 72,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.86,
-    "node_hash": "d63bc3ab7c017927690288ff5a8221ea9d4c1a16a186a9ec090f121f9031d087"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 72,
-    "passed": true,
-    "failed": [],
-    "seconds": 4.07,
-    "node_hash": "d63bc3ab7c017927690288ff5a8221ea9d4c1a16a186a9ec090f121f9031d087"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 4,
-   "re_mean": 1000000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 77,
-    "passed": true,
-    "failed": [],
-    "seconds": 4.28,
-    "node_hash": "f1e2c1cdc079fe85d1e7645556d8ce029eeec8ba25e014fb51c6f8d239f4ed8c"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 77,
-    "passed": true,
-    "failed": [],
-    "seconds": 4.43,
-    "node_hash": "f1e2c1cdc079fe85d1e7645556d8ce029eeec8ba25e014fb51c6f8d239f4ed8c"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "bwb",
-   "index": 4,
-   "re_mean": 3000000.0,
-   "B": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 82,
-    "passed": true,
-    "failed": [],
-    "seconds": 4.5,
-    "node_hash": "a37c47c2724f03d24b1fc536e4c304a08a06691f986d1f7494c3338c276c413c"
-   },
-   "A": {
-    "n_side": 115,
-    "n_ring": 236,
-    "n_span": 82,
-    "passed": true,
-    "failed": [],
-    "seconds": 4.07,
-    "node_hash": "a37c47c2724f03d24b1fc536e4c304a08a06691f986d1f7494c3338c276c413c"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 0,
-   "re_mean": 100000.0,
-   "B": {
-    "n_side": 66,
-    "n_ring": 138,
-    "n_span": 47,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.57,
-    "node_hash": "3f5b497b05aaca00bd849ca139bc0e11af1fddd7ad60b6c6fdb74aeb25757557"
-   },
-   "A": {
-    "n_side": 66,
-    "n_ring": 138,
-    "n_span": 47,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.42,
-    "node_hash": "3f5b497b05aaca00bd849ca139bc0e11af1fddd7ad60b6c6fdb74aeb25757557"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 0,
-   "re_mean": 300000.0,
-   "B": {
-    "n_side": 108,
-    "n_ring": 222,
-    "n_span": 52,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.88,
-    "node_hash": "15010f0f3847430e2458ba38485b948b23689365776914f028662876e2f8e126"
-   },
-   "A": {
-    "n_side": 108,
-    "n_ring": 222,
-    "n_span": 52,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.07,
-    "node_hash": "15010f0f3847430e2458ba38485b948b23689365776914f028662876e2f8e126"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 0,
-   "re_mean": 1000000.0,
-   "B": {
-    "n_side": 112,
-    "n_ring": 230,
-    "n_span": 57,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.13,
-    "node_hash": "7a1fcd2cac96f698fda3908ce9b2718ea35530f8ec546c499c85dba9e8536e8b"
-   },
-   "A": {
-    "n_side": 112,
-    "n_ring": 230,
-    "n_span": 57,
-    "passed": true,
-    "failed": [],
-    "seconds": 2.94,
-    "node_hash": "7a1fcd2cac96f698fda3908ce9b2718ea35530f8ec546c499c85dba9e8536e8b"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 0,
-   "re_mean": 3000000.0,
-   "B": {
-    "n_side": 112,
-    "n_ring": 230,
     "n_span": 61,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.26,
-    "node_hash": "51bc71bffead73a5924985279b00e337e310a2500775808ffff408f1146788ee"
-   },
-   "A": {
-    "n_side": 112,
-    "n_ring": 230,
-    "n_span": 61,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.26,
-    "node_hash": "51bc71bffead73a5924985279b00e337e310a2500775808ffff408f1146788ee"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 1,
-   "re_mean": 100000.0,
-   "B": {
-    "n_side": 66,
-    "n_ring": 138,
-    "n_span": 63,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.48,
-    "node_hash": "e81603020e8d1f3d55fe473f63667c5c3797459862d66dee7c28f816c306f877"
-   },
-   "A": {
-    "n_side": 66,
-    "n_ring": 138,
-    "n_span": 63,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.67,
-    "node_hash": "e81603020e8d1f3d55fe473f63667c5c3797459862d66dee7c28f816c306f877"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 1,
-   "re_mean": 300000.0,
-   "B": {
-    "n_side": 108,
-    "n_ring": 222,
-    "n_span": 67,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.71,
-    "node_hash": "975567a31f4c1ecaff444072755be5b50092523afc349c65b00c2728ab085426"
-   },
-   "A": {
-    "n_side": 108,
-    "n_ring": 222,
-    "n_span": 67,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.9,
-    "node_hash": "975567a31f4c1ecaff444072755be5b50092523afc349c65b00c2728ab085426"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "flying_wing",
-   "index": 1,
-   "re_mean": 1000000.0,
-   "B": {
-    "n_side": 113,
-    "n_ring": 232,
-    "n_span": 72,
     "passed": true,
     "failed": [],
     "seconds": 4.14,
-    "node_hash": "1536b23d1a1be7a423b07d1b53721f8ac3ca83712343e9fd4916c083dc5ed8e6"
+    "node_hash": "80aba1d2cd2a20f78159b3feba234ebf5a9c87a89af1386b898e0b862d27b04d"
    },
    "A": {
-    "n_side": 113,
-    "n_ring": 232,
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 61,
+    "passed": true,
+    "failed": [],
+    "seconds": 3.97,
+    "node_hash": "80aba1d2cd2a20f78159b3feba234ebf5a9c87a89af1386b898e0b862d27b04d"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 2,
+   "re_mean": 3000000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 64,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.53,
+    "node_hash": "48a8b52bd8994de5ceb58110dbfa7a88eaa80b0d3019aacf033c1379db8420a5"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 64,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.34,
+    "node_hash": "48a8b52bd8994de5ceb58110dbfa7a88eaa80b0d3019aacf033c1379db8420a5"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re_mean": 100000.0,
+   "B": {
+    "n_side": 80,
+    "n_ring": 166,
+    "n_span": 54,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.04,
+    "node_hash": "3a7fa3e460e6feddae6b9b1d20d66175203d73e059f96b0243b2af30049779aa"
+   },
+   "A": {
+    "n_side": 80,
+    "n_ring": 166,
+    "n_span": 54,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.26,
+    "node_hash": "3a7fa3e460e6feddae6b9b1d20d66175203d73e059f96b0243b2af30049779aa"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re_mean": 300000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 58,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.44,
+    "node_hash": "14b6a1fa558971c533fdef19654a82cc28fe18ca3e97b88155baa6e69eff753b"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 58,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.28,
+    "node_hash": "14b6a1fa558971c533fdef19654a82cc28fe18ca3e97b88155baa6e69eff753b"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re_mean": 1500000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 65,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.05,
+    "node_hash": "4c4b884848416b1c3fc665fb0df5510285679e03f03281804ef2384271f710e9"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 65,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.7,
+    "node_hash": "4c4b884848416b1c3fc665fb0df5510285679e03f03281804ef2384271f710e9"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re_mean": 3000000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 68,
+    "passed": true,
+    "failed": [],
+    "seconds": 6.77,
+    "node_hash": "ac613d3b85629971e22e0f3e66bf0737e8cc7edd8096fed5427e6d0e4e425935"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 68,
+    "passed": true,
+    "failed": [],
+    "seconds": 6.47,
+    "node_hash": "ac613d3b85629971e22e0f3e66bf0737e8cc7edd8096fed5427e6d0e4e425935"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re_mean": 100000.0,
+   "B": {
+    "n_side": 82,
+    "n_ring": 170,
+    "n_span": 68,
+    "passed": true,
+    "failed": [],
+    "seconds": 7.72,
+    "node_hash": "555a0c7e77d8bec504bc00c53653b0bae403ffe906983c9661eceebf578e63cf"
+   },
+   "A": {
+    "n_side": 82,
+    "n_ring": 170,
+    "n_span": 68,
+    "passed": true,
+    "failed": [],
+    "seconds": 6.0,
+    "node_hash": "555a0c7e77d8bec504bc00c53653b0bae403ffe906983c9661eceebf578e63cf"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re_mean": 300000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
     "n_span": 72,
     "passed": true,
     "failed": [],
-    "seconds": 4.3,
-    "node_hash": "1536b23d1a1be7a423b07d1b53721f8ac3ca83712343e9fd4916c083dc5ed8e6"
+    "seconds": 5.72,
+    "node_hash": "d63bc3ab7c017927690288ff5a8221ea9d4c1a16a186a9ec090f121f9031d087"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 72,
+    "passed": true,
+    "failed": [],
+    "seconds": 7.53,
+    "node_hash": "d63bc3ab7c017927690288ff5a8221ea9d4c1a16a186a9ec090f121f9031d087"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re_mean": 1500000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 79,
+    "passed": true,
+    "failed": [],
+    "seconds": 6.15,
+    "node_hash": "992dfa5814fa651969e0f4a82b501caaefbc2a8ad374f6bdf2537c9670183cea"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 79,
+    "passed": true,
+    "failed": [],
+    "seconds": 6.18,
+    "node_hash": "992dfa5814fa651969e0f4a82b501caaefbc2a8ad374f6bdf2537c9670183cea"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re_mean": 3000000.0,
+   "B": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 82,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.66,
+    "node_hash": "a37c47c2724f03d24b1fc536e4c304a08a06691f986d1f7494c3338c276c413c"
+   },
+   "A": {
+    "n_side": 115,
+    "n_ring": 236,
+    "n_span": 82,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.36,
+    "node_hash": "a37c47c2724f03d24b1fc536e4c304a08a06691f986d1f7494c3338c276c413c"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re_mean": 100000.0,
+   "B": {
+    "n_side": 66,
+    "n_ring": 138,
+    "n_span": 47,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.03,
+    "node_hash": "3f5b497b05aaca00bd849ca139bc0e11af1fddd7ad60b6c6fdb74aeb25757557"
+   },
+   "A": {
+    "n_side": 66,
+    "n_ring": 138,
+    "n_span": 47,
+    "passed": true,
+    "failed": [],
+    "seconds": 3.83,
+    "node_hash": "3f5b497b05aaca00bd849ca139bc0e11af1fddd7ad60b6c6fdb74aeb25757557"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re_mean": 300000.0,
+   "B": {
+    "n_side": 108,
+    "n_ring": 222,
+    "n_span": 52,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.06,
+    "node_hash": "15010f0f3847430e2458ba38485b948b23689365776914f028662876e2f8e126"
+   },
+   "A": {
+    "n_side": 108,
+    "n_ring": 222,
+    "n_span": 52,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.14,
+    "node_hash": "15010f0f3847430e2458ba38485b948b23689365776914f028662876e2f8e126"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re_mean": 1500000.0,
+   "B": {
+    "n_side": 112,
+    "n_ring": 230,
+    "n_span": 58,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.8,
+    "node_hash": "b085f33044f67de69feda226ed753d2a4a99fa2532a6a05014ef935255d13f31"
+   },
+   "A": {
+    "n_side": 112,
+    "n_ring": 230,
+    "n_span": 58,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.53,
+    "node_hash": "b085f33044f67de69feda226ed753d2a4a99fa2532a6a05014ef935255d13f31"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re_mean": 3000000.0,
+   "B": {
+    "n_side": 112,
+    "n_ring": 230,
+    "n_span": 61,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.89,
+    "node_hash": "51bc71bffead73a5924985279b00e337e310a2500775808ffff408f1146788ee"
+   },
+   "A": {
+    "n_side": 112,
+    "n_ring": 230,
+    "n_span": 61,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.7,
+    "node_hash": "51bc71bffead73a5924985279b00e337e310a2500775808ffff408f1146788ee"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re_mean": 100000.0,
+   "B": {
+    "n_side": 66,
+    "n_ring": 138,
+    "n_span": 63,
+    "passed": true,
+    "failed": [],
+    "seconds": 4.94,
+    "node_hash": "e81603020e8d1f3d55fe473f63667c5c3797459862d66dee7c28f816c306f877"
+   },
+   "A": {
+    "n_side": 66,
+    "n_ring": 138,
+    "n_span": 63,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.18,
+    "node_hash": "e81603020e8d1f3d55fe473f63667c5c3797459862d66dee7c28f816c306f877"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re_mean": 300000.0,
+   "B": {
+    "n_side": 108,
+    "n_ring": 222,
+    "n_span": 67,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.83,
+    "node_hash": "975567a31f4c1ecaff444072755be5b50092523afc349c65b00c2728ab085426"
+   },
+   "A": {
+    "n_side": 108,
+    "n_ring": 222,
+    "n_span": 67,
+    "passed": true,
+    "failed": [],
+    "seconds": 5.83,
+    "node_hash": "975567a31f4c1ecaff444072755be5b50092523afc349c65b00c2728ab085426"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re_mean": 1500000.0,
+   "B": {
+    "n_side": 113,
+    "n_ring": 232,
+    "n_span": 74,
+    "passed": true,
+    "failed": [],
+    "seconds": 6.06,
+    "node_hash": "c698fad988d142c8a518f90e3def2b12df837f27675fe6df96985aa8e31313ef"
+   },
+   "A": {
+    "n_side": 113,
+    "n_ring": 232,
+    "n_span": 74,
+    "passed": true,
+    "failed": [],
+    "seconds": 8.05,
+    "node_hash": "c698fad988d142c8a518f90e3def2b12df837f27675fe6df96985aa8e31313ef"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2078,7 +2078,7 @@
     "n_span": 77,
     "passed": true,
     "failed": [],
-    "seconds": 4.44,
+    "seconds": 9.04,
     "node_hash": "7f2e4dfc94038b7265a450657a81977c4294d3a585b2834e82c21f71dd1b2b29"
    },
    "A": {
@@ -2087,7 +2087,7 @@
     "n_span": 77,
     "passed": true,
     "failed": [],
-    "seconds": 4.24,
+    "seconds": 8.01,
     "node_hash": "7f2e4dfc94038b7265a450657a81977c4294d3a585b2834e82c21f71dd1b2b29"
    },
    "ratio": 1.0,
@@ -2103,7 +2103,7 @@
     "n_span": 47,
     "passed": true,
     "failed": [],
-    "seconds": 2.38,
+    "seconds": 3.6,
     "node_hash": "cddbbf3f3f2df3f85b42caaadcdf6bf51ff2020024a42a910379aea13bf0012d"
    },
    "A": {
@@ -2112,7 +2112,7 @@
     "n_span": 47,
     "passed": true,
     "failed": [],
-    "seconds": 2.36,
+    "seconds": 3.83,
     "node_hash": "cddbbf3f3f2df3f85b42caaadcdf6bf51ff2020024a42a910379aea13bf0012d"
    },
    "ratio": 1.0,
@@ -2128,7 +2128,7 @@
     "n_span": 52,
     "passed": true,
     "failed": [],
-    "seconds": 2.79,
+    "seconds": 3.97,
     "node_hash": "34b54aa948e90dd9a0e8bbfdee7e048f5f5d960deee715e0bf99251c874086af"
    },
    "A": {
@@ -2137,7 +2137,7 @@
     "n_span": 52,
     "passed": true,
     "failed": [],
-    "seconds": 2.85,
+    "seconds": 4.36,
     "node_hash": "34b54aa948e90dd9a0e8bbfdee7e048f5f5d960deee715e0bf99251c874086af"
    },
    "ratio": 1.0,
@@ -2146,24 +2146,24 @@
   {
    "type": "flying_wing",
    "index": 2,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 113,
     "n_ring": 232,
-    "n_span": 57,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.01,
-    "node_hash": "2dd912c6d791a83144b05b92ff0f1a61d699c8763e173c510e46d9934902a74f"
+    "seconds": 4.9,
+    "node_hash": "dda5107f0f256872ec53ab337aaafe532776cd8b424853515e11238098c45fcd"
    },
    "A": {
     "n_side": 113,
     "n_ring": 232,
-    "n_span": 57,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.07,
-    "node_hash": "2dd912c6d791a83144b05b92ff0f1a61d699c8763e173c510e46d9934902a74f"
+    "seconds": 5.75,
+    "node_hash": "dda5107f0f256872ec53ab337aaafe532776cd8b424853515e11238098c45fcd"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2178,7 +2178,7 @@
     "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.17,
+    "seconds": 4.85,
     "node_hash": "87ebcad1bd7d32b63a0a0ff7bc7096feac88293417e0583578d143d805c1d252"
    },
    "A": {
@@ -2187,7 +2187,7 @@
     "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.12,
+    "seconds": 5.06,
     "node_hash": "87ebcad1bd7d32b63a0a0ff7bc7096feac88293417e0583578d143d805c1d252"
    },
    "ratio": 1.0,
@@ -2203,7 +2203,7 @@
     "n_span": 51,
     "passed": true,
     "failed": [],
-    "seconds": 2.65,
+    "seconds": 3.83,
     "node_hash": "cfdfa6891a44df28d59b35e73556bee22a3e5d65066da41956c7c8798741447e"
    },
    "A": {
@@ -2212,7 +2212,7 @@
     "n_span": 51,
     "passed": true,
     "failed": [],
-    "seconds": 2.74,
+    "seconds": 3.66,
     "node_hash": "cfdfa6891a44df28d59b35e73556bee22a3e5d65066da41956c7c8798741447e"
    },
    "ratio": 1.0,
@@ -2228,7 +2228,7 @@
     "n_span": 56,
     "passed": true,
     "failed": [],
-    "seconds": 3.22,
+    "seconds": 4.86,
     "node_hash": "cdcefc6f4b88a8dc93ab8b3d8860dd03fb316866189749fb25f9b129c2f155e7"
    },
    "A": {
@@ -2237,7 +2237,7 @@
     "n_span": 56,
     "passed": true,
     "failed": [],
-    "seconds": 3.13,
+    "seconds": 4.54,
     "node_hash": "cdcefc6f4b88a8dc93ab8b3d8860dd03fb316866189749fb25f9b129c2f155e7"
    },
    "ratio": 1.0,
@@ -2246,24 +2246,24 @@
   {
    "type": "flying_wing",
    "index": 3,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 112,
     "n_ring": 230,
-    "n_span": 61,
+    "n_span": 63,
     "passed": true,
     "failed": [],
-    "seconds": 3.25,
-    "node_hash": "ef09680b8996cc8e702ae52c5b636d351de700903c7960f2bb55c4d18a90f6c2"
+    "seconds": 4.99,
+    "node_hash": "eff72e9021257d759378f005601b2bcbd198556273324da59adc78bff2602e5f"
    },
    "A": {
     "n_side": 112,
     "n_ring": 230,
-    "n_span": 61,
+    "n_span": 63,
     "passed": true,
     "failed": [],
-    "seconds": 3.19,
-    "node_hash": "ef09680b8996cc8e702ae52c5b636d351de700903c7960f2bb55c4d18a90f6c2"
+    "seconds": 5.24,
+    "node_hash": "eff72e9021257d759378f005601b2bcbd198556273324da59adc78bff2602e5f"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2278,7 +2278,7 @@
     "n_span": 66,
     "passed": true,
     "failed": [],
-    "seconds": 3.74,
+    "seconds": 5.46,
     "node_hash": "5ec5f0d2e78cfbc0703f51e3d93d2c6b7b18f0e8b349788f5116dce447ac1ca6"
    },
    "A": {
@@ -2287,7 +2287,7 @@
     "n_span": 66,
     "passed": true,
     "failed": [],
-    "seconds": 3.59,
+    "seconds": 5.12,
     "node_hash": "5ec5f0d2e78cfbc0703f51e3d93d2c6b7b18f0e8b349788f5116dce447ac1ca6"
    },
    "ratio": 1.0,
@@ -2303,7 +2303,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.59,
+    "seconds": 3.67,
     "node_hash": "d091d9fe0a2cad6a0442eef281db7fe0f1f4b7a1edd94f146c5cc71732496f56"
    },
    "A": {
@@ -2312,7 +2312,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.47,
+    "seconds": 3.81,
     "node_hash": "d091d9fe0a2cad6a0442eef281db7fe0f1f4b7a1edd94f146c5cc71732496f56"
    },
    "ratio": 1.0,
@@ -2328,7 +2328,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.97,
+    "seconds": 4.35,
     "node_hash": "a654605a5a51b96511657e7e35c6bdf58bf011714aea31c87769a622efe14ca0"
    },
    "A": {
@@ -2337,7 +2337,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.9,
+    "seconds": 4.65,
     "node_hash": "a654605a5a51b96511657e7e35c6bdf58bf011714aea31c87769a622efe14ca0"
    },
    "ratio": 1.0,
@@ -2346,24 +2346,24 @@
   {
    "type": "flying_wing",
    "index": 4,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 113,
     "n_ring": 232,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 2.99,
-    "node_hash": "2666852d02d20c24b9013fab4414d07754312316a41329392f2a481140225815"
+    "seconds": 4.58,
+    "node_hash": "509606df23a0d362c7c7e078cd80bd8186e6fc1cb1b77327375f3e036d2edff7"
    },
    "A": {
     "n_side": 113,
     "n_ring": 232,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.47,
-    "node_hash": "2666852d02d20c24b9013fab4414d07754312316a41329392f2a481140225815"
+    "seconds": 4.94,
+    "node_hash": "509606df23a0d362c7c7e078cd80bd8186e6fc1cb1b77327375f3e036d2edff7"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2378,7 +2378,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.33,
+    "seconds": 5.27,
     "node_hash": "124b421a9187f110c4c64d7dc0748253f0f626ccabc0fe7e775799f375bf2f0d"
    },
    "A": {
@@ -2387,7 +2387,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.31,
+    "seconds": 4.89,
     "node_hash": "124b421a9187f110c4c64d7dc0748253f0f626ccabc0fe7e775799f375bf2f0d"
    },
    "ratio": 1.0,
@@ -2403,7 +2403,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.82,
+    "seconds": 3.68,
     "node_hash": "c2f3ba7db03c5b1179dec94ec6c8111334a1b4f8ce289bd3f7e5d214bd323ff4"
    },
    "A": {
@@ -2412,7 +2412,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.97,
+    "seconds": 4.08,
     "node_hash": "c2f3ba7db03c5b1179dec94ec6c8111334a1b4f8ce289bd3f7e5d214bd323ff4"
    },
    "ratio": 1.0,
@@ -2428,7 +2428,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.97,
+    "seconds": 4.38,
     "node_hash": "16d9025e7a07a7f2483cae965170fd55daa53086d381f4a9f6d4361bc972337e"
    },
    "A": {
@@ -2437,7 +2437,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 3.19,
+    "seconds": 4.63,
     "node_hash": "16d9025e7a07a7f2483cae965170fd55daa53086d381f4a9f6d4361bc972337e"
    },
    "ratio": 1.0,
@@ -2446,24 +2446,24 @@
   {
    "type": "cranked",
    "index": 0,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.25,
-    "node_hash": "4e4b2bc5ba68327ceaafbc0bbc6d85ebfe574e841ba0173b4c44de38f0573734"
+    "seconds": 5.21,
+    "node_hash": "684e66b8233f7ee03a6be4307ba3d1a54bdfd38536ea6153593f30811815525a"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.21,
-    "node_hash": "4e4b2bc5ba68327ceaafbc0bbc6d85ebfe574e841ba0173b4c44de38f0573734"
+    "seconds": 5.37,
+    "node_hash": "684e66b8233f7ee03a6be4307ba3d1a54bdfd38536ea6153593f30811815525a"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2478,7 +2478,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.59,
+    "seconds": 5.29,
     "node_hash": "e4f909b499ed0d6086f5130d445afd8021c91152c932c142fd75cecca2c66b51"
    },
    "A": {
@@ -2487,7 +2487,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.57,
+    "seconds": 5.2,
     "node_hash": "e4f909b499ed0d6086f5130d445afd8021c91152c932c142fd75cecca2c66b51"
    },
    "ratio": 1.0,
@@ -2503,7 +2503,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.78,
+    "seconds": 4.09,
     "node_hash": "d42b971d1d66cfbc02b0028e09aa7b7473be96ea95d2ad92c427b22b1d58c5fa"
    },
    "A": {
@@ -2512,7 +2512,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 3.24,
+    "seconds": 4.12,
     "node_hash": "d42b971d1d66cfbc02b0028e09aa7b7473be96ea95d2ad92c427b22b1d58c5fa"
    },
    "ratio": 1.0,
@@ -2528,7 +2528,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 3.02,
+    "seconds": 4.58,
     "node_hash": "1f8a338725f6f45ded1f23ae8d6559f60a12d3a0ef772fd2ae89b923567e4598"
    },
    "A": {
@@ -2537,7 +2537,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.95,
+    "seconds": 3.36,
     "node_hash": "1f8a338725f6f45ded1f23ae8d6559f60a12d3a0ef772fd2ae89b923567e4598"
    },
    "ratio": 1.0,
@@ -2546,39 +2546,39 @@
   {
    "type": "cranked",
    "index": 1,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 60,
+    "passed": true,
+    "failed": [],
+    "seconds": 3.32,
+    "node_hash": "65f9111a0bd4c6c416276de9f2b99d40ed8040258d5b21e88a2b15b524e812aa"
+   },
+   "A": {
+    "n_side": 108,
+    "n_ring": 222,
+    "n_span": 60,
+    "passed": true,
+    "failed": [],
+    "seconds": 3.44,
+    "node_hash": "65f9111a0bd4c6c416276de9f2b99d40ed8040258d5b21e88a2b15b524e812aa"
+   },
+   "ratio": 1.0,
+   "same_mesh": true
+  },
+  {
+   "type": "cranked",
+   "index": 1,
+   "re_mean": 3000000.0,
+   "B": {
+    "n_side": 108,
+    "n_ring": 222,
+    "n_span": 62,
     "passed": true,
     "failed": [],
     "seconds": 3.55,
-    "node_hash": "6e7ffba194c79e68330887fb6051558cc5a65e842d22e41b011a9272a59f7e82"
-   },
-   "A": {
-    "n_side": 108,
-    "n_ring": 222,
-    "n_span": 58,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.42,
-    "node_hash": "6e7ffba194c79e68330887fb6051558cc5a65e842d22e41b011a9272a59f7e82"
-   },
-   "ratio": 1.0,
-   "same_mesh": true
-  },
-  {
-   "type": "cranked",
-   "index": 1,
-   "re_mean": 3000000.0,
-   "B": {
-    "n_side": 108,
-    "n_ring": 222,
-    "n_span": 62,
-    "passed": true,
-    "failed": [],
-    "seconds": 3.62,
     "node_hash": "7d94b4381809a7e2542a684962a17819ac33df76e84b5c5531da99a2109729de"
    },
    "A": {
@@ -2587,7 +2587,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.53,
+    "seconds": 3.45,
     "node_hash": "7d94b4381809a7e2542a684962a17819ac33df76e84b5c5531da99a2109729de"
    },
    "ratio": 1.0,
@@ -2603,7 +2603,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.69,
+    "seconds": 2.68,
     "node_hash": "5dae891bbf584c4f7c8f1d27efc5c5bca51c88a06ddb184c2a6763f863fc9a24"
    },
    "A": {
@@ -2628,7 +2628,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.99,
+    "seconds": 2.93,
     "node_hash": "62cafdb389caa9efef83062933023961c0ad7418ad28ffe1c7002f8ed2f7cd34"
    },
    "A": {
@@ -2637,7 +2637,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.94,
+    "seconds": 3.15,
     "node_hash": "62cafdb389caa9efef83062933023961c0ad7418ad28ffe1c7002f8ed2f7cd34"
    },
    "ratio": 1.0,
@@ -2646,24 +2646,24 @@
   {
    "type": "cranked",
    "index": 2,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 60,
     "passed": true,
     "failed": [],
-    "seconds": 3.39,
-    "node_hash": "031e0eac1a0d0ec2b7a78403c9f320eb343d5d7c6a2952f8d4068cf8b5621a8e"
+    "seconds": 3.34,
+    "node_hash": "cf01536faeec6976e45c90ac7a62ac5d1a3aef8f36fd678cdca0497f987ae482"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 60,
     "passed": true,
     "failed": [],
-    "seconds": 3.4,
-    "node_hash": "031e0eac1a0d0ec2b7a78403c9f320eb343d5d7c6a2952f8d4068cf8b5621a8e"
+    "seconds": 3.49,
+    "node_hash": "cf01536faeec6976e45c90ac7a62ac5d1a3aef8f36fd678cdca0497f987ae482"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2678,7 +2678,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.42,
+    "seconds": 3.57,
     "node_hash": "67598a5e6f5beeaf07fa013b394bb64b38c16c6d62b4d20f9e20d52927253c63"
    },
    "A": {
@@ -2687,7 +2687,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.45,
+    "seconds": 3.37,
     "node_hash": "67598a5e6f5beeaf07fa013b394bb64b38c16c6d62b4d20f9e20d52927253c63"
    },
    "ratio": 1.0,
@@ -2703,7 +2703,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.93,
+    "seconds": 2.74,
     "node_hash": "0eb3a1ed08e2343830779dc4077b750dffb4b6d6bc794c2cbdae8937730a99f4"
    },
    "A": {
@@ -2712,7 +2712,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.86,
+    "seconds": 2.93,
     "node_hash": "0eb3a1ed08e2343830779dc4077b750dffb4b6d6bc794c2cbdae8937730a99f4"
    },
    "ratio": 1.0,
@@ -2728,7 +2728,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.92,
+    "seconds": 2.96,
     "node_hash": "c15429ec133c80042ab6730351140b074a35a6a8ae73093851bb959eacbb6af6"
    },
    "A": {
@@ -2737,7 +2737,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 3.01,
+    "seconds": 2.92,
     "node_hash": "c15429ec133c80042ab6730351140b074a35a6a8ae73093851bb959eacbb6af6"
    },
    "ratio": 1.0,
@@ -2746,24 +2746,24 @@
   {
    "type": "cranked",
    "index": 3,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.44,
-    "node_hash": "6edf8c91a9e102f3ed29dcd96bbfc922640d81ed41ca4e1f0160fdd72906fd4c"
+    "seconds": 3.45,
+    "node_hash": "3dd02ff156b73852347c52e510f82cfda7f8d423bc0fff7054af5d39ff132a2a"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.29,
-    "node_hash": "6edf8c91a9e102f3ed29dcd96bbfc922640d81ed41ca4e1f0160fdd72906fd4c"
+    "seconds": 3.36,
+    "node_hash": "3dd02ff156b73852347c52e510f82cfda7f8d423bc0fff7054af5d39ff132a2a"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2778,7 +2778,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.44,
+    "seconds": 3.59,
     "node_hash": "8c464c1e7bfccd2e0ef4917302b68f6a1c76296128ff4805c600e089de5c6256"
    },
    "A": {
@@ -2787,7 +2787,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.59,
+    "seconds": 3.71,
     "node_hash": "8c464c1e7bfccd2e0ef4917302b68f6a1c76296128ff4805c600e089de5c6256"
    },
    "ratio": 1.0,
@@ -2803,7 +2803,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 3.03,
+    "seconds": 3.06,
     "node_hash": "3b278da6ea5a9ee6f6009444882bf3ac628983e2695dc1e7c554e8107a1e4e48"
    },
    "A": {
@@ -2812,7 +2812,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.84,
+    "seconds": 2.91,
     "node_hash": "3b278da6ea5a9ee6f6009444882bf3ac628983e2695dc1e7c554e8107a1e4e48"
    },
    "ratio": 1.0,
@@ -2828,7 +2828,7 @@
     "n_span": 55,
     "passed": true,
     "failed": [],
-    "seconds": 2.98,
+    "seconds": 3.22,
     "node_hash": "969b36e09f6d1a6057da9cb23bfebec4802fb6f197aa998dc43962148e4d5cbd"
    },
    "A": {
@@ -2837,7 +2837,7 @@
     "n_span": 55,
     "passed": true,
     "failed": [],
-    "seconds": 3.0,
+    "seconds": 3.16,
     "node_hash": "969b36e09f6d1a6057da9cb23bfebec4802fb6f197aa998dc43962148e4d5cbd"
    },
    "ratio": 1.0,
@@ -2846,24 +2846,24 @@
   {
    "type": "cranked",
    "index": 4,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 59,
+    "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.48,
-    "node_hash": "e58765b6b806678a504e14754bfda8825c1b0928aa9f4b2f07028a59a91dc11f"
+    "seconds": 3.53,
+    "node_hash": "90981e60ebde4a47a4e3781d2832f67b7799ae571a831c6d48202b3d7db3c6f3"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 59,
+    "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.62,
-    "node_hash": "e58765b6b806678a504e14754bfda8825c1b0928aa9f4b2f07028a59a91dc11f"
+    "seconds": 3.65,
+    "node_hash": "90981e60ebde4a47a4e3781d2832f67b7799ae571a831c6d48202b3d7db3c6f3"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2878,7 +2878,7 @@
     "n_span": 64,
     "passed": true,
     "failed": [],
-    "seconds": 3.71,
+    "seconds": 3.6,
     "node_hash": "efba85a475ca88627a03524f0af8c5b21f471aca54584bc098d55e207317615b"
    },
    "A": {
@@ -2903,7 +2903,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.82,
+    "seconds": 2.87,
     "node_hash": "1a3366cf30cc721bbeced7616048cbd1675af9cca1d505e7f9bdebb42d73550a"
    },
    "A": {
@@ -2912,7 +2912,7 @@
     "n_span": 48,
     "passed": true,
     "failed": [],
-    "seconds": 2.68,
+    "seconds": 2.81,
     "node_hash": "1a3366cf30cc721bbeced7616048cbd1675af9cca1d505e7f9bdebb42d73550a"
    },
    "ratio": 1.0,
@@ -2928,7 +2928,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.99,
+    "seconds": 2.84,
     "node_hash": "383e50b42ef26a099f1afd905cf453379d0aa7f23fb5b32d4547e30c7563d9f8"
    },
    "A": {
@@ -2937,7 +2937,7 @@
     "n_span": 53,
     "passed": true,
     "failed": [],
-    "seconds": 2.99,
+    "seconds": 2.94,
     "node_hash": "383e50b42ef26a099f1afd905cf453379d0aa7f23fb5b32d4547e30c7563d9f8"
    },
    "ratio": 1.0,
@@ -2946,24 +2946,24 @@
   {
    "type": "tapered",
    "index": 0,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.3,
-    "node_hash": "f6437ee90327dde26758fcc121bafb79d829e2e52a44285e1d2187d26793dfff"
+    "seconds": 3.35,
+    "node_hash": "bccf5c6313d70c21a63011f55da55d7078c4c2bd8ee5550b19f06edc59fdc4d7"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 58,
+    "n_span": 59,
     "passed": true,
     "failed": [],
     "seconds": 3.44,
-    "node_hash": "f6437ee90327dde26758fcc121bafb79d829e2e52a44285e1d2187d26793dfff"
+    "node_hash": "bccf5c6313d70c21a63011f55da55d7078c4c2bd8ee5550b19f06edc59fdc4d7"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -2978,7 +2978,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.58,
+    "seconds": 3.62,
     "node_hash": "23123a34c519d4b0e07e5cfa8044e817894d42606efc3b0db2747d493870f8d4"
    },
    "A": {
@@ -2987,7 +2987,7 @@
     "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.51,
+    "seconds": 3.67,
     "node_hash": "23123a34c519d4b0e07e5cfa8044e817894d42606efc3b0db2747d493870f8d4"
    },
    "ratio": 1.0,
@@ -3003,7 +3003,7 @@
     "n_span": 46,
     "passed": true,
     "failed": [],
-    "seconds": 2.86,
+    "seconds": 2.76,
     "node_hash": "05ba2ed1d3305ce5eb6941622d33a5c47692ec0bd89c44b3e1543c6e9306b001"
    },
    "A": {
@@ -3012,7 +3012,7 @@
     "n_span": 46,
     "passed": true,
     "failed": [],
-    "seconds": 2.8,
+    "seconds": 2.68,
     "node_hash": "05ba2ed1d3305ce5eb6941622d33a5c47692ec0bd89c44b3e1543c6e9306b001"
    },
    "ratio": 1.0,
@@ -3028,7 +3028,7 @@
     "n_span": 51,
     "passed": true,
     "failed": [],
-    "seconds": 2.99,
+    "seconds": 3.14,
     "node_hash": "1696798266d827cd1166bd745c0a19c916cb3664a544344cb3bf485b0eb06499"
    },
    "A": {
@@ -3037,7 +3037,7 @@
     "n_span": 51,
     "passed": true,
     "failed": [],
-    "seconds": 2.95,
+    "seconds": 2.77,
     "node_hash": "1696798266d827cd1166bd745c0a19c916cb3664a544344cb3bf485b0eb06499"
    },
    "ratio": 1.0,
@@ -3046,24 +3046,24 @@
   {
    "type": "tapered",
    "index": 1,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 56,
+    "n_span": 58,
     "passed": true,
     "failed": [],
-    "seconds": 3.2,
-    "node_hash": "dbb800779a2595205e81074ea8b51032e19faa5156d0e302d38ceabb9ebe29b8"
+    "seconds": 3.38,
+    "node_hash": "d77315f02f40c4a7c32197735f0570af3f185062d690ba8024f20216e4091b40"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 56,
+    "n_span": 58,
     "passed": true,
     "failed": [],
-    "seconds": 3.28,
-    "node_hash": "dbb800779a2595205e81074ea8b51032e19faa5156d0e302d38ceabb9ebe29b8"
+    "seconds": 3.38,
+    "node_hash": "d77315f02f40c4a7c32197735f0570af3f185062d690ba8024f20216e4091b40"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -3078,7 +3078,7 @@
     "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.37,
+    "seconds": 3.57,
     "node_hash": "8d7788600372c8011650360ca78d68fd9c827e689206920c38f76b61b67f1f22"
    },
    "A": {
@@ -3103,7 +3103,7 @@
     "n_span": 51,
     "passed": true,
     "failed": [],
-    "seconds": 2.81,
+    "seconds": 2.84,
     "node_hash": "131f3c433cdcc9dd3bf579dd0db842f436843b6aa4915c34ce8420c57349f5d8"
    },
    "A": {
@@ -3112,7 +3112,7 @@
     "n_span": 51,
     "passed": true,
     "failed": [],
-    "seconds": 2.91,
+    "seconds": 2.88,
     "node_hash": "131f3c433cdcc9dd3bf579dd0db842f436843b6aa4915c34ce8420c57349f5d8"
    },
    "ratio": 1.0,
@@ -3128,7 +3128,7 @@
     "n_span": 55,
     "passed": true,
     "failed": [],
-    "seconds": 3.16,
+    "seconds": 3.17,
     "node_hash": "22116c453d5f1457d8e3ed08d0bdc5e573195ea460623c09f39291a95202b19b"
    },
    "A": {
@@ -3137,7 +3137,7 @@
     "n_span": 55,
     "passed": true,
     "failed": [],
-    "seconds": 3.09,
+    "seconds": 3.14,
     "node_hash": "22116c453d5f1457d8e3ed08d0bdc5e573195ea460623c09f39291a95202b19b"
    },
    "ratio": 1.0,
@@ -3146,24 +3146,24 @@
   {
    "type": "tapered",
    "index": 2,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 60,
+    "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.43,
-    "node_hash": "c98d72a0784bbb24930a8c48f4980296d810e282356931948b878e0fee941be6"
+    "seconds": 3.37,
+    "node_hash": "47b3de12eeb0e5037a48b2130a7fe4dd1209834798094e6470faf91670198c36"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 60,
+    "n_span": 62,
     "passed": true,
     "failed": [],
-    "seconds": 3.34,
-    "node_hash": "c98d72a0784bbb24930a8c48f4980296d810e282356931948b878e0fee941be6"
+    "seconds": 3.49,
+    "node_hash": "47b3de12eeb0e5037a48b2130a7fe4dd1209834798094e6470faf91670198c36"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -3178,7 +3178,7 @@
     "n_span": 65,
     "passed": true,
     "failed": [],
-    "seconds": 3.72,
+    "seconds": 3.7,
     "node_hash": "55d06f60f8eea7ceb0556377174f4e688be1732d3918e77e3f44c41b6458af2a"
    },
    "A": {
@@ -3187,7 +3187,7 @@
     "n_span": 65,
     "passed": true,
     "failed": [],
-    "seconds": 3.64,
+    "seconds": 3.63,
     "node_hash": "55d06f60f8eea7ceb0556377174f4e688be1732d3918e77e3f44c41b6458af2a"
    },
    "ratio": 1.0,
@@ -3203,7 +3203,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.91,
+    "seconds": 2.98,
     "node_hash": "b4b0b088ddd049ed20cf213bb98423d88e5f0cdcb8faf628dd9a05b3c65f158d"
    },
    "A": {
@@ -3212,7 +3212,7 @@
     "n_span": 50,
     "passed": true,
     "failed": [],
-    "seconds": 2.77,
+    "seconds": 2.88,
     "node_hash": "b4b0b088ddd049ed20cf213bb98423d88e5f0cdcb8faf628dd9a05b3c65f158d"
    },
    "ratio": 1.0,
@@ -3228,7 +3228,7 @@
     "n_span": 54,
     "passed": true,
     "failed": [],
-    "seconds": 3.32,
+    "seconds": 3.07,
     "node_hash": "bdbc330e4c1a49c6af643e9fff04ff987e7e7e9c4d146bf30794a692f0bcf75e"
    },
    "A": {
@@ -3237,7 +3237,7 @@
     "n_span": 54,
     "passed": true,
     "failed": [],
-    "seconds": 3.1,
+    "seconds": 3.01,
     "node_hash": "bdbc330e4c1a49c6af643e9fff04ff987e7e7e9c4d146bf30794a692f0bcf75e"
    },
    "ratio": 1.0,
@@ -3246,24 +3246,24 @@
   {
    "type": "tapered",
    "index": 3,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 59,
+    "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.39,
-    "node_hash": "a2a30f74ae3e773d5c47b08f6d5cbe4f6993ce4349b6d91d2eb9b893c6d91758"
+    "seconds": 3.49,
+    "node_hash": "d6d4684d45067f25942a57ae25921e1707e2b12506f9d5ec53d6b32a65bc21f8"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 59,
+    "n_span": 61,
     "passed": true,
     "failed": [],
-    "seconds": 3.44,
-    "node_hash": "a2a30f74ae3e773d5c47b08f6d5cbe4f6993ce4349b6d91d2eb9b893c6d91758"
+    "seconds": 3.6,
+    "node_hash": "d6d4684d45067f25942a57ae25921e1707e2b12506f9d5ec53d6b32a65bc21f8"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -3278,7 +3278,7 @@
     "n_span": 64,
     "passed": true,
     "failed": [],
-    "seconds": 3.69,
+    "seconds": 3.6,
     "node_hash": "85b046fd444d38a93166ce7be45e17fa76c28a3874e6db99f1949a15c880e226"
    },
    "A": {
@@ -3287,7 +3287,7 @@
     "n_span": 64,
     "passed": true,
     "failed": [],
-    "seconds": 3.58,
+    "seconds": 3.54,
     "node_hash": "85b046fd444d38a93166ce7be45e17fa76c28a3874e6db99f1949a15c880e226"
    },
    "ratio": 1.0,
@@ -3303,7 +3303,7 @@
     "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.44,
+    "seconds": 3.31,
     "node_hash": "f9929d5ef182118edc2a2b664fe6e407ff08fcd66cffe81c609c8895344ec30f"
    },
    "A": {
@@ -3312,7 +3312,7 @@
     "n_span": 59,
     "passed": true,
     "failed": [],
-    "seconds": 3.49,
+    "seconds": 3.37,
     "node_hash": "f9929d5ef182118edc2a2b664fe6e407ff08fcd66cffe81c609c8895344ec30f"
    },
    "ratio": 1.0,
@@ -3328,7 +3328,7 @@
     "n_span": 63,
     "passed": true,
     "failed": [],
-    "seconds": 3.47,
+    "seconds": 3.53,
     "node_hash": "65f9ae3791c5d0738d3207e499f8f72900a8e9b00c78e93ce1af0e0f51822552"
    },
    "A": {
@@ -3337,7 +3337,7 @@
     "n_span": 63,
     "passed": true,
     "failed": [],
-    "seconds": 3.6,
+    "seconds": 3.29,
     "node_hash": "65f9ae3791c5d0738d3207e499f8f72900a8e9b00c78e93ce1af0e0f51822552"
    },
    "ratio": 1.0,
@@ -3346,24 +3346,24 @@
   {
    "type": "tapered",
    "index": 4,
-   "re_mean": 1000000.0,
+   "re_mean": 1500000.0,
    "B": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 68,
+    "n_span": 70,
     "passed": true,
     "failed": [],
-    "seconds": 3.74,
-    "node_hash": "301ae463fe08e8df1099de863cd4967db661fe2fd8bdc16215fa150885f29131"
+    "seconds": 3.88,
+    "node_hash": "bcecba882436dba8d3c1adf313648cd0c104e740c7b3ac0490201b3f9d1cff27"
    },
    "A": {
     "n_side": 108,
     "n_ring": 222,
-    "n_span": 68,
+    "n_span": 70,
     "passed": true,
     "failed": [],
-    "seconds": 3.93,
-    "node_hash": "301ae463fe08e8df1099de863cd4967db661fe2fd8bdc16215fa150885f29131"
+    "seconds": 3.86,
+    "node_hash": "bcecba882436dba8d3c1adf313648cd0c104e740c7b3ac0490201b3f9d1cff27"
    },
    "ratio": 1.0,
    "same_mesh": true
@@ -3378,7 +3378,7 @@
     "n_span": 73,
     "passed": true,
     "failed": [],
-    "seconds": 4.02,
+    "seconds": 4.08,
     "node_hash": "1cfe383a364f8a0961dc21bc0570ce0a6900af51ce8c3f8b4714a4b9a33018a8"
    },
    "A": {
@@ -3387,7 +3387,7 @@
     "n_span": 73,
     "passed": true,
     "failed": [],
-    "seconds": 3.96,
+    "seconds": 4.02,
     "node_hash": "1cfe383a364f8a0961dc21bc0570ce0a6900af51ce8c3f8b4714a4b9a33018a8"
    },
    "ratio": 1.0,
@@ -3459,7 +3459,7 @@
      "ratio_median": 1.0,
      "ratio_max": 1.0
     },
-    "1e+06": {
+    "2e+06": {
      "ring_B_median": 236.0,
      "ring_A_median": 236.0,
      "ring_B_range": [
@@ -3501,7 +3501,7 @@
      "ratio_median": 1.0,
      "ratio_max": 1.0
     },
-    "1e+06": {
+    "2e+06": {
      "ring_B_median": 232.0,
      "ring_A_median": 232.0,
      "ring_B_range": [
@@ -3543,7 +3543,7 @@
      "ratio_median": 1.0,
      "ratio_max": 1.0
     },
-    "1e+06": {
+    "2e+06": {
      "ring_B_median": 222.0,
      "ring_A_median": 222.0,
      "ring_B_range": [
@@ -3585,7 +3585,7 @@
      "ratio_median": 1.0,
      "ratio_max": 1.0
     },
-    "1e+06": {
+    "2e+06": {
      "ring_B_median": 222.0,
      "ring_A_median": 222.0,
      "ring_B_range": [
@@ -3616,7 +3616,7 @@
   "builds": 160,
   "passed": 160,
   "failed_checks": [],
-  "seconds_median": 3.245,
+  "seconds_median": 4.025,
   "F_median_B": 10900000.0,
   "F_median_A": 10900000.0,
   "a_prime_equals_A": true

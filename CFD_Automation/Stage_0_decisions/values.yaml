@@ -126,7 +126,7 @@ D3_conditions_and_measurement:
     sources: []
   reynolds_levels:
     value: [1.0e5, 3.0e5, 1.5e6, 3.0e6]
-    unit: on mean aerodynamic chord
+    unit: on the mean chord = area / full span (not the MAC, which on a BWB is 1.09-2.06x larger; the code has always used area / span)
     reason: >-
       Level 1e5 added on 30 Oct 2026 (Mike): real Class I wings fly at 1.2-3e5 (Black Swift S0, eBee)
       and the focus space reaches 8e4; 3e5 missed that decade. Tips (1-2e4) get no level: no RANS

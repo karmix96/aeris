@@ -329,8 +329,8 @@ BWB and cranked have 17 variables; flying wing and tapered have 13.
 ### Robustness: 0 failures in at least 150 wings
 - **In practice:** if the workflow succeeds on all 150 wings (training + corner + hold-out), we may
   claim that at least about 98 % of all wings in the design space will work, with 95 % confidence.
-- **Counts per type:** the built sets give 187 wings (BWB, cranked: 100 + 5 + 40 + 34 + 8) or 178
-  (flying wing, tapered: 100 + 5 + 40 + 26 + 7); the hold-outs (10 + 5) run once at the end. The focus
+- **Counts per type:** the built sets give 185 wings (BWB, cranked: 100 + 5 + 40 + 32 + 8) or 176
+  (flying wing, tapered: 100 + 5 + 40 + 24 + 7; before similarity 187 and 178, with 34 and 26 corner wings); the hold-outs (10 + 5) run once at the end. The focus
   sets alone give 105 (115 with the focus hold-out), below 150, so the ≥ 98 % claim needs the full-space
   sets too.
 - **Arithmetic:** the most the failure rate can be is 1 − 0.05^(1/150) = 1 − 0.98022 = 1.98 %.

@@ -4,6 +4,7 @@ import pytest
 
 from cfdauto.geometry import params
 from cfdauto.geometry.build import build, input_hash
+from cfdauto.geometry.sections import load_airfoil
 
 CFG = params.load_config()
 
@@ -26,6 +27,17 @@ def test_impossible_vector_refused_with_reason(tmp_path):
     vec = params.mid_vector(CFG.types["bwb"]) | {"c4_ratio": -0.1}
     s = build(vec, "bwb", CFG, tmp_path / "w")
     assert not s["passed"] and s["gate"] == "validity" and "chord" in s["reason"]
+    assert [p.name for p in (tmp_path / "w").iterdir()] == ["refusal.json"]
+
+
+def test_nose_hook_refused_with_reason(tmp_path):
+    """Decision 64: a section whose loft nose folds back (rc0864c, a flat-faced nose) is refused,
+    and so is any wing that uses it."""
+    with pytest.raises(ValueError, match="nose folds back"):
+        load_airfoil("rc0864c")
+    vec = params.mid_vector(CFG.types["bwb"]) | {"airfoils": ["rc0864c", "mh104", "mh61", "mh61"]}
+    s = build(vec, "bwb", CFG, tmp_path / "w")
+    assert not s["passed"] and s["gate"] == "validity" and "rc0864c: refused, the nose folds back" in s["reason"]
     assert [p.name for p in (tmp_path / "w").iterdir()] == ["refusal.json"]
 
 

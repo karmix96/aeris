@@ -630,6 +630,22 @@ def _measured(c: dict, rows: list) -> tuple[list, list]:
     return ok, [r[0] for r in have if r not in ok]
 
 
+def _split_fails(fail_rows: list, c: dict) -> dict:
+    """Why the new rule misses the 5 % test on a file (each file counted once, in this order)."""
+    def d(r, key, h, ref):
+        return abs(100 * (r[c[f"T_{key}_{h}"]] - r[c[f"T_{ref}_{h}"]]) / r[c[f"T_{ref}_{h}"]])
+
+    spread = [max(d(r, "raw5", h, "raw") for h in ("004", "018")) >= LIMIT_PCT for r in fail_rows]
+    near5 = [max(d(r, "new", h, "raw5") for h in ("004", "018")) < LIMIT_PCT for r in fail_rows]
+    return {"files": len(fail_rows),
+            "cubic_and_quintic_differ_5pct_or_more": int(sum(spread)),
+            "else_within_5pct_of_the_quintic": int(sum(n and not s for s, n in zip(spread, near5))),
+            "other": int(sum(not s and not n for s, n in zip(spread, near5))),
+            "fail_at_0.04_only": int(sum(d(r, "new", "018", "raw") < LIMIT_PCT for r in fail_rows)),
+            "median_miss_pct": float(np.median([max(d(r, "new", h, "raw") for h in ("004", "018")) for r in fail_rows]))
+            if fail_rows else 0.0}
+
+
 def database_summary(cols, rows, fails, n_names) -> dict:
     c = {k: i for i, k in enumerate(cols)}
     full, degenerate = _measured(c, rows)
@@ -663,13 +679,14 @@ def database_summary(cols, rows, fails, n_names) -> dict:
         "measured_both": len(full), "measure_failures": len(fails["measure"]),
         "raw_spline_gives_no_turning": degenerate,
         "why_old_fails": dict(Counter(w for _, w in fails["old"])),
-        "why_new_fails": dict(Counter(w for _, w in fails["new"])),
+        "why_new_fails": dict(Counter("refused: the nose folds back (gate, decision 64)" if "nose folds back" in w else w
+                                      for _, w in fails["new"])),
+        "refused_by_nose_gate": sorted(n for n, w in fails["new"] if "nose folds back" in w),
         "criterion": f"|T_built - T_raw| / T_raw < {LIMIT_PCT} % at h = 0.04 and 0.18 % c",
         "pass_old": int(np.sum(d_old < LIMIT_PCT)), "pass_new": int(np.sum(~fail_new)),
         "pass_old_share_pct": float(100 * np.mean(d_old < LIMIT_PCT)),
         "pass_new_share_pct": float(100 * np.mean(~fail_new)),
-        "new_fails_where_quintic_and_cubic_differ_by_5pct_or_more": int(np.sum(fail_new & (spread >= LIMIT_PCT))),
-        "new_fails_within_5pct_of_the_quintic": int(np.sum(fail_new & (np.array([dev(r, "new", "raw5") for r in full]) < LIMIT_PCT))),
+        "new_fails_split": _split_fails([r for r, f in zip(full, fail_new) if f], c),
         "worst_dev_old_pct": pct(d_old), "worst_dev_new_pct": pct(d_new),
         "worst_ten_new": [{"name": full[i][0], "points": full[i][1], "dev_new_pct": float(d_new[i]),
                            "dev_old_pct": float(d_old[i]), "quintic_vs_cubic_pct": float(spread[i]),
@@ -830,8 +847,8 @@ def figure(res: dict, keep: dict) -> None:
         a.set_xlabel("worst |T built − T raw| / T raw at h = 0.04 and 0.18 % c [%]")
         a.set_ylabel("share of files at or below [%]")
         a.set_title(f"All {s['measured_both']} database files: old against new rule\n"
-                    f"hooks at the nose: old {s['hooks_old']}, new {s['hooks_new']}; "
-                    f"crossing surfaces: old {len(s['crossing_old'])}, new {len(s['crossing_new'])}", fontsize=9.5)
+                    f"hooks: old {s['hooks_old']}, new {s['hooks_new']} ({len(s.get('refused_by_nose_gate', []))} refused); "
+                    f"crossings: old {len(s['crossing_old'])}, new {len(s['crossing_new'])}", fontsize=9.5)
         a.legend(loc="lower right", frameon=False)
 
         move = np.array([r[cols["le_move_pct"]] for r in full])
@@ -915,7 +932,9 @@ def main(argv: list[str]) -> None:
     if "--database" in argv:
         res["database"] = database_pass()
     elif OUT_JSON.exists() and "database" in (prev := json.loads(OUT_JSON.read_text())):
-        res["database"] = prev["database"]
+        db = prev["database"]                          # the stored pass; its summary redone with this code
+        db["summary"] = database_summary(db["columns"], db["rows"], db["fails"], db["summary"]["files"])
+        res["database"] = db
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     text = dumps(res)
     assert json.dumps(json.loads(text), sort_keys=True) == json.dumps(res, sort_keys=True), "compact json lost data"

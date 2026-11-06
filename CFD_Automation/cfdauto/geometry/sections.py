@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, make_interp_spline
 from scipy.optimize import brentq
 
 from . import airfoils as _airfoils
@@ -86,6 +86,8 @@ def airfoil_from_points(name: str, pts: np.ndarray, n_side: int = N_SIDE) -> Air
     Decision 64: the farthest raw point, used before, is not the apex (up to 0.21 % c of arc away on
     the ten study sections), and the tangent there is turned (up to 19 deg); forcing it square bent
     the built nose (up to 5.5 x the true turning per cell). See Stage_1_geometry/decisions/nose_curvature.md.
+    A section whose loft nose folds back (nose_hook below HOOK_KAPPA within HOOK_ARC) is refused
+    with a ValueError that gives the reason.
     """
     te_mid = 0.5 * (pts[0] + pts[-1])
     p = _clean(pts, te_mid)
@@ -104,7 +106,39 @@ def airfoil_from_points(name: str, pts: np.ndarray, n_side: int = N_SIDE) -> Air
     lower = _resample(frame, t_le, t[-1], t[-2], x)
     if np.mean(upper) < np.mean(lower):
         upper, lower = lower, upper
-    return Airfoil(name, x, upper, lower)
+    af = Airfoil(name, x, upper, lower)
+    kappa, arc, side = nose_hook(af)
+    if kappa < HOOK_KAPPA:
+        raise ValueError(f"{name}: refused, the nose folds back (curvature {kappa:.3g}/c on the {side} side, "
+                         f"{100 * arc:.3f} % c of arc from the leading edge; limit {HOOK_KAPPA:.0f}/c within "
+                         f"{100 * HOOK_ARC:.0f} % c): the nose is too sharp or too flat for {n_side + 1} points "
+                         f"per side (decision 64)")
+    return af
+
+
+HOOK_KAPPA = -1000.0   # decision 64: a section whose nose curves back harder than this [1/c] ...
+HOOK_ARC = 0.03        # ... within this arc length of the leading edge [c], on either side, is refused
+
+
+def nose_hook(af: Airfoil) -> tuple[float, float, str]:
+    """The smallest curvature [1/c] within HOOK_ARC of arc from the leading edge, its arc position [c] and
+    side, on the cubic spline in s = sqrt(x) that the loft puts through the section points. A round
+    nose is positive everywhere; a hook (a tiny fold or loop the loft makes when a very sharp or
+    flat-faced nose falls between a few section points) goes far below zero."""
+    q = np.linspace(0.0, 0.18, 8001)         # x up to 0.0324: more than HOOK_ARC of arc on either side
+    worst = (np.inf, 0.0, "")
+    for side, y, sign in (("upper", af.yu, -1.0), ("lower", af.yl, 1.0)):
+        spl = make_interp_spline(np.sqrt(af.x), np.column_stack([af.x, y]), k=3)
+        d1, d2 = spl(q, 1), spl(q, 2)
+        speed = np.hypot(d1[:, 0], d1[:, 1])
+        arc = np.concatenate([[0.0], np.cumsum(0.5 * (speed[1:] + speed[:-1]) * np.diff(q))])
+        with np.errstate(divide="ignore", invalid="ignore"):
+            kappa = sign * (d1[:, 0] * d2[:, 1] - d1[:, 1] * d2[:, 0]) / speed ** 3
+        kappa = np.where((arc <= HOOK_ARC) & np.isfinite(kappa), kappa, np.inf)
+        k = int(np.argmin(kappa))
+        if kappa[k] < worst[0]:
+            worst = (float(kappa[k]), float(arc[k]), side)
+    return worst
 
 
 def _clean(pts: np.ndarray, te_mid: np.ndarray) -> np.ndarray:

@@ -50,7 +50,8 @@ the change `cfdauto` needs is described.
 
 **Verdict.** The old rule failed the 5 % test on all ten airfoils, so decision 64 did not close
 without a fix. The fix is now in `cfdauto` (the new rule). It passes on all ten (worst −3.9 %, MH 60
-at 0.04 % c). On the database it passes on 94.9 % of the 2,157 measured files (old rule: 20.9 %).
+at 0.04 % c). On the database a new gate refuses the 14 files whose nose folds back, and the rule
+passes on 95.6 % of the 2,143 files both rules build and measure (old rule: 21.0 %).
 
 Table 1. R_min: smallest radius within 3 % c of the LE point [c], with where it sits (sigma, % c).
 T differences in % at h = 0.04 / 0.10 / 0.18 / 0.30 / 0.50 % c. "Jump": the curvature of the two
@@ -149,38 +150,57 @@ turns 4.31°. At the 0.04 % c cell of the BWB, MH 104 turned 4.90° (raw 4.26°,
 - `verify._unit_chord`: the same frame, found on its own (dense sampling, no shared code). Without
   it, `section_fidelity` reads the frame change as an error: 0.026 % c on the BlendedNet wings, over
   the 0.01 % c test limit. With it: at most 0.00054 % c.
+- The nose gate (`sections.nose_hook`, checked in `airfoil_from_points`): see below.
 - Not changed: the TE midpoint rule, the TE rule (`open_te`), the loft, the upper/lower order rule.
 - XFOIL takes the 401-point sections (one run checked: NACA 4415, Re 3 × 10⁵, 2°).
 - Tests: none changed (none encodes the old LE rule; the one copy of it was `verify._unit_chord`).
-  Stage 1: 172 passed, 13 skipped (pyGeo not installed). Stage 2: 14 passed. Both the same as before
-  the change.
+  One added: `test_nose_hook_refused_with_reason` (`Stage_1_geometry/tests/geometry/test_build.py`).
+  Stage 1: 173 passed, 13 skipped (pyGeo not installed). Stage 2: 14 passed. Before the change:
+  172 passed and 13 skipped, and 14 passed.
 - The wing sets were not rebuilt. Every geometry hash changes at the rebuild.
+
+### The nose gate
+
+A section is refused when the cubic spline in s = sqrt(x) that the loft puts through its points
+curves back harder than −1000/c anywhere within 3 % c of arc from its leading edge, on either side.
+The refusal is a `ValueError` with the reason, for example "rc0864c: refused, the nose folds back
+(curvature −7.88e+06/c on the lower side, 0.123 % c of arc from the leading edge; limit −1000/c within
+3 % c): the nose is too sharp or too flat for 201 points per side (decision 64)". `build` turns it
+into a "validity" refusal and writes only `refusal.json`, the same way as for an impossible vector. A
+round nose is far from the limit: the smallest nose curvature on the ten study airfoils and the 14
+named sections is +1.9/c (S5010 at 101 points per side) to +19.9/c. On the database the gate refuses
+14 files, exactly the 14 hooks found without it (DP2,00-8,55_DS, PW51i, PW75, e193gu, eh2510, hm51,
+nm-classic, nm-classic-saumon, nm18-s, nm19-s, rc0864c, sp4721bs, tp100plank, wsa828). No other file
+changes: the other 2,146 rows of the database table, the ten study airfoils and the Stage 2 line are
+the same as before the gate.
 
 ### The whole airfoil database
 
 - 2,183 files on the search path (2,176 in the AERIS database, 7 local). 23 cannot be read
   (x outside [0, 1.5]: not unit chord), for both rules.
 - Builds: old rule 2,158 (2 fail in PCHIP, "x must be strictly increasing": ah93w480b, mh112); new
-  rule 2,160 (none fail).
-- Measured: 2,157. One more file, nm26-3smoothed, gives no turning: two note lines after its points
-  carry numbers, and `read_dat` takes them as points. Both rules build garbage there. That is a reader
-  problem, not fixed here.
-- 5 % test at h = 0.04 and 0.18 % c: old rule 451 pass (20.9 %), new rule 2,048 pass (94.9 %). Worst
-  miss per file: old median 16.0 %, 90 % 122 %, 99 % 1,423 %; new median 0.53 %, 90 % 2.56 %,
-  99 % 32.6 %.
-- The 109 new-rule failures:
-  - 14 **hooks** (curvature below −1000/c within 3 % c of the LE: a tiny loop or fold at the nose).
-    The old rule has 45. The new rule removes 37 and adds 6 (DP2,00-8,55_DS, e193gu, eh2510, hm51,
-    rc0864c, tp100plank). 8 hook under both (PW51i, PW75, nm-classic, nm-classic-saumon, nm18-s,
-    nm19-s, sp4721bs, wsa828). The cause: very sharp or flat-faced noses whose features sit within
-    2–3 section points of the LE in s = sqrt(x), where the loft's cubic in s overshoots.
-  - 95 without a hook. In 36 the cubic and quintic references differ by 5 % or more (the file cannot
-    settle T at that scale). In 7 the new section is within 5 % of the quintic. The other 52 are
-    mostly tight noses missed at 0.04 % c. Over the 95: 76 fail at 0.04 % c only; median miss 9.1 %.
-  - The worst ten are all hooks: sp4721bs +7,154 % (old +3,560 %), rc0864c +2,323 % (old +97 %),
-    e193gu +1,980 % (old +183 %), nm-classic +1,215 % (old +1,214 %), tp100plank +1,145 % (old
-    −34 %), hm51 +1,095 % (old −67 %), nm19-s +846 % (old +848 %), wsa828 +828 % (old +810 %),
-    nm-classic-saumon +781 % (old +776 %), nm18-s +755 % (old +751 %).
+  rule 2,146 (14 refused by the nose gate, no other failure).
+- Measured by both rules: 2,143. One more file, nm26-3smoothed, gives no turning: two note lines after
+  its points carry numbers, and `read_dat` takes them as points. Both rules build garbage there. That
+  is a reader problem, not fixed here.
+- 5 % test at h = 0.04 and 0.18 % c: old rule 451 pass (21.0 %), new rule 2,048 pass (95.6 %). Worst
+  miss per file: old median 15.8 %, 90 % 119 %, 99 % 1,366 %; new median 0.52 %, 90 % 2.44 %,
+  99 % 15.1 %, max 216 %.
+- **Hooks** (curvature below −1000/c within 3 % c of the LE: a tiny loop or fold at the nose): the old
+  rule builds 45. Without the gate the new rule had 14: it removed 37 and added 6 (DP2,00-8,55_DS,
+  e193gu, eh2510, hm51, rc0864c, tp100plank); 8 hook under both (PW51i, PW75, nm-classic,
+  nm-classic-saumon, nm18-s, nm19-s, sp4721bs, wsa828). The cause: very sharp or flat-faced noses whose
+  features sit within 2–3 section points of the LE in s = sqrt(x), where the loft's cubic in s
+  overshoots. With the gate none is built. Before the gate they held the ten worst misses (up to
+  +7,154 %, sp4721bs).
+- The 95 new-rule failures, none a hook. In 36 the cubic and quintic references differ by 5 % or more
+  (the file cannot settle T at that scale). In 7 more the new section is within 5 % of the quintic.
+  The other 52 are mostly tight noses missed at 0.04 % c. Over the 95: 76 fail at 0.04 % c only;
+  median miss 9.1 %.
+- The worst ten now: sp4721la +216 % (old +50 %), fx77w258 +138 % (old +75 %), fx77w270 +103 % (old
+  +74 %), fx77w270s +96 % (old +85 %), ah88k136 −49 % (old −56 %), phonix10 −36 % (old −51 %),
+  mb7136rev −34 % (old −37 %), tp29-9 +33 % (old +2,531 %), tp29-8 +32 % (old +2,382 %), mjp712rev
+  −31 % (old −26 %). In the first five the cubic and quintic references differ by 12–17 %.
 - Crossing surfaces (upper below lower anywhere inside): old 4, new 4, the same files (hm50, ms3,
   ms4, ms5; the crossing is in the files). In a first pass with not-a-knot spline ends the new rule
   had 7 more, all near a closed trailing edge (vr8: −0.10 % c at x 0.991); the natural ends removed
@@ -192,9 +212,9 @@ turns 4.31°. At the 0.04 % c cell of the BWB, MH 104 turned 4.90° (raw 4.26°,
 ### Side effects
 
 - **The LE moves** (arc from the farthest raw point to the apex): median 0.046 % c, 90 % 0.28 % c,
-  99 % 0.71 % c, max 1.69 % c. Over 0.1 % c: 713 files; over 0.2 % c: 368; over 0.5 % c: 63.
+  99 % 0.71 % c, max 1.69 % c. Over 0.1 % c: 711 files; over 0.2 % c: 366; over 0.5 % c: 63.
 - **The chord line turns** by about the same angle (in radians, the move over the chord): |turn|
-  median 0.026°, 90 % 0.16°, 99 % 0.40°, max 0.96°. Over 0.05°: 779 files; over 0.1°: 430; over
+  median 0.027°, 90 % 0.16°, 99 % 0.40°, max 0.96°. Over 0.05°: 777 files; over 0.1°: 428; over
   0.3°: 58. A section's zero-angle line moves by that much. The largest moves are on coarse files with
   33–41 points (naca23024 1.69 % c and −0.96°, goe777, v43015, naca23021, usa34, goe217, goe518,
   goe570), where the nose between raw points is long.
@@ -205,8 +225,8 @@ turns 4.31°. At the 0.04 % c cell of the BWB, MH 104 turned 4.90° (raw 4.26°,
 ### Limits
 
 - pyGeo was not run; the knot check says it should give the same.
-- 14 database files still hook (none is used). A gate could refuse such a section; not done (the
-  owner decides). Stage 2's kink check would flag them too.
+- The gate refuses 14 database files (none is used). Their noses would need more section points
+  near the leading edge; not done.
 - On coarse files the reference itself is uncertain (cubic against quintic up to 15 % at 0.04 % c).
 - The trailing-edge end was studied only for crossings. The similarity branch changes the TE
   thickness next.
@@ -217,10 +237,10 @@ Decision 64 is settled with a fix. The old rule put the leading edge at the fart
 forced the tangent square there. On NACA 4415 this raised the largest turning per cell by +28 to
 +449 %, and the 5 % test failed on all ten airfoils. The new rule in `cfdauto` puts the leading edge
 at the apex of one cubic spline through the raw points, samples both sides from that spline, and
-holds 201 points per side. It passes on all ten (worst −3.9 %) and on 94.9 % of the database (old
-rule 20.9 %). It removes 37 of the 45 nose hooks and adds 6, all on files the families do not use;
-every section the configs name passes. The lower-side bump of NACA 4415 is gone, but Stage 2's flat
+holds 201 points per side. It passes on all ten (worst −3.9 %) and on 95.6 % of the database files
+both rules build (old rule 21.0 %). A gate refuses a section whose nose folds back: 14 database files,
+none of them used, and no other file changes. Every section the configs name passes. The lower-side bump of NACA 4415 is gone, but Stage 2's flat
 line stays: it comes from the growth law. The cost: every hash changes, the leading edge moves (median
-0.046 % c, max 1.69 % c) and the chord line turns (median 0.026°, max 0.96°, over 0.1° on 430 files,
+0.046 % c, max 1.69 % c) and the chord line turns (median 0.027°, max 0.96°, over 0.1° on 428 files,
 at most 0.12° on the named sections). The wing sets are rebuilt once, after this and the similarity
 change are merged.

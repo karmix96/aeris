@@ -144,8 +144,8 @@ def band_count_tables(bc: dict) -> str:
                        f"<td class='num'>{_pc(d['forward_of_band_share'])}</td><td class='num'>{d['missed_c']['median'] * 100:.0f} / {d['missed_c']['max'] * 100:.0f} % c</td></tr>")
     out.append("</table></div>")
     s = bc["summary"]
-    res = ["10⁵", "3 × 10⁵", "10⁶", "3 × 10⁶"]
-    keys = ["1e+05", "3e+05", "1e+06", "3e+06"]
+    res = ["10⁵", "3 × 10⁵", "1.5 × 10⁶", "3 × 10⁶"]
+    keys = ["1.0e+05", "3.0e+05", "1.5e+06", "3.0e+06"]
     out.append('<div class="tbl"><table class="mid"><tr><th>Type (5 wings)</th>' + "".join(f"<th>Re {r}: ring nodes B / A (median)</th>" for r in res)
                + "<th>Ratio A / B: median / max</th></tr>")
     for t in TYPES:

@@ -193,7 +193,7 @@ def count(paths: dict) -> list[dict]:
                 row["ratio"] = row["A"]["n_ring"] / row["B"]["n_ring"]
                 row["same_mesh"] = row["A"]["node_hash"] == row["B"]["node_hash"]
                 rows.append(row)
-                print(f"{t:12s} {i} Re {re:.0e}  ring B {row['B']['n_ring']}  A {row['A']['n_ring']}  ratio {row['ratio']:.4f}  "
+                print(f"{t:12s} {i} Re {re:.1e}  ring B {row['B']['n_ring']}  A {row['A']['n_ring']}  ratio {row['ratio']:.4f}  "
                       f"same mesh {row['same_mesh']}  stations {row['B']['n_span']}  passed {row['B']['passed']}/{row['A']['passed']}", flush=True)
     return rows
 
@@ -210,7 +210,7 @@ def f_check(paths: dict) -> list[dict]:
         row["ratio"] = row["A"]["n_ring"] / row["B"]["n_ring"]
         row["same_mesh"] = row["A"]["node_hash"] == row["B"]["node_hash"]
         rows.append(row)
-        print(f"F check {t} {i} Re {re:.0e}: ring B {row['B']['n_ring']} A {row['A']['n_ring']} same mesh {row['same_mesh']}", flush=True)
+        print(f"F check {t} {i} Re {re:.1e}: ring B {row['B']['n_ring']} A {row['A']['n_ring']} same mesh {row['same_mesh']}", flush=True)
     return rows
 
 
@@ -221,7 +221,7 @@ def summary(rows: list[dict]) -> dict:
         for re in RE_LEVELS:
             rr = [r for r in rows if r["type"] == t and r["re_mean"] == re]
             ra = np.array([r["ratio"] for r in rr])
-            per[t][f"{re:.0e}"] = {"ring_B_median": float(np.median([r["B"]["n_ring"] for r in rr])),
+            per[t][f"{re:.1e}"] = {"ring_B_median": float(np.median([r["B"]["n_ring"] for r in rr])),
                                    "ring_A_median": float(np.median([r["A"]["n_ring"] for r in rr])),
                                    "ring_B_range": [min(r["B"]["n_ring"] for r in rr), max(r["B"]["n_ring"] for r in rr)],
                                    "ratio_median": float(np.median(ra)), "ratio_max": float(ra.max())}
@@ -315,7 +315,7 @@ def figure(doc: dict, paths: dict) -> None:
     s = doc["summary"]
     a.text(lo + 0.03 * (hi - lo), hi - 0.04 * (hi - lo), f"{s['builds']} builds: A / B = {s['ratio']['median']:.3f} (median), "
            f"{s['ratio']['max']:.3f} (max)\nthe same mesh on {s['same_mesh']} of {len(rows)} pairs", fontsize=7.8, color=INK, va="top")
-    a.text(hi - 0.02 * (hi - lo), lo + 0.03 * (hi - lo), "one circle per wing and Re level; many overlap:\nthe rings are the same at Re 10⁶ and 3 × 10⁶\n(the bubble table's 0.10 c floor)",
+    a.text(hi - 0.02 * (hi - lo), lo + 0.03 * (hi - lo), "one circle per wing and Re level; many overlap:\nthe rings are the same at Re 1.5 × 10⁶ and 3 × 10⁶\n(the bubble table's 0.10 c floor)",
            fontsize=7.5, color=MUTED, ha="right", va="bottom")
     a.set_xlim(lo, hi); a.set_ylim(lo, hi); a.set_aspect("equal")
     a.set_xlabel("ring nodes, option B (lower band 60–100 % c)"); a.set_ylabel("ring nodes, option A (0–100 % c)")

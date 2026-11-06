@@ -863,7 +863,8 @@ def flowdata_conclusions(a: dict) -> str:
         f"from about {_pc(be['start_q05'], False)} and end by about {_pc(be['end_q95'], False)} of the chord "
         f"({_pc(be['share_outside_30_70'], False)} of them lie partly outside 30–70 %); the lower surface stays laminar to about "
         f"{_pc(be['lam_lower_median'], False)} of the chord. A transition-model mesh needs fine streamwise cells over the upper "
-        f"surface from about 10 to 85 % and the lower surface from 60 to 100 %, and y⁺ ≤ 1. These bands hold for root angles "
+        f"surface from about 10 to 85 % (Stage 2 builds it from the leading edge on every wing) and the lower surface from 60 to 100 %, "
+        f"and y⁺ ≤ 1. These bands hold for root angles "
         f"{min(by_a):g}–{max(by_a):g}°: at negative angles (now in scope, down to −5°) the lower surface becomes the suction side, "
         f"so its band must start further forward.",
         f"<strong>Size acts through Re; sweep does not enter the strips.</strong> The mean chord is the strongest shape input (larger "
@@ -883,7 +884,7 @@ def flowdata_conclusions(a: dict) -> str:
         "<strong>What this means for the CFD.</strong> Start the mesh studies with SA (ADflow), with its inflow eddy viscosity fixed "
         "(ν̃/ν about 3). SA gives an upper bound for drag only where Re is above about 10⁵ and there is no long bubble (below 10⁵, "
         "and for LA2573A in slow flight, the real flow has more drag). Make the mesh transition-ready (y⁺ ≤ 1 at each station's Re, fine cells "
-        "over the upper surface 10–85 % (from the leading edge on swept panels) and the lower surface 60–100 % of the chord) and repeat a reduced mesh study with the "
+        "over the upper surface from the leading edge to 85 % (Stage 2 does this on every wing) and the lower surface 60–100 % of the chord) and repeat a reduced mesh study with the "
         "transition model: what a mesh must resolve depends on the model. Transition must be captured (decided 4 Nov 2026): for drag "
         "numbers or rankings, run SU2 SST + LM γ-Reθ (proposal, pending: on about 20 % of the wings first; ADflow SA for all mesh "
         "studies and the fully turbulent data). Below Re 10⁵, neither is enough. The tool gives the band, the bubble positions and the "
@@ -2075,7 +2076,7 @@ __FIXES__
 <section id="decisions">
   <h2>Design decisions</h2>
   <p>Every choice behind the generator, with its reason and what it rests on. Details: <code>Stage_1_geometry/decisions/</code> and <code>CFD_Automation/OPEN_DECISIONS.md</code>.</p>
-  <div class="legend">Basis: __BASIS__ · <span class="flag fix">Fix</span> needs a change · <span class="flag open">Open</span> needs your call</div>
+  <div class="legend">Basis: __BASIS__ · <span class="flag open">Open</span> needs your call</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Decision</th><th>What we do</th><th>Why</th><th>Basis</th></tr></thead>
     <tbody>

@@ -125,8 +125,42 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="legend">Source of each value:
     <span class="tag pub">published</span> from a paper or standard
     <span class="tag own">our choice</span> no outside source; a starting value we may revise
+    <span class="tag">pending</span> a proposal, not decided yet
   </div>
 </header>
+
+<!-- What changed since 2 Nov 2026 -->
+<section class="weak" style="border-left-color: var(--accent)">
+  <h2>What changed since 2 Nov 2026 (updated 6 Nov)</h2>
+  <p class="sec-note">The tables below are updated to match. A proposal that is not decided yet carries the tag <span class="tag">pending</span>.</p>
+  <div><strong>Decided</strong>
+  <ul>
+    <li><strong>New names (2 Nov).</strong> Folder <code>Stage_0_decisions/</code> (was &ldquo;Stage 0_Decisions&rdquo;). Files <code>decisions.md</code>, <code>decisions.html</code>, <code>values.yaml</code> (were <code>STAGE0_DECISIONS.*</code> and <code>stage0_values.yaml</code>). One <code>CFD_Automation/<wbr>OPEN_DECISIONS.md</code> for every stage. Wing sets <code>training_focus</code> and <code>holdout_focus</code> (<code>training_full</code>, <code>holdout_full</code>, <code>corner1</code>, <code>corner2</code>, <code>reference</code> unchanged). One shared code package, <code>CFD_Automation/<wbr>cfdauto/</code>.</li>
+    <li><strong>Stage 1 closed (2 Nov).</strong> Four wing types in two families: tailless (BWB, flying wing) and conventional (cranked, tapered). 730 of 730 sampled wings build. Real Class I–II wings with a published area fly at Re 1.2 × 10⁵ – 3.1 × 10⁶ on the mean chord (the top is now the NTNU Aludra MK1 row, 3.1 × 10⁶; it was 2.7 × 10⁶, RUAG Ranger). 2-D strip flow dataset: SA overpredicts profile drag by a median +62 % (+69 % in level flight).</li>
+    <li><strong>Stage 2 surface mesh works.</strong> 790 of 790 builds pass 13 checks (numpy loft). A mesh station sits on every loft station, so on every break. Tip squeeze: the last spanwise gap = the tip's first wall cell. The transition band is built; the upper band starts at the leading edge on every wing. Base cells 8 / 10 / 14 / 18 at levels C / M / F / FF. Station gap 0.2 × local chord, at least 12 per panel, growth 1.2. Mesh name <code>mesh_<wbr>&lt;level&gt;_<wbr>&lt;wing_hash8&gt;_<wbr>re&lt;Re&gt;</code>: one surface per wing and Re level (Stage 2 decision 59).</li>
+    <li><strong>Transition must be captured, with ADflow and SU2 (owner, 4 Nov).</strong> This replaces &ldquo;SA for now; final choice later&rdquo;. Our ADflow build has SA only (SST aborted) and no transition model, so transition comes from SU2 (SST + LM γ-Reθ).</li>
+    <li><strong>Mach (owner, 4 Nov).</strong> No supersonic flow, not even small pockets. The scope extends toward Mach 0.5; the cap is still open. The Stage 1 data stop at Mach 0.2 (tables at Mach 0, 0.1 and 0.2).</li>
+    <li><strong>Angles of attack (owner, 6 Nov).</strong> −5° to post-stall (was 0°, 4°, 8°, plus 12° for the nose and wake studies), plus a separate post-stall study (URANS or DDES on a few wings). Steady RANS is used up to stall onset. The Stage 1 dataset covers root angles 0–10° only.</li>
+    <li><strong>First SU2 smoke test (4 Nov), not a result.</strong> It shows the mesh path works; no wing has been run (note under D3).</li>
+  </ul></div>
+  <div><strong>Proposals, pending</strong>
+  <ul>
+    <li><strong>Mesh levels VC, C, M, F.</strong> VC on the desktop; C, M and F on the university HPC (C, about 2.3 M cells, is above the desktop limit of about 1.2 M); F at about 9–11 M cells. Hard minimums at VC, accuracy targets at M (as DPW defines its medium grid), transition targets at F. Every spacing ÷ 1.3 per level, so about 2.2× cells per level; wall layers about 1.30× per level.</li>
+    <li><strong>Mesh cost, measured in Stage 2</strong> (surface × wall layers, 20 reference wings × 4 Re). Fine level: median 15.2 M cells with the planned rules; 10.9 M with a relaxed band (0.5 % c spacing where local Re ≥ 4 × 10⁵). Also proposed: tip gap 2 × s0, and station gap 0.25 c at M. Desktop limit about 1.2 M cells.</li>
+    <li><strong>Transition cells.</strong> About 20 cells per bubble as a fine-level target (Ansys CFX guidance). Wall-normal growth 1.1 instead of 1.25 with a transition model (Stage 2 decision 57; Stage 3 decides).</li>
+    <li><strong>Volume mesh.</strong> One matched C-H multiblock mesh for both solvers, instead of the overset wake box and vortex tube. SU2 has no overset and refuses structured CGNS; structured meshes converted to unstructured hexes do run. Far field at the starting value of 80 chords (ladder 40 / 80 / 160). The C-H wake lines may add about +45 % (30–60 %) cells on the wing blocks (rough count).</li>
+    <li><strong>Solver split.</strong> ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first.</li>
+    <li><strong>Similarity</strong> (new D3 row). Unit mean chord, Re as the input, Mach fixed at 0.1: 8,000 solves instead of 42,000.</li>
+    <li><strong>Mach.</strong> Core data at Mach ≤ 0.2 now; Mach 0.3–0.5 later, with a fast-UAV family.</li>
+    <li><strong>Angles.</strong> Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about 2.5° steps.</li>
+  </ul></div>
+  <div><strong>Open</strong>
+  <ul>
+    <li><strong>Nose shape (decision 64).</strong> Re-measure raw and built sections the same way before any fix (see Weak points).</li>
+    <li><strong>Still open from Stage 0:</strong> grid share 65 %, pitching moment 0.002, the iteration share, a D5.</li>
+    <li><strong>pyGeo tests and one <code>build --all</code></strong> on the owner's machine: the rename made every stored hash stale.</li>
+  </ul></div>
+</section>
 
 <!-- D1 -->
 <section>
@@ -166,7 +200,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="brace"><span class="mesh">mesh · 65 % · 1.95 counts</span><span class="rest">other · 35 % · 1.05</span></div>
     <ul class="blegend">
       <li><i class="sw m1"></i>Mesh: along the chord<span class="amt">35 % of mesh · 0.68</span></li>
-      <li><i class="sw m2"></i>Mesh: along the span<span class="amt">15 % · 0.29</span></li>
+      <li><i class="sw m2"></i>Mesh: along the semi-span<span class="amt">15 % · 0.29</span></li>
       <li><i class="sw m3"></i>Mesh: away from the wall<span class="amt">20 % · 0.39</span></li>
       <li><i class="sw m4"></i>Mesh: edges and blunt base<span class="amt">15 % · 0.29</span></li>
       <li><i class="sw m5"></i>Mesh: wake and tip vortex<span class="amt">15 % · 0.29</span></li>
@@ -183,21 +217,25 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>Error from cells that are too big. Measured with 3 meshes and an error bar (GCI, D3).</p></td><td>—</td>
       <td class="src"><span class="tag own">our choice</span><span class="ref">split; method from Celik 2008</span></td></tr>
     <tr><td class="what">· Along the chord</td><td class="val">0.68 counts</td>
-      <td><p>Points around the airfoil. Start: cells at the leading and trailing edge ≈ 0.1 % of chord.</p></td>
+      <td><p>Points around the airfoil. Start: cells at the leading and trailing edge ≈ 0.1 % of chord.</p><p>Since Stage 2 the transition band also sets cells along the chord (D3, turbulence model).</p></td>
       <td><p>Carried about 88 % of the drag error.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
-    <tr><td class="what">· Along the span</td><td class="val">0.29 counts</td>
-      <td><p>Sections root to tip. Start: spacing ≈ 0.1 % of semi-span at root and tip.</p></td><td>—</td>
-      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+    <tr><td class="what">· Along the semi-span</td><td class="val">0.29 counts</td>
+      <td><p>Sections from root to tip. Start (Stage 2, 2 Nov): a mesh station on every loft station, so on every break; station gap 0.2 × local chord, at least 12 per panel, growth 1.2. Tip squeeze: the last gap at the tip = the tip's first wall cell (s0).</p>
+        <p><span class="tag">pending</span> Tip gap 2 × s0; station gap 0.25 c at M.</p>
+        <p>The first start was DPW's: spacing ≈ 0.1 % of semi-span at root and tip.</p></td><td>—</td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">Stage 2 decision 62; first start from the DPW gridding guidelines</span></td></tr>
     <tr><td class="what">· Away from the wall</td><td class="val">0.39 counts</td>
-      <td><p>Thin layers through the boundary layer. Start: first cell y+ ≈ 1; each layer ≤ 1.25 × the one before.</p></td><td>—</td>
-      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+      <td><p>Thin layers through the boundary layer. Start: first cell y+ ≈ 1; each layer ≤ 1.25 × the one before.</p>
+        <p><span class="tag">pending</span> 1.1 instead of 1.25 with a transition model (Stage 2 decision 57; Stage 3 decides).</p></td><td>—</td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines; 1.1 from the Ansys CFX transition-model guide</span></td></tr>
     <tr><td class="what">· Edges and blunt base</td><td class="val">0.29 counts</td>
-      <td><p>Cells at nose, trailing edge and across its flat back face. Start: 0.1 % of chord; 8 cells across the base.</p></td>
+      <td><p>Cells at nose, trailing edge and across its flat back face. Start: 0.1 % of chord at the edges. Across the base: 8 / 10 / 14 / 18 cells at levels C / M / F / FF (Stage 2). Even counts, so the steps are 1.25, 1.4 and 1.29, not exactly 1.3.</p></td>
       <td><p>The base was the slowest part to settle.</p></td>
-      <td class="src"><span class="tag pub">published</span><span class="ref">DPW (edges); base count is our choice</span></td></tr>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW (edges); base counts are our choice (Stage 2 decision 61)</span></td></tr>
     <tr><td class="what">· Wake</td><td class="val">0.29 counts</td>
-      <td><p>Cells behind the wing and round the tip vortex. Rules set in the mesh stage.</p></td>
+      <td><p>Cells behind the wing and round the tip vortex. Rules set in the mesh stage.</p>
+        <p><span class="tag">pending</span> One matched C-H mesh for both solvers, instead of the overset wake box and vortex tube (SU2 has no overset). The wake lines run to the far field and may add about +45 % (30–60 %) cells on the wing blocks (rough count).</p></td>
       <td><p>Refining the near wake alone moved drag 23 counts.</p></td>
       <td class="src"><span class="tag own">our choice</span></td></tr>
     <tr><td class="what">Iterations</td><td class="val">0.30 counts<br>10 % of 3</td>
@@ -205,9 +243,9 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>Measured 0.12 counts past 10⁻⁶: inside 0.30, and inside Celik's stricter 1/10 of mesh error (0.195).</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">Celik 2008 App. A; Eça &amp; Hoekstra 2006</span></td></tr>
     <tr><td class="what">Outer boundary</td><td class="val">0.30 counts<br>10 % of 3</td>
-      <td><p>The domain edge must be far enough not to disturb the wing. Start: ≈ 100 reference chords.</p></td>
+      <td><p>The domain edge must be far enough not to disturb the wing. DPW suggests ≈ 100 reference chords. The project's starting value is 80 chords, tested with the ladder 40 / 80 / 160.</p></td>
       <td><p>40 → 60 chords moved drag 0.6–0.7 counts: 40 is too close.</p></td>
-      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines (≈ 100 c); 80 c is our starting value</span></td></tr>
     <tr><td class="what">Numerical settings</td><td class="val">0.45 counts<br>15 % of 3</td>
       <td><p>Artificial smoothing the solver adds to stay stable. Too much acts like false drag. Tested by halving and doubling it on two meshes.</p></td>
       <td><p class="warn">Halving it moved drag 12–21 counts. Biggest risk in the budget.</p></td>
@@ -219,7 +257,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <!-- D2 -->
 <section>
   <div class="sec-head"><span class="sec-id">D2</span><h2>Which wings we test</h2></div>
-  <p class="sec-note">The wing generator is new, so wings are defined by rules, not by name. Counts are per wing type (BWB, conventional).</p>
+  <p class="sec-note">The wing generator is new, so wings are defined by rules, not by name. Counts are per wing type: four types in two families, tailless (BWB, flying wing) and conventional (cranked, tapered). BWB and cranked have 17 variables; flying wing and tapered have 13.</p>
   <div class="tbl"><table>
     <thead><tr><th>What</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
     <tbody>
@@ -231,20 +269,21 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>The five must cover the training set at least as well as five picked at random: no training wing far from all five.</p></td>
       <td><p>Proves the five are spread out, not bunched.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">Johnson, Moore &amp; Ylvisaker 1990</span></td></tr>
-    <tr><td class="what">Training set</td><td class="val">100</td>
-      <td><p>Spread evenly over all variables. The mesher must build all of them.</p></td>
+    <tr><td class="what">Training set</td><td class="val">100 + 40</td>
+      <td><p>100 per type in the focus space (<code>training_focus</code>), plus 40 in the full space (<code>training_full</code>). Spread evenly over all variables. The mesher must build all of them.</p></td>
       <td><p>Latin hypercube: each range cut into 100 slices, each used once.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">McKay et al. 1979</span></td></tr>
-    <tr><td class="what">Corner set</td><td class="val">42<br><span class="num">= 34 + 8</span></td>
-      <td><p>34: each of 17 variables at its low and high end, the rest mid-range. 8: every pair of variables at all four low/high combinations. Failures stay in the list.</p></td>
-      <td><p>Shows where the rules break. 8 is the proven minimum: C(7,4) = 35 ≥ 17, while C(6,4) = 15 &lt; 17.</p></td>
+    <tr><td class="what">Corner set</td><td class="val">42 <span class="num">= 34 + 8</span><br>33 <span class="num">= 26 + 7</span></td>
+      <td><p>BWB and cranked (17 variables): 34 wings with each variable at its low and high end, the rest mid-range; 8 more where every pair of variables meets at all four low/high combinations. Flying wing and tapered (13 variables): 26 + 7 = 33. Failures stay in the list.</p>
+        <p><span class="tag">pending</span> Similarity drops the root chord, so the first part becomes 32 / 24 wings (2 per free variable) instead of 34 / 26.</p></td>
+      <td><p>Shows where the rules break. 8 is the proven minimum for 17 variables: C(7,4) = 35 ≥ 17, while C(6,4) = 15 &lt; 17. For 13 it is 7: C(6,4) = 15 ≥ 13, while C(5,3) = 10 &lt; 13.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">Katona 1973; Kleitman &amp; Spencer 1973</span></td></tr>
-    <tr><td class="what">Hold-out set</td><td class="val">10, opened once</td>
-      <td><p>Drawn now, locked away, run once at the very end.</p></td>
+    <tr><td class="what">Hold-out set</td><td class="val">10 + 5, opened once</td>
+      <td><p>10 per type in the focus space and 5 in the full space (<code>holdout_focus</code>, <code>holdout_full</code>). Drawn now, locked away, run once at the very end.</p></td>
       <td><p>Looking at test wings while tuning turns them into training wings.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">Dwork et al. 2015, 2017</span></td></tr>
     <tr><td class="what">Robustness claim</td><td class="val">0 failures in ≥ 150 → ≥ 98 %</td>
-      <td><p>If all 150 wings work, at least ~98 % of all wings in the design space will, with 95 % confidence.</p></td>
+      <td><p>If all 150 wings work, at least ~98 % of all wings in the design space will, with 95 % confidence.</p><p>Per type, the built sets give 187 wings (BWB, cranked: 100 + 5 + 40 + 34 + 8) or 178 (flying wing, tapered: 100 + 5 + 40 + 26 + 7); the hold-outs (10 + 5) run once at the end. The focus sets alone give 105 (115 with the focus hold-out), below 150, so the ≥ 98 % claim needs the full-space sets too.</p></td>
       <td><p><span class="num">1 − 0.05<sup>1/150</sup> = 1.98 %</span> worst failure rate. Quick rule: 3 ÷ 150.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">Hanley &amp; Lippman-Hand 1983</span></td></tr>
     </tbody>
@@ -257,26 +296,37 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="tbl"><table>
     <thead><tr><th>What</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
     <tbody>
-    <tr><td class="what">Speed</td><td class="val">Mach ≤ 0.3</td>
-      <td><p>Up to ~100 m/s at sea level. Air nearly incompressible. Transonic is a later stage.</p></td>
-      <td><p>Class I and II UAVs fly well below this.</p></td>
-      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Speed</td><td class="val">toward Mach 0.5<br>cap open<br>no supersonic flow</td>
+      <td><p>No supersonic flow anywhere, not even small pockets (decided 4 Nov; was Mach ≤ 0.3). The scope extends toward Mach 0.5, about 170 m/s at sea level; the cap is still open.</p>
+        <p><span class="tag">pending</span> Core data at Mach ≤ 0.2 now. Mach 0.3–0.5 later, with a fast-UAV family (real fast UAVs, thinner sections, section tables to Mach 0.5). At Mach 0.5 the angle is capped near 4° by a supersonic-pocket check (2-D estimate: pockets from 5.5–6.5° at Mach 0.5, 8–9.5° at 0.4, only near stall at 0.3).</p></td>
+      <td><p>The owner's scope. The focus wings fly at Mach 0.03–0.2.</p><p class="warn">The Stage 1 data stop at Mach 0.2 (tables at Mach 0, 0.1 and 0.2).</p></td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">owner, 4 Nov 2026</span></td></tr>
     <tr><td class="what">Reynolds number (mean chord)</td><td class="val">1×10⁵<br>3×10⁵<br>1.5×10⁶<br>3×10⁶</td>
-      <td><p>How "big and fast" the wing is to the air: Re = ρ·V·c ÷ μ. A 0.2 m chord at 25 m/s, 1,500 m ≈ 3×10⁵. Wall cells must shrink as Re grows, so every mesh study runs at all four.</p></td>
-      <td><p>Real Class I–II wings with a published wing area fly at 1.2×10⁵ to 2.7×10⁶ (RUAG Ranger, top speed). 1×10⁵ added for mini Class I (30 Oct); top lowered from 5×10⁶ to 3×10⁶ (29 Oct). Wing tips (1–2×10⁴) get no level: no RANS model is reliable there.</p></td>
+      <td><p>How "big and fast" the wing is to the air: Re = ρ·V·c ÷ μ. A 0.2 m chord at 25 m/s, 1,500 m ≈ 3×10⁵. Wall cells must shrink as Re grows, so every mesh study runs at all four.</p>
+        <p><span class="tag">pending</span> Similarity makes Re on the mean chord the input, so every shape runs at all four levels. Check C4 adds a level near 7 × 10⁵ – 10⁶ only if needed.</p></td>
+      <td><p>Real Class I–II wings with a published wing area fly at 1.2 × 10⁵ to 3.1 × 10⁶. The top is now the NTNU Aludra MK1 row at its listed top speed (area from its full span and aspect ratio). Before, it was the RUAG Ranger (2.7 × 10⁶), rounded up to 3 × 10⁶. Levels unchanged: the Aludra row is 3 % above the top level, and its listed chord (0.60 m) disagrees with full span ÷ aspect ratio (0.74 m).</p><p>1×10⁵ added for mini Class I (30 Oct); top lowered from 5×10⁶ to 3×10⁶ (29 Oct). Wing tips (1–2×10⁴) get no level: no RANS model is reliable there.</p></td>
       <td class="src"><span class="tag pub">published</span><span class="ref">ISA; Sutherland's law; sourced table of real UAV wings</span></td></tr>
-    <tr><td class="what">Angles of attack</td><td class="val">0°, 4°, 8°<br>+12° nose &amp; wake</td>
-      <td><p>Every study at 0, 4, 8. Nose and wake studies also at 12.</p></td>
-      <td><p>Cruise, climb, high lift. The nose needs finer cells as the angle grows.</p></td>
-      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Similarity</td><td class="val">unit mean chord<br>Re as input<br>Mach 0.1</td>
+      <td><p><span class="tag">pending</span> Solve every wing at a mean chord of 1 and set the Reynolds number on that chord directly. Mach fixed at 0.1, with a Prandtl–Glauert correction on CL and CM. Fixed once: trailing edge 0.2 % c; Tu 0.07 % (N_crit 9); T 288.15 K, γ 1.4, Pr 0.71; adiabatic wall.</p>
+        <p>The root chord leaves the design vector (18 → 17 numbers). Meshes per wing 21 → 4. Dataset 42,000 → 8,000 solves at 5 angles; about 12,800 with about 8 angles from −5° to stall. Corner set, part 1: 32 / 24 wings instead of 34 / 26 (D2).</p>
+        <p>Checks first: C1 scale, C2 Mach, C3 trailing edge, C4 Re-level interpolation (add a level near 7 × 10⁵ – 10⁶ only if needed).</p></td>
+      <td><p>CL, CD and CM depend on the shape, Re and Mach, not on the size itself. One mesh per wing and Re level then serves every real size and speed with that Re.</p><p>Limit: Re does not carry surface roughness or air turbulence.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">similarity and Prandtl–Glauert: Anderson 2011; the fixed values are our choice</span></td></tr>
+    <tr><td class="what">Angles of attack</td><td class="val">−5° to post-stall<br>+ post-stall study</td>
+      <td><p>Steady RANS from −5° up to stall onset. Past stall: a separate study with URANS or DDES on a few wings. Decided 6 Nov; was 0°, 4°, 8° for every study, plus 12° for the nose and wake studies.</p>
+        <p><span class="tag">pending</span> Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about 2.5° steps (about 8 angles).</p></td>
+      <td><p>Cruise, climb, high lift, and negative angles. The nose needs finer cells as the angle grows. At negative angles the lower surface becomes the suction side.</p><p class="warn">The Stage 1 dataset covers root angles 0–10° only.</p></td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">owner, 6 Nov 2026</span></td></tr>
     <tr><td class="what">What we watch</td><td class="val">CL, CD (pressure + friction), CM, neutral point, cp, y+</td>
       <td><p>A study passes only if <strong>every</strong> one passes at <strong>every</strong> angle. Good lift with bad drag is a fail.</p></td>
       <td><p>Forces can look right while the pressure is wrong; y+ checks the first wall cell.</p></td>
       <td class="src"><span class="tag own">our choice</span></td></tr>
     <tr><td class="what">Mesh family</td><td class="val">≥ 3 meshes<br>r ≥ 1.3</td>
-      <td><p>The same mesh at three sizes, each 1.3× finer in every direction: about 2.2× more cells per step.</p></td>
+      <td><p>The same mesh at three sizes, each 1.3× finer in every direction: about 2.2× more cells per step. Stage 2 builds levels C, M, F and FF this way (every spacing ÷ 1.3, checked within 3 %; only the base counts differ, D1).</p>
+        <p><span class="tag">pending</span> Four levels VC, C, M, F: VC on the desktop; C, M and F on the university HPC (C, about 2.3 M cells, is above the desktop limit of about 1.2 M); F at about 9–11 M cells. Hard minimums at VC, accuracy targets at M (as DPW defines its medium grid), transition targets at F. Every spacing ÷ 1.3 per level, so about 2.2× cells per level; wall layers about 1.30× per level.</p>
+        <p>Measured in Stage 2 (surface × wall layers, 20 reference wings × 4 Re): fine level median 15.2 M cells with the planned rules; 10.9 M with a relaxed band (0.5 % c spacing where local Re ≥ 4 × 10⁵). Also proposed: tip gap 2 × s0; station gap 0.25 c at M. Desktop limit about 1.2 M cells.</p></td>
       <td><p>Two meshes only show the answer moved; three show where it is heading.</p></td>
-      <td class="src"><span class="tag pub">published</span><span class="ref">Celik et al. 2008</span></td></tr>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Celik et al. 2008; DPW (medium grid)</span></td></tr>
     <tr><td class="what">Error bar</td><td class="val">GCI × 1.25</td>
       <td><p>Grid Convergence Index from the three meshes, times 1.25 to stay safe. Least-squares version if results scatter.</p></td>
       <td><p>Standard published procedure.</p></td>
@@ -294,12 +344,15 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>Between two compared runs only one setting changes. In a mesh study the wing never changes.</p></td>
       <td><p>With two changes, nobody can say which moved the result.</p></td>
       <td class="src"><span class="tag own">our choice</span></td></tr>
-    <tr><td class="what">Turbulence model</td><td class="val">SA for now; final choice later (by G0)</td>
-      <td><p>Mesh studies start with fully turbulent Spalart–Allmaras. The mesh is built transition-ready: y+ ≤ 1 at each case's speed, ≥ 30 cells across the boundary layer, fine chordwise cells over the band (upper 10–85 % of chord, from the nose on swept panels; lower 60–100 %). Every drag number carries a model band.</p></td>
-      <td><p>Stage 1 (2-D strips, smooth wing, calm air): long laminar runs and bubbles on most wings; SA overpredicts profile drag by a median +62 % (+69 % in level flight). What the mesh must resolve depends on the model.</p><p>"SA" is fully turbulent only with inflow ν̃/ν ≈ 3; lower values give "apparent transition".</p></td>
-      <td class="src"><span class="tag own">our choice</span><span class="ref">Stage 1 flow study; Spalart &amp; Rumsey 2007; Crivellini 2014</span></td></tr>
+    <tr><td class="what">Turbulence model</td><td class="val">transition captured<br>ADflow + SU2</td>
+      <td><p>Decided 4 Nov: the results must capture transition, with ADflow and SU2. This replaces &ldquo;SA for now; final choice later (by G0)&rdquo;. Our ADflow build has SA only (SST aborted) and no transition model, so transition comes from SU2 (SST + LM γ-Reθ).</p>
+        <p>The mesh stays transition-ready: y+ ≤ 1 at each case's speed, ≥ 30 cells across the boundary layer. The band as built in Stage 2: upper 0–85 % of chord, from the leading edge on every wing; lower 60–100 %; band cell = bubble length ÷ 20 at level C. Every drag number carries a model band.</p>
+        <p><span class="tag">pending</span> Solver split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first. About 20 cells per bubble as a fine-level target (Ansys CFX: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75–100 nodes from leading to trailing edge). Growth 1.1 instead of 1.25 off the wall (Stage 2 decision 57; Stage 3 decides).</p></td>
+      <td><p>Stage 1 (2-D strips, smooth wing, calm air): long laminar runs and bubbles on most wings; SA overpredicts profile drag by a median +62 % (+69 % in level flight). What the mesh must resolve depends on the model.</p><p>"SA" is fully turbulent only with inflow ν̃/ν ≈ 3; lower values give "apparent transition". Fix the value before the first ADflow solve.</p></td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">owner, 4 Nov 2026; Stage 1 flow study; Ansys CFX guide; Spalart &amp; Rumsey 2007; Crivellini 2014</span></td></tr>
     </tbody>
   </table></div>
+  <p class="sec-note"><strong>Note: first SU2 smoke test (4 Nov), not a result.</strong> SU2 8.6.0 ran SA and LM on one Stage 2 ring mesh: a section extruded between two symmetry planes, 97,920 cells, Re 3 × 10⁵, Mach 0.15, 4°. After about 370 iterations, not converged: SA CL 0.860, CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works. No wing has been run.</p>
 </section>
 
 <!-- D4 -->
@@ -308,8 +361,8 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="tbl"><table>
     <thead><tr><th>Rule</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
     <tbody>
-    <tr><td class="what">Mesh names</td><td class="val">mesh_&lt;level&gt;_&lt;wing_hash8&gt;</td>
-      <td><p>Every name says which size and which exact wing. Not &ldquo;family&rdquo;: that word already means the wing families (tailless, conventional).</p></td>
+    <tr><td class="what">Mesh names</td><td class="val">mesh_<wbr>&lt;level&gt;_<wbr>&lt;wing_hash8&gt;_<wbr>re&lt;Re&gt;</td>
+      <td><p>Every name says which size, which exact wing and which Re (on the mean chord). The surface depends on Re, because the tip gap and the band cells do: one surface per wing and Re level (Stage 2 decision 59). Not &ldquo;family&rdquo;: that word already means the wing families (tailless, conventional).</p></td>
       <td><p>One name, one mesh. In AERIS one name once meant two meshes.</p></td>
       <td class="src"><span class="tag own">our choice</span></td></tr>
     <tr><td class="what">Run outcomes</td><td class="val">accepted · rejected · needs review</td>
@@ -339,8 +392,12 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <section class="weak">
   <h2>Weak points still open</h2>
   <ul>
-    <li><strong>Drag ranking with SA.</strong> The 2-count increment target holds for the mesh, not for the model: SA's own error on differences is about 4 counts. Ranking wings or airfoils by drag needs transition-model results, at least on a calibration subset.</li>
-    <li><strong>Turbulence model.</strong> Choice deferred to a later stage (by G0). The mesh must stay transition-ready until then, or it is rebuilt.</li>
+    <li><strong>Drag ranking with SA.</strong> The 2-count increment target holds for the mesh, not for the model: SA's own error on differences is about 4 counts. Ranking wings or airfoils by drag needs transition-model results (SU2 SST + LM), at least on a calibration subset.</li>
+    <li><strong>Transition rests on SU2 alone.</strong> Decided 4 Nov: transition must be captured. Our ADflow build has SA only (SST aborted), so only SU2 (SST + LM) can do it. So far SU2 has run one smoke test on one ring mesh, not converged. Its cost on a full wing is unmeasured, and ADflow and SU2 SA have not yet been compared on the same mesh.</li>
+    <li><strong>Mesh size.</strong> Measured in Stage 2, the fine level has 15.2 M cells (median) with the planned rules, against the proposed 9–11 M. The relaxed band gives 10.9 M, but then the short high-Re root bubbles (about 1.5 % c) get only about 3 nodes: fine for SA, not for LM. The C-H wake lines may add about +45 % on the wing blocks, so F may land nearer 15 M than 11 M. The desktop takes about 1.2 M cells: with F at 10.9 M, VC is about 1.0 M (median) and C about 2.3 M, so C does not fit on the desktop.</li>
+    <li><strong>SU2 has no overset.</strong> It also refuses structured CGNS (structured meshes converted to unstructured hexes do run). So the overset wake box and vortex tube cannot serve both solvers. The C-H proposal (pending) has its own costs: the tip vortex must be held by the outboard blocks without a tube, the open-line march is new work, and the wake lines add cells.</li>
+    <li><strong>Nose shape (decision 64).</strong> A first check found that the upper and lower nose radius of cambered sections differ 3–13×. Measured the same way, the raw files show nearly the same mismatch (NACA 4415 raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c). So it mostly reflects how a cambered, tilted nose looks to that one-sided fit. Re-measure raw and built the same way before any fix: a fix changes every geometry hash.</li>
+    <li><strong>The new scope needs data.</strong> −5° to post-stall and Mach toward 0.5 lie outside the Stage 1 data (root angles 0–10°, Mach ≤ 0.2). The mesh rules were set from those ranges, so they must be checked again for the new ones.</li>
     <li><strong>Numerical settings.</strong> Earlier tests moved drag 12–21 counts against a 0.45-count share. Expect this to drive the solver settings.</li>
     <li><strong>Iteration share.</strong> 0.30 counts is looser than Celik's 1/10-of-mesh-error rule (0.195). The measured 0.12 meets both; re-check once the mesh family is frozen.</li>
     <li><strong>Still open from Stage 0:</strong> grid share 65 %, pitching moment 0.002, the iteration share, a D5 (open decisions 1, 3, 4, 6).</li>
@@ -367,8 +424,12 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li>Nosek et al. The preregistration revolution. PNAS 115, 2018. <a href="https://doi.org/10.1073/pnas.1708274114">DOI</a></li>
     <li>Crivellini et al. Laminar separation bubble on low-Re airfoils: RANS modelling. J. Phys. Conf. Ser. 501, 2014. <a href="https://doi.org/10.1088/1742-6596/501/1/012024">DOI</a></li>
     <li>Spalart, Rumsey. Effective inflow conditions for turbulence models in aerodynamic calculations. AIAA J. 45, 2007. <a href="https://doi.org/10.2514/1.29373">DOI</a></li>
+    <li>AIAA Drag Prediction Workshop 4. Gridding guidelines (coarse, medium, fine grids). <a href="https://aiaa-dpw.larc.nasa.gov/Workshop4/gridding_guidelines_4.html">DPW-4</a></li>
+    <li>Ansys. CFX Modeling Guide: grid requirements of the γ-Reθ transition model. <a href="https://ansyshelp.ansys.com/public/views/secured/corp/v251/en/cfx_mod/i1324236.html">Ansys Help</a></li>
+    <li>SU2 v8.6.0 source code (no overset; structured CGNS refused). <a href="https://github.com/su2code/SU2">GitHub</a></li>
+    <li>Anderson. Fundamentals of Aerodynamics, 5th ed., 2011: similarity (§1.7–1.8), Prandtl–Glauert (§11.4–11.6).</li>
   </ol>
 </section>
 
-<footer>Mirrors <span class="num">CFD_Automation/Stage_0_decisions/decisions.md</span> in the aeris repository (updated 2 Nov 2026 with the Stage 1 findings). If the two ever differ, the repository file wins.</footer>
+<footer>Mirrors <span class="num">CFD_Automation/Stage_0_decisions/decisions.md</span> in the aeris repository (updated 6 Nov 2026 with Stage 2 and the owner's decisions of 4 and 6 Nov; first updated 2 Nov with the Stage 1 findings). If the two ever differ, the repository file wins.</footer>
 </div>

@@ -18,37 +18,27 @@ from .planform import build_planform
 from ..paths import STAGE1
 
 SETS_DIR = STAGE1 / "data" / "sets"
+# Decision 70: the root chord left the design vector. Its column (the first of the old 18) is still drawn
+# and dropped, so the same seeds give the same shapes as the first sets (from_unit ignores it).
+RETIRED = ("root_chord_m",)
 
 
-def lhs(spec: TypeSpec, n: int, seed: int) -> list[dict]:
+def lhs(spec: TypeSpec, n: int, seed: int, rows: int | None = None) -> list[dict]:
     """n wings by Latin hypercube over the type's box.
 
     Section choices (if any) get their own hypercube columns, so each candidate is used about
-    equally often. With a span cap (focus space, `max_full_span_m`), the hypercube is drawn larger
-    and only the wings within the cap are kept, in draw order, until n are found: still space-filling,
-    but the strata are no longer exactly balanced where the cap cuts the box."""
-    names = spec.free_variables + spec.choice_variables
-    if spec.max_full_span_m is None:
-        unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(n)
-        return [from_unit(spec, dict(zip(names, row))) for row in unit]
-    m = max(2 * n, 8)
-    while True:
-        unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(m)
-        out = []
-        for row in unit:
-            v = from_unit(spec, dict(zip(names, row)))
-            if 2.0 * build_planform(spec, v).semi_span <= spec.max_full_span_m * (1 + 1e-12):
-                out.append(v)
-                if len(out) == n:
-                    return out
-        m *= 2
-        if m > 4096 * max(n, 1):
-            raise ValueError(f"{spec.name}: the span cap {spec.max_full_span_m} m leaves almost no wings in the box")
+    equally often. With rows (the focus sets, focus_rows), a hypercube of that many rows is drawn and
+    the first n are kept, in draw order: space-filling, but the strata are not exactly balanced."""
+    names = RETIRED + spec.free_variables + spec.choice_variables
+    unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(rows or n)[:n]
+    return [from_unit(spec, dict(zip(names, row))) for row in unit]
 
 
-def within_cap(spec: TypeSpec, vec: dict) -> bool:
-    """True when the wing's full span (tip to tip) is within the type's cap (or there is none)."""
-    return spec.max_full_span_m is None or 2.0 * build_planform(spec, vec).semi_span <= spec.max_full_span_m * (1 + 1e-12)
+def focus_rows(n: int) -> int:
+    """Rows drawn for a focus set of n wings. The first focus sets drew this many for the 7 m full-span cap
+    and kept the wings within it, in draw order. The cap went with decision 70 (at unit mean chord the full
+    span is the aspect ratio, which has its own range); the draw stays, so most focus wings keep their shapes."""
+    return max(2 * n, 8)
 
 
 def corner1(spec: TypeSpec) -> list[dict]:
@@ -92,16 +82,25 @@ def covers_all_pairs(m: np.ndarray) -> bool:
     return True
 
 
+def corner2_design(spec: TypeSpec) -> np.ndarray:
+    """The covering array of the corner2 set, one column per free variable: built with the retired
+    column (dropped), so every variable keeps its rows of the first sets. Dropping a column keeps the
+    pair coverage; N is the same as for the free variables alone (8 for 16 and 17, 7 for 12 and 13)."""
+    return corner2_matrix(len(RETIRED) + len(spec.free_variables))[:, len(RETIRED):]
+
+
 def corner2(spec: TypeSpec) -> list[dict]:
     names = spec.free_variables
-    m = corner2_matrix(len(names))
+    m = corner2_design(spec)
     return [from_unit(spec, {v: float(m[r, j]) for j, v in enumerate(names)}) for r in range(len(m))]
 
 
 def reference(spec: TypeSpec, training: list[dict]) -> list[dict]:
     """Five wings by rule. Mid-range is built from the ranges; the other four are
-    picked from the training set (no wing picked twice)."""
-    area = np.array([build_planform(spec, v).area() for v in training])
+    picked from the training set (no wing picked twice). Sizes in similarity form (decision 70): at unit
+    mean chord the area is the aspect ratio (area / c_mean^2 = b / c_mean), so the two area rules pick the
+    lowest and the highest aspect ratio; the tip chord is in mean chords."""
+    ar = np.array([v["aspect_ratio"] for v in training])
     unit = np.array([to_unit(spec, v) for v in training])
     names = list(spec.free_variables)
     sweep = np.mean([unit[:, names.index(f"sweep{i}_deg")] for i in (1, 2, 3)
@@ -112,8 +111,8 @@ def reference(spec: TypeSpec, training: list[dict]) -> list[dict]:
 
     picks, out = [], [{"rule": "mid_range", "training_index": None, "vector": mid_vector(spec)}]
     for rule, order in [
-        ("smallest_area", np.argsort(area)),
-        ("largest_area", np.argsort(-area)),
+        ("lowest_aspect_ratio", np.argsort(ar)),
+        ("highest_aspect_ratio", np.argsort(-ar)),
         ("most_sweep_smallest_tip", np.argsort(-(sweep - tip_u))),
         ("strongest_washout", np.argsort(washout)),
     ]:
@@ -162,28 +161,32 @@ def make_sets(cfg: Config, wing_type: str) -> dict[str, dict]:
     used = [seeds[k] for k in ("training_focus", "holdout_focus", "training_full", "holdout_full")]
     if len(set(used)) != len(used):
         raise ValueError("training, hold-out and their full versions need different seeds")
-    training = lhs(spec, cfg.sets["training_focus_size"], seeds["training_focus"])
+    n_train, n_hold = cfg.sets["training_focus_size"], cfg.sets["holdout_focus_size"]
+    training = lhs(spec, n_train, seeds["training_focus"], focus_rows(n_train))
     ref = reference(spec, training)
     head = {"wing_type": wing_type, "space": "focus", "variables": list(spec.free_variables)}
     head_f = head | {"space": "full", "variables": list(full.free_variables)}
     return {
-        "training_focus": head | {"how": "latin hypercube", "seed": seeds["training_focus"], "vectors": training},
+        "training_focus": head | {"how": f"latin hypercube of {focus_rows(n_train)} rows, the first {n_train} kept",
+                                 "seed": seeds["training_focus"], "vectors": training},
         "training_full": head_f | {"how": "latin hypercube over the full space", "seed": seeds["training_full"],
                                    "vectors": lhs(full, cfg.sets["training_full_size"], seeds["training_full"])},
         "corner1": head_f | {"how": "each variable at each bound of the full space, others mid-range",
                              "vectors": corner1(full)},
         "corner2": head_f | {"how": "binary covering array of strength 2 on the full space",
-                             "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables",
-                             "matrix": corner2_matrix(len(full.free_variables)).astype(int).tolist(),
+                             "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables + 1 (the retired "
+                                          "root-chord column; the same N as for n_variables here)",
+                             "matrix": corner2_design(full).astype(int).tolist(),
                              "vectors": corner2(full)},
         "reference": head | {"how": "five wings by rule", "rules": [r["rule"] for r in ref],
                              "training_index": [r["training_index"] for r in ref],
                              "coverage": coverage_check(spec, ref, training, cfg.sets["coverage_random_sets"],
                                                         cfg.sets["coverage_seed"]),
                              "vectors": [r["vector"] for r in ref]},
-        "holdout_focus": head | {"how": "latin hypercube, other seed; sealed: never built in Stage 1",
+        "holdout_focus": head | {"how": f"latin hypercube of {focus_rows(n_hold)} rows, the first {n_hold} kept, "
+                                        "other seed; sealed: never built in Stage 1",
                            "seed": seeds["holdout_focus"], "sealed": True,
-                           "vectors": lhs(spec, cfg.sets["holdout_focus_size"], seeds["holdout_focus"])},
+                           "vectors": lhs(spec, n_hold, seeds["holdout_focus"], focus_rows(n_hold))},
         "holdout_full": head_f | {"how": "latin hypercube over the full space, other seed; sealed",
                                   "seed": seeds["holdout_full"], "sealed": True,
                                   "vectors": lhs(full, cfg.sets["holdout_full_size"], seeds["holdout_full"])},

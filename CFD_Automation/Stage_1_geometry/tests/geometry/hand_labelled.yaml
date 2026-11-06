@@ -2,23 +2,25 @@
 # overrides, and the labels a person would give it (the full set).
 #
 # Bases:
-#   rect  conventional (stations chord law, span in root chords), root chord 0.5 m, semi-span 3.5 root chords (1.75 m),
+#   rect  conventional (stations chord law, span in root chords), semi-span 3.5 root chords,
 #         no taper, no sweep, no twist, no dihedral, crank at 70 % / 35 % of span
 #   bwb   a fixed BWB vector (the old AERIS mid-range wing)
 # Dihedral: one per panel (p1, p2, p3), converted on 29 Oct 2026 from the former station values.
+# Decision 70 (6 Nov 2026): no root chord in the vector. The BWB wings were given as root chord and semi-span
+# in metres; they are now given as semi-span / root chord (the same shapes): 1.0 / 0.9, 1.25 / 0.7, 0.75 / 1.1.
 
 bases:
   rect:
     type: cranked
     chord_law: stations
     span_mode: root_chord_fractions
-    vector: {root_chord_m: 0.5, c2_ratio: 1.0, c3_ratio: 1.0, c4_ratio: 1.0, semi_span_m: 3.5, b3_ratio: 0.3, split_ratio: 0.5,
+    vector: {c2_ratio: 1.0, c3_ratio: 1.0, c4_ratio: 1.0, semi_span_m: 3.5, b3_ratio: 0.3, split_ratio: 0.5,
       sweep1_deg: 0.0, sweep2_deg: 0.0, sweep3_deg: 0.0, twist0_deg: 0.0, twist1_deg: 0.0, twist2_deg: 0.0, twist3_deg: 0.0,
       dihedral_p1_deg: 0.0, dihedral_p2_deg: 0.0, dihedral_p3_deg: 0.0}
   bwb:
     type: bwb
-    span_mode: semi_span
-    vector: {root_chord_m: 0.9, c2_ratio: 0.675, c3_ratio: 0.425, c4_ratio: 0.14, semi_span_m: 1.0, b3_ratio: 0.475,
+    span_mode: root_chord_fractions
+    vector: {c2_ratio: 0.675, c3_ratio: 0.425, c4_ratio: 0.14, semi_span_m: 1.1111111111111112, b3_ratio: 0.475,
       split_ratio: 0.5, sweep1_deg: 30.0, sweep2_deg: 25.0, sweep3_deg: 15.0, twist0_deg: 0.0, twist1_deg: -1.5,
       twist2_deg: -3.0, twist3_deg: -5.0, dihedral_p1_deg: 1.5, dihedral_p2_deg: 2.250129, dihedral_p3_deg: 4.000407}
 wings:
@@ -85,7 +87,7 @@ wings:
     labels: [conventional, tapered, aft_swept, washout, dihedral]
   conventional_mid_range:
     base: rect
-    set: {root_chord_m: 0.75, c2_ratio: 0.925, c3_ratio: 0.825, c4_ratio: 0.7, semi_span_m: 4.0, b3_ratio: 0.35,
+    set: {c2_ratio: 0.925, c3_ratio: 0.825, c4_ratio: 0.7, semi_span_m: 4.0, b3_ratio: 0.35,
       sweep1_deg: 5, sweep2_deg: 5, sweep3_deg: 5, twist0_deg: 1.5, twist1_deg: 0.5, twist2_deg: -0.5, twist3_deg: -2.0,
       dihedral_p1_deg: 1.5, dihedral_p2_deg: 1.5, dihedral_p3_deg: 1.5}
     labels: [conventional, tapered, straight_tapered, washout, dihedral, high_aspect_ratio]
@@ -94,13 +96,13 @@ wings:
     labels: [tailless, bwb, aft_swept, cranked, washout, dihedral, varying_dihedral]
   bwb_slim:
     base: bwb
-    set: {root_chord_m: 0.7, c2_ratio: 0.55, c3_ratio: 0.3, c4_ratio: 0.08, semi_span_m: 1.25, b3_ratio: 0.5, split_ratio: 0.5,
+    set: {c2_ratio: 0.55, c3_ratio: 0.3, c4_ratio: 0.08, semi_span_m: 1.7857142857142858, b3_ratio: 0.5, split_ratio: 0.5,
       sweep1_deg: 25, sweep2_deg: 20, sweep3_deg: 10, twist0_deg: 0, twist1_deg: -1, twist2_deg: -2, twist3_deg: -4,
       dihedral_p1_deg: 0.0, dihedral_p2_deg: 0.0, dihedral_p3_deg: 0.0}
     labels: [tailless, bwb, aft_swept, cranked, washout, high_aspect_ratio]
   bwb_wide:
     base: bwb
-    set: {root_chord_m: 1.1, c2_ratio: 0.8, c3_ratio: 0.55, c4_ratio: 0.2, semi_span_m: 0.75, b3_ratio: 0.4, split_ratio: 0.5,
+    set: {c2_ratio: 0.8, c3_ratio: 0.55, c4_ratio: 0.2, semi_span_m: 0.6818181818181818, b3_ratio: 0.4, split_ratio: 0.5,
       sweep1_deg: 40, sweep2_deg: 35, sweep3_deg: 25, twist0_deg: 1, twist1_deg: 0, twist2_deg: -1, twist3_deg: -2,
       dihedral_p1_deg: 0.0, dihedral_p2_deg: 0.0, dihedral_p3_deg: 0.0}
     labels: [tailless, bwb, aft_swept, cranked, washout, low_aspect_ratio]

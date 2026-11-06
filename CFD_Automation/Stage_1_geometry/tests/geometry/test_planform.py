@@ -19,8 +19,9 @@ def test_chords_and_sweeps_exact(wing_type):
     for vec in _random_vectors(spec):
         pf = build_planform(spec, vec)
         r = np.array([1, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]])
-        want_c = vec["root_chord_m"] * (np.cumprod(r) if spec.chord_law == "per_panel" else r)
+        want_c = params.root_chord(spec.chord_law, vec) * (np.cumprod(r) if spec.chord_law == "per_panel" else r)
         assert np.max(np.abs(pf.chord / want_c - 1)) < 1e-3          # 0.1 %
+        assert pf.area() / (2 * pf.semi_span) == pytest.approx(1.0, rel=1e-12)   # unit mean chord (decision 70)
         want_sw = [vec["sweep1_deg"], vec["sweep2_deg"], vec["sweep3_deg"]]
         assert np.max(np.abs(panel_sweep_deg(pf.y, pf.x_le) - want_sw)) < 0.1  # 0.1 deg
         assert pf.semi_span == pytest.approx(semi_span_m(spec, vec))
@@ -42,7 +43,8 @@ def test_root_chord_fraction_span_mode():
     spec = dataclasses.replace(params.load_config().types["cranked"], span_mode="root_chord_fractions")
     vec = params.mid_vector(spec) | {"semi_span_m": 4.0}
     pf = build_planform(spec, vec)
-    assert pf.semi_span == pytest.approx(vec["semi_span_m"] * vec["root_chord_m"])
+    assert pf.semi_span == pytest.approx(vec["semi_span_m"] * pf.chord[0])
+    assert pf.area() / (2 * pf.semi_span) == pytest.approx(1.0, rel=1e-12)
 
 
 def test_forward_sweep_builds():
@@ -56,13 +58,13 @@ def test_rectangle_area_mac_ar():
     import dataclasses
     spec = dataclasses.replace(params.load_config().types["cranked"], span_mode="root_chord_fractions")
     vec = params.mid_vector(spec) | {
-        "root_chord_m": 0.5, "c2_ratio": 1.0, "c3_ratio": 1.0, "c4_ratio": 1.0,
+        "c2_ratio": 1.0, "c3_ratio": 1.0, "c4_ratio": 1.0,
         "semi_span_m": 4.0, "sweep1_deg": 0.0, "sweep2_deg": 0.0, "sweep3_deg": 0.0,
         "twist0_deg": 0.0, "twist1_deg": 0.0, "twist2_deg": 0.0, "twist3_deg": 0.0,
     }
-    pf = build_planform(spec, vec)
-    assert pf.area() == pytest.approx(2 * 2.0 * 0.5)
-    assert mean_aero_chord(pf) == pytest.approx(0.5)
+    pf = build_planform(spec, vec)          # a rectangle at unit mean chord: chord 1, semi-span 4
+    assert pf.area() == pytest.approx(2 * 4.0 * 1.0)
+    assert mean_aero_chord(pf) == pytest.approx(1.0)
     assert aspect_ratio(pf) == pytest.approx(8.0)
 
 
@@ -70,12 +72,12 @@ def test_mac_of_straight_taper():
     # MAC of a straight taper: (2/3) c_r (1 + l + l^2) / (1 + l)
     spec = params.load_config().types["tapered"]
     lam = 0.4
-    vec = params.mid_vector(spec) | {"root_chord_m": 1.0, "c4_ratio": lam}
+    vec = params.mid_vector(spec) | {"c4_ratio": lam}
     vec = params.resolve(spec, vec)
     y = build_planform(spec, vec).y / build_planform(spec, vec).semi_span
     vec |= {"c2_ratio": 1 + (lam - 1) * y[1], "c3_ratio": 1 + (lam - 1) * y[2]}
-    assert mean_aero_chord(build_planform(spec, vec)) == pytest.approx(
-        2 / 3 * (1 + lam + lam**2) / (1 + lam))
+    pf = build_planform(spec, vec)
+    assert mean_aero_chord(pf) == pytest.approx(2 / 3 * pf.chord[0] * (1 + lam + lam**2) / (1 + lam))
 
 
 def test_negative_chord_refused():

@@ -2,7 +2,6 @@
  "wing_type": "cranked",
  "space": "full",
  "variables": [
-  "root_chord_m",
   "c2_ratio",
   "c3_ratio",
   "c4_ratio",
@@ -21,7 +20,7 @@
   "dihedral_p3_deg"
  ],
  "how": "binary covering array of strength 2 on the full space",
- "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables",
+ "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables + 1 (the retired root-chord column; the same N as for n_variables here)",
  "matrix": [
   [
    0,
@@ -39,7 +38,6 @@
    0,
    0,
    0,
-   0,
    0
   ],
   [
@@ -58,11 +56,9 @@
    1,
    1,
    1,
-   1,
    1
   ],
   [
-   1,
    1,
    1,
    1,
@@ -84,7 +80,6 @@
    1,
    1,
    1,
-   1,
    0,
    0,
    0,
@@ -100,7 +95,6 @@
    0
   ],
   [
-   1,
    0,
    0,
    0,
@@ -119,7 +113,6 @@
    1
   ],
   [
-   0,
    1,
    0,
    0,
@@ -139,7 +132,6 @@
   ],
   [
    0,
-   0,
    1,
    0,
    0,
@@ -157,7 +149,6 @@
    1
   ],
   [
-   0,
    0,
    0,
    1,
@@ -178,11 +169,10 @@
  ],
  "vectors": [
   {
-   "root_chord_m": 0.08,
    "c2_ratio": 0.7,
    "c3_ratio": 0.6,
    "c4_ratio": 0.4,
-   "semi_span_m": 0.06832368179143324,
+   "semi_span_m": 1.5,
    "aspect_ratio": 3.0,
    "b3_ratio": 0.15,
    "split_ratio": 0.2,
@@ -204,11 +194,10 @@
    ]
   },
   {
-   "root_chord_m": 1.0,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 9.99930955941795,
+   "semi_span_m": 10.0,
    "aspect_ratio": 20.0,
    "b3_ratio": 0.6,
    "split_ratio": 0.8,
@@ -230,11 +219,10 @@
    ]
   },
   {
-   "root_chord_m": 1.0,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 9.998659774908756,
+   "semi_span_m": 10.0,
    "aspect_ratio": 20.0,
    "b3_ratio": 0.6,
    "split_ratio": 0.8,
@@ -256,11 +244,10 @@
    ]
   },
   {
-   "root_chord_m": 1.0,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 1.4999706815669975,
+   "semi_span_m": 1.5,
    "aspect_ratio": 3.0,
    "b3_ratio": 0.15,
    "split_ratio": 0.2,
@@ -282,11 +269,10 @@
    ]
   },
   {
-   "root_chord_m": 1.0,
    "c2_ratio": 0.7,
    "c3_ratio": 0.6,
    "c4_ratio": 0.4,
-   "semi_span_m": 4.926467381796141,
+   "semi_span_m": 10.0,
    "aspect_ratio": 20.0,
    "b3_ratio": 0.6,
    "split_ratio": 0.8,
@@ -308,11 +294,10 @@
    ]
   },
   {
-   "root_chord_m": 0.08,
    "c2_ratio": 1.0,
    "c3_ratio": 0.6,
    "c4_ratio": 0.4,
-   "semi_span_m": 0.621164439801634,
+   "semi_span_m": 10.0,
    "aspect_ratio": 20.0,
    "b3_ratio": 0.15,
    "split_ratio": 0.2,
@@ -334,11 +319,10 @@
    ]
   },
   {
-   "root_chord_m": 0.08,
    "c2_ratio": 0.7,
    "c3_ratio": 1.0,
    "c4_ratio": 0.4,
-   "semi_span_m": 0.07013263814764878,
+   "semi_span_m": 1.5,
    "aspect_ratio": 3.0,
    "b3_ratio": 0.6,
    "split_ratio": 0.2,
@@ -360,11 +344,10 @@
    ]
   },
   {
-   "root_chord_m": 0.08,
    "c2_ratio": 0.7,
    "c3_ratio": 0.6,
    "c4_ratio": 1.0,
-   "semi_span_m": 0.08827344983630218,
+   "semi_span_m": 1.5,
    "aspect_ratio": 3.0,
    "b3_ratio": 0.15,
    "split_ratio": 0.8,

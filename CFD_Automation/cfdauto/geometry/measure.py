@@ -2,7 +2,8 @@
 
 Every value is read from points on the loft (or, without pyGeo, from the same
 straight panels through the stations). Later stages use these measured values;
-the design vector is only the label.
+the design vector is only the label. Lengths are in mean chords (every wing at unit
+mean chord, decision 70): a key ending in _m is metres for a 1 m mean chord.
 """
 
 from __future__ import annotations

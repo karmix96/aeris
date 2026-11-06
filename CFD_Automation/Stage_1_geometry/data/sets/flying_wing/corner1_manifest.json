@@ -1,8 +1,8 @@
 {
  "wing_type": "flying_wing",
  "set": "corner1",
- "code_version": "0.6.0",
- "code_hash": "0252f6e7f6259a9cfcd15390ee7196fd277e24be28160e0ba4b5675f6f49074b",
+ "code_version": "0.7.0",
+ "code_hash": "e91dbc750982d6508d186f29b106ac1a3bc3bf1260ecf73afc6890390c165a4b",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d146e920db489f34e1de1f0fe7ffec7794f371b021cb6eca056ab862e5b77c51",
-   "surface_hash": "7ef10cbe351286b93a0051329c9db5de7286bbf9b5fffe54fe5c9a82e224199f",
+   "input_hash": "4621292ebfbbaf13087255edf97024bb0b74dd45a8aae843166467839ef8fa26",
+   "surface_hash": "3434771ebeff8af1c4d8e6422b0a5134639c67cafc16fe67b896b35786b166c4",
    "labels": [
     "tailless",
     "flying_wing",
@@ -20,11 +20,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.15,
-    "c2_ratio": 0.875,
-    "c3_ratio": 0.75,
-    "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 0.49497081352667477,
+    "c2_ratio": 0.75,
+    "c3_ratio": 0.5,
+    "c4_ratio": 0.2,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -51,8 +50,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2f0dc486f39b663b7f7ef981c2be4cd63c02426ec3457f908c3f1ae79630e81c",
-   "surface_hash": "8c0fee04f9ccfc39ebbdcca897817d3d0c27026f50548e8b9d4986691412ac24",
+   "input_hash": "629d3bc35da72957a1f04be1f379eaaca36083b9340dbdef661f45b8f52d69fc",
+   "surface_hash": "50f40e2bf844c58eee23b822fdd02961b4dd2a9da91c71dca969a70d44b47c54",
    "labels": [
     "tailless",
     "flying_wing",
@@ -61,11 +60,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.2,
-    "c2_ratio": 0.875,
-    "c3_ratio": 0.75,
-    "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 3.959766508213398,
+    "c2_ratio": 1.0,
+    "c3_ratio": 1.0,
+    "c4_ratio": 1.0,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -92,22 +90,21 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "68d415de0d69d5601159d1364dac49b0268f69388073a6156526fffb2bad07a4",
-   "surface_hash": "ddd1a64fd4a42dd429bb6273d6cb66faa6b319cfb54d07764acf597cb76948d7",
+   "input_hash": "45744414f0810ef8a8a913bea2f2d4caea97c54040a8c1489d6af6189e207d88",
+   "surface_hash": "a107de10601b4d374e94cfdefd5bf9089e04c171b0bccbbebd26eaba0e73c6fd",
    "labels": [
     "tailless",
     "flying_wing",
     "aft_swept",
     "washout",
-    "high_aspect_ratio"
+    "low_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.75,
-    "c3_ratio": 0.5,
-    "c4_ratio": 0.2,
-    "semi_span_m": 1.6705567710831353,
-    "aspect_ratio": 8.25,
+    "c2_ratio": 0.875,
+    "c3_ratio": 0.75,
+    "c4_ratio": 0.6000000000000001,
+    "semi_span_m": 1.25,
+    "aspect_ratio": 2.5,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
     "sweep1_deg": 30.0,
@@ -133,8 +130,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b9165448ec47b93e02a93d875d3b23465bc490ee8149b0a90fa0ed7e4f2506a9",
-   "surface_hash": "b67f55b8837548f316816a19db85148a7d96a15b964343c47c126f2c9cbedb43",
+   "input_hash": "c569b4dde81448d9106829400e28c06d7af77d182305293a9fffdc0099bd0efa",
+   "surface_hash": "cfcb0066823fe253ffce46cef289aed0173f6771199e7e6be49b288fce514c7f",
    "labels": [
     "tailless",
     "flying_wing",
@@ -143,12 +140,11 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 1.0,
-    "c3_ratio": 1.0,
-    "c4_ratio": 1.0,
-    "semi_span_m": 2.7841872649668113,
-    "aspect_ratio": 8.25,
+    "c2_ratio": 0.875,
+    "c3_ratio": 0.75,
+    "c4_ratio": 0.6000000000000001,
+    "semi_span_m": 7.0,
+    "aspect_ratio": 14.0,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
     "sweep1_deg": 30.0,
@@ -174,23 +170,22 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "914700ccfecc353f691aecbf2698b154950ebe665ccbde9e83bc6b885adb4717",
-   "surface_hash": "6de39f8cd61e67ae89782034873bce7b278460d3a15f12f773c810a10209cca0",
+   "input_hash": "466be5682e563cfe9bd20552fc15710fee77bcda4cba57611e78da0222ac09ae",
+   "surface_hash": "61109560670db0df708800f21c75cb97cac9c323b2c43da3729fe8d70d76f600",
    "labels": [
     "tailless",
     "flying_wing",
     "aft_swept",
     "washout",
-    "low_aspect_ratio"
+    "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.875,
-    "c3_ratio": 0.75,
+    "c2_ratio": 0.8300000000000001,
+    "c3_ratio": 0.6600000000000001,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 0.6749602002636473,
-    "aspect_ratio": 2.5,
-    "b3_ratio": 0.375,
+    "semi_span_m": 4.125,
+    "aspect_ratio": 8.25,
+    "b3_ratio": 0.15,
     "split_ratio": 0.5,
     "sweep1_deg": 30.0,
     "sweep2_deg": 30.0,
@@ -215,8 +210,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "07289d75d20712227301920c1ba82912f03eab0a2ed858e85f25db3b75f2cf7f",
-   "surface_hash": "b9e448b86643ebb59cbbd6576ad366309abf4e92630fa2032e7cefe7e7583b48",
+   "input_hash": "f276128d539f5d0a0abc62d8421de851484d1aebd1f5a4bf066b943a4e1316eb",
+   "surface_hash": "17f2fda63c6312c28581fd497301250fcbfb0a38dabe3213c2c47076d2950d5a",
    "labels": [
     "tailless",
     "flying_wing",
@@ -225,13 +220,12 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.875,
-    "c3_ratio": 0.75,
+    "c2_ratio": 0.92,
+    "c3_ratio": 0.8400000000000001,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 3.7797771214764255,
-    "aspect_ratio": 14.0,
-    "b3_ratio": 0.375,
+    "semi_span_m": 4.125,
+    "aspect_ratio": 8.25,
+    "b3_ratio": 0.6,
     "split_ratio": 0.5,
     "sweep1_deg": 30.0,
     "sweep2_deg": 30.0,
@@ -256,8 +250,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d5b9cab4d695273d7413ac74144e519464e6cdc3e958c6ed6f65fd1ed9d34ca9",
-   "surface_hash": "25fe65d2884726d92edf939f85050823177463e6c8d0eb61da876742da414303",
+   "input_hash": "5346964d8f912dfb5bc9531f52297c6e5b6920cf8724de80e12639079114f676",
+   "surface_hash": "85c9fdeb49ebfdb908d5d2ade2a9c7ecc0922e515a170c90e92b89b7b26d0051",
    "labels": [
     "tailless",
     "flying_wing",
@@ -266,14 +260,13 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.8300000000000001,
-    "c3_ratio": 0.6600000000000001,
+    "c2_ratio": 0.95,
+    "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2274310368660344,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
-    "b3_ratio": 0.15,
-    "split_ratio": 0.5,
+    "b3_ratio": 0.375,
+    "split_ratio": 0.2,
     "sweep1_deg": 30.0,
     "sweep2_deg": 30.0,
     "sweep3_deg": 30.0,
@@ -297,8 +290,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2b1778bd4f59c6ff723c96b916b05f8feb097492b788af17d636fb8f2d8e3572",
-   "surface_hash": "035cba9b71fb3da5a884b1f128b3cbb341ace019c4d9fdd8800d418d16c0f5a5",
+   "input_hash": "a5ee6d2013d45852b26634a35b036a19b18f63e07ede0dc3dba0cc14b1ad4fde",
+   "surface_hash": "8d4c577040d48c0cf100aaaf482a5880043790ccc892e243fcab032a9bdd8153",
    "labels": [
     "tailless",
     "flying_wing",
@@ -307,14 +300,13 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.92,
-    "c3_ratio": 0.8400000000000001,
+    "c2_ratio": 0.8,
+    "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2272998800751846,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
-    "b3_ratio": 0.6,
-    "split_ratio": 0.5,
+    "b3_ratio": 0.375,
+    "split_ratio": 0.8,
     "sweep1_deg": 30.0,
     "sweep2_deg": 30.0,
     "sweep3_deg": 30.0,
@@ -338,90 +330,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0c84cfb529efae3e7f4f190a0bfc67f58a085a08dbe0aeb1edc253419e75af73",
-   "surface_hash": "d5a403601772b1dc9d1ea067f497e286ee7b5e42ede24002942bda95358bcb02",
-   "labels": [
-    "tailless",
-    "flying_wing",
-    "aft_swept",
-    "washout",
-    "high_aspect_ratio"
-   ],
-   "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.95,
-    "c3_ratio": 0.75,
-    "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273806846425304,
-    "aspect_ratio": 8.25,
-    "b3_ratio": 0.375,
-    "split_ratio": 0.2,
-    "sweep1_deg": 30.0,
-    "sweep2_deg": 30.0,
-    "sweep3_deg": 30.0,
-    "twist0_deg": 1.0,
-    "twist1_deg": 0.0,
-    "twist2_deg": 0.0,
-    "twist3_deg": -2.5,
-    "dihedral_p1_deg": 0.0,
-    "dihedral_p2_deg": 0.0,
-    "dihedral_p3_deg": 0.0,
-    "airfoils": [
-     "mh60",
-     "mh60",
-     "mh45",
-     "mh45"
-    ]
-   }
-  },
-  {
-   "index": 9,
-   "passed": true,
-   "gate": null,
-   "reason": "",
-   "input_hash": "81ccc19a199de884bbea3c1c6becaa4e61b0f247d4aa38e75d9aef8a9fa2f788",
-   "surface_hash": "7152b4561af6cafe75ed1071b33ee647aa24cd1e0490de22b9ffbed746e6629e",
-   "labels": [
-    "tailless",
-    "flying_wing",
-    "aft_swept",
-    "washout",
-    "high_aspect_ratio"
-   ],
-   "vector": {
-    "root_chord_m": 0.675,
-    "c2_ratio": 0.8,
-    "c3_ratio": 0.75,
-    "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.227357802914081,
-    "aspect_ratio": 8.25,
-    "b3_ratio": 0.375,
-    "split_ratio": 0.8,
-    "sweep1_deg": 30.0,
-    "sweep2_deg": 30.0,
-    "sweep3_deg": 30.0,
-    "twist0_deg": 1.0,
-    "twist1_deg": 0.0,
-    "twist2_deg": 0.0,
-    "twist3_deg": -2.5,
-    "dihedral_p1_deg": 0.0,
-    "dihedral_p2_deg": 0.0,
-    "dihedral_p3_deg": 0.0,
-    "airfoils": [
-     "mh60",
-     "mh60",
-     "mh45",
-     "mh45"
-    ]
-   }
-  },
-  {
-   "index": 10,
-   "passed": true,
-   "gate": null,
-   "reason": "",
-   "input_hash": "514726963259f43c582e337f964d9a96db4f6f44f3d621ad0b06a6c21c6ee7f8",
-   "surface_hash": "a7ad4299b2cacf4dfd69c09377e8caa7269784f2e3b153603579247fcbda7a80",
+   "input_hash": "76200dd501e4ab9a15f6c3822a37a6eb8a1d8f7d965f91a09563b4a94e996708",
+   "surface_hash": "9b9996763d4268841b68488bf98709956008486230c7feb419c7a232ed1972c6",
    "labels": [
     "tailless",
     "flying_wing",
@@ -431,11 +341,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -458,12 +367,12 @@
    }
   },
   {
-   "index": 11,
+   "index": 9,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5aa99602e2d30621cebebdb4593f0ecbad7b952c4865e000077f607588bd64c2",
-   "surface_hash": "65ac765b06ee8627a7109d3a928bd18a8e2d4581419434f68c7ddc6c9a878c30",
+   "input_hash": "890571067eb53b54deefd4319cb126275555d3c617615378249f45ddcb21d393",
+   "surface_hash": "575ff3a50e30dd48378166b418ecd6a81d80a1edbcdb0cafea662bd2ccf51513",
    "labels": [
     "tailless",
     "flying_wing",
@@ -472,11 +381,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -499,12 +407,12 @@
    }
   },
   {
-   "index": 12,
+   "index": 10,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8e80eb8f08d13af0d791c36972a4a6798417fdb228408828f78e92e76500c0f9",
-   "surface_hash": "819c1a84c6cbc8c45e1be7f55661271a96d5cdacc63aad00c7616ac093a0235f",
+   "input_hash": "4d30f26fe08a9380c0a088bd86cacab2cb5ae7dbfc4c53cbaee4f850a8f3df0b",
+   "surface_hash": "40416125d0c69fc6fc3deb55197fdedd4afbed42c7896f1d78a693bf09f189e6",
    "labels": [
     "tailless",
     "flying_wing",
@@ -512,11 +420,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.227306763275437,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -539,12 +446,12 @@
    }
   },
   {
-   "index": 13,
+   "index": 11,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ac0594cf20c5297238491c9a0e54950059ed72ac1dd743c24b517a69bfe52cba",
-   "surface_hash": "92fbb549098d8e0ed721cee6d2fc10f9264666dbd0ab1225854184c97efb87b9",
+   "input_hash": "a3e5573b8cd6743688508680954f410ff7ccb07e5fa3a410fd18a279776db333",
+   "surface_hash": "505e1bf9e6911ac6c834c35b85c46438033dcc3b26a74ee14fb7817a4560e7a7",
    "labels": [
     "tailless",
     "flying_wing",
@@ -553,11 +460,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2270592106969445,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -580,12 +486,12 @@
    }
   },
   {
-   "index": 14,
+   "index": 12,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ce86b8d424cec03c791ab106e9fc46db2819cef2c65fff03d41d427572e85528",
-   "surface_hash": "dabf951b383ac37969f0545ce2e511af811dfbce7e94f59e52e7249e50d6f752",
+   "input_hash": "150b30c9a46226a52e376c8ebf6ba2bf9c144639b9397fc0a955e7f44635a64a",
+   "surface_hash": "f1e758b29903d9452536108714c5462f4d41e6296c07f3d286bb0c7ebb83bc4c",
    "labels": [
     "tailless",
     "flying_wing",
@@ -594,11 +500,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2262003396238743,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -621,12 +526,12 @@
    }
   },
   {
-   "index": 15,
+   "index": 13,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8255bf3e4d03223856f68b638ddea114fcf8fd4f4e509b42149b929b770e86c5",
-   "surface_hash": "e9ed58d87945c19727d5fa642514f141c8c237939ba9483f7877612ea2c9d69d",
+   "input_hash": "ae065ff517966036168c25b010507382ca5fd9aa0e26064cf6c716553a723e2b",
+   "surface_hash": "3330f39797bb588a296ea80e3d0c4596da58111004fc03cd3a09d7825ab166a2",
    "labels": [
     "tailless",
     "flying_wing",
@@ -635,11 +540,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.226612792846509,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -662,12 +566,12 @@
    }
   },
   {
-   "index": 16,
+   "index": 14,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0aee51d607c1c70cacafcd87aeddf122eff1fc9efc948cb77c72be47ab2a71e8",
-   "surface_hash": "d412eacbd33f5d3e921885bd71708c7e5540569ec92d834b641743ad14e6aac0",
+   "input_hash": "521007fa8263ccf3bffab6d788982098cb7c50486bbd6e84bc68136570ea2d9d",
+   "surface_hash": "e49098fb3441c0b0c38c8a9d43b724d4e5b49642e1527c30e2c8f7083b62c285",
    "labels": [
     "tailless",
     "flying_wing",
@@ -676,11 +580,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.226922243019601,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -703,12 +606,12 @@
    }
   },
   {
-   "index": 17,
+   "index": 15,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fd2b166a855c8acb817c8462e2fcb10fc88c3d01432c5426b8ccc6af7bfbeb4f",
-   "surface_hash": "f3e39a67501b92e5c6eccc1a76ac3de7834fde9cf8ec4dc94d2a6ce781564808",
+   "input_hash": "0fafa5005686b8715f2fc31bd4788548d256a219efaf2c5d328bdccb21d261ef",
+   "surface_hash": "69cff0ee2f806d39435334992ef10592b6610da7e38e758cecd9c72d532c5d60",
    "labels": [
     "tailless",
     "flying_wing",
@@ -717,11 +620,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2260371061157587,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -744,12 +646,12 @@
    }
   },
   {
-   "index": 18,
+   "index": 16,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5ac58a1fe64030082c9ee3486f59055e63146e135e2d43f6207f85b0e146607f",
-   "surface_hash": "8032626d244cbf33c7cf5f58e8004e380f77170339491c584ab5c286405110ff",
+   "input_hash": "9b558291c0fd76a7f09c9398a30da1132a6a9f00292339c82a45bbe39a1e97a5",
+   "surface_hash": "ac98a387fedeba6f091a5f18e682ac334c452d08742309aeb1303a0af8467bff",
    "labels": [
     "tailless",
     "flying_wing",
@@ -758,11 +660,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.224932297555263,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -785,12 +686,12 @@
    }
   },
   {
-   "index": 19,
+   "index": 17,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5b08f120fab3539f0b31c60e67a197682e673266fafc82021507b7f187996447",
-   "surface_hash": "2264ca773ee61467fbd1bc27f353d565a2134a52bf8376b0f435ede97b56c6ae",
+   "input_hash": "af47126ab8f08040e9d75f2587080f3ff3fc6d40e73634a55a02bee823021cea",
+   "surface_hash": "dbcb18fd678c818560d0c3988fe30815ed2a155affb2fe21c99ca248d31a2371",
    "labels": [
     "tailless",
     "flying_wing",
@@ -799,11 +700,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.226611812702431,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -826,12 +726,12 @@
    }
   },
   {
-   "index": 20,
+   "index": 18,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1467606fe54d329a2b93c91f6eb1d9e89a7fe2de8207c01f37ee584b93fd6512",
-   "surface_hash": "04015c3a07ab28f7f9b9bf931acfab42b5808c981d3ff471f1263cffa36a7f44",
+   "input_hash": "8a57d62aa28d6122a9aaaea07de3362e725c6bf56952cc4c5599c8666d494b46",
+   "surface_hash": "792a7f0b4550d4b289b6bd7068df1e7babb4f213ce28c028257e8f04458a7fbe",
    "labels": [
     "tailless",
     "flying_wing",
@@ -842,11 +742,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -869,12 +768,12 @@
    }
   },
   {
-   "index": 21,
+   "index": 19,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "db91f2db9e06e027d56aef12c786379caa493d34247cbe067cdb139f399f6fba",
-   "surface_hash": "b4113034712aec15f67d2b539e03754adecff8ab3a6f3d06a36f93ade5781c0d",
+   "input_hash": "2da2af8433bfcc40f901f2e8532553f217122cc77ead583c6a2c4d2c5a67ce6e",
+   "surface_hash": "a15dd08322a46f30b798955c2afa05f7f38a060be279a1bdc43508a2ce58648a",
    "labels": [
     "tailless",
     "flying_wing",
@@ -885,11 +784,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -912,12 +810,12 @@
    }
   },
   {
-   "index": 22,
+   "index": 20,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6f438f48f1ea4faf0492383c0abfc91120fa813a483af0865a93f5974b953a16",
-   "surface_hash": "a1516316e982017932ec8febaa0b9ef3eb0a2aad0da9963459cb5b59d62cde33",
+   "input_hash": "18b6550c45ab6a6a3d6db4768d1c1bd8ee55e5b05a59a97302101c7097ef6d01",
+   "surface_hash": "e3c0e2d4c3a39a32bd5b599a20558a1fc50add70e38d5eff712165ce96793b19",
    "labels": [
     "tailless",
     "flying_wing",
@@ -928,11 +826,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -955,12 +852,12 @@
    }
   },
   {
-   "index": 23,
+   "index": 21,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f11b6811f67e51c588da18e6be779ab58dd3dc6742dac4c2f29304340e348d85",
-   "surface_hash": "ebb53825a31fa5e3af6c04f50f9c3a10fbcc8c6b3860234ed9e78f918e0eedcb",
+   "input_hash": "fcd91ccce08de65c4c7575eb94761bd7c4a8ca77576fbeadc359ebd7ea8c8c92",
+   "surface_hash": "d7a2bc2366038e4bfd2c7a6077f8a0b742d68990190b9c135838e88dbe8b8d46",
    "labels": [
     "tailless",
     "flying_wing",
@@ -971,11 +868,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -998,12 +894,12 @@
    }
   },
   {
-   "index": 24,
+   "index": 22,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0fb2f530b813c95070a7bcc891af1ba72b3f3f58c702037588eeae732f707824",
-   "surface_hash": "1a9a7bf6b7d1f750e1fcf13083260ff07cb2f59bedebf850df6b48db96322706",
+   "input_hash": "c51fb9adb7555c4e8b65da7d3e919f5f2a7e55ab5bfaafb2852917872b4e25d7",
+   "surface_hash": "99dab92b82ce703f056d0aeaf64aa07c48f2f49524199160587687d1c18b6080",
    "labels": [
     "tailless",
     "flying_wing",
@@ -1014,11 +910,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,
@@ -1041,12 +936,12 @@
    }
   },
   {
-   "index": 25,
+   "index": 23,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "81c74ff79cdcc16da9d34b94d72a10d19de2dd6559339944204264e3e2f3e96a",
-   "surface_hash": "21431bd3afeaf2daf3adae5a14da0f7c9f9d774cddb908ee11a218dfd1e0b227",
+   "input_hash": "975b4791e43207b7f1f05388740f19900597bba9efc77f43d28ea9e11faa8e7b",
+   "surface_hash": "12fa6c0643b1154b99c63077528718fa5ce2a85576862a6f4ec3b1546dc97370",
    "labels": [
     "tailless",
     "flying_wing",
@@ -1057,11 +952,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.675,
     "c2_ratio": 0.875,
     "c3_ratio": 0.75,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 2.2273686608700367,
+    "semi_span_m": 4.125,
     "aspect_ratio": 8.25,
     "b3_ratio": 0.375,
     "split_ratio": 0.5,

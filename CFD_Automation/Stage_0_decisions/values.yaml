@@ -229,9 +229,9 @@ D3_conditions_and_measurement:
       cells_per_bubble: about 20   # at level F, instead of at level C as built (Ansys CFX: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75-100 nodes leading to trailing edge)
       wall_normal_growth: 1.107    # 1.25 at VC; just above the 1.1 a transition model asks for; 1.23 at VC would give exactly 1.1 (Stage 2 decision 57)
       band_cell_c_where_local_Re_ge_4e5: 0.005   # the bubble-length table stops at 0.10 c from local Re 4e5 up
+      lower_band_c: [0.0, 1.0]     # owner, 7 Nov 2026 (Stage 2 decision 74, option A): from the leading edge; no extra cells (shared node list)
     proposal:   # pending
       solver_split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first
-      lower_band_at_negative_angles: being counted (Stage 2 decision 74)
     # SU2 smoke test (4 Nov 2026), not a result: SU2 8.6.0, SA and LM on one Stage 2 ring mesh (a section extruded
     # between two symmetry planes, 97,920 cells, Re 3e5, Mach 0.15, 4 deg); after about 370 iterations, not converged:
     # SA CL 0.860, CD 0.0184; LM CL 0.908, CD 0.0137. Shows the mesh path works; no wing has been run.

@@ -2,7 +2,7 @@
 
 These are the starting values the whole project is judged against. For each one: **the value**,
 **what it means in practice**, **why we chose it**, and **the source**. The same values, in a form a
-program can read, are in `values.yaml`. Updated 6 Nov 2026, evening (first updated 2 Nov 2026 with the
+program can read, are in `values.yaml`. Updated 7 Nov 2026 (first updated 2 Nov 2026 with the
 Stage 1 findings). The page "CFD Automation Stage 0" mirrors this file.
 
 ## A few words first
@@ -17,7 +17,7 @@ Stage 1 findings). The page "CFD Automation Stage 0" mirrors this file.
   solver iterates.
 - **Proposal, pending**: a proposal that is not decided yet. Everything else here is decided.
 
-## What changed since 2 Nov 2026 (updated 6 Nov, evening)
+## What changed since 2 Nov 2026 (updated 7 Nov)
 
 The sections below are updated to match.
 
@@ -65,8 +65,18 @@ The sections below are updated to match.
   The C-H wake lines may add about +45 % (30–60 %, rough) cells on the wing blocks.
 - **Similarity (owner, 6 Nov; D3 section).** Every wing at unit mean chord; the Re on the mean chord is
   the input; Mach fixed at 0.1 (Prandtl–Glauert on CL and CM); trailing edge 0.2 % c. The root chord
-  leaves the design vector (18 → 17 numbers). About 8,000 solves instead of 42,000. Being built in the
-  Stage 1 code now: all hashes change.
+  leaves the design vector (18 → 17 numbers). About 8,000 solves instead of 42,000. Built in the Stage 1
+  code on 7 Nov; every hash changed and the sets were rebuilt (722 of 722).
+- **Lower transition band from the leading edge (owner, 7 Nov; Stage 2 decision 74, option A).** Counted
+  first: it costs no cells, because both sides of a ring share one node list; transition runs then reach −5°.
+- **Nose shape fixed (owner, 7 Nov; decision 64).** One curvature method along the surface found a real
+  defect: the leading edge sat at the farthest raw point, not at the curve's tip, which made a curvature
+  spike on one side and a flat spot on the other (NACA 4415: a 0.18 % c nose cell turned 9.47° built
+  against 4.31° true). New rule in Stage 1: one cubic spline, the leading edge at its apex, 201 points per
+  side; a gate refuses airfoils whose nose folds back (14 of 2,183 database files). The 5 % turning test
+  now passes on 95.6 % of the database (21.0 % before). The 6 Nov note that the finding was overstated was wrong.
+- **Re levels:** 1 × 10⁵ stays (owner, 7 Nov), 18 % below the slowest real UAV (1.22 × 10⁵ on the mean
+  chord), as a margin.
 - **First SU2 smoke test (4 Nov), not a result.** It shows the mesh path works; no wing has been run
   (note at the end of D3).
 
@@ -77,11 +87,8 @@ The sections below are updated to match.
 - **Angles.** Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about
   2.5° steps.
 - **Re levels.** Check C4 adds a level near 7 × 10⁵ – 10⁶ only if needed.
-- **Lower transition band at negative angles** (Stage 2 decision 74). Being counted.
 
 **Open**
-- **Nose shape (decision 64).** A re-measure of raw and built sections with one curvature method is
-  running, before any fix (see the weak points at the end).
 - **Still open from Stage 0:** grid share 65 %, pitching moment 0.002, the iteration share, a D5.
 - **pyGeo tests and one `build --all`** on the owner's machine: the rename made every stored hash stale.
 
@@ -537,7 +544,7 @@ if needed.
 - **Proposals, pending:**
   - solver split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about
     20 % of the wings first;
-  - the lower transition band at negative angles (Stage 2 decision 74): being counted.
+  - (the lower transition band is decided: from the leading edge, Stage 2 decision 74, owner 7 Nov).
 - **Why:** Stage 1 (2-D XFOIL strips, smooth wing in calm air) found a long laminar run and laminar
   bubbles on most of these wings; fully turbulent SA overpredicts the profile drag by a median
   +62 % (+69 % in level flight). What a mesh must resolve depends on the model, so a mesh tuned only
@@ -588,11 +595,12 @@ CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works. No wing has bee
   hexes do run). So the overset wake box and vortex tube cannot serve both solvers. The C-H mesh
   (decided 6 Nov) has its own costs: the tip vortex must be held by the outboard blocks without a tube,
   the open-line march is new work, and the wake lines add cells.
-- **Nose shape (decision 64).** A first check found that the upper and lower nose radius of cambered
-  sections differ 3–13×. Measured the same way, the raw files show nearly the same mismatch (NACA 4415
-  raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c). So it mostly reflects how a cambered, tilted nose
-  looks to that one-sided fit. A re-measure of raw and built with one curvature method is running. No
-  fix before it ends: a fix changes every geometry hash.
+- **Nose shape (decision 64): fixed on 7 Nov.** A first check (Stage 2) found the upper and lower nose
+  radius of cambered sections 3–13× apart. On 6 Nov a second check called this mostly the measuring
+  method; that was wrong, because it compared built and raw only at the raw points, where they agree by
+  construction. A third check with one curvature method along the surface found the real defect between
+  the points (NACA 4415: a 0.18 % c nose cell turned 9.47° built against 4.31° true). Fixed in Stage 1;
+  every geometry hash changed and the sets were rebuilt. The pyGeo `build --all` is still owed.
 - **The new scope needs data.** −5° to post-stall and Mach toward 0.5 lie outside the Stage 1 data (root
   angles 0–10°, Mach ≤ 0.2). The mesh rules were set from those ranges, so they must be checked again
   for the new ones.

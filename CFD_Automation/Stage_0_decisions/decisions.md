@@ -57,7 +57,7 @@ The sections below are updated to match.
   cells median on the wing blocks (10.9 M with the band change; 15.2 M with the planned rules). Desktop
   limit about 1.2 M cells.
 - **Wall-normal growth (owner, 6 Nov), settled by the mesh levels.** Growth 1.25 at VC is 1.107 at F
-  (about 1.30× more wall layers per level), which meets the 1.1 a transition model asks for (Stage 2
+  (about 1.30× more wall layers per level), just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1) (Stage 2
   decision 57).
 - **Volume mesh (owner, 6 Nov).** One matched C-H multiblock mesh for ADflow and SU2, instead of the
   overset wake box and vortex tube. SU2 has no overset and refuses structured CGNS; converted to
@@ -141,7 +141,7 @@ share**: not before (the answer is not good enough yet) and not long after (we a
 | 1a | Mesh: along the chord | points around the airfoil | 35 % | 22.75 % | 0.68 counts | edge cells ≈ 0.1 % of local chord (DPW); since Stage 2 the transition band also sets cells here (D3) | carried about 88 % of the drag error |
 | 1b | Mesh: along the semi-span | sections from root to tip | 15 % | 9.75 % | 0.29 counts | Stage 2: a station on every loft station; gap 0.2 × local chord, ≥ 12 per panel, growth 1.2; last gap at the tip = the tip's first wall cell (our choice; first start was 0.1 % of semi-span at root and tip, DPW). Decided (owner, 6 Nov): tip gap 2 × s0; station gap 0.25 × local chord at M | — |
 | 1c | Mesh: away from the wall | thin layers through the boundary layer | 20 % | 13 % | 0.39 counts | first cell y+ ≈ 1; each layer ≤ 1.25 × the previous (DPW). Decided (owner, 6 Nov): 1.25 at VC is 1.107 at F, which meets the 1.1 of a transition model (Ansys CFX) | — |
-| 1d | Mesh: edges and blunt trailing edge | cells at nose, trailing edge and across the base | 15 % | 9.75 % | 0.29 counts | 0.1 % of chord at edges (DPW); 8 / 10 / 14 / 18 cells across the base at levels C / M / F / FF (our choice) | base was the slowest part to settle |
+| 1d | Mesh: edges and blunt trailing edge | cells at nose, trailing edge and across the base | 15 % | 9.75 % | 0.29 counts | 0.1 % of chord at edges (DPW); 8 / 10 / 14 / 18 cells across the base at levels VC / C / M / F (our choice; the first approach named them C / M / F / FF) | base was the slowest part to settle |
 | 1e | Mesh: wake | cells behind the wing and around the tip vortex | 15 % | 9.75 % | 0.29 counts | set in the mesh stage (our choice). Decided (owner, 6 Nov): one matched C-H mesh for ADflow and SU2 | refining the near wake moved drag 23 counts |
 | **1** | **Mesh, all directions** | cells too big | **100 %** | **65 %** | **1.95 counts** | error bar from 3 meshes (Celik 2008) | — |
 | 2 | Iterations | solver stopped too early | — | 10 % | 0.30 counts | stopping rule in D3 (Celik 2008: < 1/10 of mesh error = 0.195) | measured 0.12 counts at 10⁻⁶: OK |
@@ -200,7 +200,7 @@ a different amount.
   - first cell at y+ ≈ 1 (small enough to sit inside the very thin layer next to the wall);
   - each layer at most 1.25 times thicker than the one before.
 - **Decided (owner, 6 Nov), settled by the mesh levels (D3):** growth 1.25 at VC is 1.107 at F, because
-  each level has about 1.30× more wall layers. That meets the 1.1 a transition model asks for (Ansys CFX
+  each level has about 1.30× more wall layers. That is just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1) (Ansys CFX
   guidance; 1.2 already moves transition a little upstream). Stage 2 decision 57. It changes the layer
   count, not the surface.
 - **Source:** DPW gridding guidelines (Levy et al. 2013); Ansys CFX Modeling Guide for 1.1.
@@ -530,7 +530,7 @@ if needed.
   - about 20 cells per bubble at level F, instead of at level C as built (Ansys CFX transition-model grid
     guidance: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75–100 nodes from the leading
     to the trailing edge);
-  - wall-normal growth 1.25 at VC is 1.107 at F, which meets the 1.1 a transition model asks for (Stage 2
+  - wall-normal growth 1.25 at VC is 1.107 at F, just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1) (Stage 2
     decision 57);
   - band cell 0.5 % c at F where local Re ≥ 4 × 10⁵: the bubble-length table stops at 0.10 c from local
     Re 4 × 10⁵ up (see Mesh family).

@@ -49,7 +49,7 @@ D1_accuracy:
     wall_normal:
       first_cell_yplus: 1          # y+ <= 1 at VC, a hard minimum (owner, 6 Nov 2026)
       growth_max: 1.25             # at VC, a hard minimum (owner, 6 Nov 2026)
-      growth_at_F: 1.107           # owner, 6 Nov 2026: 1.25 at VC, about 1.30x wall layers per level; meets the 1.1 a transition model asks for (Stage 2 decision 57; Ansys CFX guidance)
+      growth_at_F: 1.107           # owner, 6 Nov 2026: 1.25 at VC, about 1.30x wall layers per level; just above the 1.1 a transition model asks for; 1.23 at VC would give exactly 1.1 (Stage 2 decision 57; Ansys CFX guidance)
     edges_and_base:
       edge_cells_c: 0.001
       base_cells: {C: 8, M: 10, F: 14, FF: 18}   # Stage 2 decision 61; even counts, so the steps are 1.25, 1.4, 1.29
@@ -227,7 +227,7 @@ D3_conditions_and_measurement:
     # SA inflow value (nu~/nu about 3): still to fix and record, before the first ADflow solve.
     transition_targets_at_F:       # owner, 6 Nov 2026 (mesh levels)
       cells_per_bubble: about 20   # at level F, instead of at level C as built (Ansys CFX: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75-100 nodes leading to trailing edge)
-      wall_normal_growth: 1.107    # 1.25 at VC; meets the 1.1 a transition model asks for (Stage 2 decision 57)
+      wall_normal_growth: 1.107    # 1.25 at VC; just above the 1.1 a transition model asks for; 1.23 at VC would give exactly 1.1 (Stage 2 decision 57)
       band_cell_c_where_local_Re_ge_4e5: 0.005   # the bubble-length table stops at 0.10 c from local Re 4e5 up
     proposal:   # pending
       solver_split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first

@@ -14,7 +14,7 @@ def test_all_checks_pass(mesh_vc):
     assert mesh_vc.passed, [c.name for c in mesh_vc.failed()]
     assert mesh_vc.level == "VC" and len(mesh_vc.checks) == 14     # the 13 checks (cap quads in two parts)
     assert mesh_vc.info["turning_repairs"] == 0
-    assert {r["nose_solved_at"] for r in mesh_vc.stations} <= {"VC", "F"}
+    assert {r["nose_solved_at"] for r in mesh_vc.stations} <= {"VC", "C", "M", "F"}
 
 
 def test_checks_read_the_levels_own_values(mesh_vc):

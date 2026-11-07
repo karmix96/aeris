@@ -17,12 +17,13 @@ chord:                            # around the section (one closed ring per stat
   nose_turning_deg: {value: 10.0, at: M, why: "accuracy target, decision 71"}
                                   # law 1: no ring cell turns the surface by more than this: 16.9° at VC, 13° at C,
                                   # 10° at M, 7.7° at F (each level is checked against its own angle)
-  nose_solved_at: [VC, F]         # the nose spacing is solved by bisection twice per station, at VC for 16.9° and at F
-                                  # for 7.7°, both moved to VC (x 1.3^k); the smaller wins and every level takes it
-                                  # ÷ 1.3^k, so the family rule stays exact. Round noses bind at VC (a cell's turning
-                                  # grows a little faster than the cell); the built noses with a tight bend a few cells
-                                  # wide bind at F (it grows slower: BWB reference wing 0 at Re 3e5 turns 16.9, 13.5,
-                                  # 10.8° at VC, C, M with the VC spacing ÷ 1.3^k). decisions/surface_rules.md, section 13
+  nose_solved_at: [VC, C, M, F]   # the nose spacing is solved by bisection at every level, each for its own angle
+                                  # (16.9, 13, 10, 7.7°) on its own ring, the finest first; each answer is moved to VC
+                                  # (x 1.3^k), the smallest (strictest) wins and every level takes it ÷ 1.3^k, so every
+                                  # level meets its own angle and the family rule stays exact. A coarser level starts
+                                  # from the finer answer and is solved only if that misses its own angle. With VC and F
+                                  # only (7 Nov, first build), M missed 10° on the flying wings and needed a repair
+                                  # (nose x 0.9), which broke the ratio there. decisions/surface_rules.md, sections 13-14
   nose_turning_tol_deg: 0.02
   nose_envelope: 1.15             # law 2: nose spacing / chord may change by at most this between stations (a check;
                                   # one node distribution for the whole wing makes it hold by construction)
@@ -36,7 +37,12 @@ chord:                            # around the section (one closed ring per stat
                                   # check: neighbouring cells along the ring: 1.25 at VC, 1.19 at C, 1.14 at M, 1.11 at F
   max_spacing_c: {value: 0.02, at: M, why: "accuracy target, decision 71; our starting value"}
                                   # largest cell outside the band: 2 % c at M (3.38 % c at VC)
-  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c, from the leading edge on every wing (decision 58)
+  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c, from the leading edge on every wing (decision 58).
+                                  # As built the upper side still gets band-size cells over 85-100 % c: both sides share
+                                  # one node list (decision 60) and the lower band is 0-100 % c. At the Re levels the
+                                  # upper transition sits past 85 % c at low Re (refine map by Re level). Writing 0-100 % c
+                                  # here is not the same mesh: the same at VC to round-off, but +2 ring nodes at F on 42 of
+                                  # 80 reference builds (data/studies/upper_band_check.json); for the owner to decide
   band_lower: [0.0, 1.00]         # lower surface, x/c: from the leading edge, for angles down to −5° (decision 74,
                                   # option A, 7 Nov). It costs no cells: both sides share one node list (decision 60)
                                   # and the upper band already makes the front of the lower side fine (Study 8)

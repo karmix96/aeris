@@ -1,7 +1,16 @@
-"""The pictures of the Stage 2 page (docs/page/*.png), every one drawn from the mesh arrays.
+"""The pictures of the first approach on the Stage 2 page (docs/page/*.png), every one drawn from the mesh arrays.
 
-    python scripts/page_figures.py              # about 3 minutes
-    python scripts/page_figures.py refine_map   # only docs/page/refine_map.png (seconds)
+    python scripts/page_figures.py --code <CFD_Automation at commit 7bcb7067>   # the page's pictures, exactly
+    python scripts/page_figures.py --out <folder>     # the first rules on today's geometry (about 4 minutes)
+    python scripts/page_figures.py refine_map         # only docs/page/refine_map.png (seconds)
+
+Every mesh here is built with the first approach's rules (configs/surface_first.yaml, its level C = the coarsest),
+not with the mesher's own config (configs/surface.yaml, the new rules since 7 Nov). The pictures on the page were
+drawn on 2-7 Nov on the geometry of before similarity and the nose fix (Stage 1 decisions 70 and 64, 7 Nov): real
+size, the old nose rule, the old reference picks, the 0.5 mm trailing-edge floor. --code points at a checkout of
+that time (commit 7bcb7067), whose cfdauto and sets are then used: this redraws the page's pictures as they were.
+Without --code the first rules run on today's geometry (unit mean chord, the new nose, 13 of the 20 reference wings
+new): the pictures change, so write them to another folder (--out) and keep the page's own.
 """
 
 from __future__ import annotations
@@ -17,7 +26,17 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Circle  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+def _arg(name: str, default: str | None = None) -> str | None:
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
+CODE = Path(_arg("--code", str(Path(__file__).resolve().parents[2]))).resolve()   # the CFD_Automation folder to use
+sys.path.insert(0, str(CODE))
+FIRST = CODE / "Stage_2_surface_mesh" / "configs" / "surface_first.yaml"
+if not FIRST.exists():                     # before 7 Nov the first approach was the only config
+    FIRST = CODE / "Stage_2_surface_mesh" / "configs" / "surface.yaml"
+FIRST = str(FIRST)
 
 from cfdauto.geometry import airfoils as A  # noqa: E402
 from cfdauto.geometry.sections import load_airfoil  # noqa: E402
@@ -30,7 +49,7 @@ from cfdauto.mesh.stations import SpanTable, place_stations  # noqa: E402
 from cfdauto.mesh.surface import build_surface, wing_from_set  # noqa: E402
 from cfdauto.paths import STAGE2  # noqa: E402
 
-OUT = STAGE2 / "docs" / "page"
+OUT = Path(_arg("--out", str(Path(__file__).resolve().parents[1] / "docs" / "page")))
 INK, MUTED, LINE = "#142230", "#566573", "#D6DEE6"
 ACC, BWB, WARN, AMBER, VIOLET = "#0C5EA8", "#2E8B57", "#B02A20", "#9A6200", "#6A4BB0"
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
@@ -61,7 +80,7 @@ def side_cells(m, j, upper=True):
 
 # --- 1. the dense section and the arc-length parameter ---------------------------------------
 def fig_dense(w, m):
-    rc = rules("C")
+    rc = rules("C", FIRST)
     sec = Section.at(w.loft, 0.0, rc.dense_per_side)
     fig, ax = plt.subplots(1, 3, figsize=(13, 3.6))
     vv = np.zeros_like(sec.u)
@@ -87,7 +106,7 @@ def fig_dense(w, m):
 
 # --- 2. stations along the span ---------------------------------------------------------------
 def fig_stations(w, m):
-    rl = rules("C")
+    rl = rules("C", FIRST)
     tab = SpanTable.of(w.loft, rl.dense_span)
     tip_gap = m.info["s0_tip_m"]
     tab = tab.refined_at_tip(w.loft, tip_gap)
@@ -122,7 +141,7 @@ def fig_stations(w, m):
 # --- 3. the size field around the section, rule by rule --------------------------------------
 def fig_size_field(w, m):
     """Six panels: one rule added per panel, the previous result in grey behind it."""
-    rc = rules("C")
+    rc = rules("C", FIRST)
     j = 0
     r = m.stations[j]
     sec = Section.at(w.loft, r["v"], rc.dense_per_side)
@@ -167,7 +186,7 @@ def fig_size_field(w, m):
 
 # --- 4. the nose solve: turning against spacing ----------------------------------------------
 def fig_nose_solve(w_bwb, m_bwb, w_tap, m_tap):
-    rc = rules("C")
+    rc = rules("C", FIRST)
     fig, ax = plt.subplots(1, 2, figsize=(13, 4))
     for a, w, m, j, name in ((ax[0], w_bwb, m_bwb, 0, "BWB reference wing, root (MH 104)"),
                              (ax[1], w_tap, m_tap, 21, "tapered training wing 35, station 21 (NACA 4415)")):
@@ -196,7 +215,7 @@ def fig_nose_solve(w_bwb, m_bwb, w_tap, m_tap):
 # --- 5. one distribution for the wing: before and after --------------------------------------
 def fig_union(w, m):
     """m is the mesh as built (one distribution). The 'before' uses each station's own distribution."""
-    rl = rules("C")
+    rl = rules("C", FIRST)
     secs = [Section.at(w.loft, r["v"], rl.dense_per_side) for r in m.stations]
     specs = [RingSpec(r["h_le_c_asked"] * r["chord_m"], r["h_band_c"] * r["chord_m"], rl.max_spacing_c * r["chord_m"],
                       rl.te_spacing_c * r["chord_m"]) for r in m.stations]
@@ -281,7 +300,7 @@ def fig_cap(m):
 
 # --- 8. band cell and ring size against Re -----------------------------------------------------
 def fig_re(screen):
-    rc = rules("C")
+    rc = rules("C", FIRST)
     re = np.geomspace(2e4, 6e6, 200)
     fig, ax = plt.subplots(1, 3, figsize=(13, 3.8))
     a = ax[0]
@@ -307,7 +326,7 @@ def fig_re(screen):
 
 # --- 9. the family: C, M, F ------------------------------------------------------------------------
 def fig_family(w, fam):
-    ms = {lev: build_surface(w.loft, 3.0e5, lev) for lev in ("C", "M", "F")}
+    ms = {lev: build_surface(w.loft, 3.0e5, lev, FIRST) for lev in ("C", "M", "F")}
     fig, ax = plt.subplots(1, 3, figsize=(13, 4))
     a = ax[0]
     cols = {"C": ACC, "M": AMBER, "F": WARN}
@@ -387,12 +406,12 @@ def fig_nose_radius():
 # --- 12. the corner wing with the trailing-edge bend ------------------------------------------------
 def fig_corner_bend():
     w = wing_from_set("bwb", "corner2", 0)
-    m = build_surface(w.loft, 3.0e5, "C")
+    m = build_surface(w.loft, 3.0e5, "C", FIRST)
     j = m.wing.shape[1] - 1
     n = m.info["n_side"]
     ring = m.wing[:, j]
     c = m.stations[j]["chord_m"]
-    rl = rules("C")
+    rl = rules("C", FIRST)
     sec = Section.at(w.loft, m.stations[j]["v"], rl.dense_per_side)
     le = ring[n - 1]
     P = (ring - le)[:, [0, 2]] * 1000.0                          # mm, leading edge at the origin
@@ -467,15 +486,15 @@ def main() -> None:
     screen = json.loads((STAGE2 / "data" / "studies" / "screen_C.json").read_text())
     fam = json.loads((STAGE2 / "data" / "studies" / "family_ratios.json").read_text())
     w = wing_from_set("bwb", "reference", 0)
-    m = build_surface(w.loft, 3.0e5, "C")
+    m = build_surface(w.loft, 3.0e5, "C", FIRST)
     fig_dense(w, m)
     fig_stations(w, m)
     fig_size_field(w, m)
     w_tap = wing_from_set("tapered", "training_focus", 35)
-    m_tap = build_surface(w_tap.loft, 3.0e5, "C")
+    m_tap = build_surface(w_tap.loft, 3.0e5, "C", FIRST)
     fig_nose_solve(w, m, w_tap, m_tap)
     w_fw = wing_from_set("flying_wing", "training_full", 6)
-    fig_union(w_fw, build_surface(w_fw.loft, 3.0e5, "C"))
+    fig_union(w_fw, build_surface(w_fw.loft, 3.0e5, "C", FIRST))
     fig_ring(w, m)
     fig_cap(m)
     fig_re(screen)
@@ -483,8 +502,15 @@ def main() -> None:
     fig_screen_dist(screen)
     fig_nose_radius()
     fig_corner_bend()
-    meshes = {t: build_surface(wing_from_set(t, "reference", 0).loft, 3.0e5, "C") for t in TYPES}
+    meshes = {t: build_surface(wing_from_set(t, "reference", 0).loft, 3.0e5, "C", FIRST) for t in TYPES}
     fig_four(meshes)
+    fig_structured_vs_unstructured(w, m)
+    fig_topology(m)
+    fig_station_rules()
+    fig_merge(w, m)
+    fig_band_cell()
+    fig_bubble_xfoil()
+    fig_refine_map()
 
 
 # --- 14. why structured: the same section meshed both ways ----------------------------------------
@@ -581,7 +607,7 @@ def fig_topology(m):
 
 # --- 16. the station rules, one by one, on two wings ------------------------------------------------
 def fig_station_rules():
-    rl = rules("C")
+    rl = rules("C", FIRST)
     fig, ax = plt.subplots(2, 1, figsize=(13, 5.6))
     picks = [("bwb", "reference", 0), ("tapered", "reference", None)]
     # the most slender tapered reference wing, where the 0.2 c rule gets to act
@@ -595,7 +621,7 @@ def fig_station_rules():
     cols = {"12 per panel": ACC, "0.2 × chord": BWB, "growth ≤ 1.2 between neighbours (the tip squeeze to s0, or the step between two panels)": AMBER}
     for a, (t, st, i) in zip(ax, picks):
         w = wing_from_set(t, st, i)
-        m = build_surface(w.loft, 3.0e5, "C")
+        m = build_surface(w.loft, 3.0e5, "C", FIRST)
         y = np.array([r["y_m"] for r in m.stations]); ch = np.array([r["chord_m"] for r in m.stations])
         loft_y = np.array(m.info["loft_station_y_m"])
         gaps = np.diff(y); mid = 0.5 * (y[1:] + y[:-1]); cmid = 0.5 * (ch[1:] + ch[:-1])
@@ -625,7 +651,7 @@ def fig_station_rules():
 # --- 17. how the one node list is made ------------------------------------------------------------
 def fig_merge(w, m):
     from cfdauto.mesh.ring import FRAC, field_in_arc_fraction
-    rl = rules("C")
+    rl = rules("C", FIRST)
     js = {"root": 0, "mid-span": m.wing.shape[1] // 2, "tip": m.wing.shape[1] - 1}
     fig, ax = plt.subplots(1, 2, figsize=(13, 4.4), gridspec_kw={"width_ratios": [1.3, 1]})
     a = ax[0]
@@ -669,7 +695,7 @@ def fig_merge(w, m):
 
 # --- 20. the band cell: what it is and where the formula comes from --------------------------------
 def fig_band_cell():
-    rc = rules("C")
+    rc = rules("C", FIRST)
     re0, c_loc, c_mean = 3.0e5, 1.0, 1.0
     L = rc.bubble_length_c(re0)                                   # bubble length / chord at Re 3e5
     h = rc.band_spacing_c(re0)                                    # = L / 20
@@ -734,7 +760,7 @@ def fig_band_cell():
 # --- 21. how XFOIL gives the bubble length, and where the Stage 2 table sits in the Stage 1 data ---
 def fig_bubble_xfoil():
     from cfdauto.paths import STAGE1
-    rc = rules("C")
+    rc = rules("C", FIRST)
     fig, ax = plt.subplots(1, 2, figsize=(13, 4.3))
     # left: a sketch of the wall friction along the upper surface, and how a bubble is read off it
     a = ax[0]
@@ -843,7 +869,7 @@ def fig_refine_map(wing_type="bwb", index=0, mach=0.08, alpha=4.0, machs=(0.03, 
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["refine_map"]:
+    if "refine_map" in sys.argv[1:]:
         fig_refine_map()
     else:
         main()

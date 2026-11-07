@@ -1,5 +1,14 @@
 """Pictures of the reference meshes for docs/ (one overview per type, plus the BWB tip cap),
-and the screen summary figure from data/studies/screen_C.json."""
+and the screen summary figure from data/studies/screen_C.json: the first approach (2-3 Nov).
+
+    python scripts/make_figures.py --code <CFD_Automation at commit 7bcb7067>   # docs/*.png exactly as drawn
+    python scripts/make_figures.py --out <folder>       # the first rules on today's geometry
+
+The meshes are built with the first approach's rules (configs/surface_first.yaml, level C). The pictures in docs/
+were drawn on the geometry of before similarity and the nose fix (7 Nov); --code points at a checkout of that time,
+whose cfdauto and sets are then used. Without --code the wings are today's (unit mean chord, new reference picks):
+the pictures change, so write them elsewhere (--out). The new screens have their own figures (scripts/screen_study.py).
+"""
 
 from __future__ import annotations
 
@@ -13,20 +22,27 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+def _arg(name: str, default: str | None = None) -> str | None:
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
+CODE = Path(_arg("--code", str(Path(__file__).resolve().parents[2]))).resolve()
+sys.path.insert(0, str(CODE))
+FIRST = CODE / "Stage_2_surface_mesh" / "configs" / "surface_first.yaml"
+FIRST = str(FIRST if FIRST.exists() else CODE / "Stage_2_surface_mesh" / "configs" / "surface.yaml")
 
 from cfdauto.mesh.figures import INK, MUTED, cap_figure, overview  # noqa: E402
 from cfdauto.mesh.surface import build_surface, wing_from_set  # noqa: E402
 from cfdauto.paths import STAGE2  # noqa: E402
 
-DOCS = STAGE2 / "docs"
+DOCS = Path(_arg("--out", str(Path(__file__).resolve().parents[1] / "docs")))
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 
 
 def reference_pictures() -> None:
     for t in TYPES:
         w = wing_from_set(t, "reference", 0)
-        m = build_surface(w.loft, 3.0e5, "C")
+        m = build_surface(w.loft, 3.0e5, "C", FIRST)
         overview(m, f"{t} reference wing 0, level C, Re 3e5 on the mean chord", DOCS / f"surface_{t}.png")
         if t == "bwb":
             cap_figure(m, "BWB reference wing 0: the tip cap (level C, Re 3e5)", DOCS / "surface_bwb_cap.png")

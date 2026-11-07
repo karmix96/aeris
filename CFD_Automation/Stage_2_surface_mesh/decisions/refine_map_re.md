@@ -62,6 +62,15 @@ ring share one node distribution in arc fraction, and the stricter side wins (de
 lengths, 1.01–1.03 on the ten study sections). With the upper band written as 0–100 % c the 16 surfaces come out
 the same: the same ring count, and no node moves by more than 1.4 × 10⁻¹³ c (round-off).
 
+**That holds at VC only** (Stage 2, 7 Nov; `data/studies/upper_band_check.json`). On the 20 reference wings × 4 Re,
+rebuilt with the upper band written as 0–100 % c and compared with the screen: at VC the same mesh to round-off (the
+same ring and station counts on 80 of 80, no node moved by more than 3.0 × 10⁻¹³ c; the node hash rounds to
+10⁻¹² c, so 63 of the 80 hashes differ). At F, 0–100 % c adds 2 ring nodes (one per side) on 42 of 80 builds (BWB 16,
+cranked 12, tapered 13, flying wing 1), the stations unchanged: +0.39 % cells median, +0.55 % at most. With 0–85 % c
+the upper cells over 85–100 % c at F can sit a little above the band cell, inside the 1 % check (BWB reference wing 0
+at Re 3 × 10⁵: 0.00501 c against 0.0050 c). So the written rule stays 0–85 % c (7 Nov): writing 0–100 % c is for the
+owner to decide, and the screen would need a re-run (about 1.5 h on two cores).
+
 **No XFOIL answer.**
 
 - No strip is below the tables' lowest Re (1.5 × 10⁴): the lowest is 1.77 × 10⁴ (BWB at 10⁵). Five BWB root strips
@@ -129,4 +138,6 @@ Written per side, the upper band (0–85 % c) does not hold the upper transition
 3 × 10⁵ only 0–49 % of the strips fit, short by up to 15 % c. As built, the mesh still has band cells there, because
 both sides share one node distribution and the lower band is 0–100 % c; so no mesh change is needed, but the rule
 as written should say that the upper side's aft part comes from the lower band (or the upper band be written as
-0–100 % c, which gives the same 16 surfaces to round-off). For the owner to decide.
+0–100 % c, which gives the same 16 surfaces to round-off at VC, but 2 more ring nodes at F on 42 of the 80 reference
+builds, +0.39 % cells, and a re-run of the screen). The rules text now says what the built mesh does; the written
+band stays 0–85 % c. For the owner to decide.

@@ -196,12 +196,19 @@
     1.1). Bubble length from the Stage 1 XFOIL table at the local Re (0.40 c at 6e4 ... 0.05 c at and above 1e6).
     Cost: ring of about 200 nodes at Re 1e5, 400 at 3e5, 850 at and above 1.5e6 (S8: 150). Open: whether the
     coarse level needs the full 20 (the T6 chordwise ladder decides); the bubble length above 1e6 is a floor
-    (Stage 1 says "under 0.05 c"). See `Stage_2_surface_mesh/decisions/surface_rules.md`.
+    (Stage 1 says "under 0.05 c"). See `Stage_2_surface_mesh/decisions/surface_rules.md`. **Replaced by 71 and 72
+    (built 7 Nov):** 20 at F (9.1 at VC), and the bubble length stops at 0.10 c from local Re 4e5.
 57. **Wall-normal growth for a transition model: 1.1, not 1.25.** The same guide says 1.2 already moves
     transition a little upstream. Stage 0 and the handover say 1.25. Decide in Stage 3 (volume mesh); it changes
-    the layer count, not the surface.
+    the layer count, not the surface. **Settled by 71:** 1.25 at VC is 1.107 at F, just above the 1.1 (1.23 at VC
+    would give exactly 1.1).
 58. **The upper transition band starts at the leading edge on every wing** (Stage 1: from 10 % c, from the
     leading edge on panels swept over about 25°). One rule, about 10 % of the chord more at band spacing.
+    **7 Nov:** it is written 0–85 % c, but as built the upper side gets band-size cells to the trailing edge too
+    (one node list, 60, and the lower band 0–100 % c, 74); at the Re levels the upper transition sits past 85 % c at
+    low Re (65). Writing it as 0–100 % c is for the owner to decide: the same mesh at VC to round-off (80 of 80
+    reference builds), 2 more ring nodes at F on 42 of 80 (+0.39 % cells median), and a re-run of the screen (about
+    1.5 h; `Stage_2_surface_mesh/data/studies/upper_band_check.json`).
 59. **One surface per wing and Re level**; the mesh name is `mesh_<level>_<wing_hash8>_re<Re>` (the Stage 0
     name plus the Re on the mean chord). The tip gap (s0) and the band cell depend on Re. Building one takes
     3–6 s.
@@ -212,9 +219,11 @@
     1.29 instead of 1.3. The one spacing that does not follow the family ratio exactly; reported, not hidden.
 62. **Station gap 0.2 × local chord, at least 12 gaps per panel, growth 1.2 inside a panel** (checked limit
     1.3 between any two gaps, because each panel holds a whole number of gaps). Our starting values, to be
-    tested in the spanwise ladder (law 8).
+    tested in the spanwise ladder (law 8). **Replaced by 72 (built 7 Nov):** 0.25 × local chord at M, at least 12
+    gaps per panel at M; the growth 1.2 kept (see 77).
 63. **Largest cell outside the bands 2 % c** (our choice). On most stations the band covers so much of the
-    ring that it hardly applies (upper 85–100 % c only).
+    ring that it hardly applies (first: upper 85–100 % c only; with the lower band 0–100 % c and one node list, only
+    where the band cell is coarser than it, at low local Re).
 64. **Stage 1 finding (from the mesher, 2 Nov 2026): the nose of the built sections is not round.** The
     resampled sections' nose radius differs between the upper and lower side by 3-13 x on cambered sections
     with small noses (NACA 4415: formula 0.0248 c, built 0.008 c upper / 0.074 c lower; E387 0.0102 c raw,
@@ -223,6 +232,17 @@
     (resample the nose in arc length or fit the apex from the raw points; every geometry hash changes) before
     the first solves, or carry it as a stated geometry deviation. See
     `Stage_2_surface_mesh/decisions/surface_rules.md`, section 10, and `data/studies/nose_radius.json`.
+    **Decided 7 Nov 2026 (owner): fixed in Stage 1.** A study with one curvature method
+    (`Stage_1_geometry/decisions/nose_curvature.md`, `data/studies/nose_curvature.json`, `docs/nose_curvature.png`)
+    found the defect real: the old rule put the leading edge at the farthest raw point and made a curvature spike
+    on one side and a flat spot on the other, between the raw points; on NACA 4415 a 0.18 % c nose cell turned
+    9.47° built against 4.31° true; the old built nose failed a 5 % test on all ten suggested airfoils. New rule:
+    one cubic spline, the leading edge at its apex, 201 points per side; a gate refuses 14 database files whose
+    nose folds back; 95.6 % of the database passes (21.0 % before). Built; the sets rebuilt (every hash changed).
+    The 6 Nov correction (75) was wrong. In the mesh (Stage 2 Study 4, first rules at C, the same shapes): the
+    NACA 4415 / 4412 wings get a nose cell of 0.245–0.265 % c instead of 0.178 % c. The flat part of the nose solve
+    at about 7° stays (growth-limited cells 1.9–2.4 % c down the lower side; the true airfoil does the same,
+    6.0–6.8°), so the window search stays.
 65. **Per-wing transition band from the flow dataset (candidate, 3 Nov 2026).** `cfdauto/mesh/refine_map.py`
     reads the Stage 1 section tables through the flow-map engine for one wing on a Mach × angle grid and builds,
     per strip and side, the envelope of (bubble start … bubble end, transition ± margin, separation start)
@@ -236,6 +256,14 @@
     table assumes (5 % c), so 20 cells per bubble is not met at the root by either band. Decide: keep the
     generic band (cheap, covers crossflow at the leading edge, no 3-D check needed) or switch to the
     per-wing envelope with a margin after a 3-D transition check (γ-Re_θ in SU2 on a few wings). Not a rule yet.
+    **7 Nov: the refine map at the Re levels** (similarity; `Stage_2_surface_mesh/decisions/refine_map_re.md`,
+    `scripts/refine_map_re.py`, `data/studies/refine_map_re.json`; Stage 2 Study 11): the 20 new reference wings at
+    the four Re levels, −5° to 12°, the section tables rebuilt on the fixed nose. The lower band 0–100 % c holds every
+    strip. The upper band as written (0–85 % c) holds only 0–49 % of the strips at Re 10⁵ and 3 × 10⁵, short by up to
+    15 % c (the transition itself, never a bubble or separation), and 32–97 % at 1.5 × 10⁶ and 3 × 10⁶. As built this
+    is no gap: on 16 built surfaces at VC the largest upper cell over 85–99.5 % c is 0.950–0.995 × the band cell (one
+    node list, 60). The written band stays 0–85 % c (58). No XFOIL answer only on the tailless wings at negative root
+    angles (up to 46 % BWB and 43 % flying-wing strips at −5°). Still a candidate: the 3-D check comes first.
 66. **Upgrade the flow dataset with AVL and NeuralFoil (proposal, 3 Nov 2026).** Today: 2-D XFOIL strips with
     one uniform induced angle (elliptic) for the whole wing, section tables with trilinear lookup, blends
     of the parents' answers between sections, 1.5–4 % failed XFOIL points filled. AVL would give the
@@ -248,10 +276,12 @@
     (AVL downwash ↔ NeuralFoil strip lift) as flow-map method "avl+nf", validate against the existing tables
     on a sample and against a few 3-D transition RANS runs, then revisit decision 65.
 
-## The new approach — decided 4–6 Nov 2026 (owner), not built yet
+## The new approach — decided 4–7 Nov 2026 (owner); the surface rules, the nose fix and similarity built 7 Nov
 
 What was first is items 56–66 (every surface rule met at level C). Pages: `Stage_2_surface_mesh/docs/SURFACE_MESH.html`
-(section "What was first, and what changes"), `Stage_2_surface_mesh/decisions/STAGE2_STATUS.md`.
+(section "What was first, and what changes"), `Stage_2_surface_mesh/decisions/STAGE2_STATUS.md`. Built on 7 Nov:
+64 (Stage 1), 70 (Stage 1), 71, 72 and 74 (Stage 2, `Stage_2_surface_mesh/decisions/surface_rules.md` section 13);
+screened (Stage 2 Study 9). Not built: 73 (Stage 3).
 
 67. **Transition must be captured, with ADflow and SU2** (owner, 4 Nov). Stage 1: SA overpredicts the profile
     drag by a median +62 %. Which solver does what: 76.
@@ -263,34 +293,72 @@ What was first is items 56–66 (every surface rule met at level C). Pages: `Sta
     Mach 0.1 with a Prandtl–Glauert correction on CL and CM; trailing edge 0.2 % c; the root chord leaves the
     vector (18 → 17 numbers). About 5 × fewer solves (8,000, not 42,000). Checks C1 (scale), C2 (Mach), C3
     (trailing edge, with the real floor 0.42 % c), C4 (Re levels). Stage 1 code first; every hash changes.
+    **Built in Stage 1 on 7 Nov:** unit mean chord (area / full span), 17 numbers, trailing edge 0.2 % c, no 7 m full-span cap;
+    the sets rebuilt (722 of 722); 13 of the 20 reference wings are new picks. Stage 2 check (Study 10): the 20 old
+    reference shapes at unit mean chord, 80 of 80 meshed; the same ring nodes on 80 of 80 (size changes nothing);
+    6–27 fewer stations on the 8 wings that had a switch section; the cap quality falls where the old floor had
+    thickened small tips (most 0.345 → 0.133; lowest 0.112, limit 0.05). The Re levels stay 1e5, 3e5, 1.5e6, 3e6:
+    1e5 is 18 % below the slowest real UAV (1.22e5 on area / full span), kept as a margin (owner, 7 Nov).
 71. **Levels VC, C, M, F with the targets anchored** (owner, 6 Nov): hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25,
     base ≥ 8, no kinks, tip gap); accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest
-    cell), as DPW defines its medium grid; transition targets at F (20 cells per bubble; wall growth ≈ 1.1).
-    VC on the desktop (about 1.0 M cells median, desktop limit about 1.2 M); C, M, F on the university HPC.
-    Replaces "at level C" in 56 and settles 57 at F (1.25 at VC is 1.107 at F).
+    cell), as DPW defines its medium grid; transition targets at F (20 cells per bubble; wall growth 1.107 at F,
+    just above the 1.1 a transition model asks for). VC on the desktop (16 GB: about 1.2 M cells; VC has 0.70 M
+    median on the wing blocks in Study 9); C, M, F on the university HPC. Replaces "at level C" in 56 and settles 57
+    at F (1.25 at VC gives 1.107 at F).
+    **Built 7 Nov** (`configs/surface.yaml`, `cfdauto/mesh/laws.py`; the first approach kept in
+    `configs/surface_first.yaml`); screened on the rebuilt sets (Stage 2 Study 9): 1,724 of 1,724 builds
+    passed; F 6.9 M cells median on the wing blocks (20 reference wings × 4 Re), below the 9–11 M asked.
+    The pages use this count, because its rule is written down and it can be redone (n = the largest over the
+    stations of ceil(ln(1 + (g − 1) D / s0) / ln g); D = 2 local chords; g = 1.25, 1.187, 1.141, 1.107 at VC, C, M, F;
+    s0 from y⁺ = 1, 0.77, 0.59, 0.46 at each station's local Re). The first estimate (6 Nov) gave 10.9 M; its
+    wall-layer rule was not recorded, and it used the first-approach reference wings. Both leave out the C-H wake
+    lines (a rough +30–60 %); Stage 3 sets the real wall-layer rule. The nose: solved at every level, the strictest
+    wins (owner, 7 Nov). Two builder choices left: 77.
 72. **Lighter rules** (owner, 6 Nov): the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell
     0.5 % c at F); tip gap 2 × s0; station gap 0.25 × local chord at M (replaces 62's 0.2 × chord at C).
     Fine level about 10–11 M cells median on the wing blocks (10.9 M with the band change alone; 15.2 M with
-    the planned rules). Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c) get about 3 cells.
+    the planned rules; the first estimates, 6 Nov, wall-layer rule not recorded; the count of the built rules: 71).
+    Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c) get about 3 cells. **Built 7 Nov**; measured F: see 71.
 73. **One matched C-H volume mesh for ADflow and SU2** (owner, 6 Nov), instead of the overset wake box and the
     tip-vortex tube. SU2 8.6.0 has no overset and refuses structured CGNS (structured meshes converted to
     unstructured hexes run). The ring and the cap of Stage 2 stay; Stage 3: open-line march, wake lines to the
     far field (rough +30–60 % cells on the wing blocks), tip vortex in the outboard blocks, no overlap gate.
-74. **Lower band at negative angles** (pending): option A, the lower band from the leading edge (band length
+74. **Lower band at negative angles — decided 7 Nov 2026 (owner): option A, from the leading edge (0–100 % c); built
+    in `configs/surface.yaml`.** It costs no cells (both sides of a ring share one node list). The record: option A,
+    the lower band from the leading edge (band length
     125 → 185 % of the chord, each side counted alone); option B, keep 60–100 % c and run transition (LM) only at
     angles ≥ 0°. **Counted on 7 Nov** (Stage 2 Study 8; `scripts/band_count.py`, `data/studies/band_count.json`):
     the 20 reference wings × 4 Re levels at VC with the planned rules (`configs/surface_plan_VC.yaml`), 160 builds.
     A and B give the same ring, node for node (ratio A / B 1.000, median and max; the same at F on two wings), so
-    F stays at about 10.9 M cells (median, wing blocks) with A. Why: both sides share one node list (60), and the
-    upper band (0–85 % c) already makes the front of the lower side fine. A per-wing lower band from the refine map
+    F stays at about 10.9 M cells (median, wing blocks; the 6 Nov estimate) with A. Why: both sides share one node list (60), and the
+    upper band (0–85 % c) already makes the front of the lower side fine (and the lower band, in turn, gives the upper
+    side band-size cells over 85–100 % c: 58). A per-wing lower band from the refine map
     (A′, −5° to 8°, 10 % c margin) is the same as A: its union over the strips starts at 0 % c on all 20 wings.
     The refine map from −5° puts the lower transition at a median of 1–15 % c per type at −5°, in front of 60 % c
     on every strip with an answer (at 0° on 51–83 %); 42 % (BWB) and 30 % (flying wing) of the strips have no
     answer at −5°. The cells no longer decide: A keeps transition runs from −5° at no mesh cost; B only saves the
-    LM runs below 0°. Still pending: the owner chooses.
-75. **Nose (64), corrected** (6 Nov): the first reading was overstated (raw files measured the same way show
-    nearly the same split). Re-measure raw and built with one curvature method; fix only if a real error remains,
-    before the pyGeo `build --all` (a fix changes every hash). Plan agreed 6 Nov.
+    LM runs below 0°. The owner chose A on 7 Nov.
+75. ~~**Nose (64), corrected** (6 Nov): the first reading was overstated (raw files measured the same way show
+    nearly the same split).~~ **Superseded 7 Nov: the correction was wrong.** It compared built and raw only at the
+    raw points, where they agree by construction; the defect sat between them. The re-measure with one curvature
+    method (the plan agreed on 6 Nov) found it real, and it was fixed (64).
 76. **Solver split** (proposal, pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST +
     LM on about 20 % of the wings. Needs an ADflow against SU2 SA code-to-code check and the SU2 cost per solve.
+77. **Builder choices in the built rules (7 Nov).** All are stricter than decided; numbered as in
+    `Stage_2_surface_mesh/decisions/surface_rules.md`, section 13. (1) The growth limits follow the family rule:
+    along the ring 1.25 at VC (decided) gives 1.107 at F; between station gaps 1.3 at VC (not in 71–72) gives 1.127
+    at F; the kink check uses each level's turning limit. Pending: the owner confirms. (2) **The nose — answered
+    7 Nov (owner): solved at every level, the strictest wins.** First it was solved at VC and at F only, and the
+    smaller spacing won. On the rebuilt sets M then needed one repair (nose × 0.9) on all 20 flying-wing reference
+    builds, because F's spacing × 1.3 turned those noses just past M's 10.02°; the nose cell then stepped by 1.44
+    from C to M and 1.17 from M to F instead of 1.3. Now each level solves its own angle on its own ring, the
+    finest first; a coarser level is solved only where the finer answer misses its angle; the smallest spacing wins,
+    and every level takes it ÷ 1.3^k. On the 20 reference wings × 4 Re × 4 levels (Stage 2 Study 9): 80 of 320
+    builds changed, all of them flying-wing builds (the BWB, cranked and tapered builds are the same node for node); nose repairs 20
+    → 0 (on the full sets 4 of 782 F builds still needed one round: the solve measures each
+    station's own ring, the check the shared node list); the nose cell refines by 1.297–1.302 per step. The cost: VC, C and M get a finer nose than
+    their own angle asks (VC 14.6–16.1° against 16.9°). (3) The station growth stays 1.2 and the gaps per panel 12
+    at M (8 at VC), as decided; the plan file of Study 8 used 1.25 and 7 gaps per panel, so the built rules have
+    7–14 more stations (about +17 %, so about 17 % more cells). If the plan file's values were meant, they need a
+    decision. Pending: the owner confirms. See `surface_rules.md`, sections 13–14.
 

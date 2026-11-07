@@ -5,8 +5,9 @@
 Steps (Grand Roadmap recipe R-S):
 1. stations along the span (on every loft station, chord-scaled, squeezed to the tip);
 2. at each station: the nose spacing solved by bisection for the turning target (law 1) at each
-   solve level, on that level's own ring (VC for 16.9 deg and F for 7.7 deg: the 10 deg met at M,
-   moved by laws.py; the first approach: C only); the smallest, moved to VC, wins;
+   solve level, on that level's own ring (every level, VC, C, M, F, each for its own angle: 16.9,
+   13, 10, 7.7 deg, the 10 deg met at M moved by laws.py; the first approach: C only); the smallest,
+   moved to VC, wins, so every level meets its own angle and the family rule stays exact;
 3. this level's values from laws.py (each value moved from its anchor level by the family rule);
    the nose spacing is the VC one divided by r^k, so the family rule stays exact;
 4. one node distribution in arc fraction for the whole wing: at every place the strictest
@@ -79,7 +80,7 @@ def build_surface(loft, re_mean: float, level: str | None = None, config=None) -
     (default configs/surface.yaml; the first approach: configs/surface_first.yaml)."""
     rc: Rules = get_rules(None, config)            # the coarsest level
     rl: Rules = get_rules(level or rc.level, config)
-    solvers = [get_rules(lev, config) for lev in rc.nose_solve_levels]   # VC and F (the first approach: C)
+    solvers = [get_rules(lev, config) for lev in rc.nose_solve_levels]   # VC, C, M, F (the first approach: C)
     tab = SpanTable.of(loft, rl.dense_span)
 
     # 1. stations; the tip gap is the tip first cell at this Re (laws 9, 10, 13)
@@ -106,7 +107,9 @@ def build_surface(loft, re_mean: float, level: str | None = None, config=None) -
             if nose["at_cap"]:
                 continue                                    # the finer answer already meets this level's angle
             h = nose["h_le"] / c * rs.scale
-            if best is None or not best[2]["solved"] or (nose["solved"] and h < best[0]):
+            # a coarser level wins only with a truly smaller spacing: an equal one (the band cell, which every level
+            # moves by the same 1.3) leaves the finer level's answer and its name in place
+            if best is None or not best[2]["solved"] or (nose["solved"] and h < best[0] * (1.0 - 1e-9)):
                 best = (h, rs.level, nose)
         h, at, nose = best
         rows.append({"y_m": sec.y, "v": sec.v, "chord_m": c, "re_local": re_loc,

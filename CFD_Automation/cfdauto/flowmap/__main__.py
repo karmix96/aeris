@@ -8,6 +8,13 @@
 
 Writes <out>.png and <out>.json (default data/flowmaps/<type>_<set>_<index>); with --sheet,
 <out>_sheet.png and <out>_sheet.json (Mach x angle maps from the section tables).
+
+Similarity (decision 70, 7 Nov 2026): every wing is built at unit mean chord, so the tool reads it as a wing
+with a 1 m mean chord and --speed sets the Re on the mean chord: Re = (rho/mu) V x 1 m, rho/mu = 6.85e4 s/m^2
+at sea level. For the four Re levels 1e5, 3e5, 1.5e6, 3e6 give --speed 1.46, 4.38, 21.9, 43.8 (--altitude 0).
+The 2-D tables are then read at that flight Mach (0.004-0.13), not at the Mach 0.1 of decision 70.
+The flow dataset the tool places the wing in (docs/flow_summary.json) is the first approach: the record, made
+at real size and speed before 7 Nov 2026; it is not rebuilt.
 """
 
 from __future__ import annotations
@@ -20,9 +27,14 @@ from ..geometry.build import load_set
 from ..geometry.params import FAMILIES, GEOMETRY_ROOT, TAILLESS_TYPES, WING_TYPES, load_config
 from .core import flow_map, plot, plot_sheet, sweep_sheet
 
+EPILOG = ("Similarity (decision 70, 7 Nov 2026): every wing has unit mean chord, read here as 1 m. --speed sets the Re "
+          "on the mean chord: Re = 6.85e4 x V at sea level, so Re 1e5, 3e5, 1.5e6, 3e6 = --speed 1.46, 4.38, 21.9, 43.8 "
+          "(the 2-D tables are then read at that flight Mach, not at Mach 0.1). The flow dataset the output compares "
+          "with is the first approach: the record, made at real size and speed before 7 Nov 2026.")
+
 
 def main(argv=None) -> None:
-    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0], epilog=EPILOG)
     p.add_argument("--type", choices=WING_TYPES, required=True, help="generator type whose laws read the vector")
     p.add_argument("--set"); p.add_argument("--index", type=int); p.add_argument("--vector")
     p.add_argument("--family", choices=tuple(FAMILIES), help="tailless or conventional (default: from the type)")

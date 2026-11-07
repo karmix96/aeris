@@ -14,6 +14,10 @@ any wing is then evaluated in milliseconds, without XFOIL, by interpolation:
 Grid: 10 sections, Re 1.5e4 - 6e6 (14 levels, about x1.6), Mach 0 / 0.1 / 0.2, angle -10 to 14 deg
 in 0.5 deg; free transition (N_crit 9) and tripped at 1 % chord. Extra: free transition at N_crit 5 and
 11 (Mach 0.1), and three 50/50 blends (Mach 0.1) for the checks.
+
+Rebuilt on 7 Nov 2026 on the sections with the fixed nose (decision 64). The first build (before the fix) is in
+git at 11b0df15; Stage_1_geometry/scripts/section_tables_nose.py compares the two. The sweep cache
+(data/section_cache/, one JSON per sweep, keyed by the section name only) is not in git.
 """
 
 from __future__ import annotations

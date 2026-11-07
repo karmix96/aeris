@@ -1,5 +1,9 @@
 # Nose curvature: raw files against the built sections (decision 64)
 
+Status (7 Nov 2026): merged into the code; the wing sets were rebuilt with this rule and the similarity change
+(722 of 722 built, numpy loft). The 6 Nov note that the nose finding was overstated (OPEN_DECISIONS item 75) was
+wrong: see "Why the old rule was off".
+
 Date: 7 Nov 2026. Script: `Stage_1_geometry/scripts/nose_curvature.py` (under 30 s; `--database` adds
 about 4 min). Data: `Stage_1_geometry/data/studies/nose_curvature.json`. Figure:
 `Stage_1_geometry/docs/nose_curvature.png`.

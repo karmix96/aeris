@@ -131,7 +131,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 
 <!-- What changed since 2 Nov 2026 -->
 <section class="weak" style="border-left-color: var(--accent)">
-  <h2>What changed since 2 Nov 2026 (updated 6 Nov, evening)</h2>
+  <h2>What changed since 2 Nov 2026 (updated 7 Nov)</h2>
   <p class="sec-note">The tables below are updated to match. A proposal that is not decided yet carries the tag <span class="tag">pending</span>.</p>
   <div><strong>Decided</strong>
   <ul>
@@ -145,7 +145,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li><strong>Lighter rules (owner, 6 Nov).</strong> Band cell 0.5 % c at F where local Re ≥ 4 × 10⁵ (the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up). Tip gap 2 × s0. Station gap 0.25 × local chord at M. Cost (estimates, Stage 2: surface × wall layers, 20 reference wings × 4 Re): fine level about 10–11 M cells median on the wing blocks (10.9 M with the band change; 15.2 M with the planned rules). Desktop limit about 1.2 M cells.</li>
     <li><strong>Wall-normal growth (owner, 6 Nov), settled by the mesh levels.</strong> Growth 1.25 at VC is 1.107 at F (about 1.30× more wall layers per level), just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1) (Stage 2 decision 57).</li>
     <li><strong>Volume mesh (owner, 6 Nov).</strong> One matched C-H multiblock mesh for ADflow and SU2, instead of the overset wake box and vortex tube. SU2 has no overset and refuses structured CGNS; converted to unstructured hexes, it runs. Far field stays at the starting value of 80 chords (ladder 40 / 80 / 160). The C-H wake lines may add about +45 % (30–60 %, rough) cells on the wing blocks.</li>
-    <li><strong>Similarity (owner, 6 Nov; D3 row).</strong> Every wing at unit mean chord; the Re on the mean chord is the input; Mach fixed at 0.1 (Prandtl–Glauert on CL and CM); trailing edge 0.2 % c. The root chord leaves the design vector (18 → 17 numbers). About 8,000 solves instead of 42,000. Being built in the Stage 1 code now: all hashes change.</li>
+    <li><strong>Similarity (owner, 6 Nov; D3 row).</strong> Every wing at unit mean chord; the Re on the mean chord is the input; Mach fixed at 0.1 (Prandtl–Glauert on CL and CM); trailing edge 0.2 % c. The root chord leaves the design vector (18 → 17 numbers). About 8,000 solves instead of 42,000. Built in the Stage 1 code on 7 Nov; every hash changed and the sets were rebuilt (722 of 722).</li>
+    <li><strong>Lower transition band from the leading edge (owner, 7 Nov; Stage 2 decision 74, option A).</strong> Counted first: it costs no cells, because both sides of a ring share one node list; transition runs then reach −5°.</li>
+    <li><strong>Nose shape fixed (owner, 7 Nov; decision 64).</strong> One curvature method along the surface found a real defect: the leading edge sat at the farthest raw point, not at the curve's tip, which made a curvature spike on one side and a flat spot on the other (NACA 4415: a 0.18 % c nose cell turned 9.47° built against 4.31° true). New rule in Stage 1: one cubic spline, the leading edge at its apex, 201 points per side; a gate refuses airfoils whose nose folds back (14 of 2,183 database files). The 5 % turning test now passes on 95.6 % of the database (21.0 % before). The 6 Nov note that the finding was overstated was wrong.</li>
+    <li><strong>Re levels:</strong> 1 × 10⁵ stays (owner, 7 Nov), 18 % below the slowest real UAV (1.22 × 10⁵ on the mean chord), as a margin.</li>
     <li><strong>First SU2 smoke test (4 Nov), not a result.</strong> It shows the mesh path works; no wing has been run (note under D3).</li>
   </ul></div>
   <div><strong>Proposals, pending</strong>
@@ -154,11 +157,11 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li><strong>Mach.</strong> Core data at Mach ≤ 0.2 now; Mach 0.3–0.5 later, with a fast-UAV family.</li>
     <li><strong>Angles.</strong> Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about 2.5° steps.</li>
     <li><strong>Re levels.</strong> Check C4 adds a level near 7 × 10⁵ – 10⁶ only if needed.</li>
-    <li><strong>Lower transition band at negative angles</strong> (Stage 2 decision 74). Being counted.</li>
+    
   </ul></div>
   <div><strong>Open</strong>
   <ul>
-    <li><strong>Nose shape (decision 64).</strong> A re-measure of raw and built sections with one curvature method is running, before any fix (see Weak points).</li>
+    
     <li><strong>Still open from Stage 0:</strong> grid share 65 %, pitching moment 0.002, the iteration share, a D5.</li>
     <li><strong>pyGeo tests and one <code>build --all</code></strong> on the owner's machine: the rename made every stored hash stale.</li>
   </ul></div>
@@ -353,7 +356,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <td><p>Decided 4 Nov: the results must capture transition, with ADflow and SU2. This replaces &ldquo;SA for now; final choice later (by G0)&rdquo;. Our ADflow build has SA only (SST aborted) and no transition model, so transition comes from SU2 (SST + LM γ-Reθ).</p>
         <p>The mesh stays transition-ready: y+ ≤ 1 at each case's speed, ≥ 30 cells across the boundary layer. The band as built in Stage 2: upper 0–85 % of chord, from the leading edge on every wing; lower 60–100 %; band cell = bubble length ÷ 20 at level C. Every drag number carries a model band.</p>
         <p>Decided (owner, 6 Nov): about 20 cells per bubble at level F, instead of at level C as built (Ansys CFX: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75–100 nodes from leading to trailing edge). Growth 1.25 at VC is 1.107 at F, just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1) (Stage 2 decision 57). Band cell 0.5 % c at F where local Re ≥ 4 × 10⁵: the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up.</p>
-        <p><span class="tag">pending</span> Solver split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first. The lower transition band at negative angles (Stage 2 decision 74): being counted.</p></td>
+        <p><span class="tag">pending</span> Solver split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first.</p><p><span class="tag">decided</span> The lower transition band from the leading edge (Stage 2 decision 74, option A; owner, 7 Nov): no extra cells.</p></td>
       <td><p>Stage 1 (2-D strips, smooth wing, calm air): long laminar runs and bubbles on most wings; SA overpredicts profile drag by a median +62 % (+69 % in level flight). What the mesh must resolve depends on the model.</p><p>"SA" is fully turbulent only with inflow ν̃/ν ≈ 3; lower values give "apparent transition". Fix the value before the first ADflow solve.</p></td>
       <td class="src"><span class="tag own">our choice</span><span class="ref">owner, 4 Nov 2026; Stage 1 flow study; Ansys CFX guide; Spalart &amp; Rumsey 2007; Crivellini 2014</span></td></tr>
     </tbody>
@@ -402,7 +405,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <li><strong>Transition rests on SU2 alone.</strong> Decided 4 Nov: transition must be captured. Our ADflow build has SA only (SST aborted), so only SU2 (SST + LM) can do it. So far SU2 has run one smoke test on one ring mesh, not converged. Its cost on a full wing is unmeasured, and ADflow and SU2 SA have not yet been compared on the same mesh.</li>
     <li><strong>Mesh size.</strong> Estimated in Stage 2, the fine level has 15.2 M cells (median) with the planned rules, against the proposed 9–11 M. The band change (decided 6 Nov) gives 10.9 M, but then the short high-Re root bubbles (about 1.5 % c) get only about 3 nodes: fine for SA, not for LM. The C-H wake lines may add about +45 % on the wing blocks, so F may land nearer 15 M than 11 M. The desktop takes about 1.2 M cells: with F at 10.9 M, VC is about 1.0 M (median) and C about 2.3 M, so C does not fit on the desktop.</li>
     <li><strong>SU2 has no overset.</strong> It also refuses structured CGNS (structured meshes converted to unstructured hexes do run). So the overset wake box and vortex tube cannot serve both solvers. The C-H mesh (decided 6 Nov) has its own costs: the tip vortex must be held by the outboard blocks without a tube, the open-line march is new work, and the wake lines add cells.</li>
-    <li><strong>Nose shape (decision 64).</strong> A first check found that the upper and lower nose radius of cambered sections differ 3–13×. Measured the same way, the raw files show nearly the same mismatch (NACA 4415 raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c). So it mostly reflects how a cambered, tilted nose looks to that one-sided fit. A re-measure of raw and built with one curvature method is running. No fix before it ends: a fix changes every geometry hash.</li>
+    <li><strong>Nose shape (decision 64): fixed on 7 Nov.</strong> A first check (Stage 2) found the upper and lower nose radius of cambered sections 3–13× apart. On 6 Nov a second check called this mostly the measuring method; that was wrong, because it compared built and raw only at the raw points, where they agree by construction. A third check with one curvature method along the surface found the real defect between the points (NACA 4415: a 0.18 % c nose cell turned 9.47° built against 4.31° true). Fixed in Stage 1; every geometry hash changed and the sets were rebuilt. The pyGeo <code>build --all</code> is still owed.</li>
     <li><strong>The new scope needs data.</strong> −5° to post-stall and Mach toward 0.5 lie outside the Stage 1 data (root angles 0–10°, Mach ≤ 0.2). The mesh rules were set from those ranges, so they must be checked again for the new ones.</li>
     <li><strong>Numerical settings.</strong> Earlier tests moved drag 12–21 counts against a 0.45-count share. Expect this to drive the solver settings.</li>
     <li><strong>Iteration share.</strong> 0.30 counts is looser than Celik's 1/10-of-mesh-error rule (0.195). The measured 0.12 meets both; re-check once the mesh family is frozen.</li>

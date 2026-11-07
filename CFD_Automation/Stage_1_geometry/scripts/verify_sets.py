@@ -92,8 +92,8 @@ def main() -> None:
         "wings": sum(1 for r in rows if r["type"] == t)} for t in WING_TYPES}
     (DOCS / "verification_sets.json").write_text(json.dumps({"summary": summary, "rows": rows}, indent=1))
     lines = ["# Sampled wings: loft vs design", "",
-             "Worst value over every training, corner and reference wing of each type (numpy loft).", "",
-             "| type | wings | stations % c | chord % | twist ° | sweep ° | dihedral ° | straight panels % c | AR % | sections % c | ruled % c | root y m | min y m |",
+             "Worst value over every training, corner and reference wing of each type (numpy loft; every wing at unit mean chord).", "",
+             "| type | wings | stations % c | chord % | twist ° | sweep ° | dihedral ° | straight panels % c | AR % | sections % c | ruled % c | root y (mean chords) | min y (mean chords) |",
              "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for t, sm in summary.items():
         lines.append(f"| {t} | {sm['wings']} | " + " | ".join(f"{sm[k]:.2g}" for k in keys) + " |")

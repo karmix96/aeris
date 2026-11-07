@@ -10,6 +10,13 @@ with a published wing area: mean chord = area / span, aspect ratio = span^2 / ar
 Coverage: a real wing is covered when some generated wing of its family lies within 10 % of it
 in span and in mean chord (2,000 Latin-hypercube wings per type). Wings with a span only (sourced, or
 from the HCDI UAS database in the same YAML) are checked on span alone.
+
+Since decision 70 (7 Nov 2026) every generated wing is built at unit mean chord (mean chord = area / full span
+= 1), so the generated "spans" and "mean chords" below are in mean chords, read as metres: the coverage in metres
+compares real wings with wings of a 1 m mean chord and means nothing now. The script still runs. What still holds:
+each real wing's own Re (on area / full span) and aspect ratio; they set the Re range and the aspect-ratio ranges.
+docs/real_uavs.json and the page's real_uavs figure are the first-approach run (real size, before 7 Nov); it was
+not rerun, so that record is kept (the figure: docs/first_approach/real_uavs.png).
 """
 
 from __future__ import annotations

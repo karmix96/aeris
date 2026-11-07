@@ -3,7 +3,7 @@
 | choice | value | why | source |
 |---|---|---|---|
 | Spanwise order | kSpan = 2 | Straight (ruled) panels between sections, which is what a builder makes and what the planform says. Edges match the exact planform to 0.0000 % of chord. | pyGeo docs: "The spline order in span-wise direction. 2 for linear, 3 for quadratic and 4 for cubic" ([pyGeo API](https://mdolab-pygeo.readthedocs-hosted.com/en/latest/pyGeo.html)) |
-| Sections | b0–b3, plus trailing-edge switch points | Enough for straight panels; more would only add knots. | — |
+| Sections | b0–b3 (the trailing-edge switch sections went on 7 Nov 2026 with the mm floors: decision 70) | Enough for straight panels; more would only add knots. Each section has 201 points per side since 7 Nov (decision 64). | — |
 | Section parameter | the same for every section, s = √(x/c) | All sections share one knot vector. The upper/lower split falls exactly on the nose, and u in `upper(u, v)` is the chord fraction. √ keeps the nose round (vertical tangent). | — |
 | Built with | pySpline surfaces, the same way `liftingSurface` builds them, held in a pyGeo object | `liftingSurface` merges each section's own knots and splits at a knot that is not the nose: 0.51 % of chord off (BWB), 0.21 % (conventional). See below. | pyGeo 1.17.0 source, `_init_lifting_surface` |
 | Tip | open, flat (no cap surface) | Rounded tips are a later study. | — |
@@ -12,7 +12,7 @@
 ## kSpan = 2 against kSpan = 3
 
 Error of the lofted leading edge and trailing-edge midpoint against the exact straight panels,
-max over 401 span points, % of local chord. From `Stage_1_geometry/scripts/loft_kspan_study.py` →
+max over 401 points along the semi-span, % of local chord. From `Stage_1_geometry/scripts/loft_kspan_study.py` →
 `Stage_1_geometry/data/studies/loft_kspan.json`.
 
 | wing | kSpan 2 | kSpan 3 | kSpan 3 + 1 section/panel | kSpan 3 + 3 sections/panel |
@@ -30,9 +30,17 @@ to zero. kSpan = 2 is exact.
 ## Straight panels and linear twist cannot both hold
 
 On a straight panel the trailing-edge height is z_le − c·sin(twist). With chord and twist both
-linear in span, that is quadratic, not straight. We keep the straight panel; so between stations
+linear along the semi-span, that is quadratic, not straight. We keep the straight panel; so between stations
 the twist is not exactly linear. Size: sections added with exactly linear twist sit 0.11–0.30 % of
 chord off the straight trailing edge (kSpan 2 + 3 sections/panel, same study). At the stations
 twist is exact.
 
 Left for later (needs CFD): "forces change by less than one drag count when sections double".
+
+## Nose (decision 64, 7 Nov 2026)
+
+The loft's cubic in s = √(x/c) passes through the section points. Since 7 Nov the section points come from one
+cubic spline through the raw file, with the leading edge at its apex, 201 points per side; a section whose loft
+cubic folds back near the nose (curvature below −1000/c within 3 % c of arc) is refused. Measured along the arc,
+the built nose now turns within 5 % of the raw file per mesh cell on all ten suggested airfoils
+(`decisions/nose_curvature.md`). Lengths are in mean chords (every wing at unit mean chord, decision 70).

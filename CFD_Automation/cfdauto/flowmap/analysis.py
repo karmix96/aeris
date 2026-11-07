@@ -1,5 +1,8 @@
 """Analysis of the flow dataset: trends, statistics, sensitivities, checks of the method, conclusions.
 
+First approach (the record): the dataset and these numbers were made at real size and real speed before
+7 Nov 2026, with the section tables built before the nose fix (decision 64); see dataset.py.
+
     python -m cfdauto.flowmap.analysis      # reads data/flowdata/dataset.csv.gz; writes docs/flow_*.png,
                                             # docs/flow_analysis.json (numbers) and docs/flow_summary.json (tool context)
 
@@ -784,7 +787,8 @@ PARTS = ("figures", "sensitivity", "checks", "tables", "blends")
 
 def main(argv=None) -> None:
     import argparse
-    ap = argparse.ArgumentParser(description="Trends, statistics, sensitivity and checks of the flow dataset.")
+    ap = argparse.ArgumentParser(description="Trends, statistics, sensitivity and checks of the flow dataset. First "
+                                             "approach: the record, made at real size and speed before 7 Nov 2026.")
     ap.add_argument("--only", nargs="+", choices=PARTS, help="run these parts (results of the others are read from the cache)")
     a = ap.parse_args(argv)
     run = set(a.only or PARTS)

@@ -8,6 +8,11 @@ of its family, configs/real_uavs.yaml):
   fast: highest top speed at sea level, root angle 1 deg
 Section sets: the suggested one and two sourced alternatives (configs/shape_evidence.yaml sources;
 SD7032 on the Puma 3AE and LA2573A on the Dragon Eye: NTNU UAV database).
+
+First approach: the maps on the page were made on 31 Oct-2 Nov at real size and real speed. Since decision 70
+(7 Nov 2026) every wing is built at unit mean chord, and the flow-map tool reads it as a wing with a 1 m mean
+chord, so running this script now would put the mid wings at a 1 m mean chord at the real speeds (the wrong Re).
+It was not rerun; in similarity form a condition is an Re on the mean chord (speed = Re / (rho/mu)).
 """
 
 from __future__ import annotations

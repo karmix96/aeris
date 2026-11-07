@@ -543,7 +543,8 @@ def summary_html() -> str:
         return (r(*rr[0], "°") if len(set(rr)) == 1 else " / ".join(r(*x) for x in rr) + "°")
 
     def chord(key):
-        return lambda sp, space: "{:.3g}–{:.3g}".format(*SIM[f"{sp.name}/{space}"][key])
+        c = lambda x: f"{x:.3f}" if x < 1 else f"{x:.2f}"  # noqa: E731
+        return lambda sp, space: "–".join(c(x) for x in SIM[f"{sp.name}/{space}"][key])
 
     def local_re(sp, space):
         e = SIM[f"{sp.name}/{space}"]
@@ -950,9 +951,11 @@ def xfoil_note() -> str:
             else:
                 missing.append(f"{name.upper().replace('MH', 'MH ')} at {sci(r)}")
         parts.append(f"{sci(r)}: {min(vals):+.0f} to {max(vals):+.0f} %".replace("-", "−"))
-    return ("At 2°, by Re: " + "; ".join(parts) + ". Nothing is hidden: "
-            + (", ".join(missing) + " has no light bar because XFOIL found no converged free-transition answer at 2° there "
-               "(an earlier version silently showed 0° for it). " if missing else "")
+    return ("At 2°, by Re: " + "; ".join(parts) + ". "
+            + ("Nothing is hidden: " + ", ".join(missing) + " has no light bar because XFOIL found no converged free-transition "
+               "answer at 2° there (an earlier version silently showed 0° for it). " if missing else
+               "Every section has a converged answer at 2° at every Re (on the sections before the nose fix, MH 60 at "
+               "1.5 × 10⁶ had none). ")
             + "The section tables cover every angle from −10° to 14° and every Re; their maps are in the Flow dataset section "
               "(−6° to 14° shown).")
 
@@ -1657,8 +1660,8 @@ def change_table() -> str:
     out = ['<div class="tbl"><table class="wide"><thead><tr><th>What</th><th>First (30 Oct–6 Nov 2026)</th>'
            '<th>Now (7 Nov 2026)</th><th>Decided</th><th>Status</th></tr></thead><tbody>']
     for what, first, new, when, st in rows:
-        out.append(f"<tr><td class='what'>{what}</td><td class='src'>{first}</td><td class='new'>{new}</td>"
-                   f"<td class='src'>{when}</td><td><span class='flag {flag[st]}'>{st}</span></td></tr>")
+        out.append(f"<tr><td class='what'>{what}</td><td class='first'>{first}</td><td class='new'>{new}</td>"
+                   f"<td class='when'>{when}</td><td><span class='flag {flag[st]}'>{st}</span></td></tr>")
     out.append("</tbody></table></div>")
     return "".join(out)
 
@@ -1672,7 +1675,8 @@ def nose_table() -> str:
     d = json.loads((ROOT / "data" / "studies" / "nose_curvature.json").read_text())
     h = d["meta"]["h_pct"]
     i04, i18 = h.index(0.04), h.index(0.18)
-    pc = lambda x: f"{x:+.1f}".replace("-", "−")  # noqa: E731
+    pc = lambda x: "0.0" if round(x, 1) == 0 else f"{x:+.1f}".replace("-", "−")  # noqa: E731
+    jf = lambda x: f"{x:.0f}" if x >= 10 else f"{x:.2f}" if x >= 1.15 else f"{x:.3f}"  # noqa: E731
     out = []
     for k, a in d["airfoils"].items():
         c = a["curves"]
@@ -1684,7 +1688,7 @@ def nose_table() -> str:
                    f"<td class='num'>{c['new']['R_min_c']:.4f}</td>"
                    f"<td class='num'>{pc(c['old']['T_diff_vs_raw_pct'][i04])} / {pc(c['old']['T_diff_vs_raw_pct'][i18])} {ok(a['old_passes'])}</td>"
                    f"<td class='num'>{pc(c['new']['T_diff_vs_raw_pct'][i04])} / {pc(c['new']['T_diff_vs_raw_pct'][i18])} {ok(a['new_passes'])}</td>"
-                   f"<td class='num'>{jump(jo):.3g} / {jump(jn):.3g}</td>"
+                   f"<td class='num'>{jf(jump(jo))} / {jf(jump(jn))}</td>"
                    f"<td class='num'>{a['le_move_pct']:.3f} / {a['chord_turn_deg']:+.3f}°</td></tr>".replace("+-", "−"))
     return "\n".join(out)
 
@@ -1822,7 +1826,9 @@ svg.dg .station.brk { stroke: var(--amber); stroke-width: 2.4; }
 .cbox .ctag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--bwb); margin-bottom: 2px; }
 .cbox.chg { border-left-color: var(--amber); background: color-mix(in srgb, var(--amber) 6%, var(--surface)); } .cbox.chg .ctag { color: var(--amber); }
 .cbox ul { margin: 4px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
-td.new { font-size: 13.5px; background: color-mix(in srgb, var(--amber) 7%, transparent); min-width: 240px; }
+td.new { font-size: 13.5px; background: color-mix(in srgb, var(--amber) 7%, transparent); width: 44%; min-width: 300px; }
+td.first { font-size: 12.5px; color: var(--muted); width: 28%; min-width: 220px; line-height: 1.45; }
+td.when { font-size: 12.5px; color: var(--muted); width: 10%; min-width: 90px; }
 .fa { display: inline-block; align-self: flex-start; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #FFFFFF; background: #9A6200; border-radius: 3px; padding: 2px 8px; margin: 0 0 6px; line-height: 1.4; max-width: 100%; }
 .flag.chg { color: var(--amber); } .flag.gone { color: var(--muted); }
 li .flag { white-space: normal; display: inline-block; max-width: 100%; }
@@ -1931,7 +1937,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   __CHG_SUMMARY__
   <div class="tbl"><table class="wide summ">__SUMMARY__</table></div>
   <div class="cbox"><span class="ctag">Conclusion</span>Four types in two families, from one generator, every wing at unit mean chord. The focus aspect ratios run from 3 (tailless) to 16.5 (conventional); the BWB alone has a long root (up to __S_BWB_ROOT__ mean chords) and a small tip (down to __S_BWB_TIP__). Every shape runs at the four Re levels, which cover the real wings (1.22 × 10⁵ – 3.10 × 10⁶). Inside one wing the local Re reaches further: from about __S_BWB_RETIP__ at the smallest BWB tip (lowest level) to __S_BWB_REROOT__ at the largest BWB root (top level). Tailless wings are swept and washed out to fly without a tail; conventional wings are nearly straight. Every type needs a fine mesh at the leading and trailing edges, the tip and the wake.</div>
-  <p class="muted">Details: <a href="#design">Design space</a>, <a href="#ranges">Sizes</a>, <a href="#reynolds">Re and Mach</a>, <a href="#phenomena">Flow phenomena</a>, <a href="#refine">Where to refine</a>.</p>
+  <p class="muted">Details: <a href="#design">Design space</a>, <a href="#ranges">Shapes</a>, <a href="#reynolds">Re and Mach</a>, <a href="#phenomena">Flow phenomena</a>, <a href="#refine">Where to refine</a>.</p>
 </section>
 
 <section id="design">

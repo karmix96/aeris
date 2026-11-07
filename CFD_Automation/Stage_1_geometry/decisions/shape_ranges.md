@@ -1,7 +1,9 @@
 # Shape ranges and airfoils: where each one comes from (Stage 1)
 
 Decided 29 Oct 2026 (Mike: "anchor our choices based on sources. everything must make sense").
-Sizes (root chord, aspect ratio) come from real wings: see `conventional_ranges.md`.
+Sizes came from real wings: see `conventional_ranges.md`. Since 7 Nov 2026 (decision 70) every wing is built at
+unit mean chord, so the real wings set only the aspect ratios and the Re range; the root chord in metres below
+is the first approach.
 Ranges live in `configs/wing.yaml`. Tags: **checked** = I read the source myself;
 **agent** = read by the research agent only; **second-hand** = a textbook quoted by another page.
 
@@ -32,17 +34,17 @@ Ranges live in `configs/wing.yaml`. Tags: **checked** = I read the source myself
 | BWB tip chord | 0.08–0.20 | 0.06–0.20 | BlendedNet reaches 0.06 (edge case) |
 | BWB sweep 1 | 20–40° | 15–40° | Lehmkuehler 15° |
 | BWB dihedral panel 3 | 0–8° | 0–5° | Raymer 0–5° |
-| Tailed sweeps | −10° to +20° | −5° to +15° | low-speed wings near 0° c/4; no UAV source for −10° |
-| Tailed washout | up to 7° | up to 5° (root 0–2°, tip −3–0°) | Raymer about 3°; 5° as the edge |
-| Tailed dihedral | −3° to +6° | 0–5° | Raymer 0–5° |
+| Conventional sweeps | −10° to +20° | −5° to +15° | low-speed wings near 0° c/4; no UAV source for −10° |
+| Conventional washout | up to 7° | up to 5° (root 0–2°, tip −3–0°) | Raymer about 3°; 5° as the edge |
+| Conventional dihedral | −3° to +6° | 0–5° | Raymer 0–5° |
 | Cranked per-panel chords | 0.80 / 0.70 / 0.50 – 1 | 0.85 / 0.75 / 0.65 – 1 | overall taper ≥ 0.41 (Raymer about 0.4) |
 | Flying-wing taper | 0.30–0.80 | 0.30–0.90 | Panknin 0.85 |
 | Flying-wing sweep | 10–35° | 10–40° | flying-wing MAV 40° |
 
 ## Still our choice (no source)
 
-- Layout shares `b3_ratio` 0.20–0.50 and `split_ratio` 0.30–0.70 for tailed and flying wings (breaks anywhere in
-  25–80 % of the span). BWB values match Wang & Zhou (0.50, 0.48).
+- Layout shares `b3_ratio` 0.20–0.50 and `split_ratio` 0.30–0.70 for conventional and flying wings (breaks
+  anywhere in 25–80 % of the semi-span). BWB values match Wang & Zhou (0.50, 0.48).
 - Twist at b1 and b2 (between the root and tip values).
 - Sweep falls outboard on the BWB (20–40 → 15–35 → 5–25°): matches the BWB papers' shape, not a cited number.
 
@@ -65,7 +67,8 @@ Mike: design everything, but make the wings and the simulations dense where the 
   per-type list with a source (focus). The full space draws every sourced section on any type.
 - Full bounds (our choice, the widest value in any source): Pliakos et al. 2025 design-space bounds
   (twist ±5° at the breaks, ±7° at the tip; dihedral ±10°; c/4 sweep 0–60°), BlendedNet (sweep 60°,
-  tip 0.06), Wang & Zhou (root 1.8 m), Hainline (root twist 6°), Prandtl-D (washout about 10°).
+  tip 0.06), Wang & Zhou (root 1.8 m: first approach, no root chord since 7 Nov), Hainline (root twist 6°),
+  Prandtl-D (washout about 10°).
 
 ## AUTh (Panagiotou, Yakinthos) BWB work, read 30 Oct 2026
 
@@ -74,11 +77,11 @@ Mike: design everything, but make the wings and the simulations dense where the 
 | Antoniou et al. 2025, Eng. Proc. 90(1):18 | RX-3 tactical BWB: MTOW 260 kg, S 4.9 m², c/4 sweep 33°, AR 8, cruise 160 km/h | checked |
 | Panagiotou et al. 2021, Aerospace 8(1):13 | tactical BWB 200–600 kg; kink at y/b 0.32; Re 1.8–2.9 × 10⁶ on the MAC; SA, y+ < 5, 8 M nodes | checked |
 | Pliakos et al. 2025, Eng. Proc. 90(1):52 | automated CFD preprocessing for UAV wings; planform bounds (Table 2); TE 1 % chord; first TE cell ¼ of TE thickness | checked |
-| Kapsalis et al. 2026, Eng. Proc. 133(1):95 | RX-3 1:3 subscale: span 2.4 m, 6 kg, 70 km/h | agent |
+| Kapsalis et al. 2026, Eng. Proc. 133(1):95 | RX-3 1:3 subscale: full span 2.4 m, 6 kg, 70 km/h | agent |
 | AST 2018 (MALE BWB), AST 2021, AIAA 2020/2022, ICUAS 2020 | airfoils and station chords | paywalled, not read |
 
-Effect: BWB focus root chord 0.40–0.80 → 0.40–1.80 m (the old range was sized on small flying wings);
-RX-3 added to `configs/real_uavs.yaml` (span from √(AR·S) = 6.26 m; Wikipedia gives 7.2 m).
+Effect (first approach): BWB focus root chord 0.40–0.80 → 0.40–1.80 m (the old range was sized on small flying wings);
+RX-3 added to `configs/real_uavs.yaml` (full span from √(AR·S) = 6.26 m; Wikipedia gives 7.2 m).
 No AUTh paper names its BWB airfoils in an open text, so the suggested BWB pair stays MH 104 / MH 61.
 
 ## Aspect-ratio fix found by the full space (30 Oct 2026)
@@ -86,8 +89,9 @@ No AUTh paper names its BWB airfoils in an open text, so the suggested BWB pair 
 With large washout, 4 full-space wings missed their aspect ratio by 0.11–0.24 %. Causes: the mean
 chord assumed a linear chord (the true chord of a twisted ruled panel is shorter mid-panel), and the
 extra section at the trailing-edge switch used the linear chord and twist, so it sat off the panel.
-Now K integrates the true chord and the switch section sits on the ruled panel. Worst error on 730
-built wings: 0.00004 %.
+Now K integrates the true chord and the switch section sat on the ruled panel. Worst error on 730
+built wings: 0.00004 %. Since 7 Nov 2026 there is no switch section (the trailing edge is 0.2 % c on every
+wing); worst error on the 722 wings of 7 Nov: 0.00004 % (`docs/verification_sets.json`).
 
 ## Cranked made distinct from tapered (30 Oct 2026)
 
@@ -100,3 +104,5 @@ sweep 0–15°); overall taper 0.38–0.85. Layout as on Hermes 450 and Heron (f
 
 `scripts/xfoil_band.py`: each suggested section, free transition (Ncrit 9) vs tripped at 1 % chord,
 Re 1e5 / 3e5 / 1.5e6 / 3e6, 0–8°. Tripped profile drag is +37–128 % (median 76 %) at Re ≥ 3e5, 0–4° (2-D proxy); close at 1e5 (long bubble).
+Rerun on 7 Nov 2026 on the sections of the new nose rule (decision 64): +36–128 % (median 78 %) at Re ≥ 3e5,
+0–4°; −8 to +28 % at 1e5.

@@ -80,6 +80,9 @@ The sections below are updated to match.
 - **Section tables and refine map redone (7 Nov).** The 2-D XFOIL tables were rebuilt on the fixed nose:
   no Stage 1 conclusion changes. The refine map now runs at the 4 Re levels; it finds the upper transition
   past 85 % c at low Re (proposal below: write the upper band as 0–100 % c; +0.4 % cells at F).
+- **Stage 2 screen on the 7 Nov wings (7 Nov).** 1,724 of 1,724 builds pass: every set except the hold-outs at VC
+  and F (782 builds each), and the 20 reference wings at all four levels and Re levels. 4 of the 782 F builds still
+  needed one nose repair.
 - **First SU2 smoke test (4 Nov), not a result.** It shows the mesh path works; no wing has been run
   (note at the end of D3).
 

@@ -131,13 +131,14 @@ def fig_levels():
              f"  · base ≥ 8 cells ({', '.join(str(r.base_cells) for r in new)})",
              "  · no kinks; every check refuses as before",
              f"  · tip gap {new[0].tip_gap_in_s0:g} × s0 (was s0: lighter rule)",
-             "Three builder choices (stricter), for Mike:",
-             "  · the nose solved at VC and at F; the smaller wins",
+             "Decided 7 Nov: the nose solved at every level,",
+             "  · each for its own angle; the strictest wins",
+             "Two builder choices (stricter), for Mike:",
              "  · the growth limits follow the family rule",
              "  · station growth 1.2 kept (plan file: 1.25, 7 gaps)"]
     for i, s_ in enumerate(lines):
-        a.text(0.0, 0.74 - i * 0.082, s_, fontsize=8.2, color=INK if i in (0, 1, 7) else MUTED, va="top",
-               transform=a.transAxes, fontweight="bold" if i in (0, 7) else None)
+        a.text(0.0, 0.74 - i * 0.075, s_, fontsize=8.2, color=INK if i in (0, 1, 7, 9) else MUTED, va="top",
+               transform=a.transAxes, fontweight="bold" if i in (0, 7, 9) else None)
     save(fig, "levels_first_new.png")
 
 

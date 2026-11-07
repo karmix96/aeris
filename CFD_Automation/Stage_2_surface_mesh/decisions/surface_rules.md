@@ -275,7 +275,8 @@ exactly 1.3: the base 8, 10, 14, 18 (ratios 1.25, 1.4, 1.29), the gaps per panel
 On a short panel whose gaps are set by the count, the gap refines by that ratio (1.25 from VC to C on the BWB root
 panel); `test_family.py` expects that ratio there.
 
-**The nose is solved at VC and at F.** The first code solved the nose spacing at the coarsest level and gave each
+**The nose is solved at every level; the strictest wins** (the owner's answer to point (2) below, 7 Nov). How it got
+there. The first code solved the nose spacing at the coarsest level and gave each
 finer level that spacing ÷ 1.3^k. With each level checked against its own angle, that failed. On BWB reference wing 0
 at Re 3 × 10⁵, the VC spacing ÷ 1.3^k turned the surface by 16.9°, 13.5° and 10.8° at VC, C and M (the angles: 16.9°,
 13°, 10°). C needed a repair (nose × 0.9), which broke the family rule there (VC / C = 1.44, not 1.3); `test_family.py`
@@ -285,17 +286,23 @@ caught it. The cause is the built nose. On this section the lower side turns by 
 level, not 1.3. The first approach never showed this, because its finer levels were checked against C's 10°. Holding
 the nose cell over the same length on every level did not help (13.51° at C instead of 13.52°).
 
-Now the nose spacing is solved twice at every station: at F for 7.69° on the F ring, then at VC for 16.9° on the VC
+Then the nose spacing was solved twice at every station: at F for 7.69° on the F ring, then at VC for 16.9° on the VC
 ring, starting from F's answer × 1.3³. When VC's turning there is already within 16.9°, that takes one measure and no
 bisection. The smaller spacing, written at VC, wins, and every level takes it ÷ 1.3^k, so the family rule stays exact.
 F wins on noses like this one. VC wins on round noses, where a cell's turning grows a little faster than the cell (on a
 circle, 7.69° at F is 16.95° at VC, above VC's repair limit of 16.92°). On BWB reference wing 0 at Re 3 × 10⁵ this costs:
 a VC nose cell of 0.060 % c instead of 0.079 % c, a largest VC turning of 13.4° instead of 16.9°, a ring of 240 nodes
 instead of 236, no repair at VC, C or M, and no extra build time (4.1 s at VC). `stations.csv` says which level set
-each station's nose (`nose_solved_at`). The config key is `chord.nose_solved_at: [VC, F]`; without it (the first
-approach, the plan file) the nose is solved at the coarsest level only, as before. (These numbers are on the geometry
-of before 7 Nov. On the rebuilt sets, section 14: VC turns @@VC_TURN@@°, and M needed one repair round on
-@@REP_TXT@@, so the family rule is not exact at M there.)
+each station's nose (`nose_solved_at`). (These numbers are on the geometry of before 7 Nov.) On the rebuilt sets this
+left M short: M needed one repair (nose × 0.9) on all 20 flying-wing reference builds, because F's spacing × 1.3
+turned those noses just past M's 10.02°, so the nose cell stepped by @@FW_CM@@ from C to M and @@FW_MF@@ from M to F
+instead of 1.3 (section 14). **Now the nose is solved at every level** (owner, 7 Nov): F for 7.69° on the F ring, then
+M for 10°, C for 13° and VC for 16.9°, each on its own ring, starting from the finer answer × 1.3. Where the finer
+answer already meets the level's angle, that level takes one measure and no bisection. The smallest spacing, written
+at VC, wins, and every level takes it ÷ 1.3^k, so every level meets its own angle without a repair and the family
+rule stays exact. The repair loop stays as a guard (the solve uses each station's ring, the check the shared node
+list). The config key is `chord.nose_solved_at: [VC, C, M, F]`; without it (the first approach, the plan file) the
+nose is solved at the coarsest level only, as before.
 
 **Light check (7 Nov; on the geometry of before similarity and the nose fix; the full screen on the rebuilt sets is
 section 14).** The 20 reference
@@ -323,15 +330,16 @@ band (0–100 % c against 60–100 % c) changes nothing, as Study 8 found. The s
 builds the station gaps with growth 1.25 and 7 gaps per panel; the decided rules keep growth 1.2 and give 8 (12 at M
 ÷ 1.69, rounded up). Neither 1.25 nor 7 is in a decision.
 
-**Three points for the owner to confirm.** The first two make the rules stricter than the first code, never looser.
+**Three points for the owner.** All make the rules stricter than the first code, never looser. Point (2) is
+answered (7 Nov); (1) and (3) wait for the owner.
 (1) The growth limits follow the family rule. Decision 71 lists growth ≤ 1.25 along the ring as a hard minimum at VC.
 The limit of 1.3 between station gaps is not in decisions 71–72; it is anchored at VC the same way (1.13 at F).
-(2) The nose is solved at VC and at F, as above: every level meets its own angle and, on the old geometry, the family
-rule stayed exact, but VC, C and M get a finer nose than their own angle asks (VC 13.4–14.8° against 16.9° on the 80
-builds of the light check; 2–4 ring nodes at VC). On the rebuilt sets (section 14) VC turns @@VC_TURN@@°, and the
-scheme does not cover M: M needed a repair (× 0.9) on @@REP_TXT@@, which breaks the family rule for the nose cell at
-M there (@@FAM_REP@@ instead of 1.3). Solving the nose at all four levels would close that gap (two more solves per
-station).
+(2) The nose. **Answered 7 Nov (owner): solved at every level, the strictest wins.** First it was solved at VC and at
+F, as above: on the old geometry every level met its own angle and the family rule stayed exact (VC 13.4–14.8° against
+16.9° on the 80 builds of the light check; 2–4 ring nodes at VC). On the rebuilt sets M needed a repair (× 0.9) on all
+20 flying-wing reference builds, which broke the family rule for the nose cell (C/M @@FW_CM@@, M/F @@FW_MF@@ instead
+of 1.3). Solved at every level: @@REP_NOW@@ repairs, and the nose cell refines by @@FAM_NOSE@@ per step (section 14).
+The cost: VC, C and M get a finer nose than their own angle asks (VC @@VC_TURN@@° against 16.9°).
 (3) The station rules: built as decided (growth 1.2, at least 12 gaps per panel at M), they give 17 % more stations
 than the plan file (growth 1.25, 7 gaps per panel at VC). If the plan file's values were meant, they need a decision.
 
@@ -341,19 +349,22 @@ than the plan file (growth 1.25, 7 gaps per panel at VC). If the plan file's val
 The rules of section 13 on the rebuilt sets (similarity and the nose fix, section 15; 722 wings, new hashes), numpy
 loft, one build at a time. Every set at VC and at F: training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵
 on the mean chord, and the 20 reference wings at all four Re levels (782 builds per level); the 20 reference wings
-also at C and M at the four Re levels (80 builds each). Each level refuses at its own limits (section 13). Per build:
+also at C and M at the four Re levels (80 builds each). The nose is solved at every level (section 13, point 2).
+Each level refuses at its own limits (section 13). Per build:
 every check's value, limit and margin, ring nodes, stations, quads, time, which solve set each station's nose, and
 the reasons (`data/studies/screen_VC.json`, `screen_F.json`, `screen_reference_new.json`; the numbers:
 `screen_new_summary.json`; `scripts/screen.py`, `scripts/screen_study.py`; Study 9 on the page).
 
 **Result.** @@OK_NEW@@ of @@N_NEW@@ builds passed every check, @@CRASH_NEW@@ crashed (VC @@VC_OK@@ of @@VC_N@@, C @@C_OK@@ of
-@@C_N@@, M @@M_OK@@ of @@M_N@@, F @@F_OK@@ of @@F_N@@). Nose repairs (the whole wing's nose spacing × 0.9, one round):
-@@REP_TXT@@. There the F solve's spacing × 1.3 turned the surface just past M's 10.02°; after the repair M turns
-@@M_TURN@@°. The check passes, but the nose cell breaks the family rule at M on those wings (nose cell ratio
-@@FAM_REP@@ instead of 1.3). Solving the nose at all four levels (two more solves per station) would remove it; this
-is added to point (2) of section 13 for the owner. Every station took its nose from the F solve
-(@@ST_F@@ of @@ST_ALL@@), so the largest turning is @@VC_TURN@@° at VC (angle 16.9°), @@C_TURN@@° at C (13°),
-@@M_TURN@@° at M (10°) and @@F_TURN@@° at F (7.69°). On the old geometry (the light check, section 13) VC turned
+@@C_N@@, M @@M_OK@@ of @@M_N@@, F @@F_OK@@ of @@F_N@@). Nose repairs: @@REP_TXT@@.
+
+**The nose at every level, against the first build** (nose at VC and F only; the 20 reference wings × 4 Re × 4
+levels; `data/studies/nose_levels_check.json`). The first build passed every check, but only after one repair (the
+whole wing's nose spacing × 0.9) at M on all 20 flying-wing reference builds: F's spacing × 1.3 had turned those noses
+just past M's 10.02°. Solved at every level: @@NL_CHANGED@@ builds changed, all of them @@NL_TYPES@@ builds; the @@NL_SAME@@ builds
+are the same node for node. Ring nodes changed by @@NL_RING@@ (per level). Nose repairs @@REP_FIRST@@ → @@REP_NOW@@.
+What set the nose, over @@ST_ALL@@ stations of every build: @@NOSE_SRC@@. The largest turning is @@VC_TURN@@° at VC
+(angle 16.9°), @@C_TURN@@° at C (13°), @@M_TURN@@° at M (10°) and @@F_TURN@@° at F (7.69°). On the old geometry (the light check, section 13) VC turned
 13.4–14.8°: the true nose (section 15) is rounder, so F's answer is only a little finer than VC's own (on a circle
 VC would set it). Largest growth along the ring
 @@VC_CG@@ at VC (limit 1.25 within 1 %), @@F_CG@@ at F (1.107); between station gaps @@VC_SG@@ at VC (1.3), @@F_SG@@ at F
@@ -369,24 +380,35 @@ Build time median @@TIME_VC@@ s at VC, @@TIME_F@@ s at F (max @@TIME_F_MAX@@ s).
 
 (ring nodes and stations: VC and F over every set and Re level; C and M over the reference wings.)
 
-**The cell estimate** of the wing blocks: n = max over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g), cells =
+**The cell estimate** of the wing blocks (the count the pages use, because its rule is written down and it can be
+redone): n = max over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g), cells =
 (ring nodes − 1)(stations − 1) n + cap quads × n, with g the level's wall growth (1.25 at VC; 1.187, 1.141, 1.107), s0
 the level's first wall cell at the station's local Re (y⁺ 1, 0.77, 0.59, 0.46) and D = 2 local chords; no C-H wake
-lines. F is @@F_MED@@ M cells median on the 20 reference wings × 4 Re (@@F_MIN@@–@@F_MAX@@ M): @@ASKED@@ the 9–11 M asked,
-and @@F_VS6@@ × the 6 Nov estimate of 10.9 M, although the built surfaces have about 17 % more stations than the plan
-file of that estimate (station growth 1.25 and 7 gaps per panel): the two counts differ in their wall layers (here
-@@F_LAYERS@@ layers at F; the 6 Nov rule is not written down). With the wake lines (+30–60 %, rough) F is about @@F_WAKE@@ M. RAM for ADflow (1.51 GiB + 9.46 GiB
-per million cells): the desktop today (about 1.2 M cells) takes @@DESK_VC@@ of the 80 VC meshes and @@DESK_C@@ at C;
-with +32 GB (about 4.6 M) @@DESK32_VC@@ at VC, @@DESK32_C@@ at C and @@DESK32_M@@ at M; F needs the HPC.
+lines. F is @@F_MED@@ M cells median on the 20 reference wings × 4 Re (@@F_MIN@@–@@F_MAX@@ M; @@F_LAYERS@@ layers):
+@@ASKED@@ the 9–11 M asked.
 
-**The family ratios** on the 20 reference wings × 4 Re (80 pairs per step): on the pairs without a nose repair the
-nose, trailing-edge, band and tip-gap cells refine by @@FAM_SP@@ per step (on the repaired flying-wing builds the nose
-cell steps by @@FAM_REP@@); the base cells by 1.25, 1.4, 1.29 and the first station gap, where the gaps per
+| Cells of the wing blocks | First estimate (6 Nov) | This count (7 Nov; the pages use it) |
+| --- | --- | --- |
+| Wall-layer rule | not recorded (surface × wall layers, about 1.30 × the layers per level) | the formula above |
+| Surfaces | the plan file, on the first-approach reference wings (13 of the 20 replaced on 7 Nov) | the built rules on the rebuilt reference wings |
+| VC / C / M / F, median (max) [M] | 1.0 (1.5) / 2.3 (3.3) / 5.0 (7.2) / 10.9 (15.9) | @@REF_CELLS_VC@@ / @@REF_CELLS_C@@ / @@REF_CELLS_M@@ / @@REF_CELLS_F@@ |
+| F | 10.9 M median (15.2 M with the planned rules) | @@F_MED@@ M median (@@F_MIN@@–@@F_MAX@@ M), @@F_VS6@@ × the first |
+| Can it be redone? | no | yes (`scripts/screen.py`, `scripts/screen_study.py`) |
+
+The surfaces are not why the two differ (the built ones have about 17 % more stations than the plan file): they differ
+in the wall-layer rule and in the wings. Both count the wing blocks only; with the C-H wake lines (+30–60 %, rough) F
+is about @@F_WAKE@@ M. Stage 3 sets the real wall-layer rule, and with it the real count. RAM for ADflow (1.51 GiB +
+9.46 GiB per million cells): the desktop today (16 GB: about 1.2 M cells) takes @@DESK_VC@@ of the 80 VC meshes and
+@@DESK_C@@ at C; with +36 GB (about 5.0 M) @@DESK36_VC@@ at VC, @@DESK36_C@@ at C and @@DESK36_M@@ at M; F needs the HPC.
+
+**The family ratios** on the 20 reference wings × 4 Re (80 pairs per step): the nose, trailing-edge, band and tip-gap
+cells refine by @@FAM_SP@@ per step (the first build, nose at VC and F only: the flying wings' nose cell C/M @@FW_CM@@,
+M/F @@FW_MF@@); the base cells by 1.25, 1.4, 1.29 and the first station gap, where the gaps per
 panel set it, by 1.25, 1.2, 1.33 (whole numbers); ring cells by @@FAM_RING@@, station gaps by @@FAM_SPAN@@, wall layers
 by @@FAM_WALL@@ and cells by @@FAM_CELLS@@ per step (medians).
 
-**What it shows, and what not.** The built rules mesh every wing on all four levels, and the levels are true scaled
-copies, except the nose cell at M where it was repaired. The cell count depends on the wall-layer rule more than on the surface; the stations add about 17 % against the plan
+**What it shows, and what not.** The built rules mesh every wing on all four levels, and, with the nose solved at
+every level, the levels are true scaled copies. The cell count depends on the wall-layer rule more than on the surface; the stations add about 17 % against the plan
 file (point 3 of section 13). The cap quads come
 closest to a limit. Not shown: whether the march accepts these surfaces, whether the coarse levels are good enough for
 the drag, the pyGeo loft.

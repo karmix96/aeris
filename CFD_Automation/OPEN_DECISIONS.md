@@ -287,18 +287,23 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     1e5 is 18 % below the slowest real UAV (1.22e5 on area / full span), kept as a margin (owner, 7 Nov).
 71. **Levels VC, C, M, F with the targets anchored** (owner, 6 Nov): hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25,
     base ≥ 8, no kinks, tip gap); accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest
-    cell), as DPW defines its medium grid; transition targets at F (20 cells per bubble; wall growth ≈ 1.1).
-    VC on the desktop (about 1.0 M cells median, desktop limit about 1.2 M); C, M, F on the university HPC.
-    Replaces "at level C" in 56 and settles 57 at F (1.25 at VC is 1.107 at F, just above the 1.1).
+    cell), as DPW defines its medium grid; transition targets at F (20 cells per bubble; wall growth 1.107 at F,
+    just above the 1.1 a transition model asks for). VC on the desktop (16 GB: about 1.2 M cells; VC has @@VC_MED@@ M
+    median on the wing blocks in Study 9); C, M, F on the university HPC. Replaces "at level C" in 56 and settles 57
+    at F (1.25 at VC gives 1.107 at F).
     **Built 7 Nov** (`configs/surface.yaml`, `cfdauto/mesh/laws.py`; the first approach kept in
     `configs/surface_first.yaml`); screened on the rebuilt sets (Stage 2 Study 9): @@OK_NEW@@ of @@N_NEW@@ builds
-    passed; F @@F_MED@@ M cells median on the wing blocks (20 reference wings × 4 Re), @@ASKED@@ the 9–11 M asked
-    (the 6 Nov estimate was 10.9 M; the two counts differ in their wall layers, and the built surfaces have about 17 %
-    more stations than the plan file's). Three builder choices: 77.
+    passed; F @@F_MED@@ M cells median on the wing blocks (20 reference wings × 4 Re), @@ASKED@@ the 9–11 M asked.
+    The pages use this count, because its rule is written down and it can be redone (n = the largest over the
+    stations of ceil(ln(1 + (g − 1) D / s0) / ln g); D = 2 local chords; g = 1.25, 1.187, 1.141, 1.107 at VC, C, M, F;
+    s0 from y⁺ = 1, 0.77, 0.59, 0.46 at each station's local Re). The first estimate (6 Nov) gave 10.9 M; its
+    wall-layer rule was not recorded, and it used the first-approach reference wings. Both leave out the C-H wake
+    lines (a rough +30–60 %); Stage 3 sets the real wall-layer rule. The nose: solved at every level, the strictest
+    wins (owner, 7 Nov). Two builder choices left: 77.
 72. **Lighter rules** (owner, 6 Nov): the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell
     0.5 % c at F); tip gap 2 × s0; station gap 0.25 × local chord at M (replaces 62's 0.2 × chord at C).
     Fine level about 10–11 M cells median on the wing blocks (10.9 M with the band change alone; 15.2 M with
-    the planned rules; estimates of 6 Nov). Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c)
+    the planned rules; the first estimates, 6 Nov, wall-layer rule not recorded; the count of the built rules: 71). Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c)
     get about 3 cells. **Built 7 Nov**; measured F: see 71.
 73. **One matched C-H volume mesh for ADflow and SU2** (owner, 6 Nov), instead of the overset wake box and the
     tip-vortex tube. SU2 8.6.0 has no overset and refuses structured CGNS (structured meshes converted to
@@ -311,7 +316,7 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     angles ≥ 0°. **Counted on 7 Nov** (Stage 2 Study 8; `scripts/band_count.py`, `data/studies/band_count.json`):
     the 20 reference wings × 4 Re levels at VC with the planned rules (`configs/surface_plan_VC.yaml`), 160 builds.
     A and B give the same ring, node for node (ratio A / B 1.000, median and max; the same at F on two wings), so
-    F stays at about 10.9 M cells (median, wing blocks) with A. Why: both sides share one node list (60), and the
+    F stays at about 10.9 M cells (median, wing blocks; the 6 Nov estimate) with A. Why: both sides share one node list (60), and the
     upper band (0–85 % c) already makes the front of the lower side fine. A per-wing lower band from the refine map
     (A′, −5° to 8°, 10 % c margin) is the same as A: its union over the strips starts at 0 % c on all 20 wings.
     The refine map from −5° puts the lower transition at a median of 1–15 % c per type at −5°, in front of 60 % c
@@ -324,15 +329,20 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     method (the plan agreed on 6 Nov) found it real, and it was fixed (64).
 76. **Solver split** (proposal, pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST +
     LM on about 20 % of the wings. Needs an ADflow against SU2 SA code-to-code check and the SU2 cost per solve.
-77. **Three builder choices in the built rules (7 Nov; pending: the owner confirms).** All are stricter than decided.
-    (1) The nose is solved at VC and at F and the smaller spacing wins (every level then meets its own angle and the
-    family rule stays exact); on the rebuilt sets every station took F's answer, so VC turns @@VC_TURN@@° instead of
-    16.9° (Study 9). It does not cover M: the nose repair (× 0.9, one round) was needed on @@REP_TXT@@, because F's
-    spacing × 1.3 turned those noses just past M's 10.02°; there the nose cell breaks the family rule at M (ratio
-    @@FAM_REP@@ instead of 1.3). Solving at all four levels would remove it (two more solves per station). (2) The growth limits follow the family rule: along the ring 1.25 at VC (decided) gives 1.107 at
-    F; between station gaps 1.3 at VC (not in 71–72) gives 1.127 at F; the kink check uses each level's turning
-    limit. (3) The station growth stays 1.2 and the gaps per panel 12 at M (8 at VC), as decided; the plan file of
-    Study 8 used 1.25 and 7 gaps per panel, so the built rules have 7–14 more stations (about +17 %, so about 17 % more
-    cells). If the plan file's values were meant, they need a decision. See
-    `Stage_2_surface_mesh/decisions/surface_rules.md`, sections 13–14.
+77. **Builder choices in the built rules (7 Nov).** All are stricter than decided; numbered as in
+    `Stage_2_surface_mesh/decisions/surface_rules.md`, section 13. (1) The growth limits follow the family rule:
+    along the ring 1.25 at VC (decided) gives 1.107 at F; between station gaps 1.3 at VC (not in 71–72) gives 1.127
+    at F; the kink check uses each level's turning limit. Pending: the owner confirms. (2) **The nose — answered
+    7 Nov (owner): solved at every level, the strictest wins.** First it was solved at VC and at F only, and the
+    smaller spacing won. On the rebuilt sets M then needed one repair (nose × 0.9) on all 20 flying-wing reference
+    builds, because F's spacing × 1.3 turned those noses just past M's 10.02°; the nose cell then stepped by @@FW_CM@@
+    from C to M and @@FW_MF@@ from M to F instead of 1.3. Now each level solves its own angle on its own ring, the
+    finest first; a coarser level is solved only where the finer answer misses its angle; the smallest spacing wins,
+    and every level takes it ÷ 1.3^k. On the 20 reference wings × 4 Re × 4 levels (Stage 2 Study 9): @@NL_CHANGED@@
+    builds changed, all of them @@NL_TYPES@@ builds (the @@NL_SAME@@ builds are the same node for node); nose repairs @@REP_FIRST@@
+    → @@REP_NOW@@; the nose cell refines by @@FAM_NOSE@@ per step. The cost: VC, C and M get a finer nose than
+    their own angle asks (VC @@VC_TURN@@° against 16.9°). (3) The station growth stays 1.2 and the gaps per panel 12
+    at M (8 at VC), as decided; the plan file of Study 8 used 1.25 and 7 gaps per panel, so the built rules have
+    7–14 more stations (about +17 %, so about 17 % more cells). If the plan file's values were meant, they need a
+    decision. Pending: the owner confirms. See `surface_rules.md`, sections 13–14.
 

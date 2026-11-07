@@ -8,7 +8,8 @@
 > (`--config`). How the anchors are built: `decisions/surface_rules.md`, section 13. Also on 7 Nov, in Stage 1: the
 > nose fix (decision 64) and similarity (decision 70: every wing at unit mean chord; the sets rebuilt). The new screen
 > on the rebuilt sets (section 14): @@OK_NEW@@ of @@N_NEW@@ builds passed at VC, C, M and F. Still to come: Mike's
-> confirmation of three builder choices (decision 77), the pyGeo run, the matched C-H volume mesh (Stage 3).
+> confirmation of two builder choices (decision 77; the third, the nose, is answered: solved at every level, the
+> strictest wins), the pyGeo run, the matched C-H volume mesh (Stage 3).
 
 One wing surface (the Stage 1 loft) in, one structured surface mesh out: a closed ring of points
 around the section at every spanwise station, root to tip, plus one patch that closes the flat tip.
@@ -70,7 +71,7 @@ tests/mesh/                tests
 
 | Where | Rule (anchor level) | VC | C | M | F | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Nose | no ring cell turns the surface by more than 10° at M (solved by bisection on the ring as built, at VC and at F; the smaller spacing wins); away from the nose the same angle caps the cell from the local curvature | 16.9° | 13° | 10° | 7.7° | law 1 (S8); decision 71 |
+| Nose | no ring cell turns the surface by more than 10° at M (solved by bisection on the ring as built, at every level for its own angle; the strictest spacing wins); away from the nose the same angle caps the cell from the local curvature | 16.9° | 13° | 10° | 7.7° | law 1 (S8); decision 71 |
 | Nose, along the semi-span | nose spacing / chord changes by at most 1.15 between stations (checked; holds by construction with one distribution for the wing) | 1.15 | 1.15 | 1.15 | 1.15 | law 2 (S8) |
 | Trailing edge | 0.1 % of local chord at the corners (M) | 0.169 % c | 0.13 % c | 0.1 % c | 0.077 % c | law 3 (DPW) |
 | Blunt base | at least 8 cells across the base (VC), even counts | 8 | 10 | 14 | 18 | law 6 (S8) |

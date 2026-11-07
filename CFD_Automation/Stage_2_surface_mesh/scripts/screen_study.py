@@ -407,9 +407,9 @@ def fig_cells(m: dict, s: dict) -> None:
     a.axhspan(ASKED[0] / 1e6, ASKED[1] / 1e6, color=BWB, alpha=0.12)
     a.text(-0.45, ASKED[1] / 1e6 * 1.05, "F asked: 9–11 M (3 Nov)", color=BWB, fontsize=7.8)
     a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
-    a.text(4.75, DESKTOP / 1e6 * 0.86, "desktop today\n≈ 1.2 M cells (13 GB)", color=WARN, fontsize=7.6, ha="right", va="top")
+    a.text(4.75, DESKTOP / 1e6 * 0.86, "desktop today (16 GB,\n13 GB for WSL): ≈ 1.2 M cells", color=WARN, fontsize=7.6, ha="right", va="top")
     a.axhline(DESKTOP_36 / 1e6, color=AMBER, ls="--", lw=1)
-    a.text(4.75, DESKTOP_36 / 1e6 * 1.06, "with +36 GB\n≈ 5.0 M cells", color=AMBER, fontsize=7.6, ha="right")
+    a.text(4.75, DESKTOP_36 / 1e6 * 1.06, "with +36 GB:\n≈ 5.0 M cells", color=AMBER, fontsize=7.6, ha="right")
     a.set_yscale("log"); a.set_ylim(0.1, 60); a.set_xlim(-0.6, 4.8); a.set_xticks(x, LEVELS); a.set_ylabel("cells per mesh, wing blocks [millions]")
     a.legend(loc="upper left", fontsize=7.6, frameon=False)
     a.set_title("cells per mesh, per level (wing blocks; the C-H wake lines not counted)", fontsize=9.5)
@@ -417,8 +417,8 @@ def fig_cells(m: dict, s: dict) -> None:
     sec.set_ylabel("RAM for ADflow [GiB]")
     a = ax[1]
     rv = s["reference"].get("F")
-    names = ["6 Nov estimate\n(plan file, old wings,\nanother layer count)", "7 Nov screen\n(built rules,\nunit mean chord)",
-             "7 Nov screen\n+ C-H wake lines\n(rough +30…60 %)"]
+    names = ["first estimate, 6 Nov\n(wall-layer rule not\nrecorded; old wings)", "this count, 7 Nov\n(built rules; the\npages use it)",
+             "this count\n+ C-H wake lines\n(rough +30–60 %)"]
     if rv:
         f = rv["cells_est"]
         med = [F_ESTIMATE_6NOV / 1e6, f["median"] / 1e6, f["median"] / 1e6 * 1.45]

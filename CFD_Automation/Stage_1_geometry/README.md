@@ -99,7 +99,7 @@ unit mean chord, and the tool reads such a wing as one with a 1 m mean chord. So
 would put every wing at a 1 m mean chord at the real speeds (the wrong Re). In similarity form a condition is an
 Re on the mean chord: give the tool the speed V = Re / (ρ/μ) (ρ/μ = 6.85 × 10⁴ s/m² at sea level). The
 level-flight flag (wing loading against real wings of the same full span) needs a real size. The section tables
-are size-free, but were built on the sections before the nose fix.
+are size-free and were rebuilt on the fixed nose on 7 Nov (no Stage 1 conclusion changes; `decisions/flow_maps.md`).
 
 ```
 python -m cfdauto.flowmap.tables --build     # section tables: 10 sections x 14 Re x 3 Mach x 49 angles (resumable)

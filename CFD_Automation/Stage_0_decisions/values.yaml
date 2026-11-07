@@ -223,13 +223,16 @@ D3_conditions_and_measurement:
     value: transition must be captured, with ADflow and SU2 (owner, 4 Nov 2026); transition from SU2 (SST + LM gamma-Re_theta), because our ADflow build has SA only (SST aborted) and no transition model; every drag number carries a model band
     was: SA for mesh studies now; final model and SA inflow value in a later stage (by G0, decision 54)   # superseded 4 Nov 2026
     transition_ready_mesh: {yplus_max: 1, min_cells_across_bl: 30, band_upper_c: [0.0, 0.85], band_lower_c: [0.60, 1.00], upper_band_from_le: every wing, band_cell: bubble length / 20 at level C}
-    # Band as built in Stage 2 (decisions 56, 58). Stage 1 asked band_upper_c [0.10, 0.85], from the leading edge on swept panels only.
+    # First approach: the band as built in Stage 2 (decisions 56, 58). Stage 1 asked band_upper_c [0.10, 0.85], from the leading edge on swept panels only.
     # SA inflow value (nu~/nu about 3): still to fix and record, before the first ADflow solve.
     transition_targets_at_F:       # owner, 6 Nov 2026 (mesh levels)
       cells_per_bubble: about 20   # at level F, instead of at level C as built (Ansys CFX: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75-100 nodes leading to trailing edge)
       wall_normal_growth: 1.107    # 1.25 at VC; just above the 1.1 a transition model asks for; 1.23 at VC would give exactly 1.1 (Stage 2 decision 57)
       band_cell_c_where_local_Re_ge_4e5: 0.005   # the bubble-length table stops at 0.10 c from local Re 4e5 up
       lower_band_c: [0.0, 1.0]     # owner, 7 Nov 2026 (Stage 2 decision 74, option A): from the leading edge; no extra cells (shared node list)
+      upper_band_c: [0.0, 1.0]     # proposal, pending (7 Nov 2026): the refine map at the Re levels puts the upper transition past 85 % c at low Re
+                                   # (Re 1e5: 0-31 % of strips fit 0-85 % c); the built mesh already has band cells to 100 % c on both sides
+                                   # (shared node list, lower band 0-100 % c), so writing it changes no mesh (was 0-85 % c)
     proposal:   # pending
       solver_split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first
     # SU2 smoke test (4 Nov 2026), not a result: SU2 8.6.0, SA and LM on one Stage 2 ring mesh (a section extruded

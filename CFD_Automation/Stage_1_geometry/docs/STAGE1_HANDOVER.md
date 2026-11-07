@@ -45,8 +45,8 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 > - **Every geometry hash changed.** The pyGeo `build --all` on Mike's machine is still owed (the manifests must
 >   then say pygeo).
 > - **Not rebuilt: the Stage 1 flow dataset and flow maps** (`cfdauto/flowmap`). They were made at real size and
->   real speed (first approach) and stay the record. The 2-D section tables are size-free, but were built on the
->   sections before the nose fix.
+>   real speed (first approach) and stay the record. The 2-D section tables are size-free and were rebuilt on
+>   the fixed nose (7 Nov; no Stage 1 conclusion changes: `decisions/flow_maps.md`).
 >
 > Earlier (2–6 Nov, unchanged): Stage 2 surface mesh works (790 of 790 builds pass 13 checks, on the first-approach
 > wings; a station on every break; tip squeeze and band built; upper band from the leading edge on every wing).
@@ -75,11 +75,13 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
   rule (0.327 % c with the old). **The flat nose line stays**: below 0.2 % c nose spacing the largest turning per
   node is 6.0–6.8° (old 6.6–7.4°); the worst node sits 1.8–2.3 % c down the lower side, where the growth law (1.2)
   sets the cells. It happens on the true airfoil too, so the window search in the Stage 2 nose solve stays needed.
-- **The refine map (decision 65, candidate) needs a new grid.** `cfdauto/mesh/refine_map.py` runs the flow-map
-  engine on a Mach × angle × altitude grid and reads the wing's chords as metres. At unit mean chord Mach
-  0.03–0.13 is Re 7.0 × 10⁵ – 3.0 × 10⁶ at sea level (5.3 × 10⁵ – 2.3 × 10⁶ at 3,048 m), so the two lowest levels
-  (1 × 10⁵, 3 × 10⁵) fall outside its default grid. Restate its conditions as Re levels (speed = Re / (ρ/μ)).
-  Its first-approach results (on the real-size wings) are not changed by this note.
+- **The refine map (decision 65, candidate) now runs at the Re levels (7 Nov).** `cfdauto/mesh/refine_map.py`
+  has a Re mode: the condition is the Re on the mean chord (speed = Re / (ρ/μ) / mean chord), the tables are read
+  at Mach 0.1. On the 20 reference wings, −5° to 8° (`Stage_2_surface_mesh/decisions/refine_map_re.md`): the lower
+  band 0–100 % c holds every strip at every level; the upper transition sits past 85 % c at low Re (at 10⁵ only
+  0–31 % of the strips fit 0–85 % c). As built there is no gap: band cells reach 100 % c on both sides (one node
+  list, lower band 0–100 % c). First: a Mach × angle × altitude grid with the chords read as metres; at unit mean
+  chord it missed the two lowest levels (1 × 10⁵, 3 × 10⁵).
 
 ## Repo layout (renamed 2 Nov 2026)
 
@@ -126,7 +128,7 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 | Where | Rule from G1 | Differs by family? | How sure |
 | --- | --- | --- | --- |
 | Chord: leading edge | no cell turns the surface by more than 10° (law 1); since 7 Nov the nose follows the airfoil file (201 points per side) | no | geometry rule; nose checked along the arc |
-| Chord: transition band | fine cells, growth along the surface ≤ 1.25; upper from the leading edge to 85 % c on every wing (Stage 2 choice 58), lower 60–100 % c; at negative angles the lower band must reach forward (pending); a per-wing band from the refine map is a candidate (decision 65; its grid must move to Re levels) | the refine map finds the generic band misses washed-out outer panels (lower transition near the leading edge) | 2-D, calm air; 3-D check pending |
+| Chord: transition band | fine cells, growth along the surface ≤ 1.25; upper from the leading edge on every wing (written 0–85 % c; band cells reach 100 % c as built; proposal: write 0–100 % c), lower 0–100 % c (decision 74, 7 Nov; first 60–100 % c); a per-wing band from the refine map is a candidate (decision 65; now at the Re levels) | at the Re levels the refine map finds the upper transition past 85 % c at low Re (10⁵: 0–31 % of strips fit 0–85 % c); the lower band 0–100 % c holds every strip | 2-D, calm air; 3-D check pending |
 | Chord: bubbles in the band | resolve the bubble: about 0.4 c long at Re 6 × 10⁴, 0.1 c at 4 × 10⁵, down to about 0.015 c at roots above 10⁶ | long on small tips / at the lowest level; short on large roots / at the top level | XFOIL lengths; about 20 cells per bubble (Ansys CFX guidance), proposed as a fine-level target (pending); not met at the shortest root bubbles |
 | Chord: trailing edge | 0.1 % c spacing; 8 cells across the blunt base (0.2 % c on every wing since 7 Nov) | no | rule |
 | Spanwise: breaks | a station exactly on b1 and b2; spanwise growth ≤ 1.3 (done in Stage 2: a station on every loft station; since 7 Nov the loft stations are b0–b3 only) | all; on the BWB b1 is the centre-body edge | geometry |
@@ -139,7 +141,7 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 
 - Re < 4 × 10⁴: none (open laminar separation). 4 × 10⁴ – 10⁵: starting, long (0.4–0.6 c).
 - 1–4 × 10⁵: almost always (93–99 %). 5 × 10⁵ – 1.5 × 10⁶: fading (64 → 26 %). Above: rare (MH 104, LA2573A only).
-  (From the section tables, built before the nose fix.)
+  (From the section tables built before the nose fix; rebuilt 7 Nov with no conclusion changes.)
 - At unit mean chord: local Re = Re on the mean chord × local chord (in mean chords). First approach, in Mach terms:
   Re ≈ 2.3 × 10⁷ × Mach × chord [m] at sea level (1.75 × 10⁷ at 3,000 m).
 - 2-D drag gap rerun on 7 Nov on the new sections (XFOIL, 2°): fully turbulent is +39 to +128 % above free

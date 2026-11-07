@@ -1,14 +1,20 @@
-"""The pictures of the 'what was first, what changes' section of the Stage 2 page (6 Nov 2026).
+"""The pictures of the 'what was first, what changes' section of the Stage 2 page (6 Nov 2026, updated 7 Nov).
 
     python scripts/change_figures.py        # docs/page/levels_first_new.png, topology_first_new.png,
                                             # cost_first_new.png, band_negative.png (seconds)
 
-The numbers are the ones written down on 6 Nov 2026 (Stage 0 decisions, the status report): they are not
-recomputed here. The band count in band_negative.png is Study 8 (7 Nov, scripts/band_count.py). The new approach is decided but not built; these figures say what it will change.
+levels_first_new.png reads the values of both approaches from the code (cfdauto/mesh/laws.py with
+configs/surface_first.yaml and configs/surface.yaml: the new rules, built on 7 Nov) and, once the new screen has run,
+the turning each level delivered (data/studies/screen_new_summary.json). cost_first_new.png keeps the estimate of
+6 Nov (Stage 0 decisions, the status report; not recomputed here); the measured cells are Study 9
+(scripts/screen_study.py). The band count in band_negative.png is Study 8 (7 Nov, scripts/band_count.py); option A
+was decided and built on 7 Nov.
 """
 
 from __future__ import annotations
 
+import json
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -17,7 +23,12 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = Path(__file__).resolve().parents[1] / "docs" / "page"
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from cfdauto.mesh.laws import rules  # noqa: E402
+
+STAGE2 = Path(__file__).resolve().parents[1]
+FIRST = STAGE2 / "configs" / "surface_first.yaml"
+OUT = STAGE2 / "docs" / "page"
 INK, MUTED, LINE = "#142230", "#566573", "#D6DEE6"
 ACC, BWB, WARN, AMBER, VIOLET = "#0C5EA8", "#2E8B57", "#B02A20", "#9A6200", "#6A4BB0"
 GREY = "#8C98A4"
@@ -55,52 +66,76 @@ def naca4(m=0.04, p=0.4, t=0.15, n=200, te=0.004):
     return up, lo
 
 
-# --- 1. where each rule sits on the ladder, first against new ------------------------------------
+# --- 1. where each rule sits on the ladder, first against new (values from the code) ---------------------
 def fig_levels():
-    fig, ax = plt.subplots(2, 3, figsize=(13, 6.6))
+    first = [rules(lev, FIRST) for lev in ("C", "M", "F", "FF")]
+    new = [rules(lev) for lev in ("VC", "C", "M", "F")]
+    summ = STAGE2 / "data" / "studies" / "screen_new_summary.json"
+    delivered = None
+    if summ.exists():                             # the largest turning each level delivered in the new screen
+        s = json.loads(summ.read_text())
+        src = {"VC": s["full"].get("VC"), "C": s["reference"].get("C"), "M": s["reference"].get("M"), "F": s["full"].get("F")}
+        if all(src.values()):
+            delivered = [(src[lev]["nose_turning"]["min"], src[lev]["nose_turning"]["max"]) for lev in ("VC", "C", "M", "F")]
+    fig, ax = plt.subplots(2, 3, figsize=(13, 6.8))
     x = np.arange(4)
+    g = lambda rs, f: np.array([f(r) for r in rs])
     panels = [
-        ("Nose: turning per cell [°]", ladder(10, 0), ladder(10, 2), 10, "target 10° (law 1)",
-         "first: met at C · new: met at M (accuracy target, as DPW sets its medium grid)"),
-        ("Band: cells across a bubble", ladder(20, 0, -1), ladder(20, 3, -1), 20, "target 20 (Ansys CFX guide)",
-         "first: met at C · new: met at F (transition target)"),
-        ("Station gap / local chord", ladder(0.2, 0), ladder(0.25, 2), None, None,
-         "first: 0.2 c at C · new: 0.25 c at M (lighter rule)"),
-        ("Trailing-edge cell [% c]", ladder(0.1, 0), ladder(0.1, 2), 0.1, "target 0.1 % c (DPW)",
-         "first: met at C · new: met at M"),
-        ("Wall growth (march, Stage 3)", 1.25 ** (1 / R ** np.arange(4)), 1.25 ** (1 / R ** np.arange(4)), 1.1,
-         "≈ 1.1 asked with a transition model", "the same both times: 1.25 at the coarsest level, 1.107 at the finest"),
+        ("Nose: turning per cell [°]", ladder(10, 0), g(new, lambda r: r.nose_turning_deg), 10, "target 10° (law 1)",
+         "first: met at C · new: met at M (accuracy target, as DPW sets its medium grid);\neach level checked against its own angle + 0.2°"),
+        ("Band: cells across a bubble", g(first, lambda r: r.cells_per_bubble), g(new, lambda r: r.cells_per_bubble), 20,
+         "target 20 (Ansys CFX guide)", "first: met at C · new: met at F (transition target)"),
+        ("Station gap / local chord", g(first, lambda r: r.span_spacing_c), g(new, lambda r: r.span_spacing_c), None, None,
+         "first: 0.2 c at C · new: 0.25 c at M (lighter rule);\nat least " + ", ".join(str(r.min_cells_per_panel) for r in new)
+         + " gaps per panel at VC, C, M, F"),
+        ("Trailing-edge cell [% c]", g(first, lambda r: 100 * r.te_spacing_c), g(new, lambda r: 100 * r.te_spacing_c), 0.1,
+         "target 0.1 % c (DPW)", "first: met at C · new: met at M"),
+        ("Growth limits", g(first, lambda r: r.chord_growth_limit), g(new, lambda r: r.chord_growth_limit), 1.1,
+         "1.1 asked with a transition model", "wall growth (Stage 3) and ring growth, checked: 1.25 at VC, " +
+         f"{new[3].chord_growth_limit:.3f} at F,\njust above 1.1 (1.23 at VC would give exactly 1.1); dotted: station gaps"),
     ]
-    for a, (title, first, new, target, tlabel, note) in zip(ax.flat, panels):
-        a.plot(x, first, "-o", color=GREY, lw=1.6, ms=5, label="first (built 2–3 Nov)")
-        a.plot(x, new, "-o", color=ACC, lw=2.0, ms=5, label="new approach (decided 6 Nov)")
+    for a, (title, fv, nv, target, tlabel, note) in zip(ax.flat, panels):
+        a.plot(x, fv, "-o", color=GREY, lw=1.6, ms=5, label="first (built 2–3 Nov)")
+        a.plot(x, nv, "-o", color=ACC, lw=2.0, ms=5, label="new (built 7 Nov; from laws.py)")
+        for xi, v in zip(x, nv):
+            a.annotate(f"{v:.3g}", (xi, v), textcoords="offset points", xytext=(0, 7), ha="center", fontsize=7.4, color=ACC)
         if target is not None:
             a.axhline(target, color=AMBER, ls="--", lw=1.0)
             a.text(3.05, target, " " + tlabel, color=AMBER, fontsize=7.5, va="bottom", ha="right")
         a.set_xticks(x, LEVELS, fontsize=7.5)
         a.set_title(title)
-        a.text(0.0, -0.42, note, transform=a.transAxes, fontsize=7.8, color=MUTED)
+        a.text(0.0, -0.47, note, transform=a.transAxes, fontsize=7.6, color=MUTED, va="top")
         a.grid(axis="y", color=LINE, lw=0.5)
-    ax[0, 2].plot([0], [0.2], marker="*", color=GREY, ms=13); ax[0, 2].plot([2], [0.25], marker="*", color=ACC, ms=13)
-    ax[0, 0].legend(loc="upper right", frameon=False)
+    a = ax[1, 1]
+    a.plot(x, g(first, lambda r: r.span_growth_limit), ":o", color=GREY, lw=1.2, ms=3)
+    a.plot(x, g(new, lambda r: r.span_growth_limit), ":o", color=ACC, lw=1.2, ms=3)
+    a.set_ylim(1.08, 1.33)
+    ax[0, 2].plot([0], [first[0].span_spacing_c], marker="*", color=GREY, ms=13)
+    ax[0, 2].plot([2], [new[2].span_spacing_c], marker="*", color=ACC, ms=13)
+    if delivered:
+        a = ax[0, 0]
+        for xi, (lo, hi) in zip(x, delivered):
+            a.plot([xi + 0.12, xi + 0.12], [lo, hi], color=BWB, lw=4, solid_capstyle="butt", alpha=0.8)
+        a.plot([], [], color=BWB, lw=4, label="delivered, new screen (7 Nov)")
+    ax[0, 0].legend(loc="upper right", frameon=False, fontsize=7.6)
     a = ax[1, 2]
     a.axis("off")
-    lines = ["What stays at the coarsest level (hard minimums),",
-             "first and new alike:",
-             "  · first wall cell from y⁺ ≤ 1 (0.46 at the finest)",
+    lines = ["Built 7 Nov (configs/surface.yaml, laws.py):",
+             "hard minimums at VC, the same as before:",
+             "  · first wall cell from y⁺ ≤ 1 (" + ", ".join(f"{r.yplus:.2f}" for r in new[1:]) + " at C, M, F)",
              "  · growth ≤ 1.25 along the ring and off the wall",
-             "  · base ≥ 8 cells (8, 10, 14, 18)",
+             f"  · base ≥ 8 cells ({', '.join(str(r.base_cells) for r in new)})",
              "  · no kinks; every check refuses as before",
-             "  · the tip gap: s0 first, 2 × s0 now (lighter rule)",
+             f"  · tip gap {new[0].tip_gap_in_s0:g} × s0 (was s0: lighter rule)",
              "",
-             "Each level has about 2.2 × the cells of the one below",
-             "(every spacing ÷ 1.3 in three directions).",
-             "First: every target was already met at the coarsest",
-             "level, so every finer level only added cells.",
-             "New: each target is met at the level that needs it."]
-    for i, s in enumerate(lines):
-        a.text(0.0, 0.98 - i * 0.075, s, fontsize=8.6, color=INK if i < 2 or i > 7 else MUTED, va="top",
-               transform=a.transAxes, fontweight="bold" if i == 0 else None)
+             "Three builder choices, all stricter, for Mike to confirm:",
+             "  · the nose solved at VC and at F; the smaller wins",
+             "  · the growth limits follow the family rule",
+             "  · station growth 1.2 kept (plan file: 1.25, 7 gaps)",
+             "Each level about 2.2 × the cells of the one below."]
+    for i, s_ in enumerate(lines):
+        a.text(0.0, 0.99 - i * 0.075, s_, fontsize=8.4, color=INK if i in (0, 1, 8, 12) else MUTED, va="top",
+               transform=a.transAxes, fontweight="bold" if i in (0, 8) else None)
     save(fig, "levels_first_new.png")
 
 

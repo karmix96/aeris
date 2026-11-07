@@ -160,7 +160,10 @@ def level_numbers(rows: list[dict]) -> dict:
     out = {"builds": len(rows), "passed": sum(r["passed"] for r in rows),
            "refused": sum(1 for r in built if not r["passed"]), "crashed": sum(1 for r in rows if not r["built"]),
            "wings": len({(r["wing_type"], r["set"], r["index"]) for r in rows}),
-           "failed_checks": {}, "repairs": sum(1 for r in built if r["turning_repairs"] > 0)}
+           "failed_checks": {}, "repairs": sum(1 for r in built if r["turning_repairs"] > 0),
+           "repair_rounds_max": max([r["turning_repairs"] for r in built], default=0),
+           "repaired": sorted({f"{r['wing_type']} {r['set']} {r['index']}" for r in built if r["turning_repairs"] > 0}),
+           "repaired_by_type": {t: sum(1 for r in built if r["turning_repairs"] > 0 and r["wing_type"] == t) for t in TYPES}}
     for r in rows:
         for f in r["failed"]:
             out["failed_checks"][f] = out["failed_checks"].get(f, 0) + 1
@@ -221,9 +224,16 @@ def family(ref: dict) -> dict:
         keys = sorted(set(idx[a]) & set(idx[b]))
         if not keys:
             continue
-        d = {"pairs": len(keys), "spacings": {}, "counts": {}}
+        d = {"pairs": len(keys), "spacings": {}, "counts": {}, "spacings_no_repair": {}}
+        rep = [k for k in keys if idx[a][k]["turning_repairs"] > 0 or idx[b][k]["turning_repairs"] > 0]
+        clean = [k for k in keys if k not in rep]
+        d["repaired_pairs"] = len(rep)
+        d["repaired"] = sorted({f"{k[0]} {k[1]}" for k in rep})
         for s in SPACINGS:
             d["spacings"][s] = mmm([idx[a][k]["spacings"][s] / idx[b][k]["spacings"][s] for k in keys])
+            d["spacings_no_repair"][s] = mmm([idx[a][k]["spacings"][s] / idx[b][k]["spacings"][s] for k in clean])
+            if rep:
+                d.setdefault("spacings_repaired", {})[s] = mmm([idx[a][k]["spacings"][s] / idx[b][k]["spacings"][s] for k in rep])
         for c in ("n_ring", "n_span", "wall_layers", "quads", "cells_est"):
             d["counts"][c] = mmm([idx[b][k][c] / idx[a][k][c] for k in keys])
         d["counts"]["ring_cells"] = mmm([(idx[b][k]["n_ring"] - 1) / (idx[a][k]["n_ring"] - 1) for k in keys])
@@ -368,18 +378,24 @@ def fig_family(s: dict) -> None:
     x = np.arange(len(SPACINGS))
     pc = {"VC/C": LCOL["C"], "C/M": LCOL["M"], "M/F": LCOL["F"]}
     for k, p in enumerate(pairs):
-        d = fam[p]["spacings"]
+        d = fam[p]["spacings_no_repair"]
         med = np.array([d[q]["median"] for q in SPACINGS])
         lo = np.array([d[q]["min"] for q in SPACINGS]); hi = np.array([d[q]["max"] for q in SPACINGS])
         xx = x + (k - (len(pairs) - 1) / 2) * 0.26
-        a.bar(xx, med, 0.25, color=pc[p], label=f"{p} ({fam[p]['pairs']} pairs)")
+        a.bar(xx, med, 0.25, color=pc[p], label=f"{p} ({fam[p]['pairs'] - fam[p].get('repaired_pairs', 0)} pairs)")
         a.errorbar(xx, med, yerr=[med - lo, hi - med], fmt="none", ecolor=INK, capsize=2, lw=0.8)
+        if fam[p].get("repaired_pairs"):
+            dr = fam[p]["spacings_repaired"]
+            for q in ("nose_root", "nose_tip"):
+                i = SPACINGS.index(q)
+                a.plot([xx[i]], [dr[q]["median"]], "x", color=WARN, ms=7, mew=1.6,
+                       label="nose, builds repaired at M" if (q == "nose_root" and p == next(pp for pp in pairs if fam[pp].get("repaired_pairs"))) else None)
     a.axhline(1.3, color=WARN, ls="--", lw=1)
     a.text(len(SPACINGS) - 0.5, 1.305, "r = 1.3", color=WARN, fontsize=8, ha="right", va="bottom")
     a.set_xticks(x, [SPACING_NAME[q] for q in SPACINGS], rotation=25, ha="right", fontsize=8.2)
-    a.set_ylim(1.0, 1.55); a.set_ylabel("spacing, coarser level / finer level")
+    a.set_ylim(1.0, 1.6); a.set_ylabel("spacing, coarser level / finer level")
     a.legend(loc="upper left", fontsize=8, frameon=False, ncol=3)
-    a.set_title("every spacing between neighbouring levels: median (bar) and range (20 reference wings × 4 Re)", fontsize=9.5)
+    a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n(the builds without a nose repair; ×: the nose of the builds repaired at M)", fontsize=9.5)
     a = ax[1]
     keys = [("ring_cells", "ring cells"), ("station_gaps", "station gaps"), ("wall_layers", "wall layers"),
             ("cells_est", "cells")]

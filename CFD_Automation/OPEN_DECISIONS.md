@@ -196,10 +196,12 @@
     1.1). Bubble length from the Stage 1 XFOIL table at the local Re (0.40 c at 6e4 ... 0.05 c at and above 1e6).
     Cost: ring of about 200 nodes at Re 1e5, 400 at 3e5, 850 at and above 1.5e6 (S8: 150). Open: whether the
     coarse level needs the full 20 (the T6 chordwise ladder decides); the bubble length above 1e6 is a floor
-    (Stage 1 says "under 0.05 c"). See `Stage_2_surface_mesh/decisions/surface_rules.md`.
+    (Stage 1 says "under 0.05 c"). See `Stage_2_surface_mesh/decisions/surface_rules.md`. **Replaced by 71 and 72
+    (built 7 Nov):** 20 at F (9.1 at VC), and the bubble length stops at 0.10 c from local Re 4e5.
 57. **Wall-normal growth for a transition model: 1.1, not 1.25.** The same guide says 1.2 already moves
     transition a little upstream. Stage 0 and the handover say 1.25. Decide in Stage 3 (volume mesh); it changes
-    the layer count, not the surface.
+    the layer count, not the surface. **Settled by 71:** 1.25 at VC is 1.107 at F, just above the 1.1 (1.23 at VC
+    would give exactly 1.1).
 58. **The upper transition band starts at the leading edge on every wing** (Stage 1: from 10 % c, from the
     leading edge on panels swept over about 25°). One rule, about 10 % of the chord more at band spacing.
 59. **One surface per wing and Re level**; the mesh name is `mesh_<level>_<wing_hash8>_re<Re>` (the Stage 0
@@ -212,7 +214,8 @@
     1.29 instead of 1.3. The one spacing that does not follow the family ratio exactly; reported, not hidden.
 62. **Station gap 0.2 × local chord, at least 12 gaps per panel, growth 1.2 inside a panel** (checked limit
     1.3 between any two gaps, because each panel holds a whole number of gaps). Our starting values, to be
-    tested in the spanwise ladder (law 8).
+    tested in the spanwise ladder (law 8). **Replaced by 72 (built 7 Nov):** 0.25 × local chord at M, at least 12
+    gaps per panel at M; the growth 1.2 kept (see 77).
 63. **Largest cell outside the bands 2 % c** (our choice). On most stations the band covers so much of the
     ring that it hardly applies (upper 85–100 % c only).
 64. **Stage 1 finding (from the mesher, 2 Nov 2026): the nose of the built sections is not round.** The
@@ -223,6 +226,17 @@
     (resample the nose in arc length or fit the apex from the raw points; every geometry hash changes) before
     the first solves, or carry it as a stated geometry deviation. See
     `Stage_2_surface_mesh/decisions/surface_rules.md`, section 10, and `data/studies/nose_radius.json`.
+    **Decided 7 Nov 2026 (owner): fixed in Stage 1.** A study with one curvature method
+    (`Stage_1_geometry/decisions/nose_curvature.md`, `data/studies/nose_curvature.json`, `docs/nose_curvature.png`)
+    found the defect real: the old rule put the leading edge at the farthest raw point and made a curvature spike
+    on one side and a flat spot on the other, between the raw points; on NACA 4415 a 0.18 % c nose cell turned
+    9.47° built against 4.31° true; the old built nose failed a 5 % test on all ten suggested airfoils. New rule:
+    one cubic spline, the leading edge at its apex, 201 points per side; a gate refuses 14 database files whose
+    nose folds back; 95.6 % of the database passes (21.0 % before). Built; the sets rebuilt (every hash changed).
+    The 6 Nov correction (75) was wrong. In the mesh (Stage 2 Study 4, first rules at C, the same shapes): the
+    NACA 4415 / 4412 wings get a nose cell of 0.245–0.265 % c instead of 0.178 % c. The flat part of the nose solve
+    at about 7° stays (growth-limited cells 1.9–2.4 % c down the lower side; the true airfoil does the same,
+    6.0–6.8°), so the window search stays.
 65. **Per-wing transition band from the flow dataset (candidate, 3 Nov 2026).** `cfdauto/mesh/refine_map.py`
     reads the Stage 1 section tables through the flow-map engine for one wing on a Mach × angle grid and builds,
     per strip and side, the envelope of (bubble start … bubble end, transition ± margin, separation start)
@@ -248,10 +262,12 @@
     (AVL downwash ↔ NeuralFoil strip lift) as flow-map method "avl+nf", validate against the existing tables
     on a sample and against a few 3-D transition RANS runs, then revisit decision 65.
 
-## The new approach — decided 4–6 Nov 2026 (owner), not built yet
+## The new approach — decided 4–7 Nov 2026 (owner); the surface rules, the nose fix and similarity built 7 Nov
 
 What was first is items 56–66 (every surface rule met at level C). Pages: `Stage_2_surface_mesh/docs/SURFACE_MESH.html`
-(section "What was first, and what changes"), `Stage_2_surface_mesh/decisions/STAGE2_STATUS.md`.
+(section "What was first, and what changes"), `Stage_2_surface_mesh/decisions/STAGE2_STATUS.md`. Built on 7 Nov:
+64 (Stage 1), 70 (Stage 1), 71, 72 and 74 (Stage 2, `Stage_2_surface_mesh/decisions/surface_rules.md` section 13);
+screened (Stage 2 Study 9). Not built: 73 (Stage 3).
 
 67. **Transition must be captured, with ADflow and SU2** (owner, 4 Nov). Stage 1: SA overpredicts the profile
     drag by a median +62 %. Which solver does what: 76.
@@ -263,20 +279,33 @@ What was first is items 56–66 (every surface rule met at level C). Pages: `Sta
     Mach 0.1 with a Prandtl–Glauert correction on CL and CM; trailing edge 0.2 % c; the root chord leaves the
     vector (18 → 17 numbers). About 5 × fewer solves (8,000, not 42,000). Checks C1 (scale), C2 (Mach), C3
     (trailing edge, with the real floor 0.42 % c), C4 (Re levels). Stage 1 code first; every hash changes.
+    **Built in Stage 1 on 7 Nov:** unit mean chord (area / full span), 17 numbers, trailing edge 0.2 % c, no 7 m full-span cap;
+    the sets rebuilt (722 of 722); 13 of the 20 reference wings are new picks. Stage 2 check (Study 10): the 20 old
+    reference shapes at unit mean chord, 80 of 80 meshed; the same ring nodes on 80 of 80 (size changes nothing);
+    6–27 fewer stations on the 8 wings that had a switch section; the cap quality falls where the old floor had
+    thickened small tips (most 0.345 → 0.133; lowest 0.112, limit 0.05). The Re levels stay 1e5, 3e5, 1.5e6, 3e6:
+    1e5 is 18 % below the slowest real UAV (1.22e5 on area / full span), kept as a margin (owner, 7 Nov).
 71. **Levels VC, C, M, F with the targets anchored** (owner, 6 Nov): hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25,
     base ≥ 8, no kinks, tip gap); accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest
     cell), as DPW defines its medium grid; transition targets at F (20 cells per bubble; wall growth ≈ 1.1).
     VC on the desktop (about 1.0 M cells median, desktop limit about 1.2 M); C, M, F on the university HPC.
-    Replaces "at level C" in 56 and settles 57 at F (1.25 at VC is 1.107 at F).
+    Replaces "at level C" in 56 and settles 57 at F (1.25 at VC is 1.107 at F, just above the 1.1).
+    **Built 7 Nov** (`configs/surface.yaml`, `cfdauto/mesh/laws.py`; the first approach kept in
+    `configs/surface_first.yaml`); screened on the rebuilt sets (Stage 2 Study 9): @@OK_NEW@@ of @@N_NEW@@ builds
+    passed; F @@F_MED@@ M cells median on the wing blocks (20 reference wings × 4 Re), @@ASKED@@ the 9–11 M asked
+    (the 6 Nov estimate of 10.9 M came from the plan file, with fewer stations). Three builder choices: 77.
 72. **Lighter rules** (owner, 6 Nov): the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell
     0.5 % c at F); tip gap 2 × s0; station gap 0.25 × local chord at M (replaces 62's 0.2 × chord at C).
     Fine level about 10–11 M cells median on the wing blocks (10.9 M with the band change alone; 15.2 M with
-    the planned rules). Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c) get about 3 cells.
+    the planned rules; estimates of 6 Nov). Cost of the choice: the shortest high-Re root bubbles (about 1.5 % c)
+    get about 3 cells. **Built 7 Nov**; measured F: see 71.
 73. **One matched C-H volume mesh for ADflow and SU2** (owner, 6 Nov), instead of the overset wake box and the
     tip-vortex tube. SU2 8.6.0 has no overset and refuses structured CGNS (structured meshes converted to
     unstructured hexes run). The ring and the cap of Stage 2 stay; Stage 3: open-line march, wake lines to the
     far field (rough +30–60 % cells on the wing blocks), tip vortex in the outboard blocks, no overlap gate.
-74. **Lower band at negative angles** (pending): option A, the lower band from the leading edge (band length
+74. **Lower band at negative angles — decided 7 Nov 2026 (owner): option A, from the leading edge (0–100 % c); built
+    in `configs/surface.yaml`.** It costs no cells (both sides of a ring share one node list). The record: option A,
+    the lower band from the leading edge (band length
     125 → 185 % of the chord, each side counted alone); option B, keep 60–100 % c and run transition (LM) only at
     angles ≥ 0°. **Counted on 7 Nov** (Stage 2 Study 8; `scripts/band_count.py`, `data/studies/band_count.json`):
     the 20 reference wings × 4 Re levels at VC with the planned rules (`configs/surface_plan_VC.yaml`), 160 builds.
@@ -287,10 +316,22 @@ What was first is items 56–66 (every surface rule met at level C). Pages: `Sta
     The refine map from −5° puts the lower transition at a median of 1–15 % c per type at −5°, in front of 60 % c
     on every strip with an answer (at 0° on 51–83 %); 42 % (BWB) and 30 % (flying wing) of the strips have no
     answer at −5°. The cells no longer decide: A keeps transition runs from −5° at no mesh cost; B only saves the
-    LM runs below 0°. Still pending: the owner chooses.
-75. **Nose (64), corrected** (6 Nov): the first reading was overstated (raw files measured the same way show
-    nearly the same split). Re-measure raw and built with one curvature method; fix only if a real error remains,
-    before the pyGeo `build --all` (a fix changes every hash). Plan agreed 6 Nov.
+    LM runs below 0°. The owner chose A on 7 Nov.
+75. ~~**Nose (64), corrected** (6 Nov): the first reading was overstated (raw files measured the same way show
+    nearly the same split).~~ **Superseded 7 Nov: the correction was wrong.** It compared built and raw only at the
+    raw points, where they agree by construction; the defect sat between them. The re-measure with one curvature
+    method (the plan agreed on 6 Nov) found it real, and it was fixed (64).
 76. **Solver split** (proposal, pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST +
     LM on about 20 % of the wings. Needs an ADflow against SU2 SA code-to-code check and the SU2 cost per solve.
+77. **Three builder choices in the built rules (7 Nov; pending: the owner confirms).** All are stricter than decided.
+    (1) The nose is solved at VC and at F and the smaller spacing wins (every level then meets its own angle and the
+    family rule stays exact); on the rebuilt sets every station took F's answer, so VC turns @@VC_TURN@@° instead of
+    16.9° (Study 9). It does not cover M: the nose repair (× 0.9, one round) was needed on @@REP_TXT@@, because F's
+    spacing × 1.3 turned those noses just past M's 10.02°; there the nose cell breaks the family rule at M (ratio
+    @@FAM_REP@@ instead of 1.3). Solving at all four levels would remove it (two more solves per station). (2) The growth limits follow the family rule: along the ring 1.25 at VC (decided) gives 1.107 at
+    F; between station gaps 1.3 at VC (not in 71–72) gives 1.127 at F; the kink check uses each level's turning
+    limit. (3) The station growth stays 1.2 and the gaps per panel 12 at M (8 at VC), as decided; the plan file of
+    Study 8 used 1.25 and 7 gaps per panel, so the built rules have 7–14 more stations (about +17 %), which is most of
+    why F is @@F_MED@@ M cells, not 10.9 M. If the plan file's values were meant, they need a decision. See
+    `Stage_2_surface_mesh/decisions/surface_rules.md`, sections 13–14.
 

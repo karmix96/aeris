@@ -5,8 +5,10 @@
 > elsewhere; a lighter band (bubble length floor 0.10 c from local Re 4 × 10⁵); tip gap 2 × s0; station gap
 > 0.25 × chord at M; lower band from the leading edge. The rules and commands below are the new ones. The first
 > approach (2–3 Nov, every rule met at C, the coarsest of C, M, F, FF) is kept in `configs/surface_first.yaml`
-> (`--config`). How the anchors are built: `decisions/surface_rules.md`, section 13. Still to come: the full screen
-> (after the geometry branches are merged), the matched C-H volume mesh (Stage 3), similarity (unit mean chord).
+> (`--config`). How the anchors are built: `decisions/surface_rules.md`, section 13. Also on 7 Nov, in Stage 1: the
+> nose fix (decision 64) and similarity (decision 70: every wing at unit mean chord; the sets rebuilt). The new screen
+> on the rebuilt sets (section 14): @@OK_NEW@@ of @@N_NEW@@ builds passed at VC, C, M and F. Still to come: Mike's
+> confirmation of three builder choices (decision 77), the pyGeo run, the matched C-H volume mesh (Stage 3).
 
 One wing surface (the Stage 1 loft) in, one structured surface mesh out: a closed ring of points
 around the section at every spanwise station, root to tip, plus one patch that closes the flat tip.
@@ -22,7 +24,10 @@ python -m cfdauto.mesh --type bwb --set reference --index 0 --level VC --re 3e5 
 python -m cfdauto.mesh --type bwb --set reference --index 0 --level C --re 3e5 \
        --config configs/surface_first.yaml                                       # the same wing, first approach
 python scripts/screen.py                                                         # every built wing, all types, at VC
-python scripts/make_figures.py                                                   # docs/*.png
+python scripts/screen.py --level F --resume part.jsonl                           # at F; goes on after a stop
+python scripts/screen_study.py                                                   # Study 9: merge, summary, figures
+python scripts/similarity_check.py                                               # Study 10: the similarity check
+python scripts/make_figures.py --code <checkout of 7bcb7067>/CFD_Automation       # docs/*.png (first approach, as drawn)
 python -m pytest                                                                 # tests (test_family is slow)
 python scripts/refine_map_data.py && python scripts/make_refine_page.py          # the refine map: docs/REFINE_MAP.html
 python scripts/band_count.py                                                     # Study 8: the lower band A against B (decision 74)
@@ -33,8 +38,10 @@ configs/surface.yaml       every rule value with its anchor level and its source
 configs/surface_first.yaml the first approach (2–3 Nov), unchanged, for rebuilding the first meshes
 configs/surface_plan_VC.yaml the planned rules written at the coarsest level (Study 8 only, scripts/band_count.py)
 decisions/surface_rules.md what was decided and why; what the screen showed; section 13: the new rules, built
-docs/                      pictures of the reference meshes (first approach)
-data/studies/screen_C.json the robustness screen of the first approach (tracked); new screens: screen_<level>.json
+docs/                      pictures of the reference meshes (first approach); the page, the summary, the refine map
+data/studies/screen_C.json the robustness screen of the first approach (tracked)
+data/studies/screen_VC.json, screen_F.json, screen_reference_new.json, screen_new_summary.json   the new screen (7 Nov)
+data/studies/similarity_check.json   the similarity check (7 Nov)
 data/meshes/               built meshes (not tracked; rebuild with the command above)
 tests/mesh/                tests
 ../cfdauto/mesh/

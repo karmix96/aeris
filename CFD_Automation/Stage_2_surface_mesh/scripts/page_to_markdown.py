@@ -10,13 +10,13 @@ import subprocess
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
-HEAD = """# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 7 Nov 2026)
+HEAD = """# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 7 Nov 2026, evening)
 
 Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs/SURFACE_MESH.html` (repo karmix96/aeris,
 branch `stage2-surface-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
-line with its caption. Since 6 Nov 2026 the page says what was first (built and screened 2–3 Nov) and what the new
-approach changes (decided 4–6 Nov, not built yet): the section "What was first, and what changes", and a
-"What changes" note in every section it touches. Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
+line with its caption. The page says what was first (built and screened 2–3 Nov) and what the new approach changed
+(decided 4–6 Nov, built and screened 7 Nov): the section "What was first, and what changes", and a "What changes" note
+in every section it touches. Studies 1–7 are first-approach evidence; Studies 8–10 are new (Study 9: the new screen). Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
 handover' (short), 'Stage_1 Handover to the surface mesh' (the input). If this copy and the repository ever differ,
 the repository wins.
 

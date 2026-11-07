@@ -1,8 +1,9 @@
 # Stage 2 decisions — the surface mesh (2 Nov 2026, updated 7 Nov 2026)
 
-What was decided while building the surface mesher, why, and what the first screen showed.
+What was decided while building the surface mesher, why, and what the screens showed.
 Sections 1–11 are the first approach (values in `configs/surface_first.yaml`); section 13 is the new rules as built
-(values in `configs/surface.yaml`). The rules table is in `README.md`.
+(values in `configs/surface.yaml`); section 14 is the new screen; section 15 what similarity and the nose fix (Stage 1,
+7 Nov) do to the meshes. The rules table is in `README.md`.
 
 ## 1. One spacing tool for everything
 
@@ -124,7 +125,7 @@ Counts for the reference wings at Re 3 × 10⁵ (ring nodes × stations): BWB 60
 1016 × 139 (F); flying wing 430 × 74, 556 × 96, 720 × 125; cranked 398 × 75, 514 × 98, 668 × 127;
 tapered 408 × 75, 526 × 98, 684 × 127.
 
-## 10. Finding for Stage 1: the nose of the built sections is not round (first reading; corrected in section 12)
+## 10. Finding for Stage 1: the nose of the built sections is not round (first reading, 2 Nov; the cause below was right; fixed in Stage 1 on 7 Nov, section 15)
 
 While solving the nose spacing, the turning did not fall steadily as the nose spacing was reduced
 (10.0° → 10.3° → 9.5° for spacings × 1, 0.9, 0.8 on BWB training wing 36). The cause is in the loft:
@@ -188,20 +189,23 @@ approach on 4–6 Nov; `CFD_Automation/OPEN_DECISIONS.md` 67–76 has each item 
 - **Levels VC, C, M, F (71).** Hard minimums at VC (y⁺ ≤ 1, growth ≤ 1.25, base ≥ 8, no kinks, tip gap);
   accuracy targets at M (nose 10°, trailing edge 0.1 % c, station gap, largest cell 2 % c), as the DPW
   guidelines define their medium grid; transition targets at F (20 cells per bubble; wall growth 1.25 at VC is
-  1.107 at F, which meets the 1.1 of the transition-model guide). The four levels keep their places on the ladder;
+  1.107 at F, just above the 1.1 of the transition-model guide: 1.23 at VC would give exactly 1.1). The four levels
+  keep their places on the ladder;
   the first C, M, F, FF sit where VC, C, M, F sit. VC (about 1.0 M cells median) is the desktop level.
 - **Lighter rules (72).** The bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell 0.5 % c at
   F); tip gap 2 × s0; station gap 0.25 × local chord at M. Fine level about 10–11 M cells median on the wing
   blocks (10.9 M with the band change alone, 15.2 M with the planned rules); the shortest high-Re root bubbles
   (about 1.5 % c) get about 3 cells: fine for SA, not for LM, so the 3-D check decides whether a local band is needed.
-- **Lower band at negative angles (74, pending).** Angles now run from −5° (69). Option A: the lower band from the
-  leading edge (one rule for both sides; band length 125 → 185 % of the chord). Option B: keep 60–100 % c and run
-  transition (LM) only at angles ≥ 0°. Count both on the 20 reference wings, with the refine map run to −5°.
+- **Lower band at negative angles (74; decided 7 Nov: option A).** Angles now run from −5° (69). Option A: the lower
+  band from the leading edge (one rule for both sides; band length 125 → 185 % of the chord). Option B: keep
+  60–100 % c and run transition (LM) only at angles ≥ 0°. Counted on the 20 reference wings with the refine map run to
+  −5° (Study 8): A gives the same ring as B. The owner chose A; it is built (section 13).
 - **Matched C-H for ADflow and SU2 (73).** The surface ring and the cap stay; Stage 3 builds the C-H blocks
   (open-line march, wake lines to the far field, tip vortex in the outboard blocks) instead of the overset boxes.
-- **Similarity (70).** Every wing at unit mean chord, Re an input, Mach 0.1, trailing edge 0.2 % c: the 0.5 mm
-  floor that made the corner set's 12 mm tip 4 % c thick (section 6) goes.
-- **The nose, corrected (75).** The first reading compared a circle through three raw points with a one-sided
+- **Similarity (70; built in Stage 1 on 7 Nov).** Every wing at unit mean chord, Re an input, Mach 0.1, trailing
+  edge 0.2 % c: the 0.5 mm floor that made the corner set's 12 mm tip 4 % c thick (section 6) is gone (section 15).
+- **The nose, "corrected" (75; superseded on 7 Nov: the correction was wrong, see section 15).** The first reading
+  compared a circle through three raw points with a one-sided
   formula on the built section. Measured the same one-sided way, the raw files show nearly the same split (NACA
   4415 raw 0.0081 / 0.0736 c, built 0.0080 / 0.0741 c; SD7032 raw 0.0287 / 0.0023, built 0.0318 / 0.0023): mostly
   how the formula sees a cambered, tilted nose. What may remain lies inside the first raw-point gap (under
@@ -291,7 +295,8 @@ instead of 236, no repair at VC, C or M, and no extra build time (4.1 s at VC). 
 each station's nose (`nose_solved_at`). The config key is `chord.nose_solved_at: [VC, F]`; without it (the first
 approach, the plan file) the nose is solved at the coarsest level only, as before.
 
-**Light check (7 Nov; not the full screen, which comes after the geometry branches are merged).** The 20 reference
+**Light check (7 Nov; on the geometry of before similarity and the nose fix; the full screen on the rebuilt sets is
+section 14).** The 20 reference
 wings × the four Re levels (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶) at VC: 80 builds, 80 passed every check, 0 refused,
 0 crashed, no nose repair. Ring nodes 120–224–240 (min–median–max), stations 54–70–96, surface quads
 6,890–16,288–23,696, build time 3.2–4.2–5.8 s. By Re: 10⁵, ring 120–178; 3 × 10⁵, 192–240; 1.5 × 10⁶ and 3 × 10⁶,
@@ -324,3 +329,87 @@ but VC, C and M get a finer nose than their own angle asks (VC 13.4–14.8° aga
 nodes at VC).
 (3) The station rules: built as decided (growth 1.2, at least 12 gaps per panel at M), they give 17 % more stations
 than the plan file (growth 1.25, 7 gaps per panel at VC). If the plan file's values were meant, they need a decision.
+
+
+## 14. The new screen (7 Nov 2026)
+
+The rules of section 13 on the rebuilt sets (similarity and the nose fix, section 15; 722 wings, new hashes), numpy
+loft, one build at a time. Every set at VC and at F: training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵
+on the mean chord, and the 20 reference wings at all four Re levels (782 builds per level); the 20 reference wings
+also at C and M at the four Re levels (80 builds each). Each level refuses at its own limits (section 13). Per build:
+every check's value, limit and margin, ring nodes, stations, quads, time, which solve set each station's nose, and
+the reasons (`data/studies/screen_VC.json`, `screen_F.json`, `screen_reference_new.json`; the numbers:
+`screen_new_summary.json`; `scripts/screen.py`, `scripts/screen_study.py`; Study 9 on the page).
+
+**Result.** @@OK_NEW@@ of @@N_NEW@@ builds passed every check, @@CRASH_NEW@@ crashed (VC @@VC_OK@@ of @@VC_N@@, C @@C_OK@@ of
+@@C_N@@, M @@M_OK@@ of @@M_N@@, F @@F_OK@@ of @@F_N@@). Nose repairs (the whole wing's nose spacing × 0.9, one round):
+@@REP_TXT@@. There the F solve's spacing × 1.3 turned the surface just past M's 10.02°; after the repair M turns
+@@M_TURN@@°. The check passes, but the nose cell breaks the family rule at M on those wings (nose cell ratio
+@@FAM_REP@@ instead of 1.3). Solving the nose at all four levels (two more solves per station) would remove it; this
+is added to point (2) of section 13 for the owner. Every station took its nose from the F solve
+(@@ST_F@@ of @@ST_ALL@@), so the largest turning is @@VC_TURN@@° at VC (angle 16.9°), @@C_TURN@@° at C (13°),
+@@M_TURN@@° at M (10°) and @@F_TURN@@° at F (7.69°). On the old geometry (the light check, section 13) VC turned
+13.4–14.8°: the true nose (section 15) is rounder, so F's answer is only a little finer than VC's own (on a circle
+VC would set it). Largest growth along the ring
+@@VC_CG@@ at VC (limit 1.25 within 1 %), @@F_CG@@ at F (1.107); between station gaps @@VC_SG@@ at VC (1.3), @@F_SG@@ at F
+(1.127). Lowest cap-quad quality @@CAP_VC@@ at VC and @@CAP_F@@ at F (limit 0.05); lowest wing-quad quality @@WQ_MIN@@.
+Build time median @@TIME_VC@@ s at VC, @@TIME_F@@ s at F (max @@TIME_F_MAX@@ s).
+
+| Level | Ring nodes min–median–max | Stations | Cells [M], 20 reference wings × 4 Re: median (max) | Cells [M], every set at Re 3 × 10⁵: median (max) |
+| --- | --- | --- | --- | --- |
+| VC | @@VC_RING@@ | @@VC_SPAN@@ | @@REF_CELLS_VC@@ | @@ALL_CELLS_VC@@ |
+| C | @@C_RING@@ | @@C_SPAN@@ | @@REF_CELLS_C@@ | — |
+| M | @@M_RING@@ | @@M_SPAN@@ | @@REF_CELLS_M@@ | — |
+| F | @@F_RING@@ | @@F_SPAN@@ | @@REF_CELLS_F@@ | @@ALL_CELLS_F@@ |
+
+(ring nodes and stations: VC and F over every set and Re level; C and M over the reference wings.)
+
+**The cell estimate** of the wing blocks: n = max over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g), cells =
+(ring nodes − 1)(stations − 1) n + cap quads × n, with g the level's wall growth (1.25 at VC; 1.187, 1.141, 1.107), s0
+the level's first wall cell at the station's local Re (y⁺ 1, 0.77, 0.59, 0.46) and D = 2 local chords; no C-H wake
+lines. F is @@F_MED@@ M cells median on the 20 reference wings × 4 Re (@@F_MIN@@–@@F_MAX@@ M): @@ASKED@@ the 9–11 M asked,
+and @@F_VS6@@ × the 6 Nov estimate of 10.9 M (plan file: station growth 1.25 and 7 gaps per panel, so fewer stations; the
+old reference wings). With the wake lines (+30–60 %, rough) F is about @@F_WAKE@@ M. RAM for ADflow (1.51 GiB + 9.46 GiB
+per million cells): the desktop today (about 1.2 M cells) takes @@DESK_VC@@ of the 80 VC meshes and @@DESK_C@@ at C;
+with +32 GB (about 4.6 M) @@DESK32_VC@@ at VC, @@DESK32_C@@ at C and @@DESK32_M@@ at M; F needs the HPC.
+
+**The family ratios** on the 20 reference wings × 4 Re (80 pairs per step): on the pairs without a nose repair the
+nose, trailing-edge, band and tip-gap cells refine by @@FAM_SP@@ per step (on the repaired flying-wing builds the nose
+cell steps by @@FAM_REP@@); the base cells by 1.25, 1.4, 1.29 and the first station gap, where the gaps per
+panel set it, by 1.25, 1.2, 1.33 (whole numbers); ring cells by @@FAM_RING@@, station gaps by @@FAM_SPAN@@, wall layers
+by @@FAM_WALL@@ and cells by @@FAM_CELLS@@ per step (medians).
+
+**What it shows, and what not.** The built rules mesh every wing on all four levels, and the levels are true scaled
+copies, except the nose cell at M where it was repaired. The cost is above the 6 Nov estimate, mostly through the stations (point 3 of section 13). The cap quads come
+closest to a limit. Not shown: whether the march accepts these surfaces, whether the coarse levels are good enough for
+the drag, the pyGeo loft.
+
+## 15. Similarity and the nose fix, seen from the mesh (7 Nov 2026)
+
+Both were built in Stage 1 on 7 Nov (decisions 70 and 64; `Stage_1_geometry/decisions/nose_curvature.md`) and the
+sets rebuilt (722 of 722; 13 of the 20 reference wings are new picks). `scripts/similarity_check.py`
+(`data/studies/similarity_check.json`; Study 10 on the page) builds the 20 reference shapes of before (Stage 1 sets at
+commit 7bcb7067) again at unit mean chord and meshes them with the first rules at level C at the four Re levels:
+once with the code of the similarity merge (commit 9472830c: the new size and trailing edge, the old nose rule) and
+once with today's code (also the nose fix), against their first meshes at real size (`screen_C.json`).
+
+- **Similarity alone:** 80 of 80 passed. The same ring nodes on 80 of 80 meshes: size changes nothing, as it should.
+  The stations drop by 6–27 on the 8 wings that had a switch section (BWB 0, 1, 3, 4; flying wing 1, 3; cranked 4;
+  tapered 4), the extra loft station the old trailing-edge floor made; nothing else changes. The cap quality falls on
+  34 of 80 meshes (11 wings), most on BWB 1 at Re 10⁵ (0.345 → 0.133): the old floor had made the trailing edge of
+  small tips thicker. The lowest stays 0.112 (flying wing 2 at Re 10⁵), above the limit 0.05.
+- **The nose fix on top:** 80 of 80 passed; the rings change by −4 to 0 nodes; stations and caps do not change. At
+  the same 10° the NACA 4415 / 4412 wings (cranked and tapered) get a nose cell of 0.245–0.265 % c instead of
+  0.178 % c: the old spike had forced it down. The MH wings: 0.036–0.052 → 0.041–0.056 % c.
+- **The nose defect was real; the 6 Nov correction (section 12, item 75) was wrong.** It compared built and raw only at
+  the raw points, where they agree by construction; the defect sat between them. Measured with one curvature method,
+  the old rule failed the 5 % turning test on all ten suggested airfoils (NACA 4415: +449 % at 0.04 % c, +121 % at
+  0.18 % c; a 0.18 % c nose cell turned 9.47° built against 4.31° true). The new rule passes on all ten (worst −3.9 %,
+  MH 60) and on 95.6 % of the database (21.0 % before); a gate refuses 14 files whose nose folds back. The cause the
+  first reading named (section 10: the leading edge at the farthest raw point) was right.
+- **The flat part of the nose solve stays** (section 6): on NACA 4415 the bump was only in the old section, but the
+  flat line at about 7° below 0.2 % c comes from growth-limited cells 1.9–2.4 % c down the lower side, and the true
+  airfoil does the same (6.0–6.8° with the fix). So the window search stays.
+- **Re levels:** 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ on the mean chord (area / full span). The real UAVs that set the
+  Stage 1 ranges run from 1.22 × 10⁵ to 3.10 × 10⁶; 10⁵ is 18 % below the slowest and kept as a margin (owner, 7 Nov).
+

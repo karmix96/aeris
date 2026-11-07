@@ -44,7 +44,8 @@ p.shows { color: var(--muted); font-size: 14.5px; }
 .cbox { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--good); border-radius: 6px; padding: 10px 14px; font-size: 15px; }
 .cbox .ctag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--good); margin-bottom: 2px; }
 .cbox.warn { border-left-color: var(--warn); } .cbox.warn .ctag { color: var(--warn); }
-.cbox.old { border-left-color: var(--muted); } .cbox.old .ctag { color: var(--muted); }
+.cbox.old { border-left-color: var(--muted); color: var(--muted); } .cbox.old .ctag { color: var(--muted); }
+.cbox.chg { border-left-color: var(--amber); background: color-mix(in srgb, var(--amber) 6%, var(--surface)); } .cbox.chg .ctag { color: var(--amber); }
 .tbl { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 680px; }
 th, td { text-align: left; vertical-align: top; padding: 8px 11px; border-bottom: 1px solid var(--line); }
@@ -54,6 +55,8 @@ th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing
 """
 
 BOXES = {"Conclusion.": ("Conclusion", ""), "Correction (6 Nov).": ("Correction (6 Nov)", "warn"),
+         "Correction (6 Nov), withdrawn on 7 Nov: it was wrong.": ("Correction (6 Nov), withdrawn on 7 Nov: it was wrong", "old"),
+         "Second correction (7 Nov): the defect is real; fixed in Stage 1.": ("Second correction (7 Nov): the defect is real; fixed in Stage 1", "chg"),
          "First reading (2 Nov).": ("First reading (2 Nov)", "old")}
 
 

@@ -91,8 +91,9 @@ def fig_levels():
         ("Trailing-edge cell [% c]", g(first, lambda r: 100 * r.te_spacing_c), g(new, lambda r: 100 * r.te_spacing_c), 0.1,
          "target 0.1 % c (DPW)", "first: met at C · new: met at M"),
         ("Growth limits", g(first, lambda r: r.chord_growth_limit), g(new, lambda r: r.chord_growth_limit), 1.1,
-         "1.1 asked with a transition model", "wall growth (Stage 3) and ring growth, checked: 1.25 at VC, " +
-         f"{new[3].chord_growth_limit:.3f} at F,\njust above 1.1 (1.23 at VC would give exactly 1.1); dotted: station gaps"),
+         "1.1 asked with a transition model", "checked growth, solid: along the ring; dotted: between station gaps. New: 1.25 at VC to " +
+         f"{new[3].chord_growth_limit:.3f} at F,\nthe same as the wall growth planned for Stage 3, just above 1.1 (1.23 at VC would give exactly 1.1);\n"
+         "first: 1.25 and 1.3 at every level"),
     ]
     for a, (title, fv, nv, target, tlabel, note) in zip(ax.flat, panels):
         a.plot(x, fv, "-o", color=GREY, lw=1.6, ms=5, label="first (built 2–3 Nov)")
@@ -101,7 +102,9 @@ def fig_levels():
             a.annotate(f"{v:.3g}", (xi, v), textcoords="offset points", xytext=(0, 7), ha="center", fontsize=7.4, color=ACC)
         if target is not None:
             a.axhline(target, color=AMBER, ls="--", lw=1.0)
-            a.text(3.05, target, " " + tlabel, color=AMBER, fontsize=7.5, va="bottom", ha="right")
+            xl = {"Nose: turning per cell [°]": 2.2, "Band: cells across a bubble": 1.45,
+                  "Trailing-edge cell [% c]": 0.5, "Growth limits": 0.45}.get(title, 1.0)
+            a.text(xl, target, tlabel, color=AMBER, fontsize=7.5, va="bottom", ha="left")
         a.set_xticks(x, LEVELS, fontsize=7.5)
         a.set_title(title)
         a.text(0.0, -0.47, note, transform=a.transAxes, fontsize=7.6, color=MUTED, va="top")
@@ -117,25 +120,24 @@ def fig_levels():
         for xi, (lo, hi) in zip(x, delivered):
             a.plot([xi + 0.12, xi + 0.12], [lo, hi], color=BWB, lw=4, solid_capstyle="butt", alpha=0.8)
         a.plot([], [], color=BWB, lw=4, label="delivered, new screen (7 Nov)")
-    ax[0, 0].legend(loc="upper right", frameon=False, fontsize=7.6)
     a = ax[1, 2]
     a.axis("off")
+    h, lab = ax[0, 0].get_legend_handles_labels()
+    a.legend(h, lab, loc="upper left", bbox_to_anchor=(-0.02, 1.16), frameon=False, fontsize=8)
     lines = ["Built 7 Nov (configs/surface.yaml, laws.py):",
              "hard minimums at VC, the same as before:",
-             "  · first wall cell from y⁺ ≤ 1 (" + ", ".join(f"{r.yplus:.2f}" for r in new[1:]) + " at C, M, F)",
+             "  · y⁺ ≤ 1 at the wall (" + ", ".join(f"{r.yplus:.2f}" for r in new[1:]) + " at C, M, F)",
              "  · growth ≤ 1.25 along the ring and off the wall",
              f"  · base ≥ 8 cells ({', '.join(str(r.base_cells) for r in new)})",
              "  · no kinks; every check refuses as before",
              f"  · tip gap {new[0].tip_gap_in_s0:g} × s0 (was s0: lighter rule)",
-             "",
-             "Three builder choices, all stricter, for Mike to confirm:",
+             "Three builder choices (stricter), for Mike:",
              "  · the nose solved at VC and at F; the smaller wins",
              "  · the growth limits follow the family rule",
-             "  · station growth 1.2 kept (plan file: 1.25, 7 gaps)",
-             "Each level about 2.2 × the cells of the one below."]
+             "  · station growth 1.2 kept (plan file: 1.25, 7 gaps)"]
     for i, s_ in enumerate(lines):
-        a.text(0.0, 0.99 - i * 0.075, s_, fontsize=8.4, color=INK if i in (0, 1, 8, 12) else MUTED, va="top",
-               transform=a.transAxes, fontweight="bold" if i in (0, 8) else None)
+        a.text(0.0, 0.74 - i * 0.082, s_, fontsize=8.2, color=INK if i in (0, 1, 7) else MUTED, va="top",
+               transform=a.transAxes, fontweight="bold" if i in (0, 7) else None)
     save(fig, "levels_first_new.png")
 
 

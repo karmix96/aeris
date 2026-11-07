@@ -293,7 +293,8 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     **Built 7 Nov** (`configs/surface.yaml`, `cfdauto/mesh/laws.py`; the first approach kept in
     `configs/surface_first.yaml`); screened on the rebuilt sets (Stage 2 Study 9): @@OK_NEW@@ of @@N_NEW@@ builds
     passed; F @@F_MED@@ M cells median on the wing blocks (20 reference wings × 4 Re), @@ASKED@@ the 9–11 M asked
-    (the 6 Nov estimate of 10.9 M came from the plan file, with fewer stations). Three builder choices: 77.
+    (the 6 Nov estimate was 10.9 M; the two counts differ in their wall layers, and the built surfaces have about 17 %
+    more stations than the plan file's). Three builder choices: 77.
 72. **Lighter rules** (owner, 6 Nov): the bubble-length table stops at 0.10 c from local Re 4 × 10⁵ up (band cell
     0.5 % c at F); tip gap 2 × s0; station gap 0.25 × local chord at M (replaces 62's 0.2 × chord at C).
     Fine level about 10–11 M cells median on the wing blocks (10.9 M with the band change alone; 15.2 M with
@@ -331,7 +332,7 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     @@FAM_REP@@ instead of 1.3). Solving at all four levels would remove it (two more solves per station). (2) The growth limits follow the family rule: along the ring 1.25 at VC (decided) gives 1.107 at
     F; between station gaps 1.3 at VC (not in 71–72) gives 1.127 at F; the kink check uses each level's turning
     limit. (3) The station growth stays 1.2 and the gaps per panel 12 at M (8 at VC), as decided; the plan file of
-    Study 8 used 1.25 and 7 gaps per panel, so the built rules have 7–14 more stations (about +17 %), which is most of
-    why F is @@F_MED@@ M cells, not 10.9 M. If the plan file's values were meant, they need a decision. See
+    Study 8 used 1.25 and 7 gaps per panel, so the built rules have 7–14 more stations (about +17 %, so about 17 % more
+    cells). If the plan file's values were meant, they need a decision. See
     `Stage_2_surface_mesh/decisions/surface_rules.md`, sections 13–14.
 

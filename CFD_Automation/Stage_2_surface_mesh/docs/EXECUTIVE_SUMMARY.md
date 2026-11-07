@@ -218,7 +218,7 @@ None of them is a flow result: no solver has run on these surfaces. Studies 1–
 
 *What it shows.* Left: cells per mesh per level, median and largest, with the RAM ADflow needs (1.51 GiB + 9.46 GiB per million cells). Right: the fine level F, the 6 Nov estimate against the screen, and the screen with a rough +30–60 % for the C-H wake lines.
 
-**Conclusion.** The built rules mesh every wing: @@OK_NEW@@ of @@N_NEW@@ builds passed, @@CRASH_NEW@@ crashed; build time median @@TIME_VC@@ s at VC and @@TIME_F@@ s at F. F has @@F_MED@@ M cells median (@@F_MIN@@–@@F_MAX@@ M), @@ASKED@@ the 9–11 M asked and @@F_VS6@@ × the 6 Nov estimate of 10.9 M, which came from the plan file (station growth 1.25 and 7 gaps per panel, so fewer stations) on the old reference wings. With the C-H wake lines F is about @@F_WAKE@@ M. The desktop today (about 1.2 M cells) takes @@DESK_VC@@ of the VC meshes; with +32 GB (about 4.6 M) it takes @@DESK32_VC@@ at VC, @@DESK32_C@@ at C and @@DESK32_M@@ at M; F needs the HPC.
+**Conclusion.** The built rules mesh every wing: @@OK_NEW@@ of @@N_NEW@@ builds passed, @@CRASH_NEW@@ crashed; build time median @@TIME_VC@@ s at VC and @@TIME_F@@ s at F. F has @@F_MED@@ M cells median (@@F_MIN@@–@@F_MAX@@ M), @@ASKED@@ the 9–11 M asked and @@F_VS6@@ × the 6 Nov estimate of 10.9 M. The surface is not why: the built rules have about 17 % more stations than the plan file of that estimate. The two counts differ in their wall layers: this one takes one layer count per block, from the first cell to 2 local chords (@@F_LAYERS@@ layers at F); the 6 Nov rule is not written down. With the C-H wake lines F is about @@F_WAKE@@ M. The desktop today (about 1.2 M cells) takes @@DESK_VC@@ of the VC meshes; with +32 GB (about 4.6 M) it takes @@DESK32_VC@@ at VC, @@DESK32_C@@ at C and @@DESK32_M@@ at M; F needs the HPC.
 
 **Study 10 · The similarity check (7 Nov).** The 20 reference shapes of before similarity were built again at unit mean chord and meshed with the first rules at level C at the four Re levels: with the code of the similarity merge (the new size and trailing edge, the old nose) and with today's code (also the nose fix), against their first meshes at real size.
 
@@ -254,7 +254,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 
 *What it shows.* The estimate of 6 Nov, before the build. Left: cells per mesh at the new levels with the lighter band, median and largest over the 20 reference wings × 4 Re levels (surfaces from the plan file × wall layers by formula; the wing blocks only). Right: the fine level F per rule set.
 
-**Conclusion.** The 6 Nov estimate put F at 10.9 M cells (median), inside the 9–11 M asked; the planned rules gave 15.2 M. The screen of the built rules measured @@F_MED@@ M (study 9): more stations than the plan file, and new reference wings. The C-H wake lines come on top. The cost is not settled until the first C-H wing is built and counted.
+**Conclusion.** The 6 Nov estimate put F at 10.9 M cells (median), inside the 9–11 M asked; the planned rules gave 15.2 M. The screen of the built rules counts @@F_MED@@ M (study 9), with more stations than the plan file and new reference wings: the two counts differ in their wall layers. The C-H wake lines come on top. The cost is not settled until the first C-H wing is built and counted.
 
 ![The volume topology, first against new](page/topology_first_new.png)
 
@@ -275,7 +275,8 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 - **Numpy loft only.** Every mesh so far, first and new, was built on the numpy twin of the loft. The pyGeo run on Mike's machine is owed.
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the limit:** @@CAP_VC@@ at VC and @@CAP_F@@ at F, against 0.05 (study 9). Similarity made some caps worse (study 10).
-- **The stations are 17 % more than the plan.** The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel: most of why F is @@F_MED@@ M cells, not 10.9 M. If the plan file's values were meant, they need a decision.
+- **The stations are 17 % more than the plan.** The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.
+- **The cell count depends on the wall-layer rule.** This screen counts F at @@F_MED@@ M (one layer count per block, 2 chords deep); the 6 Nov estimate had 10.9 M with a layer rule that is not written down. The real number comes with the march (Stage 3).
 - **The nose is solved at VC and at F** (a builder choice): VC, C and M get a finer nose than their own angle asks (VC @@VC_TURN@@° against 16.9°), and still M needed a repair on @@REP_TXT@@, which breaks the family rule for the nose cell there (@@FAM_REP@@ instead of 1.3).
 - **The coarse levels do not resolve transition.** VC and C have 9.1 and 11.8 cells per bubble, so transition results there must not be trusted.
 - **The band rule rests on one source.** 20 cells per bubble comes from one vendor guide, for one model. The lighter band gives the shortest high-Re root bubbles (about 1.5 % c) only about 3 cells: fine for SA, wrong for LM.

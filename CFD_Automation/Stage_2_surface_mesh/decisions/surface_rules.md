@@ -368,8 +368,9 @@ Build time median @@TIME_VC@@ s at VC, @@TIME_F@@ s at F (max @@TIME_F_MAX@@ s).
 (ring nodes − 1)(stations − 1) n + cap quads × n, with g the level's wall growth (1.25 at VC; 1.187, 1.141, 1.107), s0
 the level's first wall cell at the station's local Re (y⁺ 1, 0.77, 0.59, 0.46) and D = 2 local chords; no C-H wake
 lines. F is @@F_MED@@ M cells median on the 20 reference wings × 4 Re (@@F_MIN@@–@@F_MAX@@ M): @@ASKED@@ the 9–11 M asked,
-and @@F_VS6@@ × the 6 Nov estimate of 10.9 M (plan file: station growth 1.25 and 7 gaps per panel, so fewer stations; the
-old reference wings). With the wake lines (+30–60 %, rough) F is about @@F_WAKE@@ M. RAM for ADflow (1.51 GiB + 9.46 GiB
+and @@F_VS6@@ × the 6 Nov estimate of 10.9 M, although the built surfaces have about 17 % more stations than the plan
+file of that estimate (station growth 1.25 and 7 gaps per panel): the two counts differ in their wall layers (here
+@@F_LAYERS@@ layers at F; the 6 Nov rule is not written down). With the wake lines (+30–60 %, rough) F is about @@F_WAKE@@ M. RAM for ADflow (1.51 GiB + 9.46 GiB
 per million cells): the desktop today (about 1.2 M cells) takes @@DESK_VC@@ of the 80 VC meshes and @@DESK_C@@ at C;
 with +32 GB (about 4.6 M) @@DESK32_VC@@ at VC, @@DESK32_C@@ at C and @@DESK32_M@@ at M; F needs the HPC.
 
@@ -380,7 +381,8 @@ panel set it, by 1.25, 1.2, 1.33 (whole numbers); ring cells by @@FAM_RING@@, st
 by @@FAM_WALL@@ and cells by @@FAM_CELLS@@ per step (medians).
 
 **What it shows, and what not.** The built rules mesh every wing on all four levels, and the levels are true scaled
-copies, except the nose cell at M where it was repaired. The cost is above the 6 Nov estimate, mostly through the stations (point 3 of section 13). The cap quads come
+copies, except the nose cell at M where it was repaired. The cell count depends on the wall-layer rule more than on the surface; the stations add about 17 % against the plan
+file (point 3 of section 13). The cap quads come
 closest to a limit. Not shown: whether the march accepts these surfaces, whether the coarse levels are good enough for
 the drag, the pyGeo loft.
 

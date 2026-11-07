@@ -302,16 +302,20 @@ def fig_counts(m: dict) -> None:
         a.grid(axis="y", color=LINE, lw=0.5)
     for lev in LEVELS:
         ax[0].bar([0], [0], color=LCOL[lev], label=lev)
+    lo0, hi0 = ax[0].get_ylim()
+    ax[0].set_ylim(0, hi0 * 1.22)
     ax[0].legend(title="level", ncol=4, loc="upper left", fontsize=8, title_fontsize=8, frameon=False)
+    lo1, hi1 = ax[1].get_ylim()
+    ax[1].set_ylim(lo1, hi1 + 0.15 * (hi1 - lo1))
     ax[0].set_title("ring nodes (20 reference wings × 4 Re levels)", fontsize=9.5)
     ax[1].set_title("stations (the same 80 builds per level)", fontsize=9.5)
     a = ax[2]
-    a.axhspan(ASKED[0] / 1e6, ASKED[1] / 1e6, color=BWB, alpha=0.12)
-    a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
-    a.axhline(DESKTOP_32 / 1e6, color=AMBER, ls="--", lw=1)
-    a.text(19.6, DESKTOP / 1e6 * 0.88, "desktop today ≈ 1.2 M", color=WARN, fontsize=7.6, ha="right", va="top")
-    a.text(19.6, DESKTOP_32 / 1e6 * 1.08, "with +32 GB ≈ 4.6 M", color=AMBER, fontsize=7.6, ha="right")
-    a.text(-0.6, ASKED[1] / 1e6 * 1.06, "F asked: 9–11 M", color=BWB, fontsize=7.6)
+    h1 = a.axhspan(ASKED[0] / 1e6, ASKED[1] / 1e6, color=BWB, alpha=0.12)
+    h2 = a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
+    h3 = a.axhline(DESKTOP_32 / 1e6, color=AMBER, ls="--", lw=1)
+    a.legend([h1, h3, h2], ["F asked: 9–11 M", "with +32 GB ≈ 4.6 M", "desktop today ≈ 1.2 M"], loc="lower right",
+             fontsize=7.6, frameon=False)
+    a.set_ylim(0.12, 14)
     a.set_title("cells per mesh (estimate: surface × wall layers)", fontsize=9.5)
     save(fig, "screen_new_counts.png")
 
@@ -340,17 +344,17 @@ def fig_cells(m: dict, s: dict) -> None:
     a.axhspan(ASKED[0] / 1e6, ASKED[1] / 1e6, color=BWB, alpha=0.12)
     a.text(-0.45, ASKED[1] / 1e6 * 1.05, "F asked: 9–11 M (3 Nov)", color=BWB, fontsize=7.8)
     a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
-    a.text(3.45, DESKTOP / 1e6 * 0.86, "desktop today ≈ 1.2 M cells (13 GB)", color=WARN, fontsize=7.6, ha="right", va="top")
+    a.text(4.75, DESKTOP / 1e6 * 0.86, "desktop today\n≈ 1.2 M cells (13 GB)", color=WARN, fontsize=7.6, ha="right", va="top")
     a.axhline(DESKTOP_32 / 1e6, color=AMBER, ls="--", lw=1)
-    a.text(3.45, DESKTOP_32 / 1e6 * 1.06, "with +32 GB ≈ 4.6 M cells", color=AMBER, fontsize=7.6, ha="right")
-    a.set_yscale("log"); a.set_ylim(0.1, 60); a.set_xticks(x, LEVELS); a.set_ylabel("cells per mesh, wing blocks [millions]")
+    a.text(4.75, DESKTOP_32 / 1e6 * 1.06, "with +32 GB\n≈ 4.6 M cells", color=AMBER, fontsize=7.6, ha="right")
+    a.set_yscale("log"); a.set_ylim(0.1, 60); a.set_xlim(-0.6, 4.8); a.set_xticks(x, LEVELS); a.set_ylabel("cells per mesh, wing blocks [millions]")
     a.legend(loc="upper left", fontsize=7.6, frameon=False)
     a.set_title("cells per mesh, per level (wing blocks; the C-H wake lines not counted)", fontsize=9.5)
     sec = a.secondary_yaxis("right", functions=(lambda c: RAM_BASE + RAM_PER_M * c, lambda g: (g - RAM_BASE) / RAM_PER_M))
     sec.set_ylabel("RAM for ADflow [GiB]")
     a = ax[1]
     rv = s["reference"].get("F")
-    names = ["6 Nov estimate\n(plan file, real-size\nwings, fewer stations)", "7 Nov screen\n(built rules,\nunit mean chord)",
+    names = ["6 Nov estimate\n(plan file, old wings,\nanother layer count)", "7 Nov screen\n(built rules,\nunit mean chord)",
              "7 Nov screen\n+ C-H wake lines\n(rough +30…60 %)"]
     if rv:
         f = rv["cells_est"]
@@ -394,7 +398,9 @@ def fig_family(s: dict) -> None:
     a.text(len(SPACINGS) - 0.5, 1.305, "r = 1.3", color=WARN, fontsize=8, ha="right", va="bottom")
     a.set_xticks(x, [SPACING_NAME[q] for q in SPACINGS], rotation=25, ha="right", fontsize=8.2)
     a.set_ylim(1.0, 1.6); a.set_ylabel("spacing, coarser level / finer level")
-    a.legend(loc="upper left", fontsize=8, frameon=False, ncol=3)
+    hh, ll = a.get_legend_handles_labels()
+    order = sorted(range(len(ll)), key=lambda i: (ll[i].startswith("nose"), ll[i]))
+    a.legend([hh[i] for i in order], [ll[i] for i in order], loc="upper left", fontsize=8, frameon=False, ncol=4)
     a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n(the builds without a nose repair; ×: the nose of the builds repaired at M)", fontsize=9.5)
     a = ax[1]
     keys = [("ring_cells", "ring cells"), ("station_gaps", "station gaps"), ("wall_layers", "wall layers"),
@@ -436,17 +442,20 @@ def fig_checks(s: dict) -> None:
     a.set_title("how close the worst build came to each refusal limit (VC and F: every set; C and M: the reference wings)",
                 fontsize=9.2)
     a = ax[1]
+    angle = {"VC": 16.9, "C": 13.0, "M": 10.0, "F": 7.69}
     for k, (lev, d) in enumerate(sets):
         st = d["nose_solved_at_stations"]
         tot = sum(st.values()) or 1
-        a.barh(k, st.get("F", 0) / tot * 100, color=LCOL["F"], label="nose set by the F solve" if k == 0 else None)
-        a.barh(k, st.get("VC", 0) / tot * 100, left=st.get("F", 0) / tot * 100, color=AMBER,
-               label="nose set by the VC solve" if k == 0 else None)
+        pf, pv = st.get("F", 0) / tot * 100, st.get("VC", 0) / tot * 100
+        a.barh(k, pf, color=LCOL["F"], label="nose set by the F solve" if k == 0 else None)
+        a.barh(k, pv, left=pf, color=AMBER, label="nose set by the VC solve" if k == 0 else None)
         nt = d["nose_turning"]
-        a.text(101, k, f"largest turning {nt['min']:.1f}–{nt['max']:.1f}°", va="center", fontsize=7.6)
-    a.set_yticks(range(len(sets)), [lev for lev, _ in sets]); a.set_xlim(0, 150); a.invert_yaxis()
+        a.text(3, k, f"{lev}: F solve on {pf:.0f} % of {tot:,} stations\nlargest turning {nt['min']:.2f}–{nt['max']:.2f}° (angle {angle[lev]:g}°)"
+               + (f"\nnose repairs on {d['repairs']} builds" if d["repairs"] else ""),
+               va="center", fontsize=7.8, color="white")
+    a.set_yticks(range(len(sets)), [lev for lev, _ in sets]); a.set_xlim(0, 100); a.invert_yaxis()
     a.set_xlabel("stations [%]")
-    a.legend(loc="lower right", fontsize=7.6, frameon=False)
+    a.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, fontsize=7.6, frameon=False)
     a.set_title("which solve set the nose, and the largest turning delivered", fontsize=9.2)
     save(fig, "screen_new_checks.png")
 

@@ -22,7 +22,7 @@ the numpy twin of the loft; not yet run with pyGeo (Mike's machine).
 > | Similarity | real size; TE max(0.5 / 1.0 mm, 0.2 % c) | unit mean chord (area / full span); Re an input (4 levels; 1e5 is 18 % below the slowest real UAV, kept as a margin); Mach 0.1 + Prandtl–Glauert; TE 0.2 % c; root chord out (18 → 17); no 7 m full-span cap | built in Stage 1 7 Nov (70); sets rebuilt (722 of 722); 13 of 20 reference wings new; Study 10 |
 > | Flow model, angles, Mach | ADflow SA; 0–8°; Mach 0.03–0.20 | transition with ADflow and SU2 (67; split pending, 76); −5° to post-stall + post-stall study (69); toward Mach 0.5, no supersonic, core ≤ 0.2 (68) | decided; split and core pending |
 > | Nose (64) | "the built nose is not round" | real: the old rule made a curvature spike on one side and a flat spot on the other, between the raw points (NACA 4415: a 0.18 % c cell turned 9.47° built against 4.31° true). The 6 Nov "overstated" correction (75) was wrong. New rule: one cubic spline, the LE at its apex, 201 points per side; a gate refuses 14 database files; 95.6 % of the database passes (21.0 % before) | built in Stage 1 7 Nov; Study 4 |
-> | Fine level | no target | F @@F_MED@@ M cells median on the wing blocks (20 reference wings × 4 Re; max @@F_MAX@@ M), @@ASKED@@ the 9–11 M asked; 6 Nov estimate 10.9 M (plan file, fewer stations); C-H wake lines ≈ +45 % (rough, 30–60 %) | screened 7 Nov (Study 9) |
+> | Fine level | no target | F @@F_MED@@ M cells median on the wing blocks (20 reference wings × 4 Re; max @@F_MAX@@ M), @@ASKED@@ the 9–11 M asked; 6 Nov estimate 10.9 M (plan-file surfaces, another wall-layer count); C-H wake lines ≈ +45 % (rough, 30–60 %) | screened 7 Nov (Study 9) |
 > | Builder choices (77) | — | all stricter than decided: the nose solved at VC and at F (the smaller wins: VC turns @@VC_TURN@@° instead of 16.9°); the ring and station growth limits follow the family rule (1.107 / 1.127 at F); the kink check uses each level's turning limit; station growth 1.2 kept (+17 % stations against the plan file's 1.25 and 7 gaps per panel) | pending: Mike confirms |
 
 ## What Stage 2 is
@@ -96,7 +96,9 @@ four Re levels: 782 builds per level), and the 20 reference wings at C and M (80
 - Cells (estimate, wing blocks): n = max over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g), cells =
   (ring − 1)(stations − 1) n + cap quads × n; g the level's wall growth (1.25 at VC … 1.107 at F), s0 the level's first
   cell at the local Re, D = 2 local chords. F @@F_MED@@ M median (@@F_MIN@@–@@F_MAX@@ M): @@ASKED@@ the 9–11 M asked;
-  @@F_VS6@@ × the 6 Nov estimate (10.9 M, plan file with fewer stations). With the C-H wake lines about @@F_WAKE@@ M.
+  @@F_VS6@@ × the 6 Nov estimate (10.9 M), although the stations are about 17 % more than in its plan file: the two counts
+  differ in their wall layers (here @@F_LAYERS@@ at F; the 6 Nov rule is not written down). With the C-H wake lines
+  about @@F_WAKE@@ M.
 - RAM for ADflow 1.51 GiB + 9.46 GiB per million cells: the desktop today (about 1.2 M cells) takes @@DESK_VC@@ of the VC
   meshes and @@DESK_C@@ at C; with +32 GB (about 4.6 M) @@DESK32_VC@@ at VC, @@DESK32_C@@ at C, @@DESK32_M@@ at M; F on the HPC.
 
@@ -156,7 +158,9 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
 - **No solve yet.** Nothing here says the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the 0.05 limit** (@@CAP_VC@@ at VC, @@CAP_F@@ at F); similarity made some caps worse.
 - **The stations are 17 % more than the plan file** (station growth 1.2 and 12 gaps per panel at M, as decided, against
-  1.25 and 7): most of why F is @@F_MED@@ M, not 10.9 M. If the plan file's values were meant, they need a decision.
+  1.25 and 7), so about 17 % more cells than the plan's rules. If the plan file's values were meant, they need a decision.
+- **The cell count depends on the wall-layer rule** (here one count per block, 2 chords deep; the 6 Nov rule is not
+  written down); the real number comes with the march.
 - **The nose is solved at VC and at F:** VC, C and M get a finer nose than their own angle asks, and M still needed a
   repair on @@REP_TXT@@ (the nose cell then breaks the family rule at M).
 - **The coarse levels do not resolve transition** (9.1 and 11.8 cells per bubble at VC and C).

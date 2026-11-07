@@ -182,4 +182,5 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 - Nose: settled (decision 64). The gate refuses 14 database files (very sharp or flat-faced noses; none used). On
   coarse files (about 61 points) the raw file itself does not settle the nose turning at the smallest cells better
   than about ±15 %.
-- The pyGeo build is owed; Stage 2 has not yet meshed the 7 Nov wings.
+- The pyGeo build is owed. Stage 2 screened the 7 Nov wings on 7 Nov: 1,724 of 1,724 builds pass (every set at
+  VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels; 4 F builds after one nose repair).

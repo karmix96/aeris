@@ -412,7 +412,7 @@ def cover_text() -> str:
     rows = [r for r in json.loads((DOCS / "real_uavs.json").read_text())["rows"] if r["use"] == "ranges"]
     miss = [r["name"] for r in rows if not r.get("covered")]
     full = sum(1 for r in rows if r.get("covered_full"))
-    return (f"first approach: focus {len(rows) - len(miss)} of {len(rows)}, full {full} of {len(rows)} real wings"
+    return (f"focus {len(rows) - len(miss)} of {len(rows)}, full {full} of {len(rows)} real wings"
             + (f" (only in the full space: {', '.join(miss)})" if miss else ""))
 
 
@@ -577,11 +577,11 @@ def fig_pipeline() -> str:
     steps = [
         ("1  Full design space", ["17 inputs, 4 types", "aspect ratio up to 10–20", "every sourced section", "40 + 5 hold-out, sparse"], "acc"),
         ("2  What we can make", ["straight panels (≤ 3)", "vertical sections", "any database section", "722 of 722 built wings pass"], "acc"),
-        ("3  Focus", ["Class I, small Class II", "unit mean chord, no size", "4 Re levels, 10⁵ – 3 × 10⁶", "dense: 100 + 5 + 10 per type", "real Re inside the levels"], "bwbc"),
+        ("3  Focus", ["Class I, small Class II", "unit mean chord, no size", "4 Re levels, 10⁵ – 3 × 10⁶", "dense: 100 + 5 + 10 each", "real Re inside the levels"], "bwbc"),
         ("4  Flow maps", ["local Re, root to tip", "transition and bubbles", "effect of the sections", "phenomena per family", "first approach: real size"], "amber"),
         ("5  The tool", ["wing in", "family and type by rule", "flow map at V, altitude, α", "proposed turbulence model"], "warn"),
     ]
-    w, gap, h = 176, 22, 150
+    w, gap, h = 176, 22, 158
     o = [f'<svg class="dg" viewBox="0 0 {5 * w + 4 * gap + 20} {h + 70}" role="img" aria-label="Five steps: full design space, what the parametrization can make, the focus space, flow maps, and the tool that takes a wing and returns its flow map and a proposed model">']
     for k, (title, lines, cls) in enumerate(steps):
         x = 10 + k * (w + gap)
@@ -1085,7 +1085,7 @@ def fig_re_map() -> str:
     mean chord (an input of each solve), the local Re of each type from its smallest tip at the lowest level to its
     largest root at the top level (focus space), and the real wings (their own Re, on area / full span)."""
     d = json.loads((DOCS / "real_uavs.json").read_text())
-    W, H = 900, 390
+    W, H = 900, 412
     X = _x_re
     out = [f'<svg class="dg" viewBox="0 0 {W} {H}" role="img" aria-label="Reynolds number map at unit mean chord: the four study levels on the mean chord, the local Re of each type from its smallest tip at the lowest level to its largest root at the top level, and the real wings, against the low-Re regime below 5 times 10 to the 5">']
     # regimes
@@ -1123,7 +1123,7 @@ def fig_re_map() -> str:
             for k in (2, 5):
                 out.append(f'<line class="axis" x1="{X(k * 10**e):.1f}" y1="338" x2="{X(k * 10**e):.1f}" y2="342"/>')
     out.append(f'<text class="lab muted" x="{X(1e7)}" y="380" text-anchor="end">Reynolds number (log scale)</text>')
-    out.append(f'<text class="lab muted" x="{X(1e4)}" y="380">thick bar: Re on the mean chord (the four levels) · thin bar: local Re, smallest tip at 10⁵ to largest root at 3 × 10⁶ (focus)</text>')
+    out.append(f'<text class="lab muted" x="{X(1e4)}" y="402">thick bar: Re on the mean chord (the four levels) · thin bar: local Re, smallest tip at 10⁵ to largest root at 3 × 10⁶ (focus)</text>')
     out.append("</svg>")
     return "\n".join(out)
 
@@ -1592,8 +1592,8 @@ def rows() -> str:
             f"<tr><td class='what'>{html.escape(meta['title'])}<span class='id'>{name}</span></td>"
             f"<td><span class='tag {meta['kind']}'>{kind}</span></td>"
             f"<td class='num'>semi-span {pf.semi_span * meta['real_mean_chord_m']:.3g} m<br>AR {aspect_ratio(pf):.2f}<br>"
-            f"MAC {mean_aero_chord(pf) * meta['real_mean_chord_m']:.3g} m<br><span class='muted'>built at unit mean chord;<br>"
-            f"× {meta['real_mean_chord_m']:.3g} m = real</span></td>"
+            f"MAC {mean_aero_chord(pf) * meta['real_mean_chord_m']:.3g} m<br><span class='muted'>built at c̄ = 1;<br>"
+            f"× {meta['real_mean_chord_m']:.3g} m</span></td>"
             f"<td>{html.escape(use)}</td>"
             f"<td>{html.escape(meta['fidelity'])}<br><span class='muted'>Sections: {html.escape(secs)}</span></td>"
             f"<td class='src'>{src}</td></tr>")
@@ -1953,7 +1953,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>Key pairs</h2>
   <p>The same three layers in two dimensions, one panel per type. Faint dots: full space. Strong dots: focus space. Black diamonds: real or published wings that give both values.</p>
   __CHG_PAIRS__
-  <figure class="fig card">__FA__ __PNG_PAIR_SIZE__<figcaption><strong>Size, first approach</strong> (real size, before 7 Nov): full span b (tip to tip) against mean chord, in metres. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; conventional: cranked and tapered).</figcaption></figure>
+  <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size, first approach</strong> (real size, before 7 Nov): full span b (tip to tip) against mean chord, in metres. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; conventional: cranked and tapered).</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>First approach: the focus space covered 32 of the 34 real wings with a published area (a generated wing within 10 % in full span and mean chord); the other two, Hermes 450 and Götten UAV 9, were larger than 7 m and only the full space covered them. Now this pair has no meaning: every wing has a mean chord of 1, and its full span is its aspect ratio (next figure). Size enters only as the Re on the mean chord, and the four levels cover the real wings (see <a href="#reynolds">Re and Mach</a>).</div>
   <figure class="fig card">__PNG_PAIR_PLANFORM__<figcaption><strong>Planform</strong>: aspect ratio against overall taper. The BWB lives at very low taper (big centre body), the others at 0.3–1.</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>Taper separates the BWB from the rest: only the BWB has a very small tip (4–25 % of the root chord). The other three types overlap (taper 0.2–1), so the type rules use the kink and the root chord, not taper alone.</div>
@@ -2044,7 +2044,7 @@ __DERIVED__
   <p class="muted">Extremes over all corners of the planform inputs (other inputs mid-range), in mean chords. The built sets stay inside them: their chords run 0.062–3.60 mean chords, their aspect ratios 2.5–20. <code>python scripts/size_extremes.py</code>.</p>
   <h2 style="font-size:22px">First approach: sizes at real scale (30 Oct–6 Nov 2026)</h2>
   <p>Kept as the record: the wings of the first approach, at real size, in metres. The flow maps and the flow dataset on this page used them.</p>
-  <figure class="fig">__FA__ __GIF_SIZES_FIRST__<figcaption>First approach: smallest and largest wing (least and most area) of each type at the corners of the size inputs (then including the root chord in metres), other inputs at mid-range, true scale. Solid: focus space. Dashed: full space. Left view 0.6 m wide, right view 22 m wide; the same scale in every frame.</figcaption></figure>
+  <figure class="fig">__GIF_SIZES_FIRST__<figcaption>First approach: smallest and largest wing (least and most area) of each type at the corners of the size inputs (then including the root chord in metres), other inputs at mid-range, true scale. Solid: focus space. Dashed: full space. Left view 0.6 m wide, right view 22 m wide; the same scale in every frame.</figcaption></figure>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Space</th><th>Full span b (tip to tip)</th><th>Wing area</th><th>Mean chord</th><th>Root chord</th><th>Tip chord</th></tr></thead>
     <tbody>__EXTREMES_FIRST__</tbody>
@@ -2323,7 +2323,7 @@ __DECISIONS__
     <div class="box"><h3>Generator covered them (first approach)</h3><div class="big">__COVER__</div><p>First approach (real size): in the full space each real wing with a published area had a generated wing within 10 % in full span and mean chord, and every Class I full span was inside (sourced and HCDI database). Focus space: BWB __ENV_BWB__; flying wing __ENV_FW__; cranked __ENV_CONV__; tapered __ENV_TAP__. Now this check means nothing: every generated wing has a 1 m mean chord in it.</p></div>
     <div class="box"><h3>Class II</h3><div class="big">Chords 0.54–0.78 m</div><p>13 Class II wings with an area set the aspect ratios and the Re range (first approach: the size ranges): Götten et al. 2021 (5; from images and three-views, about 10–15 %), Essari 2015 (4, Jane's-style: Hermes 450, Ranger, Seeker, Shadow 600), the NTNU RQ-7A Shadow and Aludra MK1 rows, the Pioneer (Bray 1991) and the tailless AUTh RX-3 (4.9 m²). AR 7.0–16. At top speed, where listed, Re 2.0–3.1 × 10⁶. Gap: the RX-3 is the only tailless Class II wing with an area.</p></div>
   </div>
-  <figure class="fig card">__FA__ __PNG_REAL__</figure>
+  <figure class="fig card">__PNG_REAL__</figure>
   <p class="cap">First approach (real size, before 7 Nov). Clouds: 2,000 generated wings per type (tailless panel: green BWB, brown flying wing; conventional panel: blue cranked, light blue tapered). Red: real wings with a published area or aspect ratio. Ticks on the full-span axis: real wings with only a full span listed (brown: sources and the NTNU / CNAS databases; violet: HCDI UAS database).</p>
   <div class="cbox"><span class="ctag">Conclusion</span>First approach: the generated clouds covered the real wings: in the focus space 32 of the 34 real wings with an area had a generated wing within 10 % in full span and mean chord, and the full space covered all 34. Now the generator has no size, so any real wing whose shape is in the box has a similar generated wing; what must cover the real wings is the Re range, and it does (1.22 × 10⁵ – 3.10 × 10⁶ inside the levels 10⁵ – 3 × 10⁶).</div>
   <div class="tbl"><table class="wide">
@@ -2372,7 +2372,7 @@ __SETS__
 __VSETS__
     </tbody>
   </table></div>
-  <div class="cbox"><span class="ctag">Conclusion</span>The loft is the designed wing: stations, chords, twists, sweeps and dihedrals match the inputs to machine precision, and the sections within __VS_SEC__ % of the chord (at the smallest tips).</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The loft is the designed wing: stations, chords, twists, sweeps and dihedrals match the inputs to machine precision, and the sections within __VS_SEC__ % of the chord on every wing (before 7 Nov up to 0.02 %, where the mm floor was large).</div>
   <h2 style="font-size:22px">Is the surface the intended wing? (published wings)</h2>
   <p class="muted">Errors in % of local chord. Sections: the loft cut at each station against the original airfoil points (limit 0.01). This compares only at the file's own points, so it cannot see the nose between them: the <a href='#nose'>nose study</a> (decision 64) measured that part, along the arc. Since 7 Nov the check finds the section's frame on its own, as the new rule does. Edges: against the exact straight lines (limit 1e-6). Outside CAD: only the M6 has one (limit 0.05; it needs gmsh, which is not installed here).</p>
   <div class="tbl"><table class="mid">

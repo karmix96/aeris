@@ -1,5 +1,9 @@
 """The flow dataset: every focus wing x section set x Mach x angle x altitude, same assumptions.
 
+First approach (the record): made at real size and real speed before 7 Nov 2026, with the section tables built
+before the nose fix (decision 64). Not rebuilt: since decision 70 every wing is built at unit mean chord, so a rerun
+as it is would put every wing at a 1 m mean chord at the real speeds (the wrong Re).
+
     python -m cfdauto.flowmap.dataset            # writes data/flowdata/dataset.csv.gz (about 200,000 rows)
 
 Each row is one wing at one flight condition with one section set: the inputs (geometry, sections,
@@ -95,7 +99,10 @@ def build(types=WING_TYPES, n_wings: int | None = None, set_name: str = "trainin
 
 
 def main(argv=None) -> None:
-    p = argparse.ArgumentParser(description="Build the flow dataset from the section tables.")
+    p = argparse.ArgumentParser(description="Build the flow dataset from the section tables. First approach: the "
+                                            "record, made at real size and speed before 7 Nov 2026 (not rebuilt; since "
+                                            "decision 70 every wing has unit mean chord, so a rerun as it is gives the "
+                                            "wrong Re).")
     p.add_argument("--n-wings", type=int)
     p.add_argument("--out", default=str(OUT / "dataset.csv.gz"))
     a = p.parse_args(argv)

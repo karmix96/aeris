@@ -4,6 +4,10 @@
 
 No pyGeo needed: surfaces come from preview.ruled_surface, which is the k_span = 2
 loft up to the cubic fit of each section.
+
+Since decision 70 (7 Nov 2026) every wing is built at unit mean chord (mean chord = area / full span = 1),
+so lengths in these pictures are in mean chords. The published wings are shown at their real size
+(lengths x meta["real_mean_chord_m"] = metres).
 """
 
 from __future__ import annotations
@@ -79,12 +83,12 @@ def draw_planform(ax, pf, stations, show_stations=True, color=ACCENT, label_chor
             ax.plot([st.y, st.y], [st.x_le, st.x_le + st.chord], color=ACCENT2, lw=1.4)
             ax.plot(st.y, st.x_le, "o", color=ACCENT2, ms=4)
             if label_chords:
-                ax.text(st.y + 0.015 * pf.semi_span, st.x_le + 0.5 * st.chord, f"b{i}\n{st.chord:.3g} m",
+                ax.text(st.y + 0.015 * pf.semi_span, st.x_le + 0.5 * st.chord, f"b{i}\n{st.chord:.3g}",
                         ha="left", va="center", fontsize=8, color=ACCENT2)
     ax.set_aspect("equal")
     ax.invert_yaxis()
-    ax.set_xlabel("span y [m]")
-    ax.set_ylabel("x [m]")
+    ax.set_xlabel("y along the full span [mean chords]")
+    ax.set_ylabel("x [mean chords]")
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
 
@@ -141,15 +145,17 @@ def build_steps() -> list[tuple[Image.Image, int]]:
         tab.set_fontsize(8)
         tab.scale(1, 1.05)
     frames.append((frame("1 · The design vector",
-                         ["18 numbers describe one wing:", "chords, spans, sweeps,",
-                          "twist and dihedral at the", "four stations b0 (root) to b3 (tip).",
-                          "", "One YAML file holds the ranges", "for all four wing types."],
+                         ["17 numbers describe one wing:", "chord ratios, panel shares,",
+                          "aspect ratio, sweeps, twists", "and panel dihedrals, b0 (root)",
+                          "to b3 (tip), plus 4 airfoils.", "", "No size: every wing is built",
+                          "at unit mean chord. The Re on", "the mean chord is set per solve."],
                          f1, foot="Example: BWB, every variable at mid-range"), 2500))
 
     frames.append((frame("2 · Planform",
                          ["Leading and trailing edges are", "straight lines through the four",
                           "stations, so every chord and", "sweep is exactly what was set.",
-                          "", f"Sweeps: {', '.join(f'{s:.1f}°' for s in pf.sweep_le_deg)}"],
+                          "", f"Sweeps: {', '.join(f'{s:.1f}°' for s in pf.sweep_le_deg)}",
+                          f"Root chord 1 / K = {pf.chord[0]:.3g} mean chords", "(chords in mean chords)"],
                          lambda ax: draw_planform(ax, pf, raw)), 2500))
 
     def f3(ax):
@@ -178,8 +184,8 @@ def build_steps() -> list[tuple[Image.Image, int]]:
         ax.axhline(0, color=MUTED, lw=0.6)
         ax.set_aspect("equal")
         ax.set_ylim(-0.1 * pf.semi_span, 0.25 * pf.semi_span)
-        ax.set_xlabel("span y [m]")
-        ax.set_ylabel("z [m]")
+        ax.set_xlabel("y along the full span [mean chords]")
+        ax.set_ylabel("z [mean chords]")
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
     frames.append((frame("4 · Twist and dihedral",
@@ -190,21 +196,22 @@ def build_steps() -> list[tuple[Image.Image, int]]:
 
     def f5(ax):
         a0, a1 = raw[0].airfoil, st[0].airfoil
-        c = raw[0].chord * 1000
+        c = 100.0                               # in % of the local chord: the rule is a chord fraction
         x = a0.x * c
         sel = a0.x > 0.8
         ax.plot(x[sel], a0.yu[sel] * c, color=MUTED, lw=1.2, ls="--", label="as read")
         ax.plot(x[sel], a0.yl[sel] * c, color=MUTED, lw=1.2, ls="--")
         ax.plot(x[sel], a1.yu[sel] * c, color=ACCENT, lw=2, label="opened")
         ax.plot(x[sel], a1.yl[sel] * c, color=ACCENT, lw=2)
-        ax.plot([c, c], [a1.yl[-1] * c, a1.yu[-1] * c], color=WARN, lw=3, label=f"base {a1.te_thickness * c:.2f} mm")
+        ax.plot([c, c], [a1.yl[-1] * c, a1.yu[-1] * c], color=WARN, lw=3, label=f"base {a1.te_thickness * c:.2f} % c")
         ax.legend(frameon=False, loc="upper right")
-        ax.set_xlabel("x [mm]")
-        ax.set_ylabel("z [mm]")
+        ax.set_xlabel("x [% of the local chord]")
+        ax.set_ylabel("z [% of the local chord]")
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
     frames.append((frame("5 · Trailing edge",
-                         ["The edge is opened to", f"max({cfg.te.floor_m * 1e3:.1f} mm, {cfg.te.chord_fraction * 100:.1f} % of chord),",
+                         ["The edge is opened to", f"{cfg.te.chord_fraction * 100:.1f} % of the local chord on",
+                          "every wing (no mm floor since 7 Nov),",
                           f"growing linearly from {cfg.te.open_from_xc * 100:.0f} % chord", "to the edge, half up, half down",
                           "(pyGeo's blunt-edge method):", "the camber line does not move.", "",
                           "Published wings keep their", "own edge ('as_is')."],
@@ -216,8 +223,8 @@ def build_steps() -> list[tuple[Image.Image, int]]:
                          lambda ax: draw_3d(ax, st), three_d=True), 2500))
 
     frames.append((frame("7 · Measure, label, check",
-                         [f"Area {m['area_m2']:.3f} m²,  AR {m['aspect_ratio']:.2f}",
-                          f"Mean chord {m['mac_m']:.3f} m", "", "Labels (by rule):", "  " + ", ".join(labels), "",
+                         [f"Area {m['area_m2']:.3f} mean chords²,  AR {m['aspect_ratio']:.2f}",
+                          f"Mean chord 1 (area / full span); MAC {m['mac_m']:.3f}", "", "Labels (by rule):", "  " + ", ".join(labels), "",
                           "Four checks refuse a bad wing:", "numbers → loft, trailing edge,", "validity, repeatability."],
                          lambda ax: draw_3d(ax, st), three_d=True), 3000))
     return frames
@@ -230,9 +237,11 @@ def published_frames() -> list[tuple[Image.Image, int]]:
     for name in published_wings.names():
         spec, vec, te, meta = published_wings.get(name)
         pf, st = build_wing_sections(spec, vec, te)
+        c = meta["real_mean_chord_m"]           # built at unit mean chord; lengths x c = metres
         lines = [meta["kind"].upper().replace("BWB", "BWB (blended wing body)"),
-                 f"semi-span {pf.semi_span:.3g} m, root chord {pf.chord[0]:.3g} m",
-                 f"aspect ratio {aspect_ratio(pf):.2f}, MAC {mean_aero_chord(pf):.3g} m",
+                 f"real size: semi-span {pf.semi_span * c:.3g} m, root chord {pf.chord[0] * c:.3g} m",
+                 f"aspect ratio {aspect_ratio(pf):.2f}, MAC {mean_aero_chord(pf) * c:.3g} m",
+                 f"(built at unit mean chord; x {c:.3g} m)",
                  "sections: " + ", ".join(dict.fromkeys(s.airfoil.name for s in st))]
         if "blendednet_parameters" in meta:
             p = meta["blendednet_parameters"]
@@ -316,10 +325,11 @@ def crm_check_png(path: Path) -> None:
         return
     spec, vec, te, meta = published_wings.get("nasa_crm")
     pf, st = build_wing_sections(spec, vec, te)
+    c_m = meta["real_mean_chord_m"]           # built at unit mean chord: chords x this = metres
     eta = np.array([s.y for s in st]) / pf.semi_span
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 3.6))
     a1.plot(tab[:, 0], tab[:, 1], "o", color=MUTED, ms=5, label="published (21 stations)")
-    a1.plot(eta, [s.chord for s in st], "-", color=ACCENT, lw=2, label="generator (4 stations)")
+    a1.plot(eta, [s.chord * c_m for s in st], "-", color=ACCENT, lw=2, label="generator (4 stations, real size)")
     a1.set_xlabel("2y/b")
     a1.set_ylabel("chord [m]")
     a1.legend(frameon=False)

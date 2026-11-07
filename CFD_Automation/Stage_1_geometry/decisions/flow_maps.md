@@ -1,7 +1,18 @@
 # Flow maps and the flow dataset (31 Oct 2026; baseline corrected 2 Nov 2026)
 
+> **What changes (7 Nov 2026).** Everything below is the **first approach**: the flow maps and the flow dataset
+> were made at real size and real speed (the focus wings of 30 Oct–6 Nov, full span ≤ 7 m) and are **not
+> rebuilt**. Since decision 70 every wing is built at unit mean chord, and the tool (`python -m cfdauto.flowmap`)
+> reads such a wing as one with a 1 m mean chord: rerunning the dataset as it is would put every wing at a 1 m
+> mean chord at the real speeds (the wrong Re). In similarity form a condition is an Re on the mean chord (the
+> four levels): give the tool the speed V = Re / (ρ/μ) (ρ/μ = 6.85 × 10⁴ s/m² at sea level). The level-flight
+> flag (wing loading against real wings of the same full span) needs a real size. The section tables are
+> size-free, but were built on the sections before the nose fix (decision 64, 7 Nov). The 2-D XFOIL airfoil
+> study (`scripts/xfoil_band.py`) was rerun on 7 Nov on the new sections: at 2° the tripped drag is +39 to
+> +128 % above the free drag at Re ≥ 3 × 10⁵ (median +81 %), −2 to +21 % at 10⁵.
+
 Mike's plan: full design space → what the parametrization can make → focus (Class I and small Class II,
-b ≤ 7 m) → flow maps per family (Re along the span, phenomena, transition, effect of the sections) → a tool
+b ≤ 7 m) → flow maps per family (Re along the semi-span, phenomena, transition, effect of the sections) → a tool
 that takes a wing and shows all this with a proposed turbulence model. Then (same day): a large dataset of
 wings × section sets × Mach × angle with the same assumptions, sensitivity analyses, trends and
 statistics, and conclusions under the assumptions and limits; the tool updated to match. 1–2 Nov 2026: a
@@ -26,7 +37,7 @@ logic check and an independent review; their fixes are in the code and the numbe
    loading it carries. `induced=False` is the old baseline, kept as a check (then CL = 2-D lift × the
    Helmbold slope ratio with the half-chord sweep). The tool and the dataset use the same engine (test
    `test_tool_equals_dataset`).
-3. **Model rule** (`engine.category`): "no XFOIL answer" if under half the span has a 2-D answer (often near
+3. **Model rule** (`engine.category`): "no XFOIL answer" if under half of the half wing has a 2-D answer (often near
    stall, sometimes a failed point; not a measured stall); SA adequate if |error| < 10 %, the mean upper
    laminar run is under 20 % chord and no strip is below Re 1e5; else a transition model (low-Re caution).
 4. **Dataset** (`dataset.py`): 400 focus training wings (100 per type) × 4 section sets per type
@@ -85,14 +96,14 @@ logic check and an independent review; their fixes are in the code and the numbe
 - L6. Quote level-flight numbers for physics; read the sensitivity shares as properties of the grid.
 - L7. Below Re 1e5 (tiny tips) XFOIL and the strips are weakest: qualitative only.
 - L8. Done: the induced angle is the baseline; the old high-angle findings (error +20 % at 10°, TE separation
-  on 20 % of the span at 10°, SA adequate for flying wings at 10°) were artefacts.
+  on 20 % of the half wing at 10°, SA adequate for flying wings at 10°) were artefacts.
 - L9. SA's error does not cancel at the 2-count level: D1 is a numerical target; drag ranking needs
   transition-model results, at least on a calibration subset.
 - L10. Mesh transition band: upper 0.10–0.85 c, lower 0.60–1.00 c; on swept panels the upper band starts at the
   leading edge (crossflow transition, not seen by the strips, would start there; added 2 Nov 2026).
 - L11. Done: "beyond 2-D stall" is "no XFOIL answer". Optional: retry failed points with finer steps.
 - L12. Done: the NACA set on tailless wings is tagged (cannot trim) and left out of the statistics. Start the
-  3-D check on the BWB centre body (about 30 % of the half span, about half of the area).
+  3-D check on the BWB centre body (about 30 % of the semi-span, about half of the area).
 - L13. Done: sections coded by airfoil set in the sensitivity; test split by wing (R² now 0.88 tailless,
   0.95 conventional for the SA error); flags never averaged into 0.5; crossflow flag per strip (still an
   unsourced threshold); "Class I and small Class II".

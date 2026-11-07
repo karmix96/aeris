@@ -1,6 +1,7 @@
 """Reference wings of both types: planform and front view, same scale.
 
 Reads the built wings in data/wings/<type>/reference/; writes figures/reference_wings.png.
+Since decision 70 (7 Nov 2026) every wing is built at unit mean chord, so lengths are in mean chords.
 
     python scripts/plot_reference_wings.py
 """
@@ -63,9 +64,9 @@ def main():
             ax.set_xlim(-span * 1.02, span * 1.02)
             ax.set_aspect("equal")
             ax.tick_params(labelsize=8)
-        top.set_ylabel("x [m] (wings offset)", fontsize=9)
-        front.set_ylabel("z [m] (wings offset)", fontsize=9)
-        front.set_xlabel("y [m]", fontsize=9)
+        top.set_ylabel("x [mean chords] (wings offset)", fontsize=9)
+        front.set_ylabel("z [mean chords] (wings offset)", fontsize=9)
+        front.set_xlabel("y [mean chords]", fontsize=9)
     fig.suptitle("Reference wings, all at one scale", fontsize=12)
     fig.tight_layout()
     out = ROOT / "figures" / "reference_wings.png"

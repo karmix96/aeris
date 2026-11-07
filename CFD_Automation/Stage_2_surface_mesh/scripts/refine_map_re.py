@@ -450,7 +450,7 @@ def fig_coverage(doc: dict) -> None:
     fig.legend(h, [f"Re {re_label(r)}" for r in RE_LEVELS], loc="upper center", ncol=4, frameon=False,
                bbox_to_anchor=(0.5, 1.0), fontsize=9.5, title="Re on the mean chord", title_fontsize=9.5)
     fig.text(0.01, 0.0, "As written, per side. As built, both sides share one node list (decision 60) and the lower band is "
-                        "0–100 % c,\nso the upper side also has band cells to the trailing edge (9 built surfaces, see the note).",
+                        "0–100 % c,\nso the upper side also has band cells to the trailing edge (16 built surfaces, see the note).",
              fontsize=8.5, color=MUTED, ha="left", va="top")
     fig.tight_layout(rect=(0, 0.02, 1, 0.93))
     _save(fig, "refine_re_coverage.png")

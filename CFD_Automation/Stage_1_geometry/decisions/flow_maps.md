@@ -1,5 +1,44 @@
 # Flow maps and the flow dataset (31 Oct 2026; baseline corrected 2 Nov 2026)
 
+> **Section tables rebuilt on the fixed nose (7 Nov 2026).** All 46 section tables were rebuilt on the sections with
+> the fixed nose (decision 64): 2,408 XFOIL sweeps, 40 min on 2 workers (2 cores, shared with another run). New
+> against old on every shared grid point: `scripts/section_tables_nose.py`, `data/studies/section_tables_nose.json`,
+> `docs/section_tables_nose.png`. The old tables stay in git (commit 11b0df15).
+>
+> - **XFOIL answers** (free transition, N_crit 9; 20,580 grid points): 574 gained, 317 lost (2.8 % and 1.5 %).
+>   Tripped: 762 gained, 548 lost. All 46 tables: 1,750 gained, 1,152 lost of 58,996 points. Most of them at −10° to
+>   −4.5° and 11–14°, near the 2-D stall.
+> - **Transition** (free, N_crit 9): upper side, median change 0.19 % c, 95 % of points within 1.5 % c, largest
+>   21 % c; lower side, median 0, 95 % within 2.1 % c, largest 85 % c (1.3 % of points move more than 10 % c: a
+>   lower transition that jumps between the nose and the trailing edge).
+> - **Lift and drag** (free): cl median 0.8 %, 95 % within 7.5 % (where |cl| ≥ 0.1); cd median 0.8 %, 95 % within
+>   9.9 %. Tripped: cl median 0.6 %, 95 % within 6.1 %; cd median 0.4 %, 95 % within 8.4 %.
+> - **Bubbles** (free): yes / no the same on 97.6 % (upper) and 97.7 % (lower) of the points; where both have one,
+>   start and end move by a median 0.3 % c (upper; 95 % within 1.4–1.7 % c).
+> - **By Re.** The changes grow with Re; low Re is not where they are largest. Upper transition, 95th percentile:
+>   0.6–1.1 % c up to Re 4 × 10⁵, 1.5–2.9 % c from 6 × 10⁵ to 6 × 10⁶. Drag (free), 95th percentile: 2–8 % up to
+>   4 × 10⁵, 11–20 % from 6 × 10⁵ up; the median stays 0.4–1.4 % at every Re.
+> - **By angle.** The large drag changes sit near the 2-D stall: 95th percentile 22 % at −10° to −4.5°, 14 % at
+>   11–14°; 2.7 % at 0–3.5° and 4.6 % at 4–7.5° (free).
+> - **Through the engine** (the 20 reference wings at the four Re levels, root angle 0–10°, 480 conditions): the SA
+>   profile-drag error, median +58.1 % before and +59.0 % after (change: median +0.3 points, 95 % within 5.3, largest
+>   25); within ±10 % on 7.9 % and 7.3 % of the conditions; the model category the same on 480 of 480; the upper
+>   laminar run moves by a median 0.1 % c (95 % within 0.9 % c). The share of the half wing with an upper bubble:
+>   median change 0, mean +0.3 points, but 5 % of the conditions move by 17.5 points or more (largest 37): a bubble
+>   flag flips on a few strips at once.
+> - **2-D SA error by section** (cd tripped / cd free − 1, Re ≥ 10⁵, 0–8°, median, before → after): LA2573A 37 → 37 %,
+>   E387 49 → 52 %, SD7032 59 → 61 %, NACA 4415 66 → 66 %; the other six move by 0.5–1.5 points. Below Re 10⁵ the
+>   medians stay negative (−5 to −31 %).
+> - The first-approach flow dataset, its figures and the numbers below were made with the old tables. They stay the
+>   record and are not rebuilt.
+> - **No Stage 1 conclusion changes.** The SA error (+62 % median), the model rule, the laminar run, the airfoil
+>   ranking (LA2573A lowest, then E387, NACA 4415 and SD7032 highest) and the sign flip below Re 10⁵ all hold with the
+>   new tables; the changes are a few points against effects of tens of points. The weakest number is the bubble share
+>   of the half wing on single conditions (it can move by up to 37 points); its mean moves by 0.3 points (−0.8 to
+>   +1.1 by Re level).
+> - Figure conclusion: the nose fix moves transition by a median 0.2 % c and the drag by a median 0.8 %; the larger
+>   changes come at high Re and near the 2-D stall, not at low Re.
+
 > **What changes (7 Nov 2026).** Everything below is the **first approach**: the flow maps and the flow dataset
 > were made at real size and real speed (the focus wings of 30 Oct–6 Nov, full span ≤ 7 m) and are **not
 > rebuilt**. Since decision 70 every wing is built at unit mean chord, and the tool (`python -m cfdauto.flowmap`)
@@ -7,7 +46,8 @@
 > mean chord at the real speeds (the wrong Re). In similarity form a condition is an Re on the mean chord (the
 > four levels): give the tool the speed V = Re / (ρ/μ) (ρ/μ = 6.85 × 10⁴ s/m² at sea level). The level-flight
 > flag (wing loading against real wings of the same full span) needs a real size. The section tables are
-> size-free, but were built on the sections before the nose fix (decision 64, 7 Nov). The 2-D XFOIL airfoil
+> size-free; first built on the sections before the nose fix, they were rebuilt on the fixed nose on 7 Nov (decision
+> 64; note above). The 2-D XFOIL airfoil
 > study (`scripts/xfoil_band.py`) was rerun on 7 Nov on the new sections: at 2° the tripped drag is +39 to
 > +128 % above the free drag at Re ≥ 3 × 10⁵ (median +81 %), −2 to +21 % at 10⁵.
 

@@ -129,6 +129,8 @@ def one(wing_type: str, set_name: str, index: int, re: float, level: str, config
                 "nose_capped_at_band": int(sum(r["nose_capped_at_band"] for r in m.stations)),
                 "nose_solved_at": {k: sum(r["nose_solved_at"] == k for r in m.stations)
                                    for k in sorted({r["nose_solved_at"] for r in m.stations})},
+                "nose_set_by": {k: sum(("band" if r["nose_capped_at_band"] else r["nose_solved_at"]) == k for r in m.stations)
+                                for k in sorted({"band" if r["nose_capped_at_band"] else r["nose_solved_at"] for r in m.stations})},
                 "nose_h_le_c": [float(min(r["h_le_c"] for r in m.stations)), float(max(r["h_le_c"] for r in m.stations))],
                 "spacings": spacings(m), **wall_cells(m, rl),
                 "input_hash": w.input_hash, "node_hash": m.node_hash()}

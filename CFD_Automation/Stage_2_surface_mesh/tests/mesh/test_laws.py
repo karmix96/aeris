@@ -71,7 +71,7 @@ def test_bands():
 
 
 def test_nose_solve_levels():
-    assert rules().nose_solve_levels == ["VC", "F"]             # the smaller answer wins (surface_rules.md, 13)
+    assert rules().nose_solve_levels == ["VC", "C", "M", "F"]   # the strictest answer wins (surface_rules.md, 14)
     assert rules("C", FIRST).nose_solve_levels == ["C"]         # the first approach: the coarsest level only
 
 

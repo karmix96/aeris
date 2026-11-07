@@ -14,7 +14,7 @@ Cells of the wing blocks per mesh (an estimate; scripts/screen.py): n = max over
 ceil(ln(1 + (g - 1) D / s0) / ln g), cells = (ring nodes - 1)(stations - 1) n + cap quads x n, with g the level's wall
 growth (1.25 at VC; 1.187, 1.141, 1.107 at C, M, F), s0 the level's first cell at the station's local Re and D = 2
 local chords. RAM for ADflow: 1.51 GiB + 9.46 GiB per million cells (AERIS ADR-0020): the desktop today takes about
-1.2 M cells (13 GB for WSL), with +32 GB about 4.6 M.
+1.2 M cells (16 GB, 13 GB for WSL), with +36 GB about 5.0 M.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ SPACING_NAME = {"nose_root": "nose cell, root", "nose_tip": "nose cell, tip", "t
                 "band_root": "band cell, root", "band_tip": "band cell, tip", "root_gap": "first station gap",
                 "tip_gap": "last station gap (tip)", "base_cell": "base cell"}
 RAM_BASE, RAM_PER_M = 1.51, 9.46                       # GiB, GiB per million cells (ADflow; AERIS ADR-0020)
-DESKTOP, DESKTOP_32 = 1.2e6, 4.6e6                     # cells: the desktop today (13 GB WSL cap), and with +32 GB
+DESKTOP, DESKTOP_36 = 1.2e6, 5.0e6                     # cells: the desktop today (16 GB; 13 GB WSL cap), and with +36 GB
 ASKED = (9e6, 11e6)                                    # the fine level asked on 3 Nov
 F_ESTIMATE_6NOV = 10.9e6                               # the 6 Nov estimate (plan file; 20 reference wings x 4 Re)
 EXACT = ("loft_stations_hit", "planar_stations", "ring_count")    # checks that hold to machine precision
@@ -171,13 +171,19 @@ def level_numbers(rows: list[dict]) -> dict:
         out[k] = mmm([r[k] for r in built])
     out["ram_gib"] = mmm([ram_gib(r["cells_est"]) for r in built])
     out["fits_desktop"] = sum(r["cells_est"] <= DESKTOP for r in built)
-    out["fits_desktop_32"] = sum(r["cells_est"] <= DESKTOP_32 for r in built)
+    out["fits_desktop_36"] = sum(r["cells_est"] <= DESKTOP_36 for r in built)
     st = {}
     for r in built:
         for k, n in r["nose_solved_at"].items():
             st[k] = st.get(k, 0) + n
     out["nose_solved_at_stations"] = st
+    sb = {}
+    for r in built:
+        for k, v in r.get("nose_set_by", {}).items():
+            sb[k] = sb.get(k, 0) + v
+    out["nose_set_by_stations"] = sb
     out["builds_with_a_VC_nose"] = sum(1 for r in built if r["nose_solved_at"].get("VC", 0) > 0)
+    out["builds_with_a_C_or_M_nose"] = sum(1 for r in built if r.get("nose_set_by", {}).get("M", 0) + r.get("nose_set_by", {}).get("C", 0) > 0)
     worst = {}
     for r in built:
         for name, c in r["checks"].items():
@@ -243,7 +249,7 @@ def family(ref: dict) -> dict:
 
 
 def summary(m: dict) -> dict:
-    s = {"date": "2026-11-07", "desktop_cells": DESKTOP, "desktop_32_cells": DESKTOP_32,
+    s = {"date": "2026-11-07", "desktop_cells": DESKTOP, "desktop_36_cells": DESKTOP_36,
          "ram": f"{RAM_BASE} GiB + {RAM_PER_M} GiB per million cells (ADflow; AERIS ADR-0020)",
          "asked_F": list(ASKED), "F_estimate_6nov": F_ESTIMATE_6NOV,
          "complete": {"VC": m["VC"]["complete"], "F": m["F"]["complete"], "reference": m["ref_complete"]},
@@ -251,7 +257,8 @@ def summary(m: dict) -> dict:
          "full_re3e5": {lev: level_numbers([r for r in m[lev]["rows"] if r["re_mean"] == 3.0e5])
                         for lev in ("VC", "F") if m[lev]["rows"]},
          "reference": {lev: level_numbers(rows) for lev, rows in m["ref"].items() if rows},
-         "family": family(m["ref"])}
+         "family": family(m["ref"]),
+         "nose_levels_check": {k: v for k, v in nose_levels_check(m["ref"]).items() if k != "rows"} if m["ref_complete"] else {}}
     if m["heads"]:
         h = next(iter(m["heads"].values()))
         s["mesh_code_hash"] = h["mesh_code_hash"]
@@ -262,6 +269,62 @@ def summary(m: dict) -> dict:
         s["F_reference_median_cells"] = f["median"]
         s["F_reference_vs_6nov"] = f["median"] / F_ESTIMATE_6NOV
     return s
+
+
+# --- the nose at every level against the first build (VC and F only) ----------------------------------------
+FIRST_PARTS = STAGE2 / "data" / "meshes" / "screen_parts_vcf"     # the first build of the new rules (nose at VC and F)
+NOSE_CHECK = STUDIES / "nose_levels_check.json"
+
+
+def nose_levels_check(ref_new: dict) -> dict:
+    """The reference wings at VC, C, M, F: the first build (nose solved at VC and F, 7 Nov) against the nose solved at
+    every level (decided 7 Nov). Written to data/studies/nose_levels_check.json; read back when the first parts are
+    gone."""
+    if not FIRST_PARTS.exists():
+        return json.loads(NOSE_CHECK.read_text()) if NOSE_CHECK.exists() else {}
+    key = lambda r: (r["wing_type"], r["index"], r["re_mean"])
+    rows, out = [], {"what": "reference wings x 4 Re at VC, C, M, F: nose solved at VC and F (first) against every level (now)",
+                     "levels": {}}
+    for lev in LEVELS:
+        f = FIRST_PARTS / f"ref_{lev}.jsonl"
+        if not f.exists() or not ref_new.get(lev):
+            continue
+        old = {key(r): r for r in (json.loads(l) for l in f.read_text().splitlines() if l.strip())}
+        new = {key(r): r for r in ref_new[lev]}
+        lv = {"builds": 0, "changed": 0, "changed_by_type": {t: 0 for t in TYPES}, "ring_added": [],
+              "repairs_first": 0, "repairs_now": 0, "passed_now": 0}
+        for k in sorted(set(old) & set(new)):
+            o, n = old[k], new[k]
+            ch = o["node_hash"] != n["node_hash"]
+            lv["builds"] += 1
+            lv["changed"] += int(ch)
+            lv["changed_by_type"][k[0]] += int(ch)
+            lv["repairs_first"] += int(o["turning_repairs"] > 0)
+            lv["repairs_now"] += int(n["turning_repairs"] > 0)
+            lv["passed_now"] += int(n["passed"])
+            if ch:
+                lv["ring_added"].append(n["n_ring"] - o["n_ring"])
+            rows.append({"level": lev, "wing_type": k[0], "index": k[1], "re_mean": k[2], "changed": ch,
+                         "ring_first": o["n_ring"], "ring_now": n["n_ring"], "stations_first": o["n_span"],
+                         "stations_now": n["n_span"], "repairs_first": o["turning_repairs"], "repairs_now": n["turning_repairs"],
+                         "nose_root_first": o["spacings"]["nose_root"], "nose_root_now": n["spacings"]["nose_root"],
+                         "turning_first": o["checks"]["nose_turning"]["value"], "turning_now": n["checks"]["nose_turning"]["value"],
+                         "cells_first": o["cells_est"], "cells_now": n["cells_est"]})
+        ra = lv.pop("ring_added")
+        lv["ring_added"] = mmm(ra) if ra else {}
+        lv["ring_added_values"] = sorted(set(ra))
+        out["levels"][lev] = lv
+    # the nose-cell ratio between neighbouring levels, first and now, on the builds the change touched
+    for when in ("first", "now"):
+        idx = {(r["level"], r["wing_type"], r["index"], r["re_mean"]): r[f"nose_root_{when}"] for r in rows}
+        out[f"nose_ratio_{when}"] = {}
+        for a, b in zip(LEVELS[:-1], LEVELS[1:]):
+            ks = sorted({(t, i, re) for (lv_, t, i, re) in idx if lv_ == a} & {(t, i, re) for (lv_, t, i, re) in idx if lv_ == b})
+            out[f"nose_ratio_{when}"][f"{a}/{b}"] = {t: mmm([idx[(a,) + k] / idx[(b,) + k] for k in ks if k[0] == t]) for t in TYPES}
+    out["rows"] = rows
+    NOSE_CHECK.write_text(json.dumps(out, indent=1))
+    print("wrote", NOSE_CHECK.name, {lev: (d["changed"], d["builds"], d["repairs_first"], d["repairs_now"]) for lev, d in out["levels"].items()})
+    return out
 
 
 # --- figures ----------------------------------------------------------------------------------------------
@@ -312,8 +375,8 @@ def fig_counts(m: dict) -> None:
     a = ax[2]
     h1 = a.axhspan(ASKED[0] / 1e6, ASKED[1] / 1e6, color=BWB, alpha=0.12)
     h2 = a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
-    h3 = a.axhline(DESKTOP_32 / 1e6, color=AMBER, ls="--", lw=1)
-    a.legend([h1, h3, h2], ["F asked: 9–11 M", "with +32 GB ≈ 4.6 M", "desktop today ≈ 1.2 M"], loc="lower right",
+    h3 = a.axhline(DESKTOP_36 / 1e6, color=AMBER, ls="--", lw=1)
+    a.legend([h1, h3, h2], ["F asked: 9–11 M", "with +36 GB ≈ 5.0 M", "desktop today ≈ 1.2 M"], loc="lower right",
              fontsize=7.6, frameon=False)
     a.set_ylim(0.12, 14)
     a.set_title("cells per mesh (estimate: surface × wall layers)", fontsize=9.5)
@@ -345,8 +408,8 @@ def fig_cells(m: dict, s: dict) -> None:
     a.text(-0.45, ASKED[1] / 1e6 * 1.05, "F asked: 9–11 M (3 Nov)", color=BWB, fontsize=7.8)
     a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
     a.text(4.75, DESKTOP / 1e6 * 0.86, "desktop today\n≈ 1.2 M cells (13 GB)", color=WARN, fontsize=7.6, ha="right", va="top")
-    a.axhline(DESKTOP_32 / 1e6, color=AMBER, ls="--", lw=1)
-    a.text(4.75, DESKTOP_32 / 1e6 * 1.06, "with +32 GB\n≈ 4.6 M cells", color=AMBER, fontsize=7.6, ha="right")
+    a.axhline(DESKTOP_36 / 1e6, color=AMBER, ls="--", lw=1)
+    a.text(4.75, DESKTOP_36 / 1e6 * 1.06, "with +36 GB\n≈ 5.0 M cells", color=AMBER, fontsize=7.6, ha="right")
     a.set_yscale("log"); a.set_ylim(0.1, 60); a.set_xlim(-0.6, 4.8); a.set_xticks(x, LEVELS); a.set_ylabel("cells per mesh, wing blocks [millions]")
     a.legend(loc="upper left", fontsize=7.6, frameon=False)
     a.set_title("cells per mesh, per level (wing blocks; the C-H wake lines not counted)", fontsize=9.5)
@@ -394,6 +457,11 @@ def fig_family(s: dict) -> None:
                 i = SPACINGS.index(q)
                 a.plot([xx[i]], [dr[q]["median"]], "x", color=WARN, ms=7, mew=1.6,
                        label="nose, builds repaired at M" if (q == "nose_root" and p == next(pp for pp in pairs if fam[pp].get("repaired_pairs"))) else None)
+        first = s.get("nose_levels_check", {}).get("nose_ratio_first", {}).get(p, {}).get("flying_wing", {})
+        if first and abs(first["median"] - 1.3) > 0.01:          # the first build (nose at VC and F only), flying wings
+            i = SPACINGS.index("nose_root")
+            a.plot([xx[i]], [first["median"]], "x", color=WARN, ms=7, mew=1.6,
+                   label="first build (nose at VC and F only): flying wings" if p == "C/M" else None)
     a.axhline(1.3, color=WARN, ls="--", lw=1)
     a.text(len(SPACINGS) - 0.5, 1.305, "r = 1.3", color=WARN, fontsize=8, ha="right", va="bottom")
     a.set_xticks(x, [SPACING_NAME[q] for q in SPACINGS], rotation=25, ha="right", fontsize=8.2)
@@ -401,7 +469,7 @@ def fig_family(s: dict) -> None:
     hh, ll = a.get_legend_handles_labels()
     order = sorted(range(len(ll)), key=lambda i: (ll[i].startswith("nose"), ll[i]))
     a.legend([hh[i] for i in order], [ll[i] for i in order], loc="upper left", fontsize=8, frameon=False, ncol=4)
-    a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n(the builds without a nose repair; ×: the nose of the builds repaired at M)", fontsize=9.5)
+    a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n(×: the nose cell of the first build, solved at VC and F only, on the flying wings)", fontsize=9.5)
     a = ax[1]
     keys = [("ring_cells", "ring cells"), ("station_gaps", "station gaps"), ("wall_layers", "wall layers"),
             ("cells_est", "cells")]
@@ -443,20 +511,26 @@ def fig_checks(s: dict) -> None:
                 fontsize=9.2)
     a = ax[1]
     angle = {"VC": 16.9, "C": 13.0, "M": 10.0, "F": 7.69}
+    src = [("F", LCOL["F"], "F's solve"), ("M", VIOLET, "M's solve"), ("C", BWB, "C's solve"), ("VC", AMBER, "VC's solve"),
+           ("band", GREY, "the band cell (every level the same)")]
     for k, (lev, d) in enumerate(sets):
-        st = d["nose_solved_at_stations"]
-        tot = sum(st.values()) or 1
-        pf, pv = st.get("F", 0) / tot * 100, st.get("VC", 0) / tot * 100
-        a.barh(k, pf, color=LCOL["F"], label="nose set by the F solve" if k == 0 else None)
-        a.barh(k, pv, left=pf, color=AMBER, label="nose set by the VC solve" if k == 0 else None)
+        sb = d.get("nose_set_by_stations") or d["nose_solved_at_stations"]
+        tot = sum(sb.values()) or 1
+        left = 0.0
+        for key_, col, lab in src:
+            v = sb.get(key_, 0) / tot * 100
+            if v > 0:
+                a.barh(k, v, left=left, color=col, label=lab if lab not in a.get_legend_handles_labels()[1] else None)
+                left += v
         nt = d["nose_turning"]
-        a.text(3, k, f"{lev}: F solve on {pf:.0f} % of {tot:,} stations\nlargest turning {nt['min']:.2f}–{nt['max']:.2f}° (angle {angle[lev]:g}°)"
-               + (f"\nnose repairs on {d['repairs']} builds" if d["repairs"] else ""),
-               va="center", fontsize=7.8, color="white")
+        parts = ", ".join(f"{key_} {sb.get(key_, 0) / tot * 100:.0f} %" for key_, _, _ in src if sb.get(key_, 0))
+        a.text(1.5, k, f"{lev}: {parts} of {tot:,} stations\nlargest turning {nt['min']:.2f}–{nt['max']:.2f}° (angle {angle[lev]:g}°)"
+               + (f"; nose repairs on {d['repairs']} builds" if d["repairs"] else "; no nose repair"),
+               va="center", fontsize=7.6, color="white")
     a.set_yticks(range(len(sets)), [lev for lev, _ in sets]); a.set_xlim(0, 100); a.invert_yaxis()
     a.set_xlabel("stations [%]")
-    a.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, fontsize=7.6, frameon=False)
-    a.set_title("which solve set the nose, and the largest turning delivered", fontsize=9.2)
+    a.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=3, fontsize=7.4, frameon=False)
+    a.set_title("what set the nose of each station (the strictest solve wins), and the largest turning", fontsize=9.2)
     save(fig, "screen_new_checks.png")
 
 

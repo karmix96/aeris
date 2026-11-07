@@ -495,13 +495,13 @@ def new_family_table(sn: dict) -> str:
 def new_cells_table(sn: dict) -> str:
     full, ref = sn["full_re3e5"], sn["reference"]
     t = ['<div class="tbl"><table class="wide"><tr><th>Level</th><th>Cells [M], 20 reference wings × 4 Re: min–median–max</th><th>RAM [GiB], median / max</th>'
-         '<th>Fit the desktop today (≤ 1.2 M)</th><th>Fit with +32 GB (≤ 4.6 M)</th><th>Cells [M], every set at Re 3 × 10⁵: median / max</th><th>Wall layers</th></tr>']
+         '<th>Fit the desktop today (16 GB: ≤ 1.2 M)</th><th>Fit with +36 GB (≤ 5.0 M)</th><th>Cells [M], every set at Re 3 × 10⁵: median / max</th><th>Wall layers</th></tr>']
     for lev in LEVELS:
         d = ref[lev]
         f3 = full.get(lev)
         all3 = f"{f3['cells_est']['median'] / 1e6:.2f} / {f3['cells_est']['max'] / 1e6:.2f}" if f3 else "—"
         t.append(f"<tr><td class='what'>{lev}</td><td class='num'>{_r(d, 'cells_est', '{:.2f}', 1e-6)}</td><td class='num'>{d['ram_gib']['median']:.1f} / {d['ram_gib']['max']:.1f}</td>"
-                 f"<td class='num'>{d['fits_desktop']} of {d['builds']}</td><td class='num'>{d['fits_desktop_32']} of {d['builds']}</td><td class='num'>{all3}</td><td class='num'>{_r(d, 'wall_layers')}</td></tr>")
+                 f"<td class='num'>{d['fits_desktop']} of {d['builds']}</td><td class='num'>{d['fits_desktop_36']} of {d['builds']}</td><td class='num'>{all3}</td><td class='num'>{_r(d, 'wall_layers')}</td></tr>")
     t.append("</table></div>")
     return "".join(t)
 
@@ -510,50 +510,114 @@ def _fit(n_ok: int, n: int) -> str:
     return "all" if n_ok == n else ("none" if n_ok == 0 else f"{n_ok} of {n}")
 
 
+FIRST_ESTIMATE = {"VC": (1.0, 1.5), "C": (2.3, 3.3), "M": (5.0, 7.2), "F": (10.9, 15.9)}   # 6 Nov: median, largest [M]
+
+
+def nose_first_vs_now(sn: dict) -> tuple[str, dict]:
+    """Owner point (2): the nose solved at VC and F only (first build) against every level (decided 7 Nov)."""
+    nl = sn.get("nose_levels_check", {}).get("levels", {})
+    if not nl:
+        return "", {}
+    t = ['<div class="tbl"><table class="mid"><tr><th>Level (20 reference wings × 4 Re)</th><th>Builds changed, by type</th>'
+         '<th>Ring nodes changed by</th><th>Nose repairs: first (VC and F) → now (every level)</th><th>Passed now</th></tr>']
+    for lev in LEVELS:
+        d = nl.get(lev)
+        if not d:
+            continue
+        bt = ", ".join(f"{TYPE_NAME[k]} {v}" for k, v in d["changed_by_type"].items() if v) or "none"
+        ra = d["ring_added"]
+        ra_s = (f"{ra['min']:+.0f} to {ra['max']:+.0f} (median {ra['median']:+.0f})".replace("+0 to +0", "0").replace("-", "−")
+                if ra else "—")
+        t.append(f"<tr><td class='what'>{lev}</td><td class='num'>{d['changed']} of {d['builds']}: {bt}</td><td class='num'>{ra_s}</td>"
+                 f"<td class='num'>{d['repairs_first']} → {d['repairs_now']}</td><td class='num'>{d['passed_now']} of {d['builds']}</td></tr>")
+    t.append("</table></div>")
+    agg = {"changed": sum(d["changed"] for d in nl.values()), "builds": sum(d["builds"] for d in nl.values()),
+           "types": sorted({k for d in nl.values() for k, v in d["changed_by_type"].items() if v}),
+           "repairs_first": sum(d["repairs_first"] for d in nl.values()), "repairs_now": sum(d["repairs_now"] for d in nl.values()),
+           "ratio_first": sn["nose_levels_check"].get("nose_ratio_first", {}), "ratio_now": sn["nose_levels_check"].get("nose_ratio_now", {})}
+    return "".join(t), agg
+
+
+def cells_side_by_side(sn: dict) -> str:
+    """The two cell counts: the first estimate (6 Nov, rule not recorded) and this one (Study 9)."""
+    ref = sn["reference"]
+    now = " / ".join(f"{ref[lev]['cells_est']['median'] / 1e6:.1f} ({ref[lev]['cells_est']['max'] / 1e6:.1f})" for lev in LEVELS)
+    first = " / ".join(f"{a:g} ({b:g})" for a, b in FIRST_ESTIMATE.values())
+    rf = ref["F"]["cells_est"]
+    rows = [
+        ("Wall-layer rule", "not recorded (surface × wall layers, about 1.30 × the layers per level)",
+         "n = the largest over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g); D = 2 local chords; g = 1.25, 1.187, 1.141, 1.107 at VC, C, M, F; s0 from y⁺ = 1, 0.77, 0.59, 0.46 at each station's local Re (flat plate); cells = (ring nodes − 1)(stations − 1) n + cap quads × n"),
+        ("Surfaces", "the plan file (station growth 1.25, 7 gaps per panel) on the first-approach reference wings at real size (13 of the 20 replaced on 7 Nov)",
+         "the built rules on the rebuilt reference wings at unit mean chord (Study 9)"),
+        ("Cells [M], VC / C / M / F: median (largest)", first, now),
+        ("Fine level F", "10.9 M median (15.2 M with the planned rules)", f"{rf['median'] / 1e6:.1f} M median ({rf['min'] / 1e6:.1f}–{rf['max'] / 1e6:.1f} M)"),
+        ("Can it be redone?", "no: the rule is not written down", "yes: <code>scripts/screen.py</code>, <code>scripts/screen_study.py</code>"),
+    ]
+    t = ['<div class="tbl"><table class="wide"><tr><th>Cells of the wing blocks</th><th>First estimate (6 Nov)</th><th>This count (Study 9, 7 Nov): the one the pages use</th></tr>']
+    for a, b, c in rows:
+        t.append(f"<tr><td class='what'>{a}</td><td class='src'>{b}</td><td class='new'>{c}</td></tr>")
+    t.append("</table></div>")
+    return "".join(t)
+
+
 def new_screen_section(sn: dict) -> str:
     """Study 9, the new screen: what was done, the tables, the figures, the conclusion (from screen_new_summary.json)."""
     full, ref, fam = sn["full"], sn["reference"], sn["family"]
     vc, f, c, m = full["VC"], full["F"], ref["C"], ref["M"]
-    n = vc["builds"] + f["builds"] + c["builds"] + m["builds"]
-    ok = vc["passed"] + f["passed"] + c["passed"] + m["passed"]
-    crashed = vc["crashed"] + f["crashed"] + c["crashed"] + m["crashed"]
-    repairs = vc["repairs"] + f["repairs"] + c["repairs"] + m["repairs"]
+    lv = {"VC": vc, "C": c, "M": m, "F": f}
+    n = sum(d["builds"] for d in lv.values()); ok = sum(d["passed"] for d in lv.values())
+    crashed = sum(d["crashed"] for d in lv.values()); repairs = sum(d["repairs"] for d in lv.values())
     fails = {}
-    for d in (vc, f, c, m):
+    for d in lv.values():
         for k, v in d["failed_checks"].items():
             fails[k] = fails.get(k, 0) + v
     fail_s = "; ".join(f"{CHECK_NAME.get(k, k)}: {v}" for k, v in sorted(fails.items(), key=lambda x: -x[1])) or "none"
-    lv = {"VC": vc, "C": c, "M": m, "F": f}
-    st = {lev: d["nose_solved_at_stations"] for lev, d in lv.items()}
-    st_f = sum(v.get("F", 0) for v in st.values()); st_all = sum(sum(v.values()) for v in st.values())
-    rf = ref["F"]["cells_est"]; rm = ref["M"]["cells_est"]; rc = ref["C"]["cells_est"]; rvc = ref["VC"]["cells_est"]
+    sb = {lev: d.get("nose_set_by_stations") or d["nose_solved_at_stations"] for lev, d in lv.items()}
+    st_all = sum(sum(v.values()) for v in sb.values())
+    src = {k: sum(v.get(k, 0) for v in sb.values()) for k in ("F", "M", "C", "VC", "band")}
+    src_s = ", ".join(f"{name} {src[k]:,} ({100 * src[k] / st_all:.1f} %)" for k, name in
+                      (("F", "F's solve"), ("M", "M's"), ("C", "C's"), ("VC", "VC's"), ("band", "the band cell")) if src[k])
+    rf = ref["F"]["cells_est"]
     fmed = rf["median"] / 1e6
     asked = "inside" if 9.0 <= fmed <= 11.0 else ("above" if fmed > 11.0 else "below")
     vs6 = sn["F_reference_vs_6nov"]
     fam_n = {p: fam[p]["counts"] for p in fam}
     sp = {p: fam[p]["spacings_no_repair"] for p in fam}
-    sp_lo = min(sp[p][k]["min"] for p in sp for k in ("nose_root", "nose_tip", "te_root", "band_root", "band_tip", "tip_gap"))
-    sp_hi = max(sp[p][k]["max"] for p in sp for k in ("nose_root", "nose_tip", "te_root", "band_root", "band_tip", "tip_gap"))
-    rep_lv = {lev: d for lev, d in lv.items() if d["repairs"]}
-    rep_txt = "; ".join(f"{d['repairs']} of {d['builds']} at {lev}, all on the {len(d['repaired'])} "
-                        + " and ".join(TYPE_NAME[t] for t, k in d["repaired_by_type"].items() if k)
-                        + f" reference wings{' (every Re level)' if d['repairs'] == 4 * len(d['repaired']) else ''}"
-                        for lev, d in rep_lv.items()) or "none"
-    fam_rep = {p: fam[p] for p in fam if fam[p].get("repaired_pairs")}
-    fam_rep_txt = "; ".join(f"{p} {fam[p]['spacings_repaired']['nose_root']['median']:.2f}" for p in fam_rep)
+    keys6 = ("nose_root", "nose_tip", "te_root", "band_root", "band_tip", "tip_gap")
+    sp_lo = min(sp[p][k]["min"] for p in sp for k in keys6); sp_hi = max(sp[p][k]["max"] for p in sp for k in keys6)
+    nose_lo = min(sp[p][k]["min"] for p in sp for k in ("nose_root", "nose_tip"))
+    nose_hi = max(sp[p][k]["max"] for p in sp for k in ("nose_root", "nose_tip"))
+    rep_pairs = sum(fam[p].get("repaired_pairs", 0) for p in fam)
     cells_r = [fam_n[p]["cells_est"]["median"] for p in ("VC/C", "C/M", "M/F")]
     capmin = {lev: lv[lev]["cap_quads_J"]["min"] for lev in lv}
     blocks = new_screen_block(sn)
-    desk = {lev: (ref[lev]["fits_desktop"], ref[lev]["fits_desktop_32"], ref[lev]["builds"]) for lev in LEVELS}
+    desk = {lev: (ref[lev]["fits_desktop"], ref[lev]["fits_desktop_36"], ref[lev]["builds"]) for lev in LEVELS}
+    nose_tab, na = nose_first_vs_now(sn)
+    rep_s = ("no nose repair at any level" if repairs == 0 else
+             f"a nose repair (the whole wing's nose spacing × 0.9) on {repairs} builds: "
+             + "; ".join(f"{d['repairs']} at {lev} ({', '.join(TYPE_NAME[t] for t, k in d['repaired_by_type'].items() if k)})" for lev, d in lv.items() if d["repairs"]))
+    fw_first = {pp: na.get("ratio_first", {}).get(pp, {}).get("flying_wing", {}).get("median") for pp in ("C/M", "M/F")} if na else {}
+    nose_par = ""
+    if na:
+        types_s = " and ".join(TYPE_NAME[t] for t in na["types"]) or "none"
+        others = [t for t in TYPES if t not in na["types"]]
+        nose_par = (f"<p><strong>The nose at every level: the answer to builder choice (2)</strong> (Mike, 7 Nov). First the nose was solved at "
+                    f"VC and at F only. That left M short: on all 20 flying-wing reference builds M needed one repair (the whole wing's nose "
+                    f"spacing × 0.9), so the nose cell stepped by {fw_first.get('C/M') or 1.44:.2f} from C to M and {fw_first.get('M/F') or 1.17:.2f} "
+                    f"from M to F instead of 1.3. Now the nose is solved at every level (VC, C, M, F), each for its own angle on its own ring with "
+                    f"the measure the turning check uses; the strictest spacing wins and every level takes it ÷ 1.3^k. A coarser level is solved "
+                    f"only where the finer answer misses its angle, so most stations take one measure per level. On the 20 reference wings × 4 Re "
+                    f"× 4 levels: {na['changed']} of {na['builds']} builds changed, all {types_s}; the node hashes of the "
+                    f"{', '.join(TYPE_NAME[t] for t in others)} builds are equal. Nose repairs: {na['repairs_first']} before, {na['repairs_now']} now.</p>")
     return f"""
   <h3 id="study9">Study 9 · The new screen: the built rules on every wing (7 Nov 2026, new)</h3>
-  <p><strong>What was done.</strong> The rules built on 7 Nov (<code>configs/surface.yaml</code>) on the rebuilt sets (unit mean chord, the nose fix; 722 wings, new hashes), with the numpy twin of the loft, one build at a time. Every set at VC and at F: training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶): {vc['builds']} builds per level. The 20 reference wings also at C and M, at the four Re levels: {c['builds']} builds each. The 13 checks refuse at each level's own limits (VC 17.1°, F 7.89° for the turning; the growth limits by the family rule), written before the run; failures stay in every count. Each build records every check's value, limit and margin, the ring nodes, stations, quads, build time, which solve (VC or F) set each station's nose, and the reasons for each value (<code>data/studies/screen_VC.json</code>, <code>screen_F.json</code>, <code>screen_reference_new.json</code>; the numbers below: <code>screen_new_summary.json</code>; code: <code>scripts/screen.py</code>, <code>scripts/screen_study.py</code>).</p>
-  <p><strong>The cell estimate</strong> (the wing blocks of the volume mesh, before the C-H wake lines): a structured block has one wall-layer count, so n = the largest over the stations of ceil( ln(1 + (g − 1) D / s0) / ln g ), and cells = (ring nodes − 1) × (stations − 1) × n + cap quads × n. Here g is the level's wall growth (1.25 at VC; 1.187, 1.141, 1.107 at C, M, F), s0 the level's first wall cell at the station's local Re (y⁺ 1, 0.77, 0.59, 0.46), and D = 2 local chords, the depth of the wall layers. RAM for ADflow: 1.51 GiB + 9.46 GiB per million cells (AERIS ADR-0020): the desktop today takes about 1.2 M cells (13 GB for WSL), with +32 GB about 4.6 M.</p>
+  <p><strong>What was done.</strong> The rules built on 7 Nov (<code>configs/surface.yaml</code>, with the nose solved at every level) on the rebuilt sets (unit mean chord, the nose fix; 722 wings, new hashes), with the numpy twin of the loft. Every set at VC and at F: training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶): {vc['builds']} builds per level. The 20 reference wings also at C and M, at the four Re levels: {c['builds']} builds each. The 13 checks refuse at each level's own limits (VC 17.1°, F 7.89° for the turning; the growth limits by the family rule), written before the run; failures stay in every count. Each build records every check's value, limit and margin, the ring nodes, stations, quads, build time, which level's solve set each station's nose, and the reasons for each value (<code>data/studies/screen_VC.json</code>, <code>screen_F.json</code>, <code>screen_reference_new.json</code>; the numbers below: <code>screen_new_summary.json</code>; the first build against now: <code>nose_levels_check.json</code>; code: <code>scripts/screen.py</code>, <code>scripts/screen_study.py</code>). Another job ran XFOIL on the other core during the screen, so the build times are on the high side.</p>
+  {nose_par}
+  {nose_tab}
   <p><strong>Result.</strong></p>
   <ul>
     <li><strong>Passed:</strong> {n} builds, {ok} passed every check, {n - ok - crashed} refused, {crashed} crashed (refusals by check: {fail_s}).</li>
-    <li><strong>The nose:</strong> every station of every build took its nose from the F solve ({st_f:,} of {st_all:,} stations). So the delivered turning is below each level's angle: {vc['nose_turning']['min']:.1f}–{vc['nose_turning']['max']:.1f}° at VC (angle 16.9°), {c['nose_turning']['min']:.1f}–{c['nose_turning']['max']:.1f}° at C (13°), {m['nose_turning']['min']:.1f}–{m['nose_turning']['max']:.1f}° at M (10°), {f['nose_turning']['min']:.2f}–{f['nose_turning']['max']:.2f}° at F (7.69°).</li>
-    <li><strong>Nose repairs</strong> (the whole wing's nose spacing × 0.9, one round): {repairs} builds, {rep_txt}. There F's spacing, × 1.3 to M, turned the surface just past M's 10.02°. After the repair M turns {m['nose_turning']['min']:.1f}°: the check passes, but the nose cell no longer follows the family rule at M on those wings.</li>
+    <li><strong>The nose:</strong> what set it, over {st_all:,} stations: {src_s}. The delivered turning stays below each level's angle: {vc['nose_turning']['min']:.1f}–{vc['nose_turning']['max']:.1f}° at VC (angle 16.9°), {c['nose_turning']['min']:.1f}–{c['nose_turning']['max']:.1f}° at C (13°), {m['nose_turning']['min']:.2f}–{m['nose_turning']['max']:.2f}° at M (10°), {f['nose_turning']['min']:.2f}–{f['nose_turning']['max']:.2f}° at F (7.69°); {rep_s}.</li>
     <li><strong>Growth:</strong> along the ring at most {vc['chord_growth']['max']:.3f} at VC (limit 1.25, within 1 %) and {f['chord_growth']['max']:.3f} at F (limit 1.107); between station gaps {vc['span_growth']['max']:.3f} at VC (limit 1.3) and {f['span_growth']['max']:.3f} at F (limit 1.127).</li>
     <li><strong>Quad quality:</strong> the lowest cap quads {capmin['VC']:.3f} at VC, {capmin['C']:.3f} at C, {capmin['M']:.3f} at M, {capmin['F']:.3f} at F (limit 0.05); the lowest wing quads {min(d['wing_quads_J']['min'] for d in lv.values()):.2f}.</li>
     <li><strong>Time:</strong> median {vc['seconds']['median']:.1f} s per build at VC and {f['seconds']['median']:.1f} s at F (max {f['seconds']['max']:.1f} s).</li>
@@ -563,20 +627,24 @@ def new_screen_section(sn: dict) -> str:
   {blocks[1]}
   <p><strong>The 20 reference wings</strong> at each level and Re level:</p>
   {blocks[2]}
-  {figc("screen_new_counts.png", "The 20 reference wings × 4 Re levels at VC, C, M and F, per wing type: ring nodes, stations, and the cells of the wing blocks (the estimate above, log scale) against the 9–11 M asked for F (green), the desktop today (red) and with +32 GB (amber). Boxes: the middle half; whiskers: the full range.",
+  {figc("screen_new_counts.png", "The 20 reference wings × 4 Re levels at VC, C, M and F, per wing type: ring nodes, stations, and the cells of the wing blocks (the estimate below, log scale) against the 9–11 M asked for F (green), the desktop today (red) and with +36 GB (amber). Boxes: the middle half; whiskers: the full range.",
         f"Each level has about 1.3 × the ring nodes and stations of the one below, and about {np.mean(cells_r):.1f} × the cells (wall layers × 1.3 too). The BWB has the most ring nodes (its root has the highest local Re, so the smallest band cell) and the conventional wings the fewest. The ring stops growing above Re 1.5 × 10⁶: the bubble-length floor (0.10 c from local Re 4 × 10⁵) sets the band cell there.")}
-  {figc("screen_new_checks.png", "Left: for every check, how much of the room to its limit the worst build used (1 = at the limit). For the turning it is the turning over its limit; for a growth check the room is the limit − 1; for the band, trailing-edge and tip-gap cells (delivered against asked) it is their tolerance (1 % over; the tip gap also 20 % under), so a cell delivered at exactly the asked size uses none; for the quad quality it is 0.05 over the smallest value. VC and F: every set; C and M: the 20 reference wings × 4 Re. Right: which solve set the nose of the stations, and the largest turning delivered per level.",
-        f"No check was crossed. Two run close by design: the turning is solved to within 0.02° of the level's angle at F (limit + 0.2°), and the band and trailing-edge cells are delivered at the asked size (limit 1 % over). The one that comes close by itself is the cap quality: {capmin['VC']:.3f} at VC and {capmin['F']:.3f} at F against the refusal limit 0.05. The nose is set by the F solve on every station, so VC, C and M get a finer nose than their own angle asks.")}
+  {figc("screen_new_checks.png", "Left: for every check, how much of the room to its limit the worst build used (1 = at the limit). For the turning it is the turning over its limit; for a growth check the room is the limit − 1; for the band, trailing-edge and tip-gap cells (delivered against asked) it is their tolerance (1 % over; the tip gap also 20 % under), so a cell delivered at exactly the asked size uses none; for the quad quality it is 0.05 over the smallest value. VC and F: every set; C and M: the 20 reference wings × 4 Re. Right: which level's solve set the nose of the stations (the band cell where the nose is no finer than the band), and the largest turning per level.",
+        f"No check was crossed. Two run close by design: the turning is solved to the level's angle (the limit is the angle + 0.2°), and the band and trailing-edge cells are delivered at the asked size. The one that comes close by itself is the cap quality: {capmin['VC']:.3f} at VC, {capmin['M']:.3f} at M and {capmin['F']:.3f} at F against the refusal limit 0.05. F's solve sets most noses, M's some; VC, C and M therefore get a finer nose than their own angle asks.")}
   {new_screen_checks_table(sn)}
   <p><strong>The family ratios</strong> between neighbouring levels on the 20 reference wings × 4 Re (as Study 2, but for the built rules and all four levels):</p>
-  {figc("screen_new_family.png", "Left: every spacing between neighbouring levels, coarser / finer: median (bar) and range over the pairs of each step without a nose repair (dashed: r = 1.3); red ×: the nose cells of the builds repaired at M. Right: the counts, finer / coarser, over all 80 pairs: ring cells, station gaps, wall layers and cells (dashed: 1.3 and 1.3³ = 2.2).",
-        f"The levels are true scaled copies, with one exception. On the pairs without a nose repair the nose, trailing-edge, band and tip-gap cells refine by {sp_lo:.3f}–{sp_hi:.3f} per step (1.3 within {100 * max(abs(sp_lo - 1.3), abs(sp_hi - 1.3)) / 1.3:.1f} %). The exception: the {sum(fam[p]['repaired_pairs'] for p in fam_rep) // max(len(fam_rep), 1)} flying-wing builds repaired at M, where the nose cell steps by {fam_rep_txt} (median) instead of 1.3: the family rule breaks there for the nose. Solving the nose at all four levels, not only at VC and F, would remove it (two more solves per station; for Mike). The other exceptions are whole numbers, as before: the base cells (8, 10, 14, 18: 1.25, 1.4, 1.29) and the first station gap where the gaps per panel set it (8, 10, 12, 16: 1.25, 1.2, 1.33). The cells grow by {cells_r[0]:.2f}, {cells_r[1]:.2f} and {cells_r[2]:.2f} per step (median), close to 1.3³ = 2.2.")}
+  {figc("screen_new_family.png", "Left: every spacing between neighbouring levels, coarser / finer: median (bar) and range over the 80 pairs of each step (dashed: r = 1.3); red ×: the nose cell of the first build (nose solved at VC and F only) on the flying wings. Right: the counts, finer / coarser: ring cells, station gaps, wall layers and cells (dashed: 1.3 and 1.3³ = 2.2).",
+        (f"The levels are true scaled copies: the nose, trailing-edge, band and tip-gap cells refine by {sp_lo:.3f}–{sp_hi:.3f} per step (1.3 within {100 * max(abs(sp_lo - 1.3), abs(sp_hi - 1.3)) / 1.3:.1f} %); the nose cells by {nose_lo:.3f}–{nose_hi:.3f}. " if rep_pairs == 0 else
+         f"On the pairs without a nose repair the nose, trailing-edge, band and tip-gap cells refine by {sp_lo:.3f}–{sp_hi:.3f} per step; {rep_pairs} pairs still had a repair. ")
+        + (f"With the nose at VC and F only, the flying wings' nose cell stepped by {fw_first.get('C/M'):.2f} (C/M) and {fw_first.get('M/F'):.2f} (M/F). " if fw_first.get("C/M") else "")
+        + f"The other exceptions are whole numbers, as before: the base cells (8, 10, 14, 18: 1.25, 1.4, 1.29) and the first station gap where the gaps per panel set it (8, 10, 12, 16: 1.25, 1.2, 1.33). The cells grow by {cells_r[0]:.2f}, {cells_r[1]:.2f} and {cells_r[2]:.2f} per step (median), close to 1.3³ = 2.2.")}
   {new_family_table(sn)}
-  <p><strong>The cells, against the 9–11 M asked and the desktop.</strong></p>
-  {figc("screen_new_cells.png", "Left: cells per mesh per level (wing blocks, estimate), median (bar) and largest (tick): the 20 reference wings × 4 Re (blue) and every set at Re 3 × 10⁵ (amber, VC and F only), with the RAM ADflow needs on the right axis. Right: the fine level F on the 20 reference wings × 4 Re, the 6 Nov estimate against the screen, and the screen with a rough +30–60 % for the C-H wake lines.",
-        f"F has {fmed:.1f} M cells median ({rf['min'] / 1e6:.1f}–{rf['max'] / 1e6:.1f} M) on the 20 reference wings × 4 Re: {asked} the 9–11 M asked, and {vs6:.2f} × the 6 Nov estimate of 10.9 M. The surface is not why: the built rules have about 17 % more stations than the plan file of that estimate. The difference is in the wall layers: the 6 Nov count's layer rule is not written down in the repository, while this count takes one layer count per block, from the first cell to 2 local chords at the level's growth ({ref['F']['wall_layers']['min']:.0f}–{ref['F']['wall_layers']['median']:.0f}–{ref['F']['wall_layers']['max']:.0f} layers at F). With the C-H wake lines (+30–60 %, rough) F lands at about {fmed * 1.3:.0f}–{fmed * 1.6:.0f} M. The desktop today (about 1.2 M cells) takes {_fit(desk['VC'][0], desk['VC'][2])} of the VC meshes, {_fit(desk['C'][0], desk['C'][2])} at C; with +32 GB (about 4.6 M) it takes {_fit(desk['VC'][1], desk['VC'][2])} at VC, {_fit(desk['C'][1], desk['C'][2])} at C and {_fit(desk['M'][1], desk['M'][2])} at M; F needs the HPC.")}
+  <p><strong>The cells, against the 9–11 M asked and the desktop.</strong> Two counts exist. The pages use this one, because it can be redone; the first estimate of 6 Nov is shown next to it, but its wall-layer rule was not recorded. Both count the wing blocks only: the C-H wake lines are extra (a rough +30–60 %). Stage 3 sets the real wall-layer rule, and with it the real count.</p>
+  {cells_side_by_side(sn)}
+  {figc("screen_new_cells.png", "Left: cells per mesh per level (wing blocks, this count), median (bar) and largest (tick): the 20 reference wings × 4 Re (blue) and every set at Re 3 × 10⁵ (amber, VC and F only), with the RAM ADflow needs on the right axis (1.51 GiB + 9.46 GiB per million cells). Right: the fine level F on the 20 reference wings × 4 Re: the first estimate (6 Nov, rule not recorded), this count, and this count with a rough +30–60 % for the C-H wake lines.",
+        f"F has {fmed:.1f} M cells median ({rf['min'] / 1e6:.1f}–{rf['max'] / 1e6:.1f} M) on the 20 reference wings × 4 Re: {asked} the 9–11 M asked, and {vs6:.2f} × the first estimate of 10.9 M. The surfaces are not why (the built rules have about 17 % more stations than the plan file of that estimate): the two counts differ in their wall-layer rule and in their wings. With the C-H wake lines F lands at about {fmed * 1.3:.0f}–{fmed * 1.6:.0f} M. The desktop today (16 GB: about 1.2 M cells) takes {_fit(desk['VC'][0], desk['VC'][2])} of the VC meshes and {_fit(desk['C'][0], desk['C'][2])} at C; with +36 GB (about 5.0 M) it takes {_fit(desk['VC'][1], desk['VC'][2])} at VC, {_fit(desk['C'][1], desk['C'][2])} at C and {_fit(desk['M'][1], desk['M'][2])} at M; F needs the HPC.")}
   {new_cells_table(sn)}
-  {cbox(f"The built rules mesh every wing: {ok} of {n} builds passed, {crashed} crashed, on all four levels and every set, so, by the rule of three, the true failure rate per level on this design space is below about {300 / vc['builds']:.1f} % (VC, F) and {300 / c['builds']:.1f} % (C, M) with 95 % confidence, for the surface alone. The levels are true scaled copies (Study 2's picture, now on all four levels), except the nose cell at M on the {m['repairs']} flying-wing builds that needed a repair. The cost: F is {fmed:.1f} M cells median, {asked} the 9–11 M asked and {vs6:.2f} × the 6 Nov estimate, although the stations are about 17 % more than in the plan file: the two counts differ in their wall layers, so the number depends on that rule more than on the surface. With the C-H wake lines (+30–60 %, rough) F is about {fmed * 1.3:.0f}–{fmed * 1.6:.0f} M. Weak points: the cap quads come close to the 0.05 limit ({capmin['VC']:.3f} at VC, {capmin['M']:.3f} at M); the nose is finer than VC, C and M ask, because F sets it, and M still needed a repair on the flying wings; the cell count is an estimate (one wall-layer count per block, D = 2 chords) and has no C-H wake lines; it is the numpy loft; no solve has run. What this does not show: whether the march (Stage 3) accepts these surfaces, and whether the coarse levels are good enough for the drag (the ladders after the first solves).")}"""
+  {cbox(f"The built rules mesh every wing: {ok} of {n} builds passed, {crashed} crashed, on all four levels and every set" + (f", so, by the rule of three, the true failure rate per level on this design space is below about {300 / vc['builds']:.1f} % (VC, F) and {300 / c['builds']:.1f} % (C, M) with 95 % confidence, for the surface alone. " if ok == n else ". ") + f"With the nose solved at every level, every level meets its own angle with {'no repair' if repairs == 0 else f'{repairs} repairs'}, and the levels are true scaled copies, as the grid study needs. The cells (this count): F {fmed:.1f} M median, {asked} the 9–11 M asked; about {fmed * 1.3:.0f}–{fmed * 1.6:.0f} M with the C-H wake lines. Weak points: the cap quads come close to the 0.05 limit ({capmin['VC']:.3f} at VC, {capmin['M']:.3f} at M); the nose is finer than VC, C and M ask, because F or M sets it; the cell count is an estimate whose wall-layer rule Stage 3 will set; it is the numpy loft; no solve has run. What this does not show: whether the march (Stage 3) accepts these surfaces, and whether the coarse levels are good enough for the drag (the ladders after the first solves).")}"""
 
 
 def similarity_section(sim: dict) -> str:

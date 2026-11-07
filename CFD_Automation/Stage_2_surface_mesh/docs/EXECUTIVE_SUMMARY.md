@@ -12,7 +12,7 @@
 >   - Transition must be captured, with ADflow and SU2 (4 Nov). The Mach range extends toward 0.5, with no supersonic flow (4 Nov). Angles of attack from −5° to post-stall, plus a separate post-stall study (6 Nov). One matched C-H volume mesh for ADflow and SU2 (6 Nov; Stage 3).
 >   - The Re levels stay 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶; 10⁵ is 18 % below the slowest real UAV, kept as a margin (7 Nov).
 > - **Pending**
->   - Three builder choices in the built rules, all stricter than decided, for Mike to confirm (decision 77): the nose solved at VC and at F; the growth limits by the family rule; the station growth kept at 1.2 (17 % more stations than the plan file).
+>   - Three builder choices in the built rules, all stricter than decided, for Mike to confirm (decision 77): the nose solved at VC and at F (it does not cover M: a repair was needed on @@REP_TXT@@, which breaks the family rule for the nose cell there; solving at all four levels would fix it); the growth limits by the family rule; the station growth kept at 1.2 (17 % more stations than the plan file).
 >   - The solver split (ADflow SA for the mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings) and the core Mach range (≤ 0.2 now, 0.3–0.5 later).
 > - **Open**
 >   - The pyGeo run on Mike's machine; then close Stage 2 and start Stage 3.

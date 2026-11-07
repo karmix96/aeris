@@ -293,7 +293,9 @@ circle, 7.69° at F is 16.95° at VC, above VC's repair limit of 16.92°). On BW
 a VC nose cell of 0.060 % c instead of 0.079 % c, a largest VC turning of 13.4° instead of 16.9°, a ring of 240 nodes
 instead of 236, no repair at VC, C or M, and no extra build time (4.1 s at VC). `stations.csv` says which level set
 each station's nose (`nose_solved_at`). The config key is `chord.nose_solved_at: [VC, F]`; without it (the first
-approach, the plan file) the nose is solved at the coarsest level only, as before.
+approach, the plan file) the nose is solved at the coarsest level only, as before. (These numbers are on the geometry
+of before 7 Nov. On the rebuilt sets, section 14: VC turns @@VC_TURN@@°, and M needed one repair round on
+@@REP_TXT@@, so the family rule is not exact at M there.)
 
 **Light check (7 Nov; on the geometry of before similarity and the nose fix; the full screen on the rebuilt sets is
 section 14).** The 20 reference
@@ -324,9 +326,12 @@ builds the station gaps with growth 1.25 and 7 gaps per panel; the decided rules
 **Three points for the owner to confirm.** The first two make the rules stricter than the first code, never looser.
 (1) The growth limits follow the family rule. Decision 71 lists growth ≤ 1.25 along the ring as a hard minimum at VC.
 The limit of 1.3 between station gaps is not in decisions 71–72; it is anchored at VC the same way (1.13 at F).
-(2) The nose is solved at VC and at F, as above: every level meets its own angle and the family rule stays exact,
-but VC, C and M get a finer nose than their own angle asks (VC 13.4–14.8° against 16.9° on the 80 builds; 2–4 ring
-nodes at VC).
+(2) The nose is solved at VC and at F, as above: every level meets its own angle and, on the old geometry, the family
+rule stayed exact, but VC, C and M get a finer nose than their own angle asks (VC 13.4–14.8° against 16.9° on the 80
+builds of the light check; 2–4 ring nodes at VC). On the rebuilt sets (section 14) VC turns @@VC_TURN@@°, and the
+scheme does not cover M: M needed a repair (× 0.9) on @@REP_TXT@@, which breaks the family rule for the nose cell at
+M there (@@FAM_REP@@ instead of 1.3). Solving the nose at all four levels would close that gap (two more solves per
+station).
 (3) The station rules: built as decided (growth 1.2, at least 12 gaps per panel at M), they give 17 % more stations
 than the plan file (growth 1.25, 7 gaps per panel at VC). If the plan file's values were meant, they need a decision.
 

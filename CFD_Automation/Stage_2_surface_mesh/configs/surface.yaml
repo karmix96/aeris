@@ -37,7 +37,12 @@ chord:                            # around the section (one closed ring per stat
                                   # check: neighbouring cells along the ring: 1.25 at VC, 1.19 at C, 1.14 at M, 1.11 at F
   max_spacing_c: {value: 0.02, at: M, why: "accuracy target, decision 71; our starting value"}
                                   # largest cell outside the band: 2 % c at M (3.38 % c at VC)
-  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c, from the leading edge on every wing (decision 58)
+  band_upper: [0.0, 0.85]         # transition band, upper surface, x/c, from the leading edge on every wing (decision 58).
+                                  # As built the upper side still gets band-size cells over 85-100 % c: both sides share
+                                  # one node list (decision 60) and the lower band is 0-100 % c. At the Re levels the
+                                  # upper transition sits past 85 % c at low Re (refine map by Re level). Writing 0-100 % c
+                                  # here is not the same mesh: the same at VC to round-off, but +2 ring nodes at F on 42 of
+                                  # 80 reference builds (data/studies/upper_band_check.json); for the owner to decide
   band_lower: [0.0, 1.00]         # lower surface, x/c: from the leading edge, for angles down to −5° (decision 74,
                                   # option A, 7 Nov). It costs no cells: both sides share one node list (decision 60)
                                   # and the upper band already makes the front of the lower side fine (Study 8)

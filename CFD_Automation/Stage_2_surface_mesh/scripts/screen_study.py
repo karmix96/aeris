@@ -467,7 +467,7 @@ def fig_family(s: dict) -> None:
     a.set_xticks(x, [SPACING_NAME[q] for q in SPACINGS], rotation=25, ha="right", fontsize=8.2)
     a.set_ylim(1.0, 1.6); a.set_ylabel("spacing, coarser level / finer level")
     hh, ll = a.get_legend_handles_labels()
-    order = sorted(range(len(ll)), key=lambda i: (ll[i].startswith("nose"), ll[i]))
+    order = sorted(range(len(ll)), key=lambda i: next((k for k, p in enumerate(("VC/C", "C/M", "M/F", "first", "nose")) if ll[i].startswith(p)), 9))
     a.legend([hh[i] for i in order], [ll[i] for i in order], loc="upper left", fontsize=8, frameon=False, ncol=4)
     a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n(×: the nose cell of the first build, solved at VC and F only, on the flying wings)", fontsize=9.5)
     a = ax[1]

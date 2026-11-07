@@ -7,7 +7,7 @@
 > approach (2–3 Nov, every rule met at C, the coarsest of C, M, F, FF) is kept in `configs/surface_first.yaml`
 > (`--config`). How the anchors are built: `decisions/surface_rules.md`, section 13. Also on 7 Nov, in Stage 1: the
 > nose fix (decision 64) and similarity (decision 70: every wing at unit mean chord; the sets rebuilt). The new screen
-> on the rebuilt sets (section 14): @@OK_NEW@@ of @@N_NEW@@ builds passed at VC, C, M and F. Still to come: Mike's
+> on the rebuilt sets (section 14): 1,724 of 1,724 builds passed at VC, C, M and F. Still to come: Mike's
 > confirmation of two builder choices (decision 77; the third, the nose, is answered: solved at every level, the
 > strictest wins), the pyGeo run, the matched C-H volume mesh (Stage 3).
 
@@ -30,6 +30,7 @@ python scripts/screen_study.py                                                  
 python scripts/similarity_check.py                                               # Study 10: the similarity check
 python scripts/make_figures.py --code <checkout of 7bcb7067>/CFD_Automation       # docs/*.png (first approach, as drawn)
 python -m pytest                                                                 # tests (test_family is slow)
+python scripts/refine_map_re.py                                                  # Study 11: the refine map at the Re levels
 python scripts/refine_map_data.py && python scripts/make_refine_page.py          # the refine map: docs/REFINE_MAP.html
 python scripts/band_count.py                                                     # Study 8: the lower band A against B (decision 74)
 ```
@@ -75,8 +76,8 @@ tests/mesh/                tests
 | Nose, along the semi-span | nose spacing / chord changes by at most 1.15 between stations (checked; holds by construction with one distribution for the wing) | 1.15 | 1.15 | 1.15 | 1.15 | law 2 (S8) |
 | Trailing edge | 0.1 % of local chord at the corners (M) | 0.169 % c | 0.13 % c | 0.1 % c | 0.077 % c | law 3 (DPW) |
 | Blunt base | at least 8 cells across the base (VC), even counts | 8 | 10 | 14 | 18 | law 6 (S8) |
-| Transition band | upper 0–85 % c, lower 0–100 % c (decision 74, option A); cell = bubble length / 20 at F; bubble length 0.40, 0.30, 0.10, 0.10 c at local Re 6 × 10⁴, 10⁵, 4 × 10⁵, 10⁶ (log-log, constant outside) | / 9.1 | / 11.8 | / 15.4 | / 20 | Stage 1 handover; Ansys CFX transition-model grid guide (20 per bubble); decision 72 |
-| (candidate 65) | a per-wing band from the flow dataset: the envelope of bubbles, transition ± margin and separation over the conditions one mesh serves (`cfdauto/mesh/refine_map.py`, `docs/REFINE_MAP.html`); not a rule yet | | | | | Study 7; needs a 3-D transition check |
+| Transition band | upper 0–85 % c as written, and as built the upper side gets band-size cells to the trailing edge too (one node list, decision 60, and the lower band); writing 0–100 % c is the owner's choice (the same mesh at VC to round-off, 2 more ring nodes at F on 42 of 80 reference builds, +0.39 % cells median, and a re-run of the screen, about 1.5 h); lower 0–100 % c (decision 74, option A); cell = bubble length / 20 at F; bubble length 0.40, 0.30, 0.10, 0.10 c at local Re 6 × 10⁴, 10⁵, 4 × 10⁵, 10⁶ (log-log, constant outside) | / 9.1 | / 11.8 | / 15.4 | / 20 | Stage 1 handover; Ansys CFX transition-model grid guide (20 per bubble); decision 72 |
+| (candidate 65) | a per-wing band from the flow dataset: the envelope of bubbles, transition ± margin and separation over the conditions one mesh serves (`cfdauto/mesh/refine_map.py`, `docs/REFINE_MAP.html`); not a rule yet | | | | | Study 7; at the Re levels Study 11 (`decisions/refine_map_re.md`); needs a 3-D transition check |
 | Elsewhere | cells never above 2 % c (M) | 3.38 % c | 2.6 % c | 2 % c | 1.54 % c | our choice |
 | Growth along the ring | 1.2 built, 1.25 checked (VC) | 1.2 / 1.25 | 1.15 / 1.19 | 1.11 / 1.14 | 1.087 / 1.11 | DPW; Stage 1 handover |
 | Stations | one exactly on every loft station; gap = 0.25 × local chord (M); at least 12 gaps per panel (M) | 0.4225 c, 8 | 0.325 c, 10 | 0.25 c, 12 | 0.192 c, 16 | laws 8, 9; decision 72 |

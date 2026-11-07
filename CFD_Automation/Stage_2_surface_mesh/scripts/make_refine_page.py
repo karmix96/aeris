@@ -1,10 +1,13 @@
-"""Build docs/REFINE_MAP.html: the interactive map of where to refine, per wing, from the flow dataset.
+"""Build docs/REFINE_MAP.html: the refine map at the Re levels (7 Nov; figures and numbers from
+data/studies/refine_map_re.json), then the interactive first-approach map of where to refine, per wing (the record).
 
-    python scripts/refine_map_data.py && python scripts/make_refine_page.py
+    python scripts/refine_map_re.py && python scripts/refine_map_data.py && python scripts/make_refine_page.py
 """
 
 from __future__ import annotations
 
+import base64
+import html
 import json
 import sys
 from pathlib import Path
@@ -13,8 +16,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from cfdauto.paths import STAGE2  # noqa: E402
 
-DATA = STAGE2 / "data" / "studies" / "refine_map_reference.json"
+DATA = STAGE2 / "data" / "studies" / "refine_map_reference.json"        # the first approach (3 Nov; from -5 deg on 7 Nov)
+DATA_RE = STAGE2 / "data" / "studies" / "refine_map_re.json"           # the Re levels (7 Nov; scripts/refine_map_re.py)
+PAGE = STAGE2 / "docs" / "page"
 OUT = STAGE2 / "docs" / "REFINE_MAP.html"
+UPPER_CHECK = STAGE2 / "data" / "studies" / "upper_band_check.json"     # the upper band written 0-100 % c: the cost
 
 HEAD = """<title>Where To Refine</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -92,6 +98,15 @@ code { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; whi
 section, details, .tbl { min-width: 0; max-width: 100%; }
 .chg { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 6px; padding: 10px 14px; font-size: 14.5px; line-height: 1.5; }
 .chg .ctag { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); margin-bottom: 2px; }
+.re { display: flex; flex-direction: column; gap: 14px; }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fig img { width: 100%; height: auto; display: block; border-radius: 4px; background: #fff; }
+.fig img.tall { max-width: 620px; margin: 0 auto; }
+.fig img.mid { max-width: 760px; margin: 0 auto; }
+.fig p { font-size: 14.5px; }
+.fig .k { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.fig .k.c { color: var(--accent); }
+.record { border-top: 2px solid var(--ink); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 """
@@ -99,12 +114,17 @@ section, details, .tbl { min-width: 0; max-width: 100%; }
 BODY = """
 <div class="wrap">
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 flow dataset · 3 Nov 2026 · updated 7 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 section tables · 3 Nov 2026 · updated 7 Nov 2026</div>
   <h1>Where to refine: transition, bubbles and separation, per wing</h1>
-  <p class="lede">The transition band of the mesh is generic: one band for every wing. When this map was made it was upper surface 0–85 % c, lower 60–100 % c (the first approach); since 7 Nov the lower band runs from the leading edge, 0–100 % c (decision 74). This page reads the flow dataset for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip, at one flight condition and over a range of conditions. The envelope over the range, plus a margin, is the band this wing would need.</p>
-  <div class="chg"><span class="ctag">Updated 7 Nov 2026: the map runs from −5°</span>The angles now run from −5° to post-stall (decided 6 Nov). So the map was run again for root angles −5° to 12° (it started at −2°). The envelope now starts at −5° by default and still stops at 8°: only the low end changes, so its effect is seen alone, and the top of the steady range (stall onset) is not set yet. The sliders reach 12°. <strong>What it shows for the lower side:</strong> at −5° the lower side turns turbulent close to the nose (median 1–15 % c over the strips, per wing type), and its transition or bubble sits in front of the generic lower band (60 % c) on every strip that has an answer. Already at 0° that is so on 51–83 % of the strips. At −5° many outboard strips of the BWBs and flying wings (MH 61, MH 45, at local angles of −6° to −11°) have no XFOIL answer: 42 % and 30 % of their strips (hatched). The two options for the lower band are counted in Study 8 of the Stage 2 page (decision 74). As before: the map is the 2-D XFOIL strip answer in calm air at real wing size, a candidate (decision 65), not a rule, and the cost card uses the first approach's band cell (bubble length / 20).</div>
-  <div class="chg"><span class="ctag">Updated 7 Nov 2026, evening: what changed in the mesh since</span><strong>The lower band now runs from the leading edge</strong> (decision 74, option A, chosen by Mike on 7 Nov and built): it costs no cells, because both sides of a ring share one node list (Study 8 of the Stage 2 page). The dashed generic band on this page is still the first one (lower 60–100 % c), so the misses it shows on the lower side are what the new band covers. <strong>The new rules are built</strong> (levels VC, C, M, F; band cell = bubble length / 20 at F, with the bubble length at least 0.10 c from local Re 4 × 10⁵): the cost cards here still use the first approach's band cell. <strong>Similarity is built in Stage 1</strong> (every wing at unit mean chord; 13 of the 20 reference wings are new picks): this map still shows the old 20 reference wings at real size, and the Stage 1 flow dataset it reads is still at real size. Redoing it per Re level on the new reference wings is to do.</div>
+  <p class="lede">The transition band of the mesh is generic: one band for every wing. First (2–3 Nov) it was upper surface 0–85 % c, lower 60–100 % c. Since 7 Nov the lower band runs from the leading edge, 0–100 % c (decision 74). The upper band is still written 0–85 % c, but as built the upper side gets band-size cells to the trailing edge too, because both sides share one node list. This page reads the Stage 1 section tables for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip. First section: the map at the four Re levels on the mean chord (7 Nov, new). Below it, the interactive first-approach map, kept as the record.</p>
 </header>
+__RE_SECTION__
+<section class="record">
+  <h2>The first approach (3 Nov; run again from −5° on 7 Nov): the interactive map, kept as the record</h2>
+  <p>Each wing at its real size and flight speed (Mach 0.03–0.20 at sea level), the old 20 reference wings, the section tables before the nose fix, and the first generic band (upper 0–85 % c, lower 60–100 % c, dashed). The numbers and the misses below are the first approach's; the section above replaces them.</p>
+  <div class="chg"><span class="ctag">Updated 7 Nov 2026: the map runs from −5°</span>The angles now run from −5° to post-stall (decided 6 Nov). So the map was run again for root angles −5° to 12° (it started at −2°). The envelope now starts at −5° by default and still stops at 8°: only the low end changes, so its effect is seen alone, and the top of the steady range (stall onset) is not set yet. The sliders reach 12°. <strong>What it shows for the lower side:</strong> at −5° the lower side turns turbulent close to the nose (median 1–15 % c over the strips, per wing type), and its transition or bubble sits in front of the generic lower band (60 % c) on every strip that has an answer. Already at 0° that is so on 51–83 % of the strips. At −5° many outboard strips of the BWBs and flying wings (MH 61, MH 45, at local angles of −6° to −11°) have no XFOIL answer: 42 % and 30 % of their strips (hatched). The two options for the lower band are counted in Study 8 of the Stage 2 page (decision 74). As before: the map is the 2-D XFOIL strip answer in calm air at real wing size, a candidate (decision 65), not a rule, and the cost card uses the first approach's band cell (bubble length / 20).</div>
+  <div class="chg"><span class="ctag">Updated 7 Nov 2026, evening: what changed in the mesh since</span><strong>The lower band now runs from the leading edge</strong> (decision 74, option A, chosen by Mike on 7 Nov and built): it costs no cells, because both sides of a ring share one node list (Study 8 of the Stage 2 page). The dashed generic band on this page is still the first one (lower 60–100 % c), so the misses it shows on the lower side are what the new band covers. <strong>The new rules are built</strong> (levels VC, C, M, F; band cell = bubble length / 20 at F, with the bubble length at least 0.10 c from local Re 4 × 10⁵): the cost cards here still use the first approach's band cell. <strong>Similarity is built in Stage 1</strong> (every wing at unit mean chord; 13 of the 20 reference wings are new picks): this map still shows the old 20 reference wings at real size. Done on 7 Nov: the map per Re level on the new reference wings, the section above.</div>
+</section>
 
 <section class="controls" aria-label="Controls">
   <div class="ctl"><span class="lab">Wing type</span><div class="seg" id="typeSeg"></div></div>
@@ -311,6 +331,63 @@ BODY = """
 """
 
 
+TYPES = ("bwb", "flying_wing", "cranked", "tapered")
+TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
+RE_KEYS = (("1e+05", "10⁵"), ("3e+05", "3 × 10⁵"), ("1.5e+06", "1.5 × 10⁶"), ("3e+06", "3 × 10⁶"))
+FIG_CLASS = {"refine_re_transition.png": "tall", "refine_re_coverage.png": "mid", "refine_re_no_answer.png": "mid"}
+
+
+def _img(name: str, alt: str) -> str:
+    data = base64.b64encode((PAGE / name).read_bytes()).decode()
+    return f'<img class="{FIG_CLASS.get(name, "")}" src="data:image/png;base64,{data}" alt="{html.escape(alt)}" loading="lazy">'
+
+
+def _sci(v: float) -> str:
+    m, e = f"{v:.1e}".split("e")
+    sup = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
+    return f"{m} × 10{str(int(e)).translate(sup)}"
+
+
+def re_section() -> str:
+    """The refine map at the Re levels (7 Nov): what was done, the upper-side table, the three figures with what
+    each shows and the conclusion (captions from refine_map_re.json), the as-built check and the upper band."""
+    d = json.loads(DATA_RE.read_text())
+    s, ab = d["summary"], d["as_built"]
+    rows = []
+    for k, name in RE_KEYS:
+        cells = "".join(f"<td class='num'>{100 * s[t][k]['to_8']['upper']['covered_share']:.0f} % "
+                        f"({100 * s[t][k]['to_8']['upper']['transition_inside_share']:.0f} %)</td>" for t in TYPES)
+        rows.append(f"<tr><td class='num'>{name}</td>{cells}</tr>")
+    table = ('<div class="tbl"><table><tr><th>Re on the mean chord</th>' + "".join(f"<th>{TYPE_NAME[t]}</th>" for t in TYPES)
+             + "</tr>" + "".join(rows) + "</table></div>")
+    figs = []
+    for name, cap in d["figures"].items():
+        figs.append(f'<div class="fig">{_img(name, cap["what"])}<p><span class="k">What it shows</span>{html.escape(cap["what"])}</p>'
+                    f'<p><span class="k c">Conclusion</span>{html.escape(cap["conclusion"])}</p></div>')
+    uc = json.loads(UPPER_CHECK.read_text())["levels"]
+    vc, f = uc["VC"], uc["F"]
+    check = (f" That holds at VC only. On the 20 reference wings × 4 Re (7 Nov): at VC the same mesh to round-off "
+             f"({vc['same_counts']} of {vc['builds']} with the same counts, no node moved by more than {_sci(vc['largest_node_move_c'])} c); "
+             f"at F, 0–100 % c adds 2 ring nodes on {f['ring_nodes_added'].get('2', 0)} of {f['builds']} builds "
+             f"({100 * (f['cells_ratio']['median'] - 1):.2f} % more cells, median; {100 * (f['cells_ratio']['max'] - 1):.2f} % at most), "
+             f"because with 0–85 % c the upper cells over 85–100 % c at F can sit a little above the band cell, inside the 1 % check "
+             f"(on BWB reference wing 0 at Re 3 × 10⁵: 0.00501 c against 0.0050 c). "
+             f"So the written rule stays 0–85 % c: writing 0–100 % c is for the owner to decide, and the screen would need a re-run "
+             f"(about 1.5 h). Data: <code>data/studies/upper_band_check.json</code>.")
+    n16 = len(ab["builds"])
+    return f"""
+<section class="re" id="re-levels">
+  <h2>Refine map at the Re levels (7 Nov)</h2>
+  <p><strong>What was done.</strong> The map has a Re mode now (similarity, decision 70): each of the 20 reference wings (5 per type, the new picks) at the four Re levels on the mean chord (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶) and root angles −5° to 12°, at unit mean chord and sea level, with the 2-D section tables read at Mach 0.1 and rebuilt on the fixed nose (decision 64). 13 strips per half wing (3 per panel). For each wing, Re level, strip and side: where transition sits from −5° to 8° (and to 12°); the band it needs, as before (transition ± 10 % c, the bubbles, the separation start); whether the bands hold it; and the strips with no XFOIL answer. Then an as-built check on {n16} built surfaces (wing 0 of each type at the four Re levels, level VC). In the figures, the decided upper band is the written one, 0–85 % c. Code: the Re mode of <code>cfdauto/mesh/refine_map.py</code>; <code>scripts/refine_map_re.py</code>; data <code>data/studies/refine_map_re.json</code>; note <code>decisions/refine_map_re.md</code>.</p>
+  <p><strong>Result.</strong> The lower band (0–100 % c) holds every strip at every Re level. The upper band as written (0–85 % c) does not hold the upper transition at low Re and low angle. Share of the strips whose band fits inside 0–85 % c, −5° to 8° (65 strips per type); in brackets, the share whose transition itself stays inside:</p>
+  {table}
+  <p>Where it does not fit, the cause is always the transition itself (+ 10 % c), never a bubble or a separation: at −5° and Re 10⁵ the median upper transition sits at 88–100 % c, and at 10⁵ some strips stay laminar to the trailing edge.</p>
+  {"".join(figs)}
+  <div class="chg"><span class="ctag">As built (7 Nov)</span>On all {n16} built surfaces at VC (all passed every check) the largest upper cell over 85–99.5 % c is {ab['upper_ratio_min']:.3f}–{ab['upper_ratio_max']:.3f} × the band cell: the upper side already has band-size cells to the trailing edge, because both sides of a ring share one node list (decision 60) and the lower band is 0–100 % c. So no mesh change is needed. Written as 0–100 % c, the {n16} surfaces come out the same (the same ring counts, no node moved by more than {_sci(ab['largest_node_move_with_upper_0_100_c'])} c, round-off).{check}</div>
+  <p><strong>Limits.</strong> 2-D strips (XFOIL e^N, N_crit 9: calm air) with one uniform induced angle; no crossflow transition on swept panels, no 3-D relief of bubbles, no tip effects: where to look, not the 3-D answer. A strip without an answer at one angle drops out at that angle only. The as-built check covers wing 0 of each type. The per-wing band stays a candidate (decision 65) until a 3-D transition check.</p>
+</section>"""
+
+
 ONE_ALPHA, ENVELOPE_ALPHAS = 4.0, (-5.0, 8.0)     # the default condition, and the default envelope: from the new
                                                   # lowest angle (-5 deg, decided 6 Nov) to the first top (8 deg)
 
@@ -320,8 +397,9 @@ def main() -> None:
     alphas = json.loads(data)["wings"][0]["grid"]["alpha_deg"]
     body = (BODY.replace("__A_MAX__", str(len(alphas) - 1)).replace("__A_ONE__", str(alphas.index(ONE_ALPHA)))
             .replace("__A_LO__", str(alphas.index(ENVELOPE_ALPHAS[0]))).replace("__A_HI__", str(alphas.index(ENVELOPE_ALPHAS[1]))))
-    html = HEAD + body.replace("__DATA__", data.replace("</", "<\\/"))
-    OUT.write_text(html)
+    body = body.replace("__RE_SECTION__", re_section())
+    page = HEAD + body.replace("__DATA__", data.replace("</", "<\\/"))
+    OUT.write_text(page)
     print("wrote", OUT, f"{OUT.stat().st_size / 1e6:.2f} MB")
 
 

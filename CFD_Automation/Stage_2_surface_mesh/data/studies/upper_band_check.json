@@ -1,0 +1,74 @@
+{
+ "what": "the upper band written 0-100 % c against 0-85 % c (configs/surface.yaml, the rest as built): the 20 reference wings x 4 Re at VC and at F, rebuilt with 0-100 % c and compared with the screen parts (data/meshes/screen_parts/ref_VC.json, ref_F.json, built with 0-85 % c); the node hash rounds every coordinate to 1e-12 c",
+ "date": "2026-11-07",
+ "levels": {
+  "VC": {
+   "builds": 80,
+   "passed": 80,
+   "same_hash": 17,
+   "same_counts": 80,
+   "ring_nodes_added": {
+    "0": 80
+   },
+   "stations_added": {
+    "0": 80
+   },
+   "ring_plus_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "cells_ratio": {
+    "min": 1.0,
+    "median": 1.0,
+    "max": 1.0
+   },
+   "band_cell_ratio_min": 0.9999999999991537,
+   "largest_node_move_c": 3.0397906414236786e-13,
+   "note": "the counts are equal on every build; the hashes that differ differ by round-off only"
+  },
+  "F": {
+   "builds": 80,
+   "passed": 80,
+   "same_hash": 11,
+   "same_counts": 38,
+   "ring_nodes_added": {
+    "0": 38,
+    "2": 42
+   },
+   "stations_added": {
+    "0": 80
+   },
+   "ring_plus_by_type": {
+    "bwb": 16,
+    "flying_wing": 1,
+    "cranked": 12,
+    "tapered": 13
+   },
+   "cells_ratio": {
+    "min": 1.0,
+    "median": 1.0039441587462878,
+    "max": 1.005456160385738
+   },
+   "band_cell_ratio_min": 0.9839427554347521,
+   "example": {
+    "build": [
+     "bwb",
+     0,
+     300000.0
+    ],
+    "n_side": [
+     247,
+     248
+    ],
+    "upper_aft_cell_max_c": [
+     0.00501,
+     0.00497
+    ],
+    "band_cell_c": 0.005,
+    "note": "with 0-85 % c the upper cells over 85-99.5 % c at the root sit about 0.2 % above the band cell (the check allows 1 %); with 0-100 % c each side gets one more node"
+   }
+  }
+ }
+}

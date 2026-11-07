@@ -137,7 +137,7 @@ def fig_levels():
              "  · the growth limits follow the family rule",
              "  · station growth 1.2 kept (plan file: 1.25, 7 gaps)"]
     for i, s_ in enumerate(lines):
-        a.text(0.0, 0.74 - i * 0.075, s_, fontsize=8.2, color=INK if i in (0, 1, 7, 9) else MUTED, va="top",
+        a.text(0.0, 0.68 - i * 0.073, s_, fontsize=8.2, color=INK if i in (0, 1, 7, 9) else MUTED, va="top",
                transform=a.transAxes, fontweight="bold" if i in (0, 7, 9) else None)
     save(fig, "levels_first_new.png")
 

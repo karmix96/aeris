@@ -231,8 +231,9 @@ D3_conditions_and_measurement:
       band_cell_c_where_local_Re_ge_4e5: 0.005   # the bubble-length table stops at 0.10 c from local Re 4e5 up
       lower_band_c: [0.0, 1.0]     # owner, 7 Nov 2026 (Stage 2 decision 74, option A): from the leading edge; no extra cells (shared node list)
       upper_band_c: [0.0, 1.0]     # proposal, pending (7 Nov 2026): the refine map at the Re levels puts the upper transition past 85 % c at low Re
-                                   # (Re 1e5: 0-31 % of strips fit 0-85 % c); the built mesh already has band cells to 100 % c on both sides
-                                   # (shared node list, lower band 0-100 % c), so writing it changes no mesh (was 0-85 % c)
+                                   # (Re 1e5: 0-31 % of strips fit 0-85 % c); the built mesh already has about band-size cells to 100 % c on both sides
+                                   # (shared node list, lower band 0-100 % c; at F within 0.2 % of the band cell). Writing it: same mesh at VC,
+                                   # +2 ring nodes on 42 of 80 reference builds at F (+0.4 % cells, median); was 0-85 % c
     proposal:   # pending
       solver_split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first
     # SU2 smoke test (4 Nov 2026), not a result: SU2 8.6.0, SA and LM on one Stage 2 ring mesh (a section extruded

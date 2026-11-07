@@ -79,7 +79,7 @@ The sections below are updated to match.
   chord), as a margin.
 - **Section tables and refine map redone (7 Nov).** The 2-D XFOIL tables were rebuilt on the fixed nose:
   no Stage 1 conclusion changes. The refine map now runs at the 4 Re levels; it finds the upper transition
-  past 85 % c at low Re (proposal below: write the upper band as 0–100 % c; same mesh).
+  past 85 % c at low Re (proposal below: write the upper band as 0–100 % c; +0.4 % cells at F).
 - **First SU2 smoke test (4 Nov), not a result.** It shows the mesh path works; no wing has been run
   (note at the end of D3).
 
@@ -90,8 +90,8 @@ The sections below are updated to match.
 - **Angles.** Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about
   2.5° steps.
 - **Re levels.** Check C4 adds a level near 7 × 10⁵ – 10⁶ only if needed.
-- **Upper transition band 0–100 % of chord (7 Nov; was 0–85 %).** Same mesh as built (one node list for
-  both sides; lower band 0–100 % c).
+- **Upper transition band 0–100 % of chord (7 Nov; was 0–85 %).** The built mesh is already close (one node
+  list for both sides; lower band 0–100 % c): same mesh at VC, +0.4 % cells at F (median).
 
 **Open**
 - **Still open from Stage 0:** grid share 65 %, pitching moment 0.002, the iteration share, a D5.
@@ -553,8 +553,9 @@ if needed.
   - (the lower transition band is decided: from the leading edge, Stage 2 decision 74, owner 7 Nov);
   - upper transition band 0–100 % of chord (7 Nov; was 0–85 %): the refine map at the Re levels puts the
     upper transition past 85 % c at low Re (at Re 10⁵ only 0–31 % of strips fit 0–85 % c). The built mesh
-    already has band cells to the trailing edge on both sides (one node list for both sides, lower band
-    0–100 % c), so writing it changes no mesh.
+    already has about band-size cells to the trailing edge on both sides (one node list for both sides, lower
+    band 0–100 % c; at F within 0.2 % of the band cell). Writing it gives the same mesh at VC and 2 more ring
+    nodes on 42 of the 80 reference builds at F (+0.4 % cells, median).
 - **Why:** Stage 1 (2-D XFOIL strips, smooth wing in calm air) found a long laminar run and laminar
   bubbles on most of these wings; fully turbulent SA overpredicts the profile drag by a median
   +62 % (+69 % in level flight). What a mesh must resolve depends on the model, so a mesh tuned only

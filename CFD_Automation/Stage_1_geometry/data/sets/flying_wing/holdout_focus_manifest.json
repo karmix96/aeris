@@ -2,13 +2,13 @@
  "wing_type": "flying_wing",
  "set": "holdout_focus",
  "code_version": "0.7.0",
- "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
- "loft_backend": "pygeo",
+ "code_hash": "51e670d22d2b05abc858bec563f038bdb96e6c74162628c2824c64d9979a29d3",
+ "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "e49a28b9ca3bdfd87c960eb4696f19099bd9a3a356269f46a1b6a5fa91ef1cd8",
+   "input_hash": "e19309a854493b641faf6da24e7794075ee917a0cbf88ed2d12c6b7d5a67e060",
    "vector": {
     "c2_ratio": 0.9725237506790582,
     "c3_ratio": 0.9098140073452221,
@@ -38,7 +38,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "0e7d4758b333dddfca6f7f711cab90ef07ec608a1fc4c441ab54a83a66fd3b7a",
+   "input_hash": "33a01519e79ca106c43e62ee1ea7cb20fc40603d6e3bd6d66e80788a2daefbc5",
    "vector": {
     "c2_ratio": 0.953687388878253,
     "c3_ratio": 0.8660590334023838,
@@ -68,7 +68,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "ed905f075baf5c89e18c97f21b22b7ff3abc0fbe2de154e1ad07546363998e26",
+   "input_hash": "580832eb3547dbfadcbe3118c980810bc1bbcdb89de446321fd5b486dd9d31ec",
    "vector": {
     "c2_ratio": 0.9060948618853332,
     "c3_ratio": 0.7547694779547636,
@@ -98,7 +98,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "0d3d6046c9dbcc6d2514e85a1d5ab89fb591551ee1b5acb7d95a9e408bccfa20",
+   "input_hash": "0ff66d1d33a71eb6cb44d063f37d15c02d126a11f7d325673a8f807640fca69b",
    "vector": {
     "c2_ratio": 0.9330840037824156,
     "c3_ratio": 0.8575974382409607,
@@ -128,7 +128,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "2023085c7c7769a84a80f0ca65c91a70e5c419710c083c9508bfd7cd2f9ba321",
+   "input_hash": "87f1349e1a79130e9e9b8e1b4248b7e01c9bb01e48c68c59f12fe0a4b6ec98fa",
    "vector": {
     "c2_ratio": 0.8538161593903957,
     "c3_ratio": 0.7057475401040607,
@@ -158,7 +158,7 @@
   {
    "index": 5,
    "built": false,
-   "input_hash": "14438907a947b7bcd28ffd2eef23a87985ab2a1c57a7ffa1d83f56164c326d03",
+   "input_hash": "6f7891f0e310e392e6d30febbb66f8b045a88827f693152c4866febf1a0442f1",
    "vector": {
     "c2_ratio": 0.7845151727965398,
     "c3_ratio": 0.683231834133831,
@@ -188,7 +188,7 @@
   {
    "index": 6,
    "built": false,
-   "input_hash": "f241579963e9d25be5f40ffb27e83c76491961d416d73fd416fddaf2579c0b2b",
+   "input_hash": "40662f8a8ccd5a3bc61b2a45b6c1afc6bdf1a52d30b3b245cc9e7c5ef7923665",
    "vector": {
     "c2_ratio": 0.9092208180801822,
     "c3_ratio": 0.8288221196240835,
@@ -218,7 +218,7 @@
   {
    "index": 7,
    "built": false,
-   "input_hash": "b24f2ae45f228cc78b8dc8423b1a88b1d6a523f46a801db26d9355b02e5862dd",
+   "input_hash": "8efcc5e03e9903e4d4e91a4fc40da751883b2d83cad7af64304dc22b9d1c0631",
    "vector": {
     "c2_ratio": 0.7620704450103098,
     "c3_ratio": 0.6232517132620838,
@@ -248,7 +248,7 @@
   {
    "index": 8,
    "built": false,
-   "input_hash": "89511a1edf24d305b76560fd016ddbebd3f7469b36cd18b25eff8bf6e0c3ffb2",
+   "input_hash": "d92b25431eb255c100c92e5826df1ea0d7c185e37feec62cc45b52d74ffe8fef",
    "vector": {
     "c2_ratio": 0.9568601798212912,
     "c3_ratio": 0.897803880826351,
@@ -278,7 +278,7 @@
   {
    "index": 9,
    "built": false,
-   "input_hash": "7653900bd519e51d9ccf437551369f409bbb9aa636ff665a4bb9b9be000e7b1f",
+   "input_hash": "536a7498f4b258f38160b32c4feaa4932d4fe5f34e13cf52b39bc5ddc7df1d45",
    "vector": {
     "c2_ratio": 0.8712873869352935,
     "c3_ratio": 0.7775481744537863,

@@ -103,3 +103,22 @@ def test_type_rules_inside_each_family():
         got = [label(exact_measure(spec, v)[0], tailless=t in params.TAILLESS_TYPES)[0][1] for v in lhs(spec, 40, 7)]
         share = got.count(t) / len(got)
         assert share >= (0.75 if t in ("bwb", "flying_wing") else 0.95), (t, share)
+
+
+def test_value_exactly_at_a_threshold_gets_the_label():
+    """Decision 79 (8 Nov 2026): a designed value exactly at a threshold gets the label on the built loft.
+
+    BWB corner1 #8 changes its leading-edge sweep by exactly 5 deg (35 -> 30), the kink threshold: the numpy loft
+    measured 4.999999999999993 deg and pyGeo 5 or more, so the two lofts gave different labels. Flying-wing
+    reference #0 is designed at AR exactly 8 and measured 7.99999998 (area error), so it missed high_aspect_ratio."""
+    from cfdauto.geometry.build import build
+    bwb = {"c2_ratio": 0.675, "c3_ratio": 0.375, "c4_ratio": 0.145, "semi_span_m": 3.125, "aspect_ratio": 6.25,
+           "b3_ratio": 0.3, "split_ratio": 0.5, "sweep1_deg": 35.0, "sweep2_deg": 35.0, "sweep3_deg": 30.0,
+           "twist0_deg": 2.0, "twist1_deg": 0.0, "twist2_deg": 0.0, "twist3_deg": -1.5, "dihedral_p1_deg": 0.0,
+           "dihedral_p2_deg": 0.0, "dihedral_p3_deg": 0.0, "airfoils": ["mh104", "mh104", "mh61", "mh61"]}
+    assert "cranked" in build(bwb, "bwb", CFG, iges=False)["labels"]
+    fw = {"c2_ratio": 0.87, "c3_ratio": 0.74, "c4_ratio": 0.6, "semi_span_m": 4.0, "aspect_ratio": 8.0,
+          "b3_ratio": 0.35, "split_ratio": 0.5, "sweep1_deg": 25.0, "sweep2_deg": 25.0, "sweep3_deg": 25.0,
+          "twist0_deg": 0.5, "twist1_deg": -0.5, "twist2_deg": -2.0, "twist3_deg": -3.5, "dihedral_p1_deg": 2.5,
+          "dihedral_p2_deg": 2.5, "dihedral_p3_deg": 2.5, "airfoils": ["mh60", "mh60", "mh45", "mh45"]}
+    assert "high_aspect_ratio" in build(fw, "flying_wing", CFG, iges=False)["labels"]

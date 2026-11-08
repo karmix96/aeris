@@ -115,9 +115,10 @@ The sections below are updated to match.
   the 20 reference wings equal the numpy ones: at VC, old levels, every count and every check value (within
   6 × 10⁻¹⁰); at the new levels, VC and F, the same ring nodes and stations (80 of 80 each). One label differs
   (decision 79).
-- **Label rules at a threshold (decision 79, open).** Two label tests have no tolerance (the kink) or too small a one
-  (aspect ratio): BWB corner1 #8 is "cranked" with pyGeo only, and the flying-wing reference wing 0 (AR exactly 8)
-  misses "high_aspect_ratio". Labels only; a fix changes every hash, not the meshes.
+- **Label rules at a threshold (decision 79): fixed on 8 Nov.** The kink tests had no tolerance and the aspect-ratio
+  tests too small a one: BWB corner1 #8 was "cranked" with pyGeo only, and the flying-wing reference wing 0 (AR
+  exactly 8) missed "high_aspect_ratio". Now every rule has the tolerance; 2 labels changed, no type, no surface, no
+  mesh; every input hash changed. Owed: one more pyGeo `build --all`.
 
 ---
 

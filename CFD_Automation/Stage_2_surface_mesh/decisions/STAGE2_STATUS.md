@@ -221,6 +221,9 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   Structured CGNS for ADflow; a converter to unstructured hexes (.su2) for SU2. Rough cost +30–60 % cells.
 - Before any solve: Mike's two confirmations (77) and his choice on the upper band (0–85 or 0–100 % c). The pyGeo run
   is done (8 Nov).
+- Stage 1's label fix (decision 79, 8 Nov) changed every wing's input hash, not its surface (the same surface hash on
+  all 722): every mesh and screen here stands (5 builds re-meshed: the same node hashes); mesh names
+  (`mesh_<level>_<hash8>_…`) take the new hashes.
 
 ## How to run
 

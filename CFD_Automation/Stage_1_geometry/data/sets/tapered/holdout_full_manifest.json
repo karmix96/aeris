@@ -2,13 +2,13 @@
  "wing_type": "tapered",
  "set": "holdout_full",
  "code_version": "0.7.0",
- "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
- "loft_backend": "pygeo",
+ "code_hash": "51e670d22d2b05abc858bec563f038bdb96e6c74162628c2824c64d9979a29d3",
+ "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "3de513cb4a66ae6244d68d731c60b5847aa69815dc00495e72465ae029c9f23c",
+   "input_hash": "95cfd0095cdcb7162977f1603e3a9095ad5a39308b0b49651b70a5d62ce21b9a",
    "vector": {
     "c2_ratio": 0.8838883066875539,
     "c3_ratio": 0.8309639022868089,
@@ -38,7 +38,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "0534af89fdc9d037aa718803fa8008a445c6cee6a8c69c06380f3e1fbf598d69",
+   "input_hash": "3b87e1f596c19dbfb69ea366919e3e81365760d032c1048cc75eabde3c99e10a",
    "vector": {
     "c2_ratio": 0.869784908129251,
     "c3_ratio": 0.7300957617606042,
@@ -68,7 +68,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "4b80d1891c29e90f4fbb53d0b7ac26850df64cd00524cfdf2cf933713d5f70cf",
+   "input_hash": "bceab6f6898eb7927328a57225a596544650b68dbae36a8061650fb80d965bc5",
    "vector": {
     "c2_ratio": 0.968538203436802,
     "c3_ratio": 0.9524524190305117,
@@ -98,7 +98,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "c81e846835941a779fe6b99be2142d7496ec4b515ee806db6ddb62d0b8e07de3",
+   "input_hash": "7072a9d89873ca5ff072d5b117e1ce80be5083f0df051535a9b9c963730e28b7",
    "vector": {
     "c2_ratio": 0.9484196201873333,
     "c3_ratio": 0.7817414488868557,
@@ -128,7 +128,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "788dba5589e3785d4ea24dfe1899a06349e85cc817394a7f4a4c61c02e9a8e62",
+   "input_hash": "d295db4d0aba73b8af4bd8769099842a504d904bf096d83427e0120a226286d8",
    "vector": {
     "c2_ratio": 0.8259223103620592,
     "c3_ratio": 0.5615328633442946,

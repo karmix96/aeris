@@ -123,7 +123,9 @@
     input hashes and pass/fail as the numpy loft; manifests pushed, they now say pygeo), Stage 2 tests 41. Meshes of
     the 20 reference wings on the pyGeo loft: at VC, old levels, the same counts and every check value within
     6 × 10⁻¹⁰ (`Stage_2_surface_mesh/data/studies/screen_VC_pygeo_oldlevels.json`); at the new levels, VC and F,
-    80 of 80 pass each with the same ring nodes and stations. The node hashes differ (round-off). One label differs (79).
+    80 of 80 pass each with the same ring nodes and stations. The node hashes differ (round-off). One label differed
+    (79, fixed 8 Nov; that fix changed every input hash, so the manifests are the numpy rebuild until Mike's next
+    pyGeo `build --all`).
 45. **Shape ranges from sources (decided 29 Oct 2026).** Every shape range and airfoil now has its source
     (`Stage_1_geometry/decisions/shape_ranges.md`). BWB airfoils MH 104 / MH 61 (was MH 91 / E374 / NLF1015);
     tailed sweep −5…15°, washout ≤ 5°, dihedral 0–5°. Open: check Raymer's taper and washout values
@@ -379,7 +381,7 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     Stage 0 `values.yaml` (`cfdauto.paths.re_levels()`); the studies run at the old levels keep their own as records.
     (4) No 5th level (Mike, 8 Nov): the levels stay as they are; LOTUS 11 m and the Patroller at top speed stay
     extrapolations.
-79. **Label rules at a threshold (open, 8 Nov 2026).** The pyGeo and numpy lofts give the same labels on 721 of 722
+79. **Label rules at a threshold (Mike: fix it; built 8 Nov 2026).** The pyGeo and numpy lofts give the same labels on 721 of 722
     wings. BWB corner1 #8 changes its leading-edge sweep by exactly 5° at the outer break (35° → 30°), the kink
     threshold: the numpy loft measures 4.999999999999993° (no kink, no "cranked" label), pyGeo gives the label. The two
     kink tests (sweep change, chord slope) have no tolerance, unlike the twist, sweep and dihedral rules (EPS 10⁻⁹: a
@@ -390,4 +392,9 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     Proposed fix: EPS on the two kink tests, a tolerance of 10⁻⁶ (relative) on the AR tests. Checked on the numpy
     loft: it changes 2 labels (corner1 #8 gains "cranked", as with pyGeo; reference wing 0 gains
     "high_aspect_ratio"). Every geometry hash changes with it: one more `build --all` on both machines; the meshes
-    stay the same. Mike to decide: now or with the next geometry change.
+    stay the same. **Built (8 Nov):** EPS on every label threshold (the kink, BWB, straight and rectangular tests had
+    none), AR_TOL 10⁻⁶ on the AR tests; `test_measure_labels.py` pins both wings (it fails on the old rule). Rebuilt
+    with the numpy loft: 722 of 722; the code hash aa6ccb5d → 51e670d2, so every input hash changed; the surface
+    hashes equal the 7 Nov build on all 722; the labels changed on exactly the 2 wings (now equal to pyGeo's on 721,
+    and on the 722nd pyGeo gets the same new label). The meshes are the same: the mesher reads only the loft (5 builds
+    re-meshed at VC, both relabelled wings among them: the same node hashes). Owed: one pyGeo `build --all` (Mike).

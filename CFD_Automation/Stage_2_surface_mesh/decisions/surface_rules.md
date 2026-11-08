@@ -526,3 +526,7 @@ The node hashes differ (0 of 80 equal): the nodes move by round-off when the lof
 
 **Conclusion.** The numpy twin stands for the production loft: on the reference wings it gives the same meshes as
 pyGeo, to round-off. The full sets were not meshed on pyGeo.
+
+**Then (8 Nov): the label fix in Stage 1 (decision 79).** Every wing's input hash changed (the geometry code hash
+aa6ccb5d → 51e670d2); no surface did (the same surface hash on all 722). The mesher reads only the loft, so every
+mesh and screen above stands; 5 builds re-meshed at VC (the two relabelled wings among them) have the same node hashes.

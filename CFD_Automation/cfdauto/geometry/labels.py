@@ -30,7 +30,12 @@ T = {
 
 # A designed value exactly at a threshold (e.g. a twist change of exactly 1.0 deg) must get the label;
 # the measured value can miss it by about 1e-15 from rounding (35 wings did after the similarity rebuild).
+# Every rule below uses it (8 Nov 2026, decision 79: the kink tests had none, and on a 5 deg sweep change the
+# pyGeo and numpy lofts gave different labels).
 EPS = 1e-9
+# The measured aspect ratio carries the area integration error (about 3e-9 relative, more than EPS): a wing
+# designed at AR 8 measured 7.99999998. Relative tolerance for the aspect-ratio rules (decision 79).
+AR_TOL = 1e-6
 
 def _line_slope(y, f, y0, y1):
     """Slope of f between y0 and y1 (from the end values)."""
@@ -58,8 +63,9 @@ def shape_values(m: dict) -> dict:
         k_in = abs(_line_slope(y, c, lo, y0)) * s / c0
         k_out = abs(_line_slope(y, c, y0, hi)) * s / c0
         big, small = max(k_in, k_out), min(k_in, k_out)
-        chord_kink = big >= T["kink_chord_slope_floor"] and big >= T["kink_chord_factor"] * max(small, 1e-12)
-        if abs(sw_out - sw_in) >= T["kink_sweep_deg"] or chord_kink:
+        chord_kink = (big >= T["kink_chord_slope_floor"] - EPS
+                      and big >= T["kink_chord_factor"] * max(small, 1e-12) - EPS)
+        if abs(sw_out - sw_in) >= T["kink_sweep_deg"] - EPS or chord_kink:
             kinks.append(float(y0 / s))
 
     yi = T["dihedral_inner"] * s
@@ -87,9 +93,9 @@ def shape_values(m: dict) -> dict:
 def is_bwb(v: dict) -> bool:
     """Centre body: a long root chord against the outer wing (thresholds in T)."""
     ratio = v["root_over_outer"]
-    return v["root_chord_m"] >= T["bwb_root_over_semispan"] * v["semi_span_m"] and (
-        ratio >= T["bwb_root_over_outer"]
-        or (ratio >= T["bwb_root_over_outer_with_loss"] and v["root_loss"] >= T["bwb_root_loss"]))
+    return v["root_chord_m"] >= T["bwb_root_over_semispan"] * v["semi_span_m"] - EPS and (
+        ratio >= T["bwb_root_over_outer"] - EPS
+        or (ratio >= T["bwb_root_over_outer_with_loss"] - EPS and v["root_loss"] >= T["bwb_root_loss"] - EPS))
 
 
 def classify(v: dict, tailless: bool) -> tuple[str, str]:
@@ -124,13 +130,13 @@ def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
         out.append("unswept_outer")
 
     kinked = bool(v["kinks_at_span_fraction"])
-    straight = abs(v["qc_sweep_deg"]) < T["sweep_deg"]
-    if not bwb and straight and v["taper"] >= T["rect_taper"]:
+    straight = abs(v["qc_sweep_deg"]) < T["sweep_deg"] - EPS       # a designed 5 deg is swept, as above
+    if not bwb and straight and v["taper"] >= T["rect_taper"] - EPS:
         out.append("rectangular")
     if kinked:
         if "cranked" not in out:
             out.append("cranked")
-    elif not bwb and straight and v["taper"] < T["rect_taper"]:
+    elif not bwb and straight and v["taper"] < T["rect_taper"] - EPS:
         out.append("straight_tapered")
 
     if v["twist_change_deg"] <= -T["twist_deg"] + EPS:
@@ -145,8 +151,8 @@ def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
     if v["dihedral_range_outer_deg"] >= T["varying_dihedral_deg"] - EPS:
         out.append("varying_dihedral")
 
-    if v["aspect_ratio"] >= T["high_ar"]:
+    if v["aspect_ratio"] >= T["high_ar"] * (1.0 - AR_TOL):
         out.append("high_aspect_ratio")
-    elif v["aspect_ratio"] <= T["low_ar"]:
+    elif v["aspect_ratio"] <= T["low_ar"] * (1.0 + AR_TOL):
         out.append("low_aspect_ratio")
     return out, v

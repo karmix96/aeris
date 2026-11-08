@@ -44,8 +44,8 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 >   the raw points saw the same split because the built section passes through those points; the defect sat
 >   between them.
 > - **Every geometry hash changed.** The pyGeo `build --all` ran on Mike's machine on 8 Nov: 722 of 722 (pyGeo tests 24
->   of 24; the manifests now say pygeo; the reference meshes on pyGeo equal the numpy ones; one label differs from
->   the numpy loft: decision 79).
+>   of 24; the manifests now say pygeo; the reference meshes on pyGeo equal the numpy ones; one label differed from
+>   the numpy loft; fixed 8 Nov, decision 79, which changed every input hash but no surface).
 > - **Not rebuilt: the Stage 1 flow dataset and flow maps** (`cfdauto/flowmap`). They were made at real size and
 >   real speed (first approach) and stay the record. The 2-D section tables are size-free and were rebuilt on
 >   the fixed nose (7 Nov; no Stage 1 conclusion changes: `decisions/flow_maps.md`).
@@ -57,7 +57,8 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 > angles 0–10°. Proposals (pending): one matched C-H volume mesh for both solvers (SU2 has no overset); ADflow SA for
 > mesh studies and fully turbulent data, SU2 SST + LM on about 20 % of the wings; relaxed band (0.5 % c where local
 > Re ≥ 4 × 10⁵); fine level 15.2 M cells median with the planned rules, 10.9 M with the relaxed band; core Mach
-> ≤ 0.2 now. Open: the label rules at a threshold (decision 79); push the raw XFOIL data. The pyGeo run is done (8 Nov).
+> ≤ 0.2 now. Open: one more pyGeo `build --all` (the label fix of 8 Nov, decision 79, changed every input hash); push the raw
+> XFOIL data.
 
 ## What the two changes mean for the mesh (Stage 2)
 
@@ -106,7 +107,8 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 - First-approach pictures and data kept as the record: `Stage_1_geometry/docs/first_approach/` (real size, before
   7 Nov).
 - The rename changed the geometry code hash, so every input hash changed; on 7 Nov every hash changed again. The
-  pyGeo `build --all` of 8 Nov (Mike's machine, 722 of 722) refreshed the manifests (pushed on 8 Nov).
+  pyGeo `build --all` of 8 Nov (Mike's machine, 722 of 722) refreshed the manifests; the label fix of 8 Nov (decision 79)
+  changed every input hash again (no surface), so the manifests are the numpy rebuild until the next pyGeo build.
 
 ## The wings
 

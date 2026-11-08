@@ -321,7 +321,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 6. ~~The nose at M (decision 77, point 2)~~ — done 7 Nov: solved at every level, the strictest wins.
 7. ~~The refine map at the Re levels~~ — done 7 Nov (study 11): the lower band holds every strip; the upper band as written does not at low Re, but the built mesh has band-size cells there.
 8. **Mike: confirm or change the two builder choices left** (decision 77): the growth limits by the family rule; the station growth 1.2; and choose the upper band (0–85 % c as now, or 0–100 % c with the screen re-run).
-9. **pyGeo run (Mike's machine): done on 8 Nov.** pyGeo tests 24, Stage 1 tests 204, `build --all` 722 of 722 (manifests pushed), Stage 2 tests 41; the reference meshes on pyGeo equal the numpy ones (VC and F). One Stage 1 label differs (decision 79).
+9. **pyGeo run (Mike's machine): done on 8 Nov.** pyGeo tests 24, Stage 1 tests 204, `build --all` 722 of 722 (manifests pushed), Stage 2 tests 41; the reference meshes on pyGeo equal the numpy ones (VC and F). Stage 1's label fix (decision 79, 8 Nov) changed every input hash but no surface, so every mesh and screen here stands.
 10. **Close Stage 2:** final page, summary and handover; notify.
 11. **Stage 3:** the matched C-H volume mesh on one wing first, count its cells, then the first solves.
 12. **Ladders after the first solves:** chordwise (cells per bubble, the band), spanwise (station gap, tip gap), the nose angle (12, 10, 8, 6°).

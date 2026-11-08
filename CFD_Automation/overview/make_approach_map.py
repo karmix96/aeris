@@ -712,10 +712,10 @@ def page() -> str:
 
     status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 8 Nov 2026</span><h2>Built, pending, next</h2>'
               '<div class="status"><div><span class="k ok">Built and checked</span><ul><li>Similarity, nose fix, 722 wings rebuilt</li>'
-              '<li>New surface rules; 1,724 of 1,724 builds pass</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; VC meshes with the same ring nodes and stations as the numpy ones (80 of 80)</li></ul></div>'
+              '<li>New surface rules; 1,724 of 1,724 builds pass</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li></ul></div>'
               '<div><span class="k you">Your calls</span><ul><li>Decision 77: growth by the family rule; station growth 1.2</li>'
               '<li>Upper band: 0–85 % c written, or 0–100 % c (+0.4 % cells at F)</li><li>Solver split (76); Stage 0 leftovers</li></ul></div>'
-              '<div><span class="k next">Before Stage 3</span><ul><li>pyGeo screen at the new Re levels (VC and F); push the pyGeo manifests</li>'
+              '<div><span class="k next">Before Stage 3</span><ul><li>Label rules at a threshold (79): 2 labels; every hash changes, the meshes do not</li>'
               '<li>Fix the 4 F nose repairs; screen M on the full sets</li><li>Close Stage 2; start the C-H volume mesh</li></ul></div></div></section>')
 
     head = ('<title>CFD Automation Approach Map</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'

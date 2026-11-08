@@ -4,8 +4,8 @@ Text copy for chats in this project. Repo: karmix96/aeris, branch `stage2-surfac
 `CFD_Automation/Stage_2_surface_mesh/` (configs, decisions, docs, tests, scripts, studies) and the code in
 `CFD_Automation/cfdauto/mesh/`. Read first: the page `Stage_2_surface_mesh/docs/SURFACE_MESH.html` (live: https://claude.ai/artifact/6SXM1yDgwbPvgNRsDb24fi; text copy: 'Stage_2 Surface mesh page'), then `Stage_2_surface_mesh/README.md` (how to run, the rules table,
 the checks) and `decisions/surface_rules.md` (why, and what the screens showed). Built and screened here with
-the numpy twin of the loft; on Mike's machine with pyGeo (8 Nov) the VC screen of the reference wings at the old
-levels gave the same ring nodes and stations on 80 of 80 builds.
+the numpy twin of the loft; on Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes
+(VC and F: the same ring nodes and stations, 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰).
 
 > **What was first, and what changed (7 Nov 2026).** The **first approach** was built and screened on 2–3 Nov (the
 > sections below the box). On 4–6 Nov a **new approach** was decided (owner), and on **7 Nov it was built**: the surface
@@ -178,8 +178,8 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
 
 ## Weak points, said plainly
 
-- Built and screened with the **numpy twin of the loft**. With pyGeo (Mike's machine, 8 Nov) only the VC screen of
-  the reference wings at the old levels: same ring nodes and stations on 80 of 80. F and the new levels with pyGeo are owed.
+- Built and screened with the **numpy twin of the loft**; on pyGeo (Mike's machine, 8 Nov) only the 20 reference
+  wings, with the same meshes (VC and F). The full sets were not meshed on pyGeo.
 - **No solve yet.** Nothing here says the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the 0.05 limit** (0.075 at VC, 0.061 at F); similarity made some caps worse.
 - **The stations are 17 % more than the plan file** (station growth 1.2 and 12 gaps per panel at M, as decided, against
@@ -219,7 +219,8 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   starting value); the stations go on past the tip into outboard H blocks, growing from the tip gap; the tip
   vortex resolved there by clustering along its path (no tube); the cap is the wall of the first outboard block.
   Structured CGNS for ADflow; a converter to unstructured hexes (.su2) for SU2. Rough cost +30–60 % cells.
-- Before any solve: Mike's two confirmations (77), his choice on the upper band (0–85 or 0–100 % c), and the pyGeo screen at the new levels (the pyGeo tests, `build --all` and the VC screen at the old levels ran on 8 Nov).
+- Before any solve: Mike's two confirmations (77) and his choice on the upper band (0–85 or 0–100 % c). The pyGeo run
+  is done (8 Nov).
 
 ## How to run
 

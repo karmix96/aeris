@@ -19,8 +19,8 @@
 >   - The upper band: kept at 0–85 % c as written; as built the upper side has band-size cells to the trailing edge anyway. Writing 0–100 % c is Mike's choice: the same mesh at VC, 2 more ring nodes at F on 42 of 80 reference builds (+0.39 % cells), and a re-run of the screen (study 11).
 >   - The solver split (ADflow SA for the mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings) and the core Mach range (≤ 0.2 now, 0.3–0.5 later).
 > - **Open**
->   - The pyGeo screen at the new levels on Mike's machine (at the old levels his 80 reference meshes at VC had the
->     same ring nodes and stations as the numpy ones); then close Stage 2 and start Stage 3.
+>   - Close Stage 2 and start Stage 3. The pyGeo run is done (Mike's machine, 8 Nov): on the 20 reference wings the
+>     pyGeo loft gives the same meshes as the numpy one.
 
 Stage 2 puts a structured surface mesh on every wing that Stage 1 makes. The **first approach** was built and screened on 2–3 Nov: 790 of 790 builds passed all 13 checks, on 730 wings of 4 types and 5 sets plus the 20 reference wings at all four Re levels. On 4–6 Nov a **new approach** was decided, and on **7 Nov it was built and screened**: 1,724 of 1,724 builds pass, on the rebuilt sets (unit mean chord, the true nose), at all four levels VC, C, M and F. It keeps the mesher and changes where each rule is met, three rule values, the lower band, the volume mesh around the surface (Stage 3) and the wing size. This summary says what Stage 2 is, how one mesh is made, what the eleven studies showed, what was first and what changed, what is weak, what is left, and what Stage 3 gets. Studies 1–7 are first-approach evidence, on the geometry of before 7 Nov; studies 8–11 are new. More detail on every figure: the page *Surface Mesh* (`docs/SURFACE_MESH.html`).
 
@@ -297,7 +297,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 
 ## 6. Weak points, said plainly
 
-- **Numpy loft here.** Every mesh so far, first and new, was built on the numpy twin of the loft. With pyGeo (Mike's machine, 8 Nov) only the VC screen of the reference wings at the old levels: same ring nodes and stations on 80 of 80. F and the new levels with pyGeo are owed.
+- **Numpy loft here; pyGeo checked on the reference wings only.** Every mesh so far was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the limit:** 0.075 at VC and 0.061 at F, against 0.05 (study 9). Similarity made some caps worse (study 10).
 - **The stations are 17 % more than the plan.** The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.
@@ -321,7 +321,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 6. ~~The nose at M (decision 77, point 2)~~ — done 7 Nov: solved at every level, the strictest wins.
 7. ~~The refine map at the Re levels~~ — done 7 Nov (study 11): the lower band holds every strip; the upper band as written does not at low Re, but the built mesh has band-size cells there.
 8. **Mike: confirm or change the two builder choices left** (decision 77): the growth limits by the family rule; the station growth 1.2; and choose the upper band (0–85 % c as now, or 0–100 % c with the screen re-run).
-9. **pyGeo run (Mike's machine):** done on 8 Nov (pyGeo tests 24, Stage 1 tests 204, `build --all` 722 of 722, Stage 2 tests 41; VC screen of the reference wings at the old levels: 80 of 80, same counts as the numpy one). Left: push the pyGeo manifests; screen at the new levels (VC and F).
+9. **pyGeo run (Mike's machine): done on 8 Nov.** pyGeo tests 24, Stage 1 tests 204, `build --all` 722 of 722 (manifests pushed), Stage 2 tests 41; the reference meshes on pyGeo equal the numpy ones (VC and F). One Stage 1 label differs (decision 79).
 10. **Close Stage 2:** final page, summary and handover; notify.
 11. **Stage 3:** the matched C-H volume mesh on one wing first, count its cells, then the first solves.
 12. **Ladders after the first solves:** chordwise (cells per bubble, the band), spanwise (station gap, tip gap), the nose angle (12, 10, 8, 6°).

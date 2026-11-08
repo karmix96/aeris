@@ -109,11 +109,15 @@ The sections below are updated to match.
 
 **Open**
 - **Still open from Stage 0:** grid share 65 %, pitching moment 0.002, the iteration share, a D5.
-- **pyGeo run on the owner's machine: done on 8 Nov, except the new levels.** pyGeo tests 24 of 24 (the pyGeo and
-  numpy lofts agree within 10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all`
-  with pyGeo 722 of 722, Stage 2 tests 41; the VC screen of the 20 reference wings at the old levels: 80 of 80
-  pass, the same ring nodes and stations as the numpy screen on 80 of 80. Left: push the pyGeo manifests and
-  screen at the new levels (VC and F) with pyGeo.
+- **pyGeo run on the owner's machine: done (8 Nov).** pyGeo tests 24 of 24 (the pyGeo and numpy lofts agree within
+  10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all` with pyGeo 722 of 722 (the same
+  input hashes and pass/fail as the numpy loft; the manifests now say pygeo), Stage 2 tests 41. The pyGeo meshes of
+  the 20 reference wings equal the numpy ones: at VC, old levels, every count and every check value (within
+  6 × 10⁻¹⁰); at the new levels, VC and F, the same ring nodes and stations (80 of 80 each). One label differs
+  (decision 79).
+- **Label rules at a threshold (decision 79, open).** Two label tests have no tolerance (the kink) or too small a one
+  (aspect ratio): BWB corner1 #8 is "cranked" with pyGeo only, and the flying-wing reference wing 0 (AR exactly 8)
+  misses "high_aspect_ratio". Labels only; a fix changes every hash, not the meshes.
 
 ---
 

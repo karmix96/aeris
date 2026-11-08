@@ -118,11 +118,12 @@
 42. **Mixed shares (decided 29 Oct 2026).** Equal, 1/4 per type.
 43. ~~**Smallest generated wings.**~~ **Decided 29 Oct 2026:** kept (micro Class I). Spans start at 0.4–0.6 m (small root chord with low AR); the
     smallest real wing with an area is 0.96 m; the Wasp (0.33 m, designation-systems.net) and Black Widow (0.15 m, AIAA 2001-0127) are smaller.
-44. **pyGeo run: done on Mike's machine (8 Nov), except the new levels.** pyGeo tests 24 of 24 (the pyGeo and numpy
-    lofts agree within 10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all` with pyGeo
-    722 of 722, Stage 2 tests 41; VC screen of the 20 reference wings at the old levels: 80 of 80 pass, with the same
-    ring nodes and stations as the numpy screen on 80 of 80. Left: push the pyGeo manifests; screen at the new levels
-    (VC and F) with pyGeo.
+44. **pyGeo run: done on Mike's machine (8 Nov).** pyGeo tests 24 of 24 (the pyGeo and numpy lofts agree within
+    10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all` with pyGeo 722 of 722 (same
+    input hashes and pass/fail as the numpy loft; manifests pushed, they now say pygeo), Stage 2 tests 41. Meshes of
+    the 20 reference wings on the pyGeo loft: at VC, old levels, the same counts and every check value within
+    6 × 10⁻¹⁰ (`Stage_2_surface_mesh/data/studies/screen_VC_pygeo_oldlevels.json`); at the new levels, VC and F,
+    80 of 80 pass each with the same ring nodes and stations. The node hashes differ (round-off). One label differs (79).
 45. **Shape ranges from sources (decided 29 Oct 2026).** Every shape range and airfoil now has its source
     (`Stage_1_geometry/decisions/shape_ranges.md`). BWB airfoils MH 104 / MH 61 (was MH 91 / E374 / NLF1015);
     tailed sweep −5…15°, washout ≤ 5°, dihedral 0–5°. Open: check Raymer's taper and washout values
@@ -378,3 +379,15 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     Stage 0 `values.yaml` (`cfdauto.paths.re_levels()`); the studies run at the old levels keep their own as records.
     (4) No 5th level (Mike, 8 Nov): the levels stay as they are; LOTUS 11 m and the Patroller at top speed stay
     extrapolations.
+79. **Label rules at a threshold (open, 8 Nov 2026).** The pyGeo and numpy lofts give the same labels on 721 of 722
+    wings. BWB corner1 #8 changes its leading-edge sweep by exactly 5° at the outer break (35° → 30°), the kink
+    threshold: the numpy loft measures 4.999999999999993° (no kink, no "cranked" label), pyGeo gives the label. The two
+    kink tests (sweep change, chord slope) have no tolerance, unlike the twist, sweep and dihedral rules (EPS 10⁻⁹: a
+    designed value at a threshold must get the label). On the numpy loft 29 wings sit on the kink-sweep threshold and
+    7 on the kink-chord threshold (margins about ±10⁻¹⁴), so round-off decides their label. And the flying-wing
+    reference wing 0, designed at AR exactly 8, misses "high_aspect_ratio" on both lofts: its measured AR is
+    7.99999998 (area error about 3 × 10⁻⁹), beyond EPS. Effect: labels only (no type changes, no geometry, no mesh).
+    Proposed fix: EPS on the two kink tests, a tolerance of 10⁻⁶ (relative) on the AR tests. Checked on the numpy
+    loft: it changes 2 labels (corner1 #8 gains "cranked", as with pyGeo; reference wing 0 gains
+    "high_aspect_ratio"). Every geometry hash changes with it: one more `build --all` on both machines; the meshes
+    stay the same. Mike to decide: now or with the next geometry change.

@@ -70,7 +70,7 @@ th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing
 </ul></li>
 <li><strong>Open</strong>
 <ul>
-<li>The pyGeo screen at the new levels on Mike's machine (at the old levels his 80 reference meshes at VC had the same ring nodes and stations as the numpy ones); then close Stage 2 and start Stage 3.</li>
+<li>Close Stage 2 and start Stage 3. The pyGeo run is done (Mike's machine, 8 Nov): on the 20 reference wings the pyGeo loft gives the same meshes as the numpy one.</li>
 </ul></li>
 </ul>
 </blockquote>
@@ -416,7 +416,7 @@ th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing
 <p><strong>What stays the same.</strong> The six steps and the code (one change: the nose is solved at every level, and the strictest spacing wins); the ring and the cap; the family rule (÷ 1.3 per level, growth g^(1/1.3)); the 13 checks; one surface per wing and Re level.</p>
 <h2 id="6-weak-points-said-plainly">6. Weak points, said plainly</h2>
 <ul>
-<li><strong>Numpy loft here.</strong> Every mesh so far, first and new, was built on the numpy twin of the loft. With pyGeo (Mike's machine, 8 Nov) only the VC screen of the reference wings at the old levels: same ring nodes and stations on 80 of 80. F and the new levels with pyGeo are owed.</li>
+<li><strong>Numpy loft here; pyGeo checked on the reference wings only.</strong> Every mesh so far was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.</li>
 <li><strong>No solve yet.</strong> Nothing here shows that the surface gives a good volume mesh or a converged run.</li>
 <li><strong>The cap quads come close to the limit:</strong> 0.075 at VC and 0.061 at F, against 0.05 (study 9). Similarity made some caps worse (study 10).</li>
 <li><strong>The stations are 17 % more than the plan.</strong> The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.</li>
@@ -440,7 +440,7 @@ th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing
 <li><del>The nose at M (decision 77, point 2)</del> — done 7 Nov: solved at every level, the strictest wins.</li>
 <li><del>The refine map at the Re levels</del> — done 7 Nov (study 11): the lower band holds every strip; the upper band as written does not at low Re, but the built mesh has band-size cells there.</li>
 <li><strong>Mike: confirm or change the two builder choices left</strong> (decision 77): the growth limits by the family rule; the station growth 1.2; and choose the upper band (0–85 % c as now, or 0–100 % c with the screen re-run).</li>
-<li><strong>pyGeo run (Mike's machine):</strong> done on 8 Nov (pyGeo tests 24, Stage 1 tests 204, <code>build --all</code> 722 of 722, Stage 2 tests 41; VC screen of the reference wings at the old levels: 80 of 80, same counts as the numpy one). Left: push the pyGeo manifests; screen at the new levels (VC and F).</li>
+<li><strong>pyGeo run (Mike's machine): done on 8 Nov.</strong> pyGeo tests 24, Stage 1 tests 204, <code>build --all</code> 722 of 722 (manifests pushed), Stage 2 tests 41; the reference meshes on pyGeo equal the numpy ones (VC and F). One Stage 1 label differs (decision 79).</li>
 <li><strong>Close Stage 2:</strong> final page, summary and handover; notify.</li>
 <li><strong>Stage 3:</strong> the matched C-H volume mesh on one wing first, count its cells, then the first solves.</li>
 <li><strong>Ladders after the first solves:</strong> chordwise (cells per bubble, the band), spanwise (station gap, tip gap), the nose angle (12, 10, 8, 6°).</li>

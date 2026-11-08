@@ -507,14 +507,22 @@ code hashes with this check.
 
 ## 18. The pyGeo loft on Mike's machine (8 Nov 2026)
 
-Run by Mike on the 7 Nov code (commit 25cbfea0, the old Re levels; the geometry and mesh code that builds the
-surfaces is unchanged since), with pyGeo installed: pyGeo tests 24 of 24 (pyGeo and the numpy twin agree within
-10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all` 722 of 722, Stage 2 tests 41.
+Run by Mike with pyGeo installed. Stage 1 (on commit 25cbfea0; the geometry code is unchanged since): pyGeo tests 24
+of 24 (pyGeo and the numpy twin agree within 10⁻⁶ chord on the 7 published wings), all Stage 1 tests 204 (1 skipped),
+`build --all` 722 of 722. Against the numpy manifests: the same input hashes and the same pass/fail on all 722; the
+surface hashes differ on all 722 (round-off between the two lofts); the labels on 721 (decision 79). Stage 2 tests 41.
 
-The VC screen of the 20 reference wings × 4 Re (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶), built on the pyGeo loft: 80 of 80
-pass. Against the numpy screen of 7 Nov: the same ring nodes and stations on 80 of 80 builds, cells within 0.005 M
-(the rounding of the printout); cells median 0.70 M, largest 0.99 M (numpy: 0.70, 0.99). Median build time 3.1 s
-(cloud 5.1 s).
+The 20 reference wings meshed on the pyGeo loft, against the numpy screens:
 
-Not shown yet: F and the new Re levels with pyGeo, and agreement node by node (the screen stores a node hash, which
-differs as soon as the two lofts differ by round-off).
+| Run | Builds | Passed | Same ring nodes and stations | Other counts (quads, wall layers, cells) | Check values |
+| --- | --- | --- | --- | --- | --- |
+| VC, old levels (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶), full record | 80 | 80 | 80 | equal on 80 | within 6 × 10⁻¹⁰ (nose turning, degrees); relative ≤ 4 × 10⁻¹¹ |
+| VC, new levels (10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶), printout | 80 | 80 | 80 | cells within 0.005 M (print rounding) | not printed |
+| F, new levels, printout | 80 | 80 | 80 | cells within 0.005 M; median 6.70 M, largest 10.17 M (as numpy) | not printed |
+
+The node hashes differ (0 of 80 equal): the nodes move by round-off when the loft changes. Record:
+`data/studies/screen_VC_pygeo_oldlevels.json`. Median build time at VC 2.85 s (cloud 4.98 s); at F 10.25 s (cloud
+10.1 s).
+
+**Conclusion.** The numpy twin stands for the production loft: on the reference wings it gives the same meshes as
+pyGeo, to round-off. The full sets were not meshed on pyGeo.

@@ -19,9 +19,10 @@ the mesh must serve, plus a margin. Two grids:
     band = envelope_band(sm, machs=(0.03, 0.13), alphas=(-5, 8), margin=0.10)
 
 Bands. GENERIC_BAND is the first approach's generic band (upper 0–85 % c, lower 60–100 % c; Study 8's option B).
-DECIDED_BAND is the band decided on 7 Nov 2026 (upper 0–85 % c, lower 0–100 % c; decision 74, option A;
-configs/surface.yaml). A strip with no XFOIL answer falls back to the band of its mode: GENERIC_BAND in the
-Mach mode, DECIDED_BAND in the Re mode.
+BAND_7NOV is the band written on 7 Nov 2026 (upper 0–85 % c, lower 0–100 % c; decision 74, option A): the Re-mode
+study of 7–8 Nov (scripts/refine_map_re.py) reads against it. DECIDED_BAND is the band written since 8 Nov 2026
+(owner: upper 0–100 % c as well; configs/surface.yaml). A strip with no XFOIL answer falls back to the band of its
+mode: GENERIC_BAND in the Mach mode, DECIDED_BAND in the Re mode.
 
 Limits, inherited from the dataset: 2-D strips, e^N with N_crit 9 (calm air), a uniform (elliptic) induced
 angle, no crossflow transition on swept panels, no 3-D relief of bubbles, no tip effects. Where a strip has
@@ -39,7 +40,8 @@ import numpy as np
 from ..paths import re_levels
 
 GENERIC_BAND = {"upper": (0.0, 0.85), "lower": (0.60, 1.0)}     # first approach (record); Study 8's option B
-DECIDED_BAND = {"upper": (0.0, 0.85), "lower": (0.0, 1.0)}      # decided 7 Nov 2026 (decision 74, option A)
+BAND_7NOV = {"upper": (0.0, 0.85), "lower": (0.0, 1.0)}         # written 7 Nov 2026 (decision 74, option A); record
+DECIDED_BAND = {"upper": (0.0, 1.0), "lower": (0.0, 1.0)}       # since 8 Nov 2026 (owner): the upper band 0-100 % c too
 MACHS = (0.03, 0.05, 0.08, 0.10, 0.13, 0.16, 0.20)
 ALPHAS = tuple(float(a) for a in range(-5, 13))      # root angle; from -5 deg since 6 Nov 2026 (was -2)
 ALTS = (0.0, 3000.0)

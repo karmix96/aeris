@@ -66,7 +66,7 @@ def test_tip_gap_is_two_s0_at_every_level():
 
 def test_bands():
     for lev in LEVELS:
-        assert rules(lev).band_upper == (0.0, 0.85)
+        assert rules(lev).band_upper == (0.0, 1.0)              # owner, 8 Nov 2026 (was 0-85 % c, decision 58)
         assert rules(lev).band_lower == (0.0, 1.0)              # decision 74, option A
 
 

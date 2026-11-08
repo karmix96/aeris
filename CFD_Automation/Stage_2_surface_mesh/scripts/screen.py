@@ -3,6 +3,9 @@
     python scripts/screen.py                 # all sets at Re 3e5; reference wings at all four Re levels
     python scripts/screen.py --sets reference --re 1e5 3e5 1e6 4e6
     python scripts/screen.py --level F --sets reference
+    python scripts/screen.py --family --types bwb cranked --resume data/meshes/screen_family/bwb_cranked.jsonl
+        # every level of each wing and Re with ONE nose factor (owner, 8 Nov 2026: the ratio between levels stays
+        # exactly 1.3, also when a nose repair is needed; each row carries the family's repair label)
 
 Writes data/studies/screen_<level>.json (one row per wing and Re: passed, every check with its value, limit and
 margin, the failed checks with their rule, counts, the nose source per station, the spacings for the family
@@ -35,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from cfdauto import __version__  # noqa: E402
 from cfdauto.geometry.build import load_set  # noqa: E402
 from cfdauto.mesh.laws import CONFIG, rules  # noqa: E402
-from cfdauto.mesh.surface import build_surface, mesh_code_hash, wing_from_set  # noqa: E402
+from cfdauto.mesh.surface import build_family, build_surface, mesh_code_hash, wing_from_set  # noqa: E402
 from cfdauto.paths import STAGE2, re_levels  # noqa: E402
 
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
@@ -109,14 +112,9 @@ def wall_cells(m, rl) -> dict:
             "cells_wing": int(wing), "cells_cap": int(cap), "cells_est": int(wing + cap)}
 
 
-def one(wing_type: str, set_name: str, index: int, re: float, level: str, config=None) -> dict:
-    row = {"wing_type": wing_type, "set": set_name, "index": index, "re_mean": re, "level": level}
-    t0 = time.time()
-    try:
-        rl = rules(level, config)
-        w = wing_from_set(wing_type, set_name, index)
-        m = build_surface(w.loft, re, level, config)
-        row |= {"built": True, "passed": m.passed, "failed": [c.name for c in m.failed()],
+def mesh_row(row: dict, w, m, rl) -> dict:
+    """The screen row of one built mesh (every check with its margin, the counts, the nose, the cells)."""
+    return row | {"built": True, "passed": m.passed, "failed": [c.name for c in m.failed()],
                 "failed_detail": {c.name: f"{c.value:.6g}, limit {c.limit}" for c in m.failed()},
                 "checks": checks_with_margins(m, rl),
                 "n_ring": m.info["n_ring"], "n_span": m.info["n_span"], "n_side": m.info["n_side"],
@@ -133,12 +131,43 @@ def one(wing_type: str, set_name: str, index: int, re: float, level: str, config
                                 for k in sorted({"band" if r["nose_capped_at_band"] else r["nose_solved_at"] for r in m.stations})},
                 "nose_h_le_c": [float(min(r["h_le_c"] for r in m.stations)), float(max(r["h_le_c"] for r in m.stations))],
                 "spacings": spacings(m), **wall_cells(m, rl),
+                "nose_factor": m.info.get("nose_factor", 1.0), "nose_repair": m.info.get("nose_repair"),
+                "nose_family": m.info.get("nose_family"),
                 "input_hash": w.input_hash, "node_hash": m.node_hash()}
+
+
+def one(wing_type: str, set_name: str, index: int, re: float, level: str, config=None) -> dict:
+    row = {"wing_type": wing_type, "set": set_name, "index": index, "re_mean": re, "level": level}
+    t0 = time.time()
+    try:
+        rl = rules(level, config)
+        w = wing_from_set(wing_type, set_name, index)
+        m = build_surface(w.loft, re, level, config)
+        row = mesh_row(row, w, m, rl)
     except Exception as exc:  # a crash is a failure with a reason, never a missing row
         row |= {"built": False, "passed": False, "failed": ["exception"], "error": f"{type(exc).__name__}: {exc}",
                 "trace": traceback.format_exc().splitlines()[-3:]}
     row["seconds"] = round(time.time() - t0, 2)
     return row
+
+
+def family_rows(wing_type: str, set_name: str, index: int, re: float, levels, config=None) -> list[dict]:
+    """Every level of one wing at one Re, built by build_family (one nose factor for the family)."""
+    base = {"wing_type": wing_type, "set": set_name, "index": index, "re_mean": re}
+    t0 = time.time()
+    try:
+        w = wing_from_set(wing_type, set_name, index)
+        meshes = build_family(w.loft, re, levels, config)
+        rows = []
+        for lev, m in meshes.items():
+            r = mesh_row(base | {"level": lev}, w, m, rules(lev, config))
+            r["seconds"] = m.info["seconds"]
+            rows.append(r)
+        return rows
+    except Exception as exc:  # a crash is a failure with a reason, never a missing row
+        return [base | {"level": lev, "built": False, "passed": False, "failed": ["exception"],
+                        "error": f"{type(exc).__name__}: {exc}", "trace": traceback.format_exc().splitlines()[-3:],
+                        "seconds": round(time.time() - t0, 2)} for lev in levels]
 
 
 def check_rules(level: str, config=None) -> dict:
@@ -156,10 +185,17 @@ def main(argv=None) -> None:
     p.add_argument("--level", default=None, help="a level of the config (default: the coarsest, VC)")
     p.add_argument("--config", default=None, help="rules file (default configs/surface.yaml)")
     p.add_argument("--out", default=None, help="default data/studies/screen_<level>.json (see above)")
+    p.add_argument("--family", action="store_true",
+                   help="every level of the config per wing and Re, with one nose factor (build_family); writes "
+                        "<out-dir>/<tag>_<level>.json per level")
+    p.add_argument("--out-dir", default=None, help="--family: default data/meshes/screen_family")
+    p.add_argument("--tag", default=None, help="--family: the name of this part (default: the types joined by _)")
     p.add_argument("--resume", default=None,
                    help="a .jsonl file: every row is appended as it is built, and rows already in it are not built "
                         "again, so a stopped screen goes on where it stopped (the full JSON is written at the end)")
     a = p.parse_args(argv)
+    if a.family:
+        return main_family(a)
     rl = rules(a.level, a.config)
     level = rl.level
     other = a.config and Path(a.config).resolve() != CONFIG.resolve()
@@ -211,6 +247,59 @@ def main(argv=None) -> None:
                                                             "(n_ring-1)(n_span-1) n + cap_quads n"},
                                "summary": summary, "rows": rows}, indent=1))
     print(json.dumps(summary, indent=1))
+
+
+def main_family(a) -> None:
+    """--family: each wing and Re at every level of the config, built together with one nose factor."""
+    levels = rules(None, a.config).names
+    out_dir = Path(a.out_dir) if a.out_dir else STAGE2 / "data" / "meshes" / "screen_family"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tag = a.tag or "_".join(a.types)
+    log = Path(a.resume) if a.resume else out_dir / f"{tag}.jsonl"
+    done = {}
+    if log.exists():
+        for line in log.read_text().splitlines():
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue                      # a line cut by a stop: built again
+            done[(r["wing_type"], r["set"], r["index"], float(r["re_mean"]), r["level"])] = r
+    print(f"family screen {tag}: levels {levels}; {len(done)} rows already in {log.name}", flush=True)
+    rows = []
+    for t in a.types:
+        for s in a.sets:
+            n = len(load_set(t, s)["vectors"])
+            res = a.re or (list(RE_LEVELS) if s == "reference" else [3.0e5])
+            for i in range(n):
+                for re in res:
+                    keys = [(t, s, i, float(re), lev) for lev in levels]
+                    if all(k in done for k in keys):
+                        rows += [done[k] for k in keys]
+                        continue
+                    fam = family_rows(t, s, i, re, levels, a.config)
+                    rows += fam
+                    with open(log, "a") as f:
+                        for r in fam:
+                            f.write(json.dumps(r) + "\n")
+                    ok = all(r["passed"] for r in fam)
+                    nf = fam[0].get("nose_family") or {}
+                    print(f"{'ok ' if ok else 'XX '}{t:12s} {s:15s} {i:3d} Re {re:7.1e}  "
+                          + "  ".join(f"{r['level']} {r['n_ring']}x{r['n_span']} {r['cells_est'] / 1e6:5.2f}M"
+                                      if r["built"] else f"{r['level']} {r['error']}" for r in fam)
+                          + f"  nose: {nf.get('label', '?')}  {sum(r['seconds'] for r in fam):5.1f} s", flush=True)
+    for lev in levels:
+        rl = rules(lev, a.config)
+        lr = [r for r in rows if r["level"] == lev]
+        (out_dir / f"{tag}_{lev}.json").write_text(json.dumps(
+            {"code_version": __version__, "mesh_code_hash": mesh_code_hash(), "level": lev, "family": True,
+             "levels": levels, "config": str(a.config or CONFIG), "rules": rl.values(),
+             "check_rules": check_rules(lev, a.config),
+             "cell_estimate": {"wall_growth_vc": WALL_GROWTH_VC, "wall_depth_c": WALL_DEPTH_C},
+             "summary": summarise(lr), "rows": lr}, indent=1))
+    fams = [r for r in rows if r["level"] == levels[0] and r.get("built")]
+    rep_ = [r for r in fams if (r.get("nose_family") or {}).get("rounds", 0) > 0]
+    print(json.dumps({"families": len(fams), "builds": len(rows), "passed": sum(r["passed"] for r in rows),
+                      "family_repairs": len(rep_)}, indent=1))
 
 
 def summarise(rows: list[dict]) -> dict:

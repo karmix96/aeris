@@ -16,6 +16,13 @@ Steps (Grand Roadmap recipe R-S):
    spanwise envelope (law 2) holds by construction;
 5. the rings, every node asked from the loft; the tip cap from the tip ring;
 6. the checks, each against this level's own value; nothing is written unless all pass.
+
+The nose repair (owner, 8 Nov 2026). The solve uses each station's own ring; the mesh uses the shared node list, which
+can turn a nose a little more. A repair multiplies the nose spacing of every station by 0.9. It is needed only where
+a ring turns past this level's check limit (its angle + 0.2 deg, the limit that refuses a mesh; before 8 Nov a
+turning 0.003-0.006 deg past the solve's own tolerance of 0.02 deg triggered it, on 4 of 782 F builds). A repair is a
+property of the family, one wing at one Re: build_family applies the same factor at every level, so every spacing
+still refines by exactly 1.3 between levels, and every mesh records it (info["nose_family"], info["nose_repair"]).
 """
 
 from __future__ import annotations
@@ -35,6 +42,9 @@ from .ring import RingSpec, Section, build_ring_at, kink_mask, nose_turning, sol
 from .stations import SpanTable, place_stations
 
 Array = np.ndarray
+
+REPAIR_FACTOR = 0.9       # one repair round: the nose spacing of every station x 0.9
+REPAIR_TOL_STEPS = 10     # a round is needed above the level's angle + 10 x its turning tolerance = the check limit
 
 
 @dataclass
@@ -75,9 +85,12 @@ def mesh_code_hash() -> str:
     return h.hexdigest()
 
 
-def build_surface(loft, re_mean: float, level: str | None = None, config=None) -> SurfaceMesh:
+def build_surface(loft, re_mean: float, level: str | None = None, config=None, nose_factor: float = 1.0) -> SurfaceMesh:
     """level: a level of the config's ladder (VC, C, M, F; default the coarsest). config: a rules file
-    (default configs/surface.yaml; the first approach: configs/surface_first.yaml)."""
+    (default configs/surface.yaml; the first approach: configs/surface_first.yaml). nose_factor: the family's nose
+    repair (1.0 = none; build_family sets it, the same at every level). A round still needed here is applied and
+    recorded (info["turning_repairs"] > 0): then this level is off the family ratio until the family is rebuilt with
+    build_family."""
     rc: Rules = get_rules(None, config)            # the coarsest level
     rl: Rules = get_rules(level or rc.level, config)
     solvers = [get_rules(lev, config) for lev in rc.nose_solve_levels]   # VC, C, M, F (the first approach: C)
@@ -119,10 +132,11 @@ def build_surface(loft, re_mean: float, level: str | None = None, config=None) -
 
     # 3-5. This level's spacings per station, then ONE node distribution in arc fraction for the
     # whole wing (the strictest station wins at every place), the rings, and the turning measured
-    # again on the rings as built. A station above this level's target tightens the nose spacing of
-    # the whole wing by 10 % (the union keeps every station's own band and trailing-edge cells).
-    target = rl.nose_turning_deg + rl.nose_turning_tol_deg
-    h_le_c = np.array([r["h_le_c_solved"] for r in rows])
+    # again on the rings as built. The family's nose factor first; a station above this level's check limit
+    # then tightens the nose spacing of the whole wing by 10 % (the union keeps every station's own band and
+    # trailing-edge cells); build_family moves such a round to every level.
+    target = rl.nose_turning_deg + REPAIR_TOL_STEPS * rl.nose_turning_tol_deg
+    h_le_c = np.array([r["h_le_c_solved"] for r in rows]) * float(nose_factor)
 
     def make_specs(h_le_c):
         return [RingSpec(h_le=h * sec.chord / rl.scale, h_band=rl.band_spacing_c(r["re_local"]) * sec.chord,
@@ -140,7 +154,7 @@ def build_surface(loft, re_mean: float, level: str | None = None, config=None) -
         bad = (turn > target) & np.array([r["nose_solved"] for r in rows])
         if not bad.any():
             break
-        h_le_c = h_le_c * 0.9
+        h_le_c = h_le_c * REPAIR_FACTOR
     rings = [o["ring"] for o in outs]
     us = [np.concatenate([o["u_upper"][::-1], o["u_lower"][1:], np.full(rl.n_base - 2, np.nan)]) for o in outs]
     repair = repairs
@@ -161,9 +175,49 @@ def build_surface(loft, re_mean: float, level: str | None = None, config=None) -
         "re_tip": re_tip, "s0_tip_m": s0_tip, "tip_gap_asked_m": tip_gap, "cells_per_panel": st["cells_per_panel"],
         "loft_station_y_m": tab.loft_y.tolist(), "cap": cap_info, "rules": rl.values(),
         "turning_repairs": repair,
+        "nose_factor": float(nose_factor),
+        "nose_repair": {"family_factor": float(nose_factor), "rounds_here": int(repair),
+                        "factor_here": float(nose_factor) * REPAIR_FACTOR ** repair,
+                        "label": ("none" if repair == 0 and nose_factor == 1.0 else
+                                  "family repair (the same factor at every level)" if repair == 0 else
+                                  "repaired at this level only: off the family ratio; rebuild with build_family"),
+                        "trigger_deg": float(target)},
     })
     mesh.checks = run_checks(mesh, secs, specs, st, tab, rl)
     return mesh
+
+
+def build_family(loft, re_mean: float, levels=None, config=None) -> dict[str, SurfaceMesh]:
+    """Every level of one wing at one Re with ONE nose factor, so that every spacing refines by exactly 1.3 between
+    levels, also when a nose repair is needed (owner, 8 Nov 2026). First every level with factor 1; if a level needs
+    repair rounds, the factor 0.9^n (n the most rounds any level needed) goes on every level and all are rebuilt,
+    until no level needs a round. Each mesh then carries info["nose_family"]: the factor, the rounds, the levels
+    that needed them, and a label (none, or family repair)."""
+    import time
+    levels = list(levels or get_rules(None, config).names)
+    factor, found, t_all = 1.0, [], 0.0
+    for _ in range(12):
+        meshes, secs = {}, {}
+        for lev in levels:
+            t0 = time.time()
+            meshes[lev] = build_surface(loft, re_mean, lev, config, nose_factor=factor)
+            secs[lev] = time.time() - t0
+        t_all += sum(secs.values())
+        need = {lev: m.info["turning_repairs"] for lev, m in meshes.items() if m.info["turning_repairs"]}
+        if not need:
+            break
+        found.append({"factor": factor, "rounds_needed": need})
+        factor *= REPAIR_FACTOR ** max(need.values())
+    else:
+        raise RuntimeError("the family nose factor did not settle in 12 rebuilds")
+    rounds = int(round(np.log(factor) / np.log(REPAIR_FACTOR))) if factor < 1.0 else 0
+    fam = {"levels": levels, "factor": factor, "rounds": rounds, "found": found,
+           "label": "none" if rounds == 0 else f"family repair: nose x {REPAIR_FACTOR}^{rounds} at every level",
+           "seconds_total": round(t_all, 2)}
+    for lev, m in meshes.items():
+        m.info["nose_family"] = fam
+        m.info["seconds"] = round(secs[lev], 2)
+    return meshes
 
 
 # --- checks ---------------------------------------------------------------------------
@@ -304,7 +358,9 @@ def write(mesh: SurfaceMesh, wing: Wing, out: Path) -> Path:
             "wing_input_hash": wing.input_hash, "loft_surface_hash": wing.surface_hash,
             "loft_backend": wing.loft.backend, "level": mesh.level, "re_mean": mesh.re_mean,
             "rules_config": cfg.name, "rules_hash": hashlib.sha256(cfg.read_bytes()).hexdigest(),
-            "mesh_code_hash": mesh_code_hash(), "passed": mesh.passed}
+            "mesh_code_hash": mesh_code_hash(), "passed": mesh.passed,
+            # the nose repair label (owner, 8 Nov 2026): the family factor and whether this level is off the ratio
+            "nose_repair": mesh.info.get("nose_repair"), "nose_family": mesh.info.get("nose_family")}
     if not mesh.passed:
         (out / "refusal.json").write_text(json.dumps(head | {"failed": [c.as_dict() for c in mesh.failed()],
                                                              "checks": checks}, indent=1))

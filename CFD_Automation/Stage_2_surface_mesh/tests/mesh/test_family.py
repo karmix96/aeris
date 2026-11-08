@@ -16,8 +16,8 @@ def spacings(m):
         "te": root["h_te_c_delivered"], "band_root": root["band_max_c"], "band_tip": tip["band_max_c"],
         "tip_gap": float(np.diff(y)[-1]), "root_gap": float(np.diff(y)[0]),
         "base": float(np.linalg.norm(m.wing[-1, 0] - m.wing[0, 0])),   # one base cell at the root
-        # a cell in the stretched part behind the upper band (85-100 % c) and a station gap in the
-        # tip squeeze: both must refine by r too (a true scaled copy, not only the end spacings)
+        # a cell over 85-100 % c of the upper side (behind the band written until 8 Nov 2026) and a station gap
+        # in the tip squeeze: both must refine by r too (a true scaled copy, not only the end spacings)
         "upper_aft_cell": _cell_at(m, 0, 0.92), "squeeze_gap": _gap_at(m, 0.5 * (y[-1] + m.info["loft_station_y_m"][-2])),
     }
 
@@ -51,3 +51,28 @@ def test_level_c_is_level_vc_divided_by_r(bwb, mesh_vc):
         assert abs(v_sp[k] / c_sp[k] / want[k] - 1.0) < 0.03, (k, v_sp[k] / c_sp[k], want[k])
     for k in ("n_ring", "n_span"):           # counts refine by r too (within the integer steps)
         assert abs(m.info[k] / mesh_vc.info[k] / r - 1.0) < 0.05, (k, m.info[k], mesh_vc.info[k])
+
+
+@pytest.mark.slow
+def test_family_nose_repair_keeps_the_ratio_and_is_labelled(bwb, monkeypatch):
+    """Owner, 8 Nov 2026: a nose repair is a property of the family. Forced here (the trigger moved 0.4 deg below each
+    level's angle), build_family puts the same factor on every level, so the asked nose spacing still refines by
+    exactly r between levels, no level keeps a repair of its own, and every mesh carries the label."""
+    import cfdauto.mesh.surface as S
+    monkeypatch.setattr(S, "REPAIR_TOL_STEPS", -20)
+    ms = S.build_family(bwb.loft, 3.0e5, ["VC", "C"])
+    fam = ms["VC"].info["nose_family"]
+    assert fam["rounds"] >= 1 and fam["label"].startswith("family repair") and fam["found"]
+    for m in ms.values():
+        assert m.info["turning_repairs"] == 0
+        assert m.info["nose_factor"] == pytest.approx(fam["factor"])
+        assert m.info["nose_repair"]["label"].startswith("family repair")
+        assert m.info["nose_family"] is fam
+    r = rules("VC").ratio
+    vc, c = ms["VC"].stations[0], ms["C"].stations[0]          # the root station is on every level
+    assert vc["h_le_c_solved"] == c["h_le_c_solved"]
+    assert vc["h_le_c_asked"] / c["h_le_c_asked"] == pytest.approx(r, rel=1e-12)
+
+
+def test_no_repair_means_label_none(mesh_vc):
+    assert mesh_vc.info["nose_repair"]["label"] == "none" and mesh_vc.info["nose_factor"] == 1.0

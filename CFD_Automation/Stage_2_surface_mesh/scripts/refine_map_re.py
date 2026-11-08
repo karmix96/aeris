@@ -12,8 +12,9 @@ follows from Re: V = Re / (ρ/μ) / mean chord. For each wing, Re level, strip a
   - where transition sits from −5° to 8°, and from −5° to 12° (earliest and latest over the angles with an answer);
   - the envelope band, as in the first approach: from min(bubble start, transition − 10 % c) to
     max(bubble end, transition + 10 % c, separation start);
-  - whether the decided generic band (upper 0–85 % c, lower 0–100 % c; decision 74 option A) covers that band,
-    and by how much it falls short when it does not;
+  - whether the band written on 7 Nov (upper 0–85 % c, lower 0–100 % c; decision 74 option A) covers that band,
+    and by how much it falls short when it does not (since 8 Nov the upper band is written 0–100 % c, owner, so
+    every band now fits; this study is the reason, kept as it was read);
   - the strips with no XFOIL answer, split by cause: local Re below the tables' lowest (1.5 × 10⁴) or not
     (beyond the section's 2-D stall, or a failed point).
 
@@ -39,7 +40,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from cfdauto.flowmap import tables  # noqa: E402
-from cfdauto.mesh.refine_map import (ALPHAS, DECIDED_BAND, GENERIC_BAND, MACH_SIMILARITY, RE_LEVELS,  # noqa: E402
+from cfdauto.mesh.refine_map import (ALPHAS, BAND_7NOV as DECIDED_BAND, GENERIC_BAND, MACH_SIMILARITY, RE_LEVELS,  # noqa: E402
                                      envelope_band, strip_map)
 from cfdauto.paths import STAGE2  # noqa: E402
 

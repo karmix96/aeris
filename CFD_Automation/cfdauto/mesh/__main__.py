@@ -19,7 +19,7 @@ def main(argv=None) -> None:
     p.add_argument("--set", required=True, help="training_focus, training_full, corner1, corner2, reference")
     p.add_argument("--index", type=int, required=True)
     p.add_argument("--level", default=None, help="a level of the config: VC, C, M, F (default: the coarsest, VC)")
-    p.add_argument("--re", type=float, default=3.0e5, help="Re on the mean chord (Stage 0 levels: 1e5, 3e5, 1.5e6, 3e6)")
+    p.add_argument("--re", type=float, default=3.0e5, help="Re on the mean chord (Stage 0 levels: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026)")
     p.add_argument("--config", default=None, help="rules file (default configs/surface.yaml; the first approach: "
                                                    "configs/surface_first.yaml)")
     p.add_argument("--out", default=None, help="default: Stage_2_surface_mesh/data/meshes/<type>/<set>/<index>/<name> "

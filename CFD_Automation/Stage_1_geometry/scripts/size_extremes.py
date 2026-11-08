@@ -3,7 +3,7 @@
 Since decision 70 (7 Nov 2026) every wing is built at unit mean chord: mean chord = area / full span = 1.
 So a wing has no size. Every length is in mean chords, the full span b equals the aspect ratio, and the
 area equals the aspect ratio too. Size enters only through the Re on the mean chord, an input of each solve
-(the Stage 0 levels 1e5, 3e5, 1.5e6, 3e6).
+(the Stage 0 levels: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026; 1e5, 3e5, 1.5e6, 3e6 before).
 
     python scripts/size_extremes.py     # writes docs/size_extremes.json and docs/size_extremes.gif
 
@@ -11,7 +11,7 @@ Searched over all corners of the planform inputs (aspect ratio, chord ratios, pa
 inputs stay mid-range:
   lowest / highest aspect ratio    the two outlines in the GIF
   smallest tip chord               with the lowest Re level, the lowest local Re (tip Re = 1e5 x tip chord)
-  largest root chord               with the top Re level, the highest local Re (root Re = 3e6 x root chord)
+  largest root chord               with the top Re level, the highest local Re (root Re = 4e6 x root chord)
   local Re = (Re on the mean chord) x (local chord in mean chords)
 
 The first approach (real size and real speeds, 30 Oct - 6 Nov 2026) is kept, not rebuilt:

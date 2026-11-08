@@ -3,7 +3,8 @@
     python scripts/refine_map_re.py              # data/studies/refine_map_re.json and docs/page/refine_re_*.png (about 30 s)
     python scripts/refine_map_re.py --figures    # only redraw the figures from the JSON
 
-Every reference wing (4 types × 5) at the four Re levels on the mean chord (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶) ×
+Every reference wing (4 types × 5) at the four Re levels on the mean chord (Stage 0: 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ since
+8 Nov 2026; the 7 Nov run at 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ is kept in data/studies/refine_map_re_levels_7nov.json) ×
 root angle −5…12° (1° steps): sea level, unit mean chord, 3 strips per panel (as the first approach), the 2-D
 section tables read at Mach 0.1 (decision 70), rebuilt on the fixed nose (decision 64, 7 Nov 2026). The speed
 follows from Re: V = Re / (ρ/μ) / mean chord. For each wing, Re level, strip and side:
@@ -64,7 +65,7 @@ def _f(sm: dict, name: str) -> np.ndarray:
 
 
 def re_label(r: float) -> str:
-    return {1e5: "10⁵", 3e5: "3 × 10⁵", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶"}.get(r, f"{r:.3g}")
+    return {1e5: "10⁵", 3e5: "3 × 10⁵", 1e6: "10⁶", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶", 4e6: "4 × 10⁶"}.get(r, f"{r:.3g}")
 
 
 # --- per wing -----------------------------------------------------------------------------------------
@@ -338,14 +339,14 @@ CAPTIONS = {
                 "start) fits inside the written upper band 0–85 % c, the share whose transition itself fits (tick), and how "
                 "far the band's aft end goes past 85 % c.",
         "conclusion": "As written, the upper band misses the upper transition on most strips at 10⁵ and 3 × 10⁵ (0–49 % fit, "
-                      "short by up to 15 % c, to the trailing edge) and on 3–68 % at 1.5 × 10⁶ and 3 × 10⁶; as built this is "
+                      "short by up to 15 % c, to the trailing edge) and on 0–88 % at 10⁶ and 4 × 10⁶; as built this is "
                       "no gap, because the shared node distribution (decision 60) and the lower band 0–100 % c already give "
                       "the upper side band cells to the trailing edge."},
     "refine_re_no_answer.png": {
         "what": "Share of strips with no XFOIL answer against the root angle, per type and Re level; no strip is below the "
                 "tables' lowest Re, so each one is beyond the section's 2-D stall or a failed point.",
         "conclusion": "Only the tailless wings lose answers in numbers, at negative root angles (up to 46 % of the BWB and "
-                      "43 % of the flying-wing strips at −5°), where their outboard sections (MH 61, MH 60 / MH 45) are "
+                      "42 % of the flying-wing strips at −5°), where their outboard sections (MH 61, MH 60 / MH 45) are "
                       "below the lowest angle XFOIL converges at; the band there rests on the other angles."},
 }
 

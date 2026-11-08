@@ -8,7 +8,8 @@ full span = 1 (the geometric mean chord, not the MAC). A wing has no size; lengt
 ending in `_m` is metres for a 1 m mean chord). The root chord left the vector (18 → 17 names: 16 sampled for
 bwb and cranked, 12 for tapered and flying_wing); semi-span = AR / 2, root chord = 1 / K. The trailing edge is
 0.2 % of the local chord on every wing (no mm floors, no wing class, no switch section), and the 7 m full-span
-cap is gone. Size enters each solve as the Re on the mean chord (the Stage 0 levels 1e5, 3e5, 1.5e6, 3e6);
+cap is gone. Size enters each solve as the Re on the mean chord (the Stage 0 levels 1e5, 3e5, 1e6, 4e6 since 8 Nov;
+1.5e6 and 3e6 before);
 Mach 0.1 with a Prandtl–Glauert correction is on the solver side. **Same day (decision 64, the nose):** the
 leading edge is the apex of one cubic spline through the raw points, both sides are sampled from it, 201 points
 per side, and a nose gate refuses a section whose nose folds back. Every geometry hash changed; the sets were
@@ -32,6 +33,8 @@ python scripts/summary_figs.py                                      # docs/summa
 python scripts/size_extremes.py                                     # extreme shapes at unit mean chord (docs/size_extremes.*)
 python scripts/design_space_figs.py                                 # design space, key pairs, families, local Re
 python scripts/nose_curvature.py [--database]                       # nose study, decision 64 (data/studies/nose_curvature.json)
+python scripts/greek_uavs.py                                        # Greek tactical UAVs against the Re levels (configs/greek_uavs.yaml; 8 Nov)
+python scripts/re_ladder_check.py                                   # check C4 on 2-D data: drag read between the Re levels (8 Nov)
 python scripts/loft_kspan_study.py                                  # data/studies/loft_kspan.json
 python -m pytest                                                    # all tests
 python -m pytest -m "not pygeo"                                     # without pyGeo

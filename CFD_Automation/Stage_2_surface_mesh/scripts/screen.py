@@ -1,7 +1,7 @@
 """Robustness screen of the surface mesher: every wing of the built sets, every type, one level (default VC).
 
     python scripts/screen.py                 # all sets at Re 3e5; reference wings at all four Re levels
-    python scripts/screen.py --sets reference --re 1e5 3e5 1.5e6 3e6
+    python scripts/screen.py --sets reference --re 1e5 3e5 1e6 4e6
     python scripts/screen.py --level F --sets reference
 
 Writes data/studies/screen_<level>.json (one row per wing and Re: passed, every check with its value, limit and
@@ -36,11 +36,11 @@ from cfdauto import __version__  # noqa: E402
 from cfdauto.geometry.build import load_set  # noqa: E402
 from cfdauto.mesh.laws import CONFIG, rules  # noqa: E402
 from cfdauto.mesh.surface import build_surface, mesh_code_hash, wing_from_set  # noqa: E402
-from cfdauto.paths import STAGE2  # noqa: E402
+from cfdauto.paths import STAGE2, re_levels  # noqa: E402
 
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 SETS = ("reference", "training_focus", "training_full", "corner1", "corner2")
-RE_LEVELS = (1.0e5, 3.0e5, 1.5e6, 3.0e6)
+RE_LEVELS = re_levels()     # Stage 0 values.yaml: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
 FIRST_SCREEN = STAGE2 / "data" / "studies" / "screen_C.json"     # the first approach's screen (2-3 Nov)
 WALL_GROWTH_VC = 1.25          # wall-normal growth at VC (decision 71, hard minimum); 1.107 at F by the family rule
 WALL_DEPTH_C = 2.0             # wall-normal depth of the wing blocks, in local chords (for the cell estimate only)
@@ -152,7 +152,7 @@ def main(argv=None) -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--sets", nargs="+", default=list(SETS))
     p.add_argument("--types", nargs="+", default=list(TYPES))
-    p.add_argument("--re", nargs="+", type=float, default=None, help="Re levels; default 3e5 (reference: all four)")
+    p.add_argument("--re", nargs="+", type=float, default=None, help="Re levels; default 3e5 (reference: the four Stage 0 levels)")
     p.add_argument("--level", default=None, help="a level of the config (default: the coarsest, VC)")
     p.add_argument("--config", default=None, help="rules file (default configs/surface.yaml)")
     p.add_argument("--out", default=None, help="default data/studies/screen_<level>.json (see above)")

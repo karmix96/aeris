@@ -36,6 +36,7 @@ DOCS = ROOT / "docs"
 PAGE = DOCS / "page"
 STUDIES = ROOT / "data" / "studies"
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
+RE_NAME = {1e5: "10⁵", 3e5: "3 × 10⁵", 1e6: "10⁶", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶", 4e6: "4 × 10⁶"}
 TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
 
 
@@ -125,7 +126,9 @@ def change_table(sn: dict, uc: dict) -> str:
         ("Volume mesh (Stage 3)", "O-H body mesh (S8) with an overset wake box and a tip-vortex tube; ADflow only (SU2 has no overset).",
          "One matched C-H multiblock mesh for ADflow and SU2 (SU2 reads it converted to unstructured hexes). Wake lines from the trailing edge to the far field; the tip vortex resolved in the outboard blocks; no overlap gate. The ring and the cap of Stage 2 stay as they are.", "decided 6 Nov", "Stage 3"),
         ("Wing size and Re (similarity)", "Wings at real size; Re 3 × 10⁵ on the mean chord for the screen, 4 Re levels on the reference wings; trailing edge max(0.5 mm Class I / 1.0 mm Class II, 0.2 % c).",
-         "Every wing at unit mean chord (area / full span); the Re on the mean chord is an input (the same 4 levels: 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶; 10⁵ is 18 % below the slowest real UAV, kept as a margin, Mike, 7 Nov); Mach 0.1 with a Prandtl–Glauert correction on CL and CM; trailing edge 0.2 % c; the root chord leaves the vector (18 → 17 numbers); no 7 m full-span cap. Built in Stage 1 on 7 Nov: the sets rebuilt (722 of 722), 13 of the 20 reference wings are new picks. Checked in Stage 2 (Study 10).", "decided 6 Nov; built 7 Nov", "built (Stage 1)"),
+         "Every wing at unit mean chord (area / full span); the Re on the mean chord is an input (4 levels: 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ since 8 Nov, were 1.5 × 10⁶ and 3 × 10⁶; 10⁵ is 18 % below the slowest real UAV, kept as a margin, Mike, 7 Nov); Mach 0.1 with a Prandtl–Glauert correction on CL and CM; trailing edge 0.2 % c; the root chord leaves the vector (18 → 17 numbers); no 7 m full-span cap. Built in Stage 1 on 7 Nov: the sets rebuilt (722 of 722), 13 of the 20 reference wings are new picks. Checked in Stage 2 (Study 10).", "decided 6 Nov; built 7 Nov", "built (Stage 1)"),
+        ("Re levels (78)", "10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ on the mean chord (top 3 × 10⁶ from the fastest real Class II wing).",
+         "10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ (Mike, 8 Nov): 4 × 10⁶ takes in every cruise point of the Greek tactical programmes (LOTUS, Archytas, ACTUS; Stage 0); 10⁶ fills the old ×5 gap (check C4 on 2-D data). Still 4 levels and 8,000 solves; at F the two moved levels have 0.5 % fewer cells. The reference wings re-screened at the new levels (Study 9) and the refine map redone (Study 11) on 8 Nov.", "decided 8 Nov", "screened"),
         ("Flow model", "Fully turbulent ADflow SA planned; the turbulence model left to a later stage.",
          "Transition must be captured, with ADflow and SU2 (4 Nov). Split, proposal (pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings.", "decided 4 Nov; split pending", "—"),
         ("Angles of attack", "0–8° (12° for the nose and wake studies).",
@@ -457,7 +460,7 @@ def new_screen_block(sn: dict) -> str:
     t.append("</table></div>")
     out.append("".join(t))
     # C. reference wings per level and Re
-    res = [("1.0e+05", "10⁵"), ("3.0e+05", "3 × 10⁵"), ("1.5e+06", "1.5 × 10⁶"), ("3.0e+06", "3 × 10⁶")]
+    res = [(f"{r:.1e}", RE_NAME.get(r, f"{r:.2g}")) for r in sn.get("re_levels", (1e5, 3e5, 1.5e6, 3e6))]
     t = ['<div class="tbl"><table class="mid"><tr><th>Reference wings (20 per Re)</th>' + "".join(f"<th>Re {n}: ring × stations; cells [M] median</th>" for _, n in res) + "</tr>"]
     for lev in LEVELS:
         cells = []
@@ -597,6 +600,12 @@ def cells_side_by_side(sn: dict) -> str:
 
 def new_screen_section(sn: dict) -> str:
     """Study 9, the new screen: what was done, the tables, the figures, the conclusion (from screen_new_summary.json)."""
+    lv_txt = ", ".join(RE_NAME.get(r, f"{r:.2g}") for r in sn.get("re_levels", (1e5, 3e5, 1.5e6, 3e6)))
+    hc = sn.get("hash_check") or {}
+    hc_txt = (f"The reference wings were screened again on 8 Nov at the new Re levels (10⁶ and 4 × 10⁶ in place of 1.5 × 10⁶ and "
+              f"3 × 10⁶; decision 78); the mesh code had changed only in a file the surface mesher does not use, and the "
+              f"{hc['rebuilt_compared']} meshes rebuilt at 10⁵ and 3 × 10⁵ have the very same nodes as on 7 Nov "
+              f"({hc['rebuilt_same_nodes']} of {hc['rebuilt_compared']}), so the 7 Nov set screens stand. ") if hc else ""
     full, ref, fam = sn["full"], sn["reference"], sn["family"]
     vc, f, c, m = full["VC"], full["F"], ref["C"], ref["M"]
     lv = {"VC": vc, "C": c, "M": m, "F": f}
@@ -651,7 +660,7 @@ def new_screen_section(sn: dict) -> str:
                     + f"Nose repairs: {na['repairs_first']} before, {na['repairs_now']} now.</p>")
     return f"""
   <h3 id="study9">Study 9 · The new screen: the built rules on every wing (7 Nov 2026, new)</h3>
-  <p><strong>What was done.</strong> The rules built on 7 Nov (<code>configs/surface.yaml</code>, with the nose solved at every level) on the rebuilt sets (unit mean chord, the nose fix; 722 wings, new hashes), with the numpy twin of the loft. Every set at VC and at F: training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶): {vc['builds']} builds per level. The 20 reference wings also at C and M, at the four Re levels: {c['builds']} builds each. The 13 checks refuse at each level's own limits (VC 17.1°, F 7.89° for the turning; the growth limits by the family rule), written before the run; failures stay in every count. Each build records every check's value, limit and margin, the ring nodes, stations, quads, build time, which level's solve set each station's nose, and the reasons for each value (<code>data/studies/screen_VC.json</code>, <code>screen_F.json</code>, <code>screen_reference_new.json</code>; the numbers below: <code>screen_new_summary.json</code>; the first build against now: <code>nose_levels_check.json</code>; code: <code>scripts/screen.py</code>, <code>scripts/screen_study.py</code>). Another job ran XFOIL on the other core during the screen, so the build times are on the high side.</p>
+  <p><strong>What was done.</strong> The rules built on 7 Nov (<code>configs/surface.yaml</code>, with the nose solved at every level) on the rebuilt sets (unit mean chord, the nose fix; 722 wings, new hashes), with the numpy twin of the loft. Every set at VC and at F: training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels ({lv_txt}): {vc['builds']} builds per level. The 20 reference wings also at C and M, at the four Re levels: {c['builds']} builds each. {hc_txt} The 13 checks refuse at each level's own limits (VC 17.1°, F 7.89° for the turning; the growth limits by the family rule), written before the run; failures stay in every count. Each build records every check's value, limit and margin, the ring nodes, stations, quads, build time, which level's solve set each station's nose, and the reasons for each value (<code>data/studies/screen_VC.json</code>, <code>screen_F.json</code>, <code>screen_reference_new.json</code>; the numbers below: <code>screen_new_summary.json</code>; the first build against now: <code>nose_levels_check.json</code>; code: <code>scripts/screen.py</code>, <code>scripts/screen_study.py</code>). Another job ran XFOIL on the other core during the screen, so the build times are on the high side.</p>
   {nose_par}
   {nose_tab}
   <p><strong>Result.</strong></p>
@@ -692,7 +701,7 @@ def new_screen_section(sn: dict) -> str:
 def refine_re_section(rre: dict, uc: dict) -> str:
     """Study 11: the refine map at the Re levels (7 Nov; data/studies/refine_map_re.json, scripts/refine_map_re.py)."""
     s, ab = rre["summary"], rre["as_built"]
-    keys = (("1e+05", "10⁵"), ("3e+05", "3 × 10⁵"), ("1.5e+06", "1.5 × 10⁶"), ("3e+06", "3 × 10⁶"))
+    keys = tuple((k, RE_NAME.get(float(k), k)) for k in next(iter(s.values())).keys())     # the levels the map ran at
     t = ['<div class="tbl"><table class="mid"><tr><th>Upper side, −5° to 8°: strips whose band fits 0–85 % c (transition itself)</th>'
          + "".join(f"<th>{TYPE_NAME[ty]}</th>" for ty in TYPES) + "</tr>"]
     for k, name in keys:
@@ -702,7 +711,7 @@ def refine_re_section(rre: dict, uc: dict) -> str:
     t.append("</table></div>")
     cov = rre["figures"]["refine_re_coverage.png"]
     return f"""
-  <h3 id="study11">Study 11 · The refine map at the Re levels (7 Nov 2026, new)</h3>
+  <h3 id="study11">Study 11 · The refine map at the Re levels (7 Nov 2026; redone 8 Nov at the new levels)</h3>
   <p><strong>What was done.</strong> The refine map of Study 7 in its new Re mode (similarity): the 20 reference wings (the new picks) at the four Re levels on the mean chord, root angles −5° to 12°, unit mean chord, the section tables rebuilt on the fixed nose and read at Mach 0.1, 13 strips per half wing. Per strip and side: where transition sits from −5° to 8°, the band it needs (transition ± 10 % c, bubbles, separation start), whether the bands hold it, and the strips with no XFOIL answer. Then an as-built check on {len(ab['builds'])} built surfaces (wing 0 of each type × 4 Re, level VC). Details and the other two figures: the refine page (<code>docs/REFINE_MAP.html</code>, first section) and <code>decisions/refine_map_re.md</code>; data <code>data/studies/refine_map_re.json</code>; <code>scripts/refine_map_re.py</code>.</p>
   {"".join(t)}
   {figc("refine_re_coverage.png", cov["what"], cov["conclusion"])}
@@ -742,7 +751,8 @@ def similarity_section(sim: dict) -> str:
              f"{new[big]['cap_quads_J']:.3f}): the old floor had made the trailing edge of small tips thicker, which gave "
              f"the cap room. The lowest stays {new[low]['cap_quads_J']:.3f} ({name(low[:2])}, Re {low[2]:.0e}), above the "
              f"0.05 limit. The four Re levels cover the real UAVs: 10⁵ is 18 % below the slowest (1.22 × 10⁵), kept as a "
-             f"margin (Mike, 7 Nov), and 3 × 10⁶ is at the fastest top speed (3.1 × 10⁶).")
+             f"margin (Mike, 7 Nov), and 4 × 10⁶ (since 8 Nov; 3 × 10⁶ before) is above the fastest top speed (3.1 × 10⁶) and "
+             f"takes in every cruise point of the Greek tactical UAVs.")
     return f"""
   <h3 id="study10">Study 10 · The similarity check: the same shapes at real size and at unit mean chord (7 Nov 2026, new)</h3>
   <p><strong>What was done.</strong> Similarity (decision 70) was built in Stage 1 on 7 Nov: every wing at unit mean chord (area / full span), the Re on the mean chord an input, the root chord out of the vector (17 numbers), the trailing edge 0.2 % c on every wing, no 7 m full-span cap; the sets were rebuilt (722 of 722 built), and 13 of the 20 reference wings are new picks (the same at the same index: {', '.join(name(w) for w in picks)}). To see what similarity alone does to a mesh, the 20 reference shapes of before (Stage 1 sets at commit 7bcb7067) were built again at unit mean chord and meshed with the first rules at level C at the four Re levels: once with the code of the similarity merge (commit 9472830c: the new size and trailing edge, the old nose rule) and once with today's code (also the nose fix), and compared with their first meshes at real size (the first screen, Study 1). {passed[0]} and {passed[1]} of 80 builds passed. Code: <code>scripts/similarity_check.py</code>; data: <code>data/studies/similarity_check.json</code>.</p>

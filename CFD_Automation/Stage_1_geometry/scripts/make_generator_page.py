@@ -101,7 +101,7 @@ DECISIONS = [
          "Before, 46 of 100 conventional wings got wider toward the tip. With per-panel ratios no chord grows outboard, and the Latin hypercube stays intact.", "req", ""),
         ("Sweep law", "<code>panels</code>: one sweep per panel. <code>one</code>: sweep2 = sweep3 = sweep1 (tapered, flying wing).",
          "Straight leading edge for straight-edged wings. Variables a law computes need no range.", "req", ""),
-        ("Aspect ratios and the Re range from real wings", "Aspect ratio: BWB 3–9; flying wing 3–13; conventional (cranked, tapered) 4.5–16.5. Since 7 Nov the real wings set only the aspect ratios and the Re range. Real Class I–II wings fly at Re 1.22 × 10⁵ – 3.10 × 10⁶ on the mean chord (area / full span); the levels 1 × 10⁵ – 3 × 10⁶ cover them, and 1 × 10⁵ sits 18 % below the slowest real UAV (kept as a margin: you, 7 Nov 2026). <span class='muted'>First approach: root chord BWB 0.40–1.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m.</span>",
+        ("Aspect ratios and the Re range from real wings", "Aspect ratio: BWB 3–9; flying wing 3–13; conventional (cranked, tapered) 4.5–16.5. Since 7 Nov the real wings set only the aspect ratios and the Re range. Real Class I–II wings fly at Re 1.22 × 10⁵ – 3.10 × 10⁶ on the mean chord (area / full span); the levels 1 × 10⁵ – 4 × 10⁶ cover them (1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ since 8 Nov), and 1 × 10⁵ sits 18 % below the slowest real UAV (kept as a margin: you, 7 Nov 2026). The Greek tactical BWBs (LOTUS, Archytas; 8 Nov) cruise at 1.4–3.7 × 10⁶. <span class='muted'>First approach: root chord BWB 0.40–1.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m.</span>",
          "The aspect ratio has no size, so the real wings still bound it: tailless 2.9–12.4 (ScanEagle), conventional 4.9–16.0. First approach (30 Oct–6 Nov): all 34 real wings with a published area had a generated wing within 10 % in full span and mean chord, and all 112 real full spans were inside. At unit mean chord that check compares real wings with wings of a 1 m mean chord, so it means nothing now (see <a href='#real'>Real wings</a>).", "meas", "chg"),
         ("Cranked differs from tapered", "Cranked focus = constant-chord centre and tapered outer panels: inner chord 0.95–1, middle 0.80–1, outer 0.50–0.85 of the chord inboard; sweep −3–3° inner, −5–10° middle, 0–15° outer. Full space unchanged.",
          "Your remark (30 Oct 2026): the two types looked alike, because the old per-panel ratios (0.85/0.75/0.65–1) made mostly straight-tapered wings with faint breaks. The layout follows Class II UAVs like Hermes 450 and Heron (from photos; no published chord table), so it is our choice.", "own", ""),
@@ -192,7 +192,7 @@ FIXES = [
 ]
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
-    ("Study plan (Stage 0)", "Re levels", "Kept (you, 7 Nov 2026): 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ on the mean chord (area / full span). Real Class I–II wings fly at 1.22 × 10⁵ – 3.10 × 10⁶, so the lowest level sits 18 % below the slowest real UAV: a margin. Still to run: check C4 (do the levels interpolate? XFOIL tables at 7 × 10⁵ and 10⁶; add a level if above budget).", "act"),
+    ("Study plan (Stage 0)", "Re levels", "Changed (you, 8 Nov 2026): 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ on the mean chord (area / full span; were 1.5 × 10⁶ and 3 × 10⁶). 4 × 10⁶ takes in every cruise point of the Greek tactical programmes (LOTUS, Archytas, ACTUS); 1 × 10⁶ fills the old ×5 gap (check C4 on 2-D data, <a href='#greek'>below</a>). Same four levels and 8,000 solves. Real Class I–II wings fly at 1.22 × 10⁵ – 3.10 × 10⁶; the lowest level sits 18 % below the slowest real UAV: a margin (7 Nov). Still to run: check C4 with the solver.", "act"),
     ("Flow conditions", "Transition and solver split", "Decided (4 Nov 2026): transition must be captured, with ADflow and SU2. Our ADflow build has SA only and no transition model, so transition comes from SU2 (SST + LM γ-Reθ). Proposal, pending: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first. The flow dataset (<a href='#flowdata'>Flow dataset</a>, first approach) puts the SA profile-drag error at a median __FD_MED__ over all focus wings and conditions, __FD_LF__ in level flight, within ±10 % in only __FD_OK__ of rows; below Re 10⁵ it changes sign. Logic check (1 Nov 2026): what a mesh must resolve depends on the model, so an SA mesh study alone does not qualify the mesh for γ-Reθ: build the mesh transition-ready from the start and repeat a reduced mesh study with γ-Reθ. Fix the SA inflow eddy viscosity (ν̃/ν about 3, Spalart &amp; Rumsey 2007); with a low value SA shows an uncontrolled apparent transition (Crivellini &amp; D'Alessandro 2014). First SU2 smoke test (4 Nov): SU2 ran SA and LM on one Stage 2 ring mesh (a section extruded between two symmetry planes, 97,920 cells, Re 3 × 10⁵, Mach 0.15, 4°); after about 370 iterations, not converged: SA CL 0.860, CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works; no wing has been run.", "decide"),
     ("Flow conditions", "Mach cap", "The Mach scope extends toward 0.5, with no supersonic flow (decided 4 Nov 2026); the cap is open. Under similarity the CFD runs at Mach 0.1 with a Prandtl–Glauert correction (check C2: Mach 0.05 / 0.1 / 0.2; if it fails, Mach becomes an input). The section tables and the flow dataset stop at Mach 0.2. Recommendation (pending): core data at Mach ≤ 0.2 now, Mach 0.3–0.5 later; at Mach 0.5 the angles would be capped near 4° by a supersonic-pocket gate.", "decide"),
     ("Flow conditions", "Fast-UAV family", "Proposal, pending: Mach 0.3–0.5 needs a fast-UAV family in Stage 1, with real fast UAVs, thinner sections and section tables up to Mach 0.5. Today fast wings such as the Vindicator and the CPJ 100-LE are left out as 'outside phase 1'.", "decide"),
@@ -211,7 +211,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
     ("Study plan (Stage 0)", "Turbulence-model source", "Crivellini 2014 is weak support. Find a better source or call it our choice.", "decide"),
     ("Study plan (Stage 0)", "Stage 0 D5", "The Grand Roadmap lists a D5 (prior work, transition route, tunnel, cloud budget). Add it? Its transition route is now partly decided: transition must be captured (4 Nov 2026).", "decide"),
-    ("Geometry", "Similarity checks C1–C4", "Similarity is built (7 Nov). Its four CFD checks are still to run: C1 scale (mean chord 0.3 m against 1 m), C2 Mach (0.05 / 0.1 / 0.2; CL and CM after Prandtl–Glauert), C3 trailing edge (0.1 / 0.2 / 0.3 % c and the real floor 0.42 % c), C4 Re levels (interpolation). Limits: Re does not carry roughness or air turbulence; small real wings have thicker trailing edges.", "act"),
+    ("Geometry", "Similarity checks C1–C4", "Similarity is built (7 Nov). Its four CFD checks are still to run: C1 scale (mean chord 0.3 m against 1 m), C2 Mach (0.05 / 0.1 / 0.2; CL and CM after Prandtl–Glauert), C3 trailing edge (0.1 / 0.2 / 0.3 % c and the real floor 0.42 % c), C4 Re levels (interpolation; done on 2-D data on 8 Nov, which added 1 × 10⁶). Limits: Re does not carry roughness or air turbulence; small real wings have thicker trailing edges.", "act"),
     ("Geometry", "Full-space edges", "At unit mean chord the full space reaches aspect ratio 20 and root chords up to " + f"{U['bwb']['root_chord'][1]:.2f}" + " mean chords (a BWB corner), so at the top level the local Re reaches " + _sci(U['bwb']['re_root_max']) + " at that root; at the lowest level the smallest tip (" + f"{U['bwb']['tip_chord'][0]:.3f}" + " mean chords) runs at " + _sci(U['bwb']['re_tip_min']) + ". The section tables cover 1.5 × 10⁴ – 6 × 10⁶. Keep, or narrow the full chord ratios?", "decide"),
     ("Geometry", "Airfoil search order", "Project folder → AERIS database → NACA formula; of 2,183 files, 23 cannot be read (not unit chord) and the nose gate refuses 14. Keep?", "decide"),
     ("Geometry", "pyGeo run", "The nose is decided (64) and similarity is built (70). Every geometry hash changed on 7 Nov, and the sets were rebuilt with the numpy loft (722 of 722 built). Owed: the pyGeo tests and one <code>build --all</code> on your machine; the manifests must then say pygeo. Without pyGeo: __TESTS__. The Stage 2 tests and screen with pyGeo are owed too. Stage 2 has screened the 7 Nov wings at every set: 1,724 of 1,724 builds pass (every set at VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels; 4 F builds after one nose repair), with the numpy loft.", "act"),
@@ -441,7 +441,7 @@ def hcdi_table(d: dict) -> str:
 
 PHENOMENA = [
     ("Laminar flow, transition and laminar separation bubbles",
-     "Every type. Re on the mean chord: the four levels 1 × 10⁵ – 3 × 10⁶, an input of each solve since 7 Nov (real Class I–II wings fly at 1.22 × 10⁵ – 3.10 × 10⁶). Our low-Re sections (MH 45, MH 60, MH 61, MH 104) are designed for long laminar runs. First approach (real size and speed): 5.4 × 10⁴ – 3.5 × 10⁶ on the mean chord (focus).",
+     "Every type. Re on the mean chord: the four levels 1 × 10⁵ – 4 × 10⁶ (since 8 Nov), an input of each solve since 7 Nov (real Class I–II wings fly at 1.22 × 10⁵ – 3.10 × 10⁶). Our low-Re sections (MH 45, MH 60, MH 61, MH 104) are designed for long laminar runs. First approach (real size and speed): 5.4 × 10⁴ – 3.5 × 10⁶ on the mean chord (focus).",
      "Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.",
      "ADflow SA: no. Spalart–Allmaras without transition makes the wall flow turbulent from the nose. In 2-D (XFOIL, 2°) that raises profile drag by 39–128 % (median 81 %) at Re ≥ 3 × 10⁵ (7 Nov, new sections). Carried as a model band (Stage 0). Transition must be captured too (decided 4 Nov 2026): our ADflow build has SA only, so it comes from SU2 (SST + LM γ-Reθ).",
      "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35); our XFOIL runs (Drela 1989)"),
@@ -560,8 +560,8 @@ def summary_html() -> str:
         ("Washout (root − tip)", both(washout)),
         ("Dihedral (per panel)", both(dih)),
         ("Suggested sections b0–b3", [", ".join(cfg.types[t].airfoils) for t in WING_TYPES]),
-        ("Re on the mean chord (an input)", ["1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶: every shape at all four"] * 4),
-        ("Local Re: smallest tip at 10⁵ · largest root at 3 × 10⁶", both(local_re)),
+        ("Re on the mean chord (an input)", ["1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶: every shape at all four"] * 4),
+        ("Local Re: smallest tip at 10⁵ · largest root at 4 × 10⁶", both(local_re)),
         ("Mach (CFD)", ["0.1, with a Prandtl–Glauert correction (check C2)"] * 4),
         ("Main flow features", [SUMMARY_TEXT["flow"][t] for t in WING_TYPES]),
         ("Mesh must resolve", [SUMMARY_TEXT["mesh"][t] for t in WING_TYPES]),
@@ -577,7 +577,7 @@ def fig_pipeline() -> str:
     steps = [
         ("1  Full design space", ["17 inputs, 4 types", "aspect ratio up to 10–20", "every sourced section", "40 + 5 hold-out, sparse"], "acc"),
         ("2  What we can make", ["straight panels (≤ 3)", "vertical sections", "any database section", "722 of 722 built wings pass"], "acc"),
-        ("3  Focus", ["Class I, small Class II", "unit mean chord, no size", "4 Re levels, 10⁵ – 3 × 10⁶", "dense: 100 + 5 + 10 each", "real Re inside the levels"], "bwbc"),
+        ("3  Focus", ["Class I, small Class II", "unit mean chord, no size", "4 Re levels, 10⁵ – 4 × 10⁶", "dense: 100 + 5 + 10 each", "real Re inside the levels"], "bwbc"),
         ("4  Flow maps", ["local Re, root to tip", "transition and bubbles", "effect of the sections", "phenomena per family", "first approach: real size"], "amber"),
         ("5  The tool", ["wing in", "family and type by rule", "flow map at V, altitude, α", "proposed turbulence model"], "warn"),
     ]
@@ -987,7 +987,7 @@ def extremes_html() -> dict:
                       f"<td class='num'>{r['tip_chord'][0]:.3f} – {r['tip_chord'][1]:.3f}</td>"
                       f"<td class='num'>{r['taper'][0]:.2f} – {r['taper'][1]:.2f}</td>"
                       f"<td class='num'>{r['root_over_tip_max']:.1f} ×</td></tr>")
-            rm.append(f"<tr><td>{tag}</td><td>{sp_txt}</td><td class='num'>1 × 10⁵ – 3 × 10⁶</td>"
+            rm.append(f"<tr><td>{tag}</td><td>{sp_txt}</td><td class='num'>1 × 10⁵ – 4 × 10⁶</td>"
                       f"<td class='num'>{r['tip_chord'][0]:.3f} → {sci(r['re_tip_min'])}</td>"
                       f"<td class='num'>{r['root_chord'][1]:.3f} → {sci(r['re_root_max'])}</td></tr>")
     out = {"__EXTREMES__": "\n".join(ex), "__RE_MACH__": "\n".join(rm)}
@@ -1110,7 +1110,7 @@ def fig_re_map() -> str:
         out.append(f'<rect class="bar {cls}" x="{X(LV[0]):.1f}" y="{y - 7}" width="{X(LV[-1]) - X(LV[0]):.1f}" height="14" rx="2"/>')
         out.append(f'<rect class="bar {cls} tipbar" x="{X(lo):.1f}" y="{y + 11}" width="{X(hi) - X(lo):.1f}" height="5" rx="1"/>')
     # study levels
-    for lv, txt in ((1e5, "1 × 10⁵"), (3e5, "3 × 10⁵"), (1.5e6, "1.5 × 10⁶"), (3e6, "3 × 10⁶")):
+    for lv, txt in ((v, {1e5: "1 × 10⁵", 3e5: "3 × 10⁵", 1e6: "1 × 10⁶", 4e6: "4 × 10⁶"}.get(v, f"{v:.2g}")) for v in LV):
         out.append(f'<line class="level" x1="{X(lv):.1f}" y1="40" x2="{X(lv):.1f}" y2="290"/>')
         out.append(f'<text class="lab warn" x="{X(lv):.1f}" y="304" text-anchor="middle">{txt}</text>')
     out.append(f'<text class="lab warn" x="{X(3e5) - 8:.1f}" y="320" text-anchor="end">study levels</text>')
@@ -1123,7 +1123,7 @@ def fig_re_map() -> str:
             for k in (2, 5):
                 out.append(f'<line class="axis" x1="{X(k * 10**e):.1f}" y1="338" x2="{X(k * 10**e):.1f}" y2="342"/>')
     out.append(f'<text class="lab muted" x="{X(1e7)}" y="380" text-anchor="end">Reynolds number (log scale)</text>')
-    out.append(f'<text class="lab muted" x="{X(1e4)}" y="402">thick bar: Re on the mean chord (the four levels) · thin bar: local Re, smallest tip at 10⁵ to largest root at 3 × 10⁶ (focus)</text>')
+    out.append(f'<text class="lab muted" x="{X(1e4)}" y="402">thick bar: Re on the mean chord (the four levels) · thin bar: local Re, smallest tip at 10⁵ to largest root at 4 × 10⁶ (focus)</text>')
     out.append("</svg>")
     return "\n".join(out)
 
@@ -1613,7 +1613,7 @@ def change_table() -> str:
          "Stage 0, 7 Nov", "built 7 Nov"),
         ("Re and Mach",
          "Re followed from the real size and the real speeds of each family: focus 5.4 × 10⁴ – 3.5 × 10⁶ on the mean chord; Mach 0.03–0.20.",
-         "The Re on the mean chord is an <strong>input of each solve</strong>: the four Stage 0 levels 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶, kept. Real Class I–II wings fly at 1.22 × 10⁵ – 3.10 × 10⁶ (on area / full span), so 1 × 10⁵ sits 18 % below the slowest real UAV: kept as a margin. Mach 0.1 with a Prandtl–Glauert correction on CL and CM, on the solver side (check C2).",
+         "The Re on the mean chord is an <strong>input of each solve</strong>: the four Stage 0 levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (since 8 Nov; were 1.5 × 10⁶ and 3 × 10⁶). Real Class I–II wings fly at 1.22 × 10⁵ – 3.10 × 10⁶ (on area / full span), so 1 × 10⁵ sits 18 % below the slowest real UAV: kept as a margin. Mach 0.1 with a Prandtl–Glauert correction on CL and CM, on the solver side (check C2).",
          "levels: Stage 0; margin: you, 7 Nov", "input of each solve"),
         ("Trailing edge",
          "Class I max(0.5 mm, 0.2 % c), Class II max(1.0 mm, 0.2 % c); a section added where the rule switched. Edges 0.20–4.17 % c; 370 of the 730 wings had an edge set by a floor.",
@@ -1847,7 +1847,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__ · updated 7 Nov 2026</div>
   <h1>Wing Generator</h1>
   <p class="lede">Seventeen numbers and four airfoil names go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, shaped like real Class I and II UAVs. Since 7 Nov 2026 every wing is built at unit mean chord: it has no size, and size enters the CFD only as the Re on the mean chord. On the same day the nose rule changed, so the built nose now follows the airfoil file. Every later stage (mesh, solver, data) reads only this surface. The section <a href="#change">What was first, and what changes</a> and an amber <em>What changes</em> box in every section it touches say what the two changes changed.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes (7 Nov)</a><a href="#pipeline">The plan</a><a href="#runs">What was run</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Shapes</a><a href="#inputs">Parameters</a><a href="#nose">Nose study</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#flowdata">Flow dataset</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fixes</a><a href="#build">One wing, step by step</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes (7 Nov)</a><a href="#pipeline">The plan</a><a href="#runs">What was run</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Shapes</a><a href="#inputs">Parameters</a><a href="#nose">Nose study</a><a href="#reynolds">Re and Mach</a><a href="#greek">Greek UAVs</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#flowdata">Flow dataset</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fixes</a><a href="#build">One wing, step by step</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -1859,7 +1859,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, focus and full space, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified (ONERA M6, RIBES, NASA CRM and four BlendedNet designs). Tests: __TESTS__.</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Stage 1 closed; Stage 2 under way</div><p>Fixes 1–3 done: panel dihedrals and code hash here; a mesh station on every break, made by the Stage 2 surface mesher (790 of 790 builds pass its 13 checks, on the first-approach wings). Done on 7 Nov: similarity (decision 70) and the nose fix (decision 64); every hash changed and the sets were rebuilt. Still owed in Stage 1: the pyGeo tests and one <code>build --all</code> with pyGeo on your machine, and the push of the raw XFOIL data. Stage 2 has screened the 7 Nov wings at every set: 1,724 of 1,724 builds pass (every set at VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels; 4 F builds after one nose repair). Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
   </div>
-  <div class="weak amber"><strong>What changed since 2 Nov 2026 (updated 7 Nov).</strong>
+  <div class="weak amber"><strong>What changed since 2 Nov 2026 (updated 8 Nov).</strong>
     <ul>
       <li><strong>Decided.</strong>
         <ul>
@@ -1869,6 +1869,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
           <li>Angles of attack: −5° to post-stall, plus a separate post-stall study (6 Nov).</li>
           <li>The Mach scope extends toward 0.5, with no supersonic flow (4 Nov); the data on this page stop at Mach 0.2.</li>
           <li>First SU2 smoke test (4 Nov): SU2 ran SA and LM on one Stage 2 ring mesh (a section extruded between two symmetry planes, 97,920 cells, Re 3 × 10⁵, Mach 0.15, 4°); after about 370 iterations, not converged: SA CL 0.860, CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works; no wing has been run.</li>
+          <li><strong>Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (you, 8 Nov; were 1.5 × 10⁶ and 3 × 10⁶):</strong> the Greek tactical programmes (LOTUS, Archytas, ACTUS) are in scope, and 1 × 10⁶ fills the old ×5 gap (check C4 on 2-D data). Same 8,000 solves. The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷. See <a href="#greek">Greek UAVs and the Re levels</a>.</li>
           <li><strong>Similarity, built 7 Nov (decision 70):</strong> every wing at unit mean chord; the root chord out of the vector (18 → 17); trailing edge 0.2 % c on every wing; no 7 m cap; the Re on the mean chord is an input (the four levels, kept). 722 of 722 wings built.</li>
           <li><strong>Nose fix, built 7 Nov (decision 64):</strong> leading edge at the apex of one cubic spline through the raw points, both sides from that spline, 201 points per side; a nose gate. The 6 Nov note that the nose finding was overstated (item 75) was wrong.</li>
         </ul></li>
@@ -1941,7 +1942,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   __CHG_SUMMARY__
   <div class="tbl"><table class="wide summ">__SUMMARY__</table></div>
   <div class="cbox"><span class="ctag">Conclusion</span>Four types in two families, from one generator, every wing at unit mean chord. The focus aspect ratios run from 3 (tailless) to 16.5 (conventional); the BWB alone has a long root (up to __S_BWB_ROOT__ mean chords) and a small tip (down to __S_BWB_TIP__). Every shape runs at the four Re levels, which cover the real wings (1.22 × 10⁵ – 3.10 × 10⁶). Inside one wing the local Re reaches further: from about __S_BWB_RETIP__ at the smallest BWB tip (lowest level) to __S_BWB_REROOT__ at the largest BWB root (top level). Tailless wings are swept and washed out to fly without a tail; conventional wings are nearly straight. Every type needs a fine mesh at the leading and trailing edges, the tip and the wake.</div>
-  <p class="muted">Details: <a href="#design">Design space</a>, <a href="#ranges">Shapes</a>, <a href="#reynolds">Re and Mach</a>, <a href="#phenomena">Flow phenomena</a>, <a href="#refine">Where to refine</a>.</p>
+  <p class="muted">Details: <a href="#design">Design space</a>, <a href="#ranges">Shapes</a>, <a href="#reynolds">Re and Mach</a><a href="#greek">Greek UAVs</a>, <a href="#phenomena">Flow phenomena</a>, <a href="#refine">Where to refine</a>.</p>
 </section>
 
 <section id="design">
@@ -1958,7 +1959,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <p>The same three layers in two dimensions, one panel per type. Faint dots: full space. Strong dots: focus space. Black diamonds: real or published wings that give both values.</p>
   __CHG_PAIRS__
   <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size, first approach</strong> (real size, before 7 Nov): full span b (tip to tip) against mean chord, in metres. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; conventional: cranked and tapered).</figcaption></figure>
-  <div class="cbox"><span class="ctag">Conclusion</span>First approach: the focus space covered 32 of the 34 real wings with a published area (a generated wing within 10 % in full span and mean chord); the other two, Hermes 450 and Götten UAV 9, were larger than 7 m and only the full space covered them. Now this pair has no meaning: every wing has a mean chord of 1, and its full span is its aspect ratio (next figure). Size enters only as the Re on the mean chord, and the four levels cover the real wings (see <a href="#reynolds">Re and Mach</a>).</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>First approach: the focus space covered 32 of the 34 real wings with a published area (a generated wing within 10 % in full span and mean chord); the other two, Hermes 450 and Götten UAV 9, were larger than 7 m and only the full space covered them. Now this pair has no meaning: every wing has a mean chord of 1, and its full span is its aspect ratio (next figure). Size enters only as the Re on the mean chord, and the four levels cover the real wings (see <a href="#reynolds">Re and Mach</a><a href="#greek">Greek UAVs</a>).</div>
   <figure class="fig card">__PNG_PAIR_PLANFORM__<figcaption><strong>Planform</strong>: aspect ratio against overall taper. The BWB lives at very low taper (big centre body), the others at 0.3–1.</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>Taper separates the BWB from the rest: only the BWB has a very small tip (4–25 % of the root chord). The other three types overlap (taper 0.2–1), so the type rules use the kink and the root chord, not taper alone.</div>
   <figure class="fig card">__PNG_PAIR_SWEEP__<figcaption><strong>Sweep</strong>: aspect ratio against inner-panel leading-edge sweep. Published sweeps given at the quarter chord (marked c/4 in the sources) sit a few degrees below their leading-edge value.</figcaption></figure>
@@ -2066,18 +2067,18 @@ __DERIVED__
 <section id="reynolds">
   <h2>Reynolds and Mach numbers</h2>
   <div class="three">
-    <div class="box"><h3>Study levels (Stage 0)</h3><div class="big">1 × 10⁵ · 3 × 10⁵ · 1.5 × 10⁶ · 3 × 10⁶</div><p>On the mean chord (area / full span, not the MAC). Since 7 Nov the Re is an input of each solve: every shape runs at all four. Every mesh study runs at these four. 1 × 10⁵ added 30 Oct 2026 for mini Class I wings; it sits 18 % below the slowest real UAV, kept as a margin (you, 7 Nov).</p></div>
+    <div class="box"><h3>Study levels (Stage 0)</h3><div class="big">1 × 10⁵ · 3 × 10⁵ · 1 × 10⁶ · 4 × 10⁶</div><p>On the mean chord (area / full span, not the MAC). Since 7 Nov the Re is an input of each solve: every shape runs at all four. Every mesh study runs at these four. Changed on 8 Nov (you): 1 × 10⁶ and 4 × 10⁶ replace 1.5 × 10⁶ and 3 × 10⁶, for the Greek tactical programmes and check C4 (<a href="#greek">below</a>). 1 × 10⁵ added 30 Oct 2026 for mini Class I wings; it sits 18 % below the slowest real UAV, kept as a margin (you, 7 Nov).</p></div>
     <div class="box"><h3>Real wings fly at</h3><div class="big">__REAL_RE__</div><p>On the mean chord (area / full span), cruise at 3,048 m to top speed at sea level, for the 34 real wings with a published area. Inside the four levels.</p></div>
     <div class="box"><h3>Mach</h3><div class="big">0.1 (CFD)</div><p>Under similarity the CFD runs at Mach 0.1, with a Prandtl–Glauert correction on CL and CM (check C2: 0.05 / 0.1 / 0.2). First approach (the flow data on this page): Mach 0.03–0.20 from the real wings' speeds, well below 0.3, so the air is nearly incompressible. Since 4 Nov 2026 the Mach scope extends toward 0.5, with no supersonic flow. Proposal, pending: core data at Mach ≤ 0.2 now, 0.3–0.5 later with a fast-UAV family (the section tables stop at Mach 0.2).</p></div>
   </div>
   __CHG_REYNOLDS__
   <h2 style="font-size:22px">By type and space (unit mean chord)</h2>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Type</th><th>Space</th><th>Re on the mean chord</th><th>Smallest tip chord → tip Re at 1 × 10⁵</th><th>Largest root chord → root Re at 3 × 10⁶</th></tr></thead>
+    <thead><tr><th>Type</th><th>Space</th><th>Re on the mean chord</th><th>Smallest tip chord → tip Re at 1 × 10⁵</th><th>Largest root chord → root Re at 4 × 10⁶</th></tr></thead>
     <tbody>__RE_MACH__</tbody>
   </table></div>
   <p class="muted">Local Re = Re on the mean chord × local chord (in mean chords). Chords from all corners of the planform inputs (others mid-range). One wing at one level covers a much narrower band than its row.</p>
-  <div class="cbox"><span class="ctag">Conclusion</span>The four study Re levels (10⁵ – 3 × 10⁶) cover the real wings (1.22 × 10⁵ – 3.10 × 10⁶ on the mean chord). Inside one wing, Re goes further: at the lowest level down to about __S_BWB_RETIP__ at the smallest focus BWB tip (__S_BWB_TIP__ mean chords), at the top level up to __S_BWB_REROOT__ at the largest focus BWB root (__S_BWB_ROOT__ mean chords). The other types stay within about __S_OTHER_RE__.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>The four study Re levels (10⁵ – 4 × 10⁶) cover the real wings (1.22 × 10⁵ – 3.10 × 10⁶ on the mean chord) and every cruise point of the Greek tactical BWBs (1.4–3.7 × 10⁶). Inside one wing, Re goes further: at the lowest level down to about __S_BWB_RETIP__ at the smallest focus BWB tip (__S_BWB_TIP__ mean chords), at the top level up to __S_BWB_REROOT__ at the largest focus BWB root (__S_BWB_ROOT__ mean chords). The other types stay within about __S_OTHER_RE__.</div>
   <h2 style="font-size:22px">First approach: Re and Mach at real size and speed</h2>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Type</th><th>Space</th><th>Speed</th><th>Mach</th><th>Re, mean chord</th><th>Re, smallest tip</th><th>Re, largest root</th></tr></thead>
@@ -2091,12 +2092,44 @@ __DERIVED__
     <tbody>
       <tr><td class="num">below 10⁵</td><td>Laminar; long bubbles close to bursting (bubbles appear from about 6 × 10⁴); lower down the flow can separate without reattaching; strong hysteresis</td><td>Tips and outer panels at the lowest level (10⁵ on the mean chord)</td><td><span class="flag fix">poor</span> no transition model, results only indicative</td></tr>
       <tr><td class="num">10⁵ – 5 × 10⁵</td><td>Laminar separation bubbles, transition on the bubble</td><td>The two lowest levels (most Class I wings fly there); outer panels of BWBs</td><td><span class="flag open">drag too high</span> bubble missed; SA drag error −2 to +77 % (2-D, 2°; near zero only at 10⁵)</td></tr>
-      <tr><td class="num">5 × 10⁵ – 3 × 10⁶</td><td>Laminar to 30–60 % of chord, then turbulent; short bubbles still form up to about 2 × 10⁶</td><td>The two top levels (Class II wings); BWB centre bodies</td><td><span class="flag open">drag too high</span> the laminar run is missed: the largest SA drag error, +74 to +128 % (2-D, 2°)</td></tr>
-      <tr><td class="num">above 3 × 10⁶</td><td>Shorter laminar run in quiet air</td><td>Large roots at the top level (up to __S_BWB_REROOT__)</td><td><span class="flag open">drag too high</span> still +74 to +120 % at 3 × 10⁶ in quiet air (2-D); closer in gusty air or on a rough surface</td></tr>
+      <tr><td class="num">5 × 10⁵ – 3 × 10⁶</td><td>Laminar to 30–60 % of chord, then turbulent; short bubbles still form up to about 2 × 10⁶</td><td>The level 1 × 10⁶ (Class II wings in loiter); BWB centre bodies</td><td><span class="flag open">drag too high</span> the laminar run is missed: the largest SA drag error, +74 to +128 % (2-D, 2°)</td></tr>
+      <tr><td class="num">above 3 × 10⁶</td><td>Shorter laminar run in quiet air</td><td>The top level 4 × 10⁶ (Class II at top speed; the Greek tactical BWBs); large roots (up to __S_BWB_REROOT__)</td><td><span class="flag open">drag too high</span> still +74 to +120 % at 3 × 10⁶ in quiet air (2-D); closer in gusty air or on a rough surface</td></tr>
     </tbody>
   </table></div>
   <p class="muted">Bands are approximate (Carmichael 1981; Lissaman 1983; Mueller &amp; DeLaurier 2003). "SA drag error" = profile drag of fully turbulent CFD ÷ profile drag of the real flow − 1, from XFOIL (see <a href="#phenomena">Flow phenomena</a> and <a href="#flowdata">Flow dataset</a>). Corrected 1 Nov 2026: this table had called SA "good" above 5 × 10⁵; the 2-D runs show the opposite in quiet air. The 2-D numbers were rerun on 7 Nov on the sections of the new nose rule (they moved by at most 4 points).</p>
   <div class="cbox"><span class="ctag">Conclusion</span>No Re band in our range is safe for fully turbulent SA drag in quiet air: from 10⁵ up it gives too much drag (it misses the laminar run); below 10⁵ it misses the laminar separation. For drag, the model choice matters more than the mesh.</div>
+
+  <h2 id="greek" style="font-size:22px">Greek tactical UAVs and the Re levels (8 Nov 2026)</h2>
+  <p>You asked (8 Nov) that the range include the Greek programmes LOTUS, Archytas and ACTUS. ACTUS is not an aircraft: it is an EDF 2023 project (Intracom Defense, Dec 2024 – 2028) that develops and certifies LOTUS and the Safran Patroller. No wing area is published for any Greek aircraft, so the mean chord comes from an assumed aspect ratio of 8: the AUTh RX-3, which LOTUS is based on, has AR 8 and a 33° sweep (Kapsalis et al. 2025), inside our BWB focus (AR 3–9, sweep 15–40°). Every number with its source, the conflicts between sources and the assumptions: <code>configs/greek_uavs.yaml</code>; the numbers: <code>scripts/greek_uavs.py</code> (<code>docs/greek_uavs.json</code>).</p>
+  <figure class="fig card">__PNG_GREEK__<figcaption class="cap"><span class="howto">How to read.</span> One bar per aircraft: from cruise at 3,048 m (dot) to top speed at sea level (diamond), on the mean chord. The lighter end is a range of top speeds in the sources. Dashed: the four Re levels since 8 Nov; dotted: 1.5 × 10⁶ and 3 × 10⁶, the levels before. The grey bar on top: the 31 real Class I–II wings with a published area. Shaded: above the top level, where the data are extrapolated.</figcaption></figure>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Aircraft</th><th>Full span</th><th>Cruise / top speed</th><th>Re (mean chord)</th><th>Mach at top speed</th><th>What is not published</th></tr></thead>
+    <tbody>
+      <tr><td>Archytas (HAI; AUTh aerodynamics; BWB, VTOL)</td><td class="num">6.4 m</td><td class="num">120 / 158 km/h</td><td class="num">1.4 → 2.4 × 10⁶</td><td class="num">0.13</td><td>wing area; MTOW (180–200 kg on one site)</td></tr>
+      <tr><td>RX-3 (AUTh/DELAER; LOTUS is based on it)</td><td class="num">7.2 m</td><td class="num">180 / 241 km/h</td><td class="num">2.4 → 4.1 × 10⁶</td><td class="num">0.20</td><td>wing area (a paper airframe like it: 4.9 m², 6.26 m)</td></tr>
+      <tr><td>LOTUS sub-scale demonstrator</td><td class="num">about 7 m</td><td class="num">the RX-3's</td><td class="num">2.3 → 4.0 × 10⁶</td><td class="num">0.20</td><td>speeds, area; one source says 6 m and 230 kg</td></tr>
+      <tr><td>LOTUS (EDIDP, then ACTUS; BWB)</td><td class="num">11 m</td><td class="num">180 (assumed) / about 220–240 km/h (planned)</td><td class="num">3.7 → 5.8–6.3 × 10⁶</td><td class="num">0.18–0.20</td><td>cruise speed, area; weight 500–700 kg</td></tr>
+      <tr><td>Safran Patroller (ACTUS)</td><td class="num">18 m</td><td class="num">92 / 265–314 km/h</td><td class="num">1.3 → 4.9–5.8 × 10⁶</td><td class="num">0.22–0.26</td><td>area (the Stemme S15 wing used: 17.4 m², AR 18.6)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cbox"><span class="ctag">Conclusion</span>With the levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶ and 4 × 10⁶, every cruise point of the Greek tactical UAVs is inside (LOTUS 11 m: 2.8 × 10⁶ at 20,000 ft, 3.7 × 10⁶ at 10,000 ft), and so are the 6–7 m versions at top speed (the RX-3 3 % above). LOTUS 11 m flying low and fast (4.7–6.3 × 10⁶) and the Patroller at top speed are extrapolations. Every Greek number rests on an assumption (AR 8; AR 6 would raise each Re by a third), and the sources disagree on several values. Mach stays at or below 0.26: the Prandtl–Glauert correction from Mach 0.1 is +1.1 to +2.9 %. The shapes fit the generator: the RX-3 family (AR 8, sweep 33°) sits inside the BWB focus; the Patroller (AR 18.6) only in the full space. LOTUS 11 m (500–700 kg) and the Patroller (1.2 t) are NATO Class III by weight.</div>
+  <h2 style="font-size:22px">Check C4 on 2-D data: can the data be read between the levels?</h2>
+  <p>Each of the 13 section tables (free transition at N_crit 9, and tripped), at 0, 2, 4 and 6°, Mach 0.1: the drag at every grid Re that is not a level is read by a straight line in log Re and log cd between the two nearest levels (above the top: from the two highest), and compared with the table (<code>scripts/re_ladder_check.py</code>, <code>docs/re_ladder_check.json</code>).</p>
+  <figure class="fig card">__PNG_LADDER__<figcaption class="cap"><span class="howto">How to read.</span> Each point: the 90th percentile of the drag error over the 13 sections and 4 angles at that Re. Grey: the levels until 8 Nov; blue: since 8 Nov. No point where the Re is itself a level. Left: with transition; right: fully turbulent (note the different scale).</figcaption></figure>
+  <div class="cbox"><span class="ctag">Conclusion</span>With transition, the new levels read drag better where it changes fastest: at 6 × 10⁵ the error falls from 16.9 % to 8.8 % (90th percentile), and above the top (6 × 10⁶) from 12.0 % to 7.8 %. The price: between 1 × 10⁶ and 4 × 10⁶ it rises from 2.5–3.7 % to 6.8–7.0 %. Over 1 × 10⁵ – 4 × 10⁶ the median is 3.0 % (3.3 % before) and the worst 20 % (26 %). Fully turbulent drag reads well with either (median 0.7 %, at most 1.3 % at the 90th percentile). This is a 2-D proxy: check C4 with the solver is still to run, and wing drag also carries induced drag, which does not depend on Re.</div>
+  <h2 style="font-size:22px">The scope by NATO class (Mitridis et al. 2023)</h2>
+  <p>A peer-reviewed survey of 202 fixed-wing UAVs (AUTh, the group that did the aerodynamics of Archytas and the RX-3), sorted by NATO class. It gives the class limits, spans and speeds per class. It gives no aspect ratio or wing area (not enough solid data), so it cannot give a Re by itself; with our aspect ratios it supports the range.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>NATO class (by take-off weight)</th><th>Altitude</th><th>Full span</th><th>Median cruise / top speed</th><th>Our scope</th></tr></thead>
+    <tbody>
+      <tr><td>Class I micro and mini (below 15 kg)</td><td class="num">below 3,000 ft</td><td class="num">about 0.7–3.5 m</td><td class="num">about 60 / 95 km/h</td><td>yes (the 1 × 10⁵ and 3 × 10⁵ levels)</td></tr>
+      <tr><td>Class I small (15–150 kg)</td><td class="num">below 5,000 ft</td><td class="num">about 1–8 m</td><td class="num">about 120 / 160 km/h</td><td>yes</td></tr>
+      <tr><td>Class II tactical (150–600 kg)</td><td class="num">below 18,000 ft</td><td class="num">about 2–16 m</td><td class="num">about 180 / 190 km/h</td><td>yes (Archytas, RX-3, LOTUS demonstrator)</td></tr>
+      <tr><td>Class III (over 600 kg)</td><td class="num">up to 65,000 ft</td><td class="num">—</td><td class="num">—</td><td>only LOTUS 11 m and the Patroller (in cruise)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Speeds and spans read from the paper's box and dot plots (2005–2015; about ± 10 %); class limits from its Table 2. Within a class, span against weight and cruise speed against weight fit poorly (R² &lt; 0.2, Tables 5 and 9).</p>
+  <div class="cbox"><span class="ctag">Conclusion</span>The paper fits our approach: within one class the spread is wide and the trend lines are weak, so a range sampled across the spread, not a trend line, is the right description of the design space. Its class limits make our scope precise: Class I and Class II up to 600 kg and 18,000 ft, with the Greek tactical BWBs inside and LOTUS 11 m at the Class III edge.</div>
 </section>
 
 <section id="phenomena">
@@ -2107,7 +2140,7 @@ __DERIVED__
     <figcaption class="cap">Where the wings fly, at unit mean chord. Thick bars: the four levels on the mean chord, the same for every type. Thin bars: the local Re along the semi-span, from the smallest tip at the lowest level to the largest root at the top level (focus space). Top lines: the real wings with a published area and speeds, each at its own Re on the mean chord (cruise at 3,048 m to top speed at sea level). The tips go furthest into the low-Re regime, the BWB down to about __S_BWB_RETIP__ (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>At the two lowest levels every type flies in the low-Re regime (below 5 × 10⁵), and the tips go deepest: the BWB down to about __S_BWB_RETIP__ at 10⁵. Low-Re effects are the rule for these wings, not the exception.</div>
   <figure class="fig card">__PNG_LOCALRE__
-    <figcaption class="cap">At unit mean chord: local Re = Re on the mean chord × local chord (in mean chords). Top: each type's focus wing with the smallest tip chord, at the lowest level (1 × 10⁵). Bottom: its focus wing with the largest root chord, at the top level (3 × 10⁶). At the lowest level the outer panels sit below 10⁵ (red) and the BWB carries two regimes at once; at the top level the roots pass 3 × 10⁶ (dark blue).</figcaption></figure>
+    <figcaption class="cap">At unit mean chord: local Re = Re on the mean chord × local chord (in mean chords). Top: each type's focus wing with the smallest tip chord, at the lowest level (1 × 10⁵). Bottom: its focus wing with the largest root chord, at the top level (4 × 10⁶; 3 × 10⁶ until 8 Nov). At the lowest level the outer panels sit below 10⁵ (red) and the BWB carries two regimes at once; at the top level the roots pass 4 × 10⁶ (dark blue).</figcaption></figure>
   <div class="cbox"><span class="ctag">Conclusion</span>One wing can hold two regimes: at the lowest level the focus BWB with the smallest tip runs at __S_TIPW_REROOT__ at the root and __S_TIPW_RETIP__ at the tip, __S_TIPW_RATIO__ times less (first approach, real size: 2.4 × 10⁵ and 1.4 × 10⁴, 17 times). One flow model may not fit the whole half wing. One first-cell height does (it changes only about 20 % along the semi-span, because Re and chord change together), but the root boundary layer is up to about 10 × thicker and needs more wall layers.</div>
   <h2 style="font-size:22px">What fully turbulent CFD would miss: estimated in 2-D with XFOIL (no wing CFD run yet)</h2>
   <p>No CFD has been run on a wing yet (the 4 Nov SU2 smoke test on one ring mesh did not converge and gives no result). Four airfoils, each on its own (2-D, not a cut of a wing; rerun on 7 Nov 2026 on the sections of the new nose rule), were run in XFOIL (Drela 1989: a panel method coupled to a boundary-layer model, not RANS): MH 104, the BWB centre body (root); MH 61, the BWB outer wing (tip); MH 60, the flying wing; NACA 4415, the conventional wings (root). Each was run twice at the four study Re:</p>
@@ -2571,6 +2604,8 @@ def main() -> None:
                 .replace("__PNG_REAL__", img("first_approach/real_uavs.png", "First approach: real wings against generated wings at real size, full span and mean chord"))
                 .replace("__PNG_NOSE__", img("nose_curvature.png", "Nose curvature study: the built nose against the raw file, old and new rule"))
                 .replace("__PNG_TABLES_NOSE__", img("section_tables_nose.png", "Section tables rebuilt on the fixed nose: new minus old, by Re"))
+                .replace("__PNG_GREEK__", img("greek_uavs.png", "Greek tactical UAVs against the Re levels: Re on the mean chord from cruise to top speed"))
+                .replace("__PNG_LADDER__", img("re_ladder_check.png", "Check C4 on 2-D data: drag read between the Re levels, old against new levels"))
                 .replace("__RE_LO__", sci3(real['re_low_min']))
                 .replace("__RE_HI__", sci3(real['re_high_max']))
                 .replace("__COVER__", cover_text())

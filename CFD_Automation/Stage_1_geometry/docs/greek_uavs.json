@@ -1,0 +1,305 @@
+{
+ "what": "Greek tactical UAVs against the Re levels on the mean chord (area / full span)",
+ "date": "2026-11-08",
+ "levels": [
+  100000.0,
+  300000.0,
+  1000000.0,
+  4000000.0
+ ],
+ "old_levels": [
+  100000.0,
+  300000.0,
+  1500000.0,
+  3000000.0
+ ],
+ "air_check": {
+  "sea_level": 68459,
+  "1524_m": 60622,
+  "3048_m": 53460,
+  "note": "Stage 0: 68,500 / 60,600 / 53,500 s/m2 (rounded); here unrounded"
+ },
+ "method": "Re low: cruise at 3,048 m; Re high: top speed at sea level; ISA + Sutherland",
+ "real_class_I_II": {
+  "n": 31,
+  "re_min": 122046.87499999997,
+  "re_max": 3102142.7703523687
+ },
+ "rows": [
+  {
+   "name": "Archytas",
+   "family": "tailless",
+   "span_m": 6.4,
+   "mean_chord_m": 0.8,
+   "chord_from": "AR 8 (assumed: True)",
+   "cruise_kmh": 120,
+   "cruise_assumed": false,
+   "top_kmh": [
+    158.0
+   ],
+   "top_assumed": false,
+   "re_cruise_3048m": 1425610.6175568784,
+   "re_top_sea_level": [
+    2403686.5050785
+   ],
+   "mach_top": [
+    0.12897341855879627
+   ],
+   "pg_from_mach_0p1_pct": [
+    0.33675112608519964
+   ],
+   "inside_levels": true,
+   "above_top_factor": 0.6009216262696251,
+   "re_cruise_at_ceiling": 897491.5492500801,
+   "re_top_if_ar6": [
+    3204915.340104667
+   ]
+  },
+  {
+   "name": "HCUAV (RX-1)",
+   "family": null,
+   "span_m": 6.4,
+   "mean_chord_m": 0.8,
+   "chord_from": "AR 8 (assumed: True)",
+   "cruise_kmh": 160,
+   "cruise_assumed": false,
+   "top_kmh": [
+    190.0
+   ],
+   "top_assumed": false,
+   "re_cruise_3048m": 1900814.1567425043,
+   "re_top_sea_level": [
+    2890509.0883855387
+   ],
+   "mach_top": [
+    0.15509461725424867
+   ],
+   "pg_from_mach_0p1_pct": [
+    0.7174632631612665
+   ],
+   "inside_levels": true,
+   "above_top_factor": 0.7226272720963847,
+   "re_top_if_ar6": [
+    3854012.117847385
+   ]
+  },
+  {
+   "name": "RX-3",
+   "family": "tailless",
+   "span_m": 7.2,
+   "mean_chord_m": 0.9,
+   "chord_from": "AR 8 (assumed: False)",
+   "cruise_kmh": 180,
+   "cruise_assumed": false,
+   "top_kmh": [
+    241.0
+   ],
+   "top_assumed": false,
+   "re_cruise_3048m": 2405717.917127232,
+   "re_top_sea_level": [
+    4124680.4030975215
+   ],
+   "mach_top": [
+    0.19672527767512593
+   ],
+   "pg_from_mach_0p1_pct": [
+    1.4818357420096406
+   ],
+   "inside_levels": false,
+   "above_top_factor": 1.0311701007743803,
+   "plot_note": "a paper airframe like it has 6.26 m",
+   "re_top_if_ar6": [
+    5499573.870796695
+   ]
+  },
+  {
+   "name": "LOTUS demonstrator",
+   "family": "tailless",
+   "span_m": 7.0,
+   "mean_chord_m": 0.875,
+   "chord_from": "AR 8 (assumed: True)",
+   "cruise_kmh": 180,
+   "cruise_assumed": true,
+   "top_kmh": [
+    241.0
+   ],
+   "top_assumed": true,
+   "re_cruise_3048m": 2338892.4194292533,
+   "re_top_sea_level": [
+    4010105.9474559235
+   ],
+   "mach_top": [
+    0.19672527767512593
+   ],
+   "pg_from_mach_0p1_pct": [
+    1.4818357420096406
+   ],
+   "inside_levels": false,
+   "above_top_factor": 1.002526486863981,
+   "re_top_if_ar6": [
+    5346807.929941231
+   ]
+  },
+  {
+   "name": "LOTUS",
+   "family": "tailless",
+   "span_m": 11.0,
+   "mean_chord_m": 1.375,
+   "chord_from": "AR 8 (assumed: True)",
+   "cruise_kmh": 180,
+   "cruise_assumed": true,
+   "top_kmh": [
+    220.0,
+    240.0
+   ],
+   "top_assumed": false,
+   "re_cruise_3048m": 3675402.3733888264,
+   "re_top_sea_level": [
+    5752493.416030429,
+    6275447.362942288
+   ],
+   "mach_top": [
+    0.1795832410312353,
+    0.1959089902158931
+   ],
+   "pg_from_mach_0p1_pct": [
+    1.1430483794163449,
+    1.4649226699745777
+   ],
+   "inside_levels": false,
+   "above_top_factor": 1.5688618407355719,
+   "plot_note": "top speed planned (press)",
+   "re_cruise_at_ceiling": 2819496.797142202,
+   "re_top_if_ar6": [
+    7669991.221373905,
+    8367263.150589717
+   ]
+  },
+  {
+   "name": "Patroller",
+   "family": "conventional",
+   "span_m": 18.0,
+   "mean_chord_m": 0.9667,
+   "chord_from": "area 17.4 m2 (assumed: True)",
+   "cruise_kmh": 92,
+   "cruise_assumed": false,
+   "top_kmh": [
+    265.0,
+    314.0
+   ],
+   "top_assumed": false,
+   "re_cruise_3048m": 1320669.8359867188,
+   "re_top_sea_level": [
+    4871395.250930452,
+    5772143.806762874
+   ],
+   "mach_top": [
+    0.21631617669671527,
+    0.25631426219912673
+   ],
+   "pg_from_mach_0p1_pct": [
+    1.9116691741688951,
+    2.937525917233219
+   ],
+   "inside_levels": false,
+   "above_top_factor": 1.4430359516907185,
+   "plot_note": "top speed 265-314 km/h (sources disagree)",
+   "re_cruise_at_ceiling": 880691.4482288915
+  }
+ ],
+ "projects": [
+  {
+   "name": "ACTUS",
+   "what": "Advanced Capabilities & Certification for Tactical UAV Systems: an EDF 2023 project (grant EUR 42 M, 48 months, kick-off 17-18 Dec 2024), coordinated by Intracom Defense with 23-24 partners from 9-11 countries. It develops and certifies two tactical UAVs, LOTUS and the Patroller. It is a project, not an aircraft.",
+   "sources": [
+    {
+     "url": "https://www.intracomdefense.com/intracom-defense-launches-the-actus-project/",
+     "stype": "manufacturer",
+     "date": "2025-02-03"
+    },
+    {
+     "url": "https://www.signalgenerix.com/projects/actus-advanced-capabilities-certification-for-tactical-uav-systems/",
+     "stype": "manufacturer"
+    }
+   ]
+  }
+ ],
+ "nato_classes": {
+  "source": "mitridis2023aerospace",
+  "table": [
+   {
+    "class": "I",
+    "category": "micro",
+    "gtow_kg": [
+     0,
+     2
+    ],
+    "altitude_ft_below": 200
+   },
+   {
+    "class": "I",
+    "category": "mini",
+    "gtow_kg": [
+     2,
+     15
+    ],
+    "altitude_ft_below": 3000
+   },
+   {
+    "class": "I",
+    "category": "small",
+    "gtow_kg": [
+     15,
+     150
+    ],
+    "altitude_ft_below": 5000
+   },
+   {
+    "class": "II",
+    "category": "tactical",
+    "gtow_kg": [
+     150,
+     600
+    ],
+    "altitude_ft_below": 18000
+   },
+   {
+    "class": "III",
+    "category": "MALE / HALE / strike",
+    "gtow_kg": [
+     600,
+     null
+    ],
+    "altitude_ft_below": 65000
+   }
+  ],
+  "read_from_plots": {
+   "cruise_kmh_median": {
+    "micro_mini": 60,
+    "small": 120,
+    "tactical": 180
+   },
+   "top_kmh_median": {
+    "micro_mini": 95,
+    "small": 160,
+    "tactical": 190
+   },
+   "full_span_m": {
+    "micro_mini": [
+     0.7,
+     3.5
+    ],
+    "small": [
+     1.0,
+     8.0
+    ],
+    "tactical": [
+     2.0,
+     16.0
+    ]
+   }
+  },
+  "fits_within_class": "full span vs weight and cruise speed vs weight: R2 < 0.2 for small and tactical (Tables 5, 9)",
+  "no_area": "aspect ratio and wing area were not collected (no solid data), so the paper cannot give Re by itself"
+ }
+}

@@ -1,6 +1,6 @@
 """Section tables: XFOIL results on a grid of Re x Mach x angle, for every section the flow maps use.
 
-    python -m cfdauto.flowmap.tables --build        # needs xfoil; about 2,400 sweeps, resumable
+    python -m cfdauto.flowmap.tables --build        # needs xfoil; 2,752 sweeps, resumable
     python -m cfdauto.flowmap.tables --status
 
 Why tables. A flow map needs XFOIL at every strip of every wing, angle and speed. Strip sections are the
@@ -11,7 +11,7 @@ any wing is then evaluated in milliseconds, without XFOIL, by interpolation:
   - a strip between two different station sections takes the blend of the two parents' results
     (checked against direct XFOIL runs of 50/50 blends, see the analysis).
 
-Grid: 10 sections, Re 1.5e4 - 6e6 (14 levels, about x1.6), Mach 0 / 0.1 / 0.2, angle -10 to 14 deg
+Grid: 10 sections, Re 1.5e4 - 1.5e7 (16 levels, about x1.6; 1e7 and 1.5e7 added 8 Nov 2026), Mach 0 / 0.1 / 0.2, angle -10 to 14 deg
 in 0.5 deg; free transition (N_crit 9) and tripped at 1 % chord. Extra: free transition at N_crit 5 and
 11 (Mach 0.1), and three 50/50 blends (Mach 0.1) for the checks.
 
@@ -37,7 +37,10 @@ from . import xfoil
 
 SECTIONS = ("mh104", "mh61", "mh60", "mh45", "s5010", "naca4415", "naca4412", "sd7032", "la2573a", "e387")
 BLENDS = (("mh104", "mh61"), ("naca4415", "naca4412"), ("mh60", "mh45"))
-RE = np.array([1.5e4, 2.5e4, 4e4, 6e4, 1e5, 1.5e5, 2.5e5, 4e5, 6e5, 1e6, 1.5e6, 2.5e6, 4e6, 6e6])
+RE = np.array([1.5e4, 2.5e4, 4e4, 6e4, 1e5, 1.5e5, 2.5e5, 4e5, 6e5, 1e6, 1.5e6, 2.5e6, 4e6, 6e6, 1e7, 1.5e7])
+# 1e7 and 1.5e7 added on 8 Nov 2026: with the top Re level 4e6 (Stage 0, 8 Nov) the root strips reach a local Re of
+# 1.0e7 (focus BWB, root chord 2.5 mean chords) to 1.44e7 (full-space BWB, 3.6) on the built sets; the extreme full-space
+# BWB corner (root 4.9 mean chords, scripts/size_extremes.py) reaches 1.96e7, read at the edge. Rows up to 6e6 unchanged.
 MACH = np.array([0.0, 0.1, 0.2])
 ALPHA = np.round(np.arange(-10.0, 14.0001, 0.5), 3)
 UP = [a for a in ALPHA if a >= 0]

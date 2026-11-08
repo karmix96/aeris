@@ -2,7 +2,7 @@
 
 These are the starting values the whole project is judged against. For each one: **the value**,
 **what it means in practice**, **why we chose it**, and **the source**. The same values, in a form a
-program can read, are in `values.yaml`. Updated 7 Nov 2026 (first updated 2 Nov 2026 with the
+program can read, are in `values.yaml`. Updated 8 Nov 2026 (first updated 2 Nov 2026 with the
 Stage 1 findings). The page "CFD Automation Stage 0" mirrors this file.
 
 ## A few words first
@@ -17,7 +17,7 @@ Stage 1 findings). The page "CFD Automation Stage 0" mirrors this file.
   solver iterates.
 - **Proposal, pending**: a proposal that is not decided yet. Everything else here is decided.
 
-## What changed since 2 Nov 2026 (updated 7 Nov)
+## What changed since 2 Nov 2026 (updated 8 Nov)
 
 The sections below are updated to match.
 
@@ -77,6 +77,16 @@ The sections below are updated to match.
   now passes on 95.6 % of the database (21.0 % before). The 6 Nov note that the finding was overstated was wrong.
 - **Re levels:** 1 × 10⁵ stays (owner, 7 Nov), 18 % below the slowest real UAV (1.22 × 10⁵ on the mean
   chord), as a margin.
+- **Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (owner, 8 Nov; were 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶,
+  3 × 10⁶).** Two reasons. (1) The Greek tactical BWB programmes are in scope: LOTUS, Archytas, and ACTUS,
+  the EDF project that develops LOTUS and the Safran Patroller. 4 × 10⁶ covers all their cruise points and
+  the 6–7 m versions at top speed; LOTUS 11 m and the Patroller at top speed (4.9–6.3 × 10⁶) are
+  extrapolations. No wing area is published, so their Re rests on an assumed AR of 8. (2) 1 × 10⁶ fills the
+  old 3 × 10⁵ → 1.5 × 10⁶ gap: on the 2-D section tables, drag read between the levels (with transition)
+  is off by 8.8 % instead of 16.9 % at 6 × 10⁵ (90th percentile). The price: between 1 × 10⁶ and
+  4 × 10⁶ it is off by 6.8–7.0 % instead of 2.5–3.7 % (fully turbulent: 0.4–0.5 % instead of 0.1–0.2 %).
+  Same 4 levels and 8,000 solves; at F the two moved levels have 0.5 % fewer cells; the largest F mesh is
+  9.99 M cells (was 9.74 M). The 2-D tables gain the rows 1 × 10⁷ and 1.5 × 10⁷. Details: D3, Reynolds.
 - **Section tables and refine map redone (7 Nov).** The 2-D XFOIL tables were rebuilt on the fixed nose:
   no Stage 1 conclusion changes. The refine map now runs at the 4 Re levels; it finds the upper transition
   past 85 % c at low Re (proposal below: write the upper band as 0–100 % c; +0.4 % cells at F).
@@ -92,7 +102,7 @@ The sections below are updated to match.
 - **Mach.** Core data at Mach ≤ 0.2 now; Mach 0.3–0.5 later, with a fast-UAV family.
 - **Angles.** Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about
   2.5° steps.
-- **Re levels.** Check C4 adds a level near 7 × 10⁵ – 10⁶ only if needed.
+- **Check C4 with the solver.** Done on 2-D data on 8 Nov (1 × 10⁶ added); the solver check is still to run.
 - **Upper transition band 0–100 % of chord (7 Nov; was 0–85 %).** The built mesh is already close (one node
   list for both sides; lower band 0–100 % c): same mesh at VC, +0.4 % cells at F (median).
 
@@ -372,7 +382,7 @@ BWB and cranked have 17 variables; flying wing and tapered have 13.
     5.5–6.5° at Mach 0.5, 8–9.5° at 0.4, only near stall at 0.3.
 - **Source:** our choice (owner).
 
-### Reynolds numbers: 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (on the mean chord; top was 5 × 10⁶ until 29 Oct 2026; 1 × 10⁵ added 30 Oct 2026)
+### Reynolds numbers: 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (on the mean chord; owner, 8 Nov 2026; were 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶; top 5 × 10⁶ until 29 Oct 2026)
 - **In practice:** the Reynolds number says how "big and fast" a wing is for the air:
   Re = air density × speed × chord ÷ air viscosity. A small, slow wing has low Re; a large, fast
   wing has high Re. Example: a 0.2 m chord at 25 m/s and 1,500 m gives about 3 × 10⁵.
@@ -426,8 +436,47 @@ levels are unchanged. The Aludra row is 3 % above the top level, and its listed 
 disagrees with full span ÷ aspect ratio (0.74 m): check the row before quoting it.
 
 **Decided (owner, 6 Nov; similarity, below):** Re on the mean chord is the input, so every shape runs
-at all four levels. **Proposal, pending:** the Re levels: check C4 adds a level near 7 × 10⁵ – 10⁶ only
-if needed.
+at all four levels.
+
+**Update 8 Nov 2026 (owner): levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶.**
+- **The Greek tactical programmes are in scope.** No wing area is published for any of them, so the
+  mean chord comes from an assumed aspect ratio of 8 (the AUTh RX-3, which LOTUS is based on, has AR 8 and a
+  33° sweep: Kapsalis et al. 2025). Re on the mean chord, cruise at 3,048 m to top speed at sea level
+  (`Stage_1_geometry/configs/greek_uavs.yaml`, `scripts/greek_uavs.py`):
+
+  | aircraft | full span | cruise / top speed | Re (mean chord) | Mach at top speed |
+  |---|---|---|---|---|
+  | Archytas (HAI; AUTh aerodynamics; BWB, VTOL) | 6.4 m | 120 / 158 km/h | 1.4 → 2.4 × 10⁶ | 0.13 |
+  | RX-3 (AUTh/DELAER; LOTUS is based on it) | 7.2 m | 180 / 241 km/h | 2.4 → 4.1 × 10⁶ | 0.20 |
+  | LOTUS sub-scale demonstrator | about 7 m | not published (the RX-3's used) | 2.3 → 4.0 × 10⁶ | 0.20 |
+  | LOTUS (EDIDP, then ACTUS; BWB) | 11 m | not published / about 220–240 km/h (planned) | 3.7 → 5.8–6.3 × 10⁶ | 0.18–0.20 |
+  | Safran Patroller (ACTUS) | 18 m | 92 / 265–314 km/h | 1.3 → 4.9–5.8 × 10⁶ | 0.22–0.26 |
+
+  ACTUS is an EDF 2023 project (Intracom Defense, Dec 2024 – 2028) that develops and certifies LOTUS and
+  the Patroller; it is not an aircraft. 4 × 10⁶ covers every cruise point (LOTUS 11 m: 2.8 × 10⁶ at
+  20,000 ft, 3.7 × 10⁶ at 10,000 ft, its cruise assumed 180 km/h) and the 6–7 m versions at top speed (the
+  RX-3 3 % above). LOTUS 11 m low and fast (4.7–6.3 × 10⁶) and the Patroller at top speed are extrapolations.
+  With AR 6 instead of 8 every Greek BWB Re is a third higher. LOTUS 11 m (500–700 kg) and the Patroller
+  (1.2 t) are NATO Class III by weight (over 600 kg). Mach up to 0.26: Prandtl–Glauert from Mach 0.1 adds
+  +1.1 to +2.9 %.
+- **The 1 × 10⁶ level: check C4 on 2-D data** (`Stage_1_geometry/scripts/re_ladder_check.py`; 13 section
+  tables, angles 0–6°, Mach 0.1; drag read between the levels in log Re against the table). With
+  transition, over 1 × 10⁵ – 4 × 10⁶: median 3.0 %, 90th percentile 7.3 %, worst 20 % (old levels 3.3 /
+  8.0 / 26 %). At 6 × 10⁵ the 90th percentile falls from 16.9 % to 8.8 %; between 1 × 10⁶ and 4 × 10⁶ it
+  rises from 2.5–3.7 % to 6.8–7.0 % (the price of the wider gap). Fully turbulent: median 0.7 %, 90th
+  percentile 1.3 % (old 0.8 / 1.3 %). Above the top (6 × 10⁶): 7.8 % with transition (old levels: 12.0 %),
+  0.7 % fully turbulent. A 2-D proxy: the solver check is still to run.
+- **Cost.** Still four levels and 8,000 solves. At F, the 1 × 10⁶ and 4 × 10⁶ meshes together have 0.5 %
+  fewer cells than the 1.5 × 10⁶ and 3 × 10⁶ ones; the largest F wing-block mesh is 9.99 M cells (was
+  9.74 M). The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷: at 4 × 10⁶ the root strips reach a
+  local Re of 1.0 × 10⁷ (focus BWB) to 1.44 × 10⁷ (full-space BWB) on the built sets; the extreme full-space BWB
+  corner (root 4.9 mean chords) reaches 1.96 × 10⁷ and is read at the table edge. The rows up to 6 × 10⁶ are unchanged.
+- **Scope reference (Mitridis et al. 2023, 202 fixed-wing UAVs by NATO class).** By take-off weight: Class
+  I small 15–150 kg below 5,000 ft; Class II tactical 150–600 kg below 18,000 ft; Class III over 600 kg.
+  Median cruise about 120 / 180 km/h and top speed about 160 / 190 km/h (small / tactical; read from the
+  paper's box plots); full spans about 1–8 m and 2–16 m. Within a class the fits are weak (R² < 0.2), so the
+  spread, not a trend line, sets the range. The paper gives no aspect ratio or wing area, so it cannot give
+  Re by itself.
 
 ### Similarity: unit mean chord, Re as the input, Mach 0.1 (owner, 6 Nov 2026)
 - **In practice:** every wing is solved at a mean chord of 1, and the Reynolds number on that chord is
@@ -618,6 +667,12 @@ CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works. No wing has bee
 - **The new scope needs data.** −5° to post-stall and Mach toward 0.5 lie outside the Stage 1 data (root
   angles 0–10°, Mach ≤ 0.2). The mesh rules were set from those ranges, so they must be checked again
   for the new ones.
+- **The Greek programmes rest on assumptions (8 Nov).** No wing area is published for LOTUS, Archytas or
+  the RX-3, so their Re uses AR 8 (AR 6 would make it a third higher); the LOTUS speeds are planned values
+  from the press, and the sources disagree on several numbers (LOTUS weight 500–700 kg, demonstrator span
+  6 or 7 m, Patroller top speed 265 or 314 km/h). LOTUS 11 m and the Patroller at top speed lie above the
+  top level (extrapolated). The 1 × 10⁶ level makes drag read between the levels worse from 1 × 10⁶ to
+  4 × 10⁶ (2-D, with transition: 6.8–7.0 % against 2.5–3.7 %, 90th percentile).
 - **Numerical settings.** Earlier tests moved drag 12–21 counts against a 0.45-count share. Expect this
   to drive the solver settings.
 - **Iteration share.** 0.30 counts is looser than Celik's 1/10-of-mesh-error rule (0.195). The measured
@@ -632,3 +687,9 @@ Sources added on 6 Nov 2026: AIAA DPW-4 gridding guidelines
 transition-model grid requirements
 (https://ansyshelp.ansys.com/public/views/secured/corp/v251/en/cfx_mod/i1324236.html); SU2 v8.6.0 source
 code (https://github.com/su2code/SU2); Anderson, Fundamentals of Aerodynamics, 5th ed., 2011.
+
+Sources added on 8 Nov 2026: Mitridis, Kapsalis, Terzis, Panagiotou, Aerospace 10, 382, 2023
+(https://doi.org/10.3390/aerospace10040382); Kapsalis, Panagiotou, Yakinthos, Drones 9, 862, 2025
+(https://doi.org/10.3390/drones9120862); Antoniou, Kapsalis, Panagiotou, Yakinthos, Aerospace 10, 720, 2023
+(https://doi.org/10.3390/aerospace10080720); the Greek programme pages (press, manufacturer and ministry), each
+in `Stage_1_geometry/configs/greek_uavs.yaml`.

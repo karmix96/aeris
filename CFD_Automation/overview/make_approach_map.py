@@ -10,6 +10,7 @@ docs of 7 Nov 2026 and is written here by hand, with the doc it comes from.
 from __future__ import annotations
 
 import html
+import json
 import math
 import sys
 from pathlib import Path
@@ -36,8 +37,15 @@ RANGES = {  # type: (AR focus, AR full, root focus, root full, tip focus, tip fu
     "cranked": ((4.5, 16.5), (3, 20), (1.015, 1.369), (1.000, 2.361), (0.439, 0.883), (0.234, 1.000)),
     "tapered": ((4.5, 16.5), (3, 20), (1.000, 1.429), (1.000, 1.600), (0.571, 1.000), (0.400, 1.000)),
 }
-# Stage 1 page, "By type and space": local Re, smallest focus tip at 1e5 and largest focus root at 3e6
-LOCAL_RE = {"bwb": (9.9e3, 8.5e6), "flying_wing": (4.6e4, 4.6e6), "cranked": (4.4e4, 4.1e6), "tapered": (5.7e4, 4.3e6)}
+from cfdauto.paths import STAGE1, re_levels  # noqa: E402
+
+LEVELS = re_levels()          # Stage 0 values.yaml: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
+LEV_LAB = {1e5: "1 × 10⁵", 3e5: "3 × 10⁵", 1e6: "1 × 10⁶", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶", 4e6: "4 × 10⁶"}
+# Stage 1 docs/size_extremes.json: local Re, smallest focus tip at the lowest level, largest focus root at the top level
+_EXT = json.loads((STAGE1 / "docs" / "size_extremes.json").read_text())
+LOCAL_RE = {t: (_EXT[f"{t}/focus"]["re_tip_min"], _EXT[f"{t}/focus"]["re_root_max"]) for t in TYPES}
+# Stage 1 docs/greek_uavs.json (8 Nov 2026): the Greek tactical UAVs, cruise at 3,048 m to top speed at sea level
+GREEK = json.loads((STAGE1 / "docs" / "greek_uavs.json").read_text())["rows"]
 
 
 def esc(s: str) -> str:
@@ -195,7 +203,7 @@ def fig_similarity() -> str:
     b.append(f'<polygon points="{pts}" class="wing now"/>')
     b.append(T(420, 86, "one shape, c̄ = 1", "t sm acc"))
     b.append(T(420, 188, "+ the Re as an input:", "t sm"))
-    for k, lab in enumerate(("1 × 10⁵", "3 × 10⁵", "1.5 × 10⁶", "3 × 10⁶")):
+    for k, lab in enumerate(LEV_LAB.get(r, f"{r:.2g}") for r in LEVELS):
         b.append(f'<rect x="{420 + k * 68}" y="198" width="64" height="22" rx="3" class="lvl"/>')
         b.append(T(452 + k * 68, 213, lab, "t xs", "middle"))
     b.append(T(420, 244, "Mach 0.1; CL, CM × 1/√(1−M²)", "t xs mut"))
@@ -240,14 +248,24 @@ def fig_re() -> str:
             b.append(T(x0 - 10, y + 18, s2, "t xs mut", "end"))
     y = 56
     label(y, "Study levels", "on the mean chord")
-    for r in (1e5, 3e5, 1.5e6, 3e6):
+    for r in LEVELS:
         b.append(f'<circle cx="{X(r):.1f}" cy="{y}" r="7" class="lvldot"/>')
+    b.append(T(X(LEVELS[-1]) + 12, y + 4, "since 8 Nov", "t xs mut"))
     y = 106
     label(y, "Real UAV wings", "34 wings, mean chord")
     b.append(f'<rect x="{X(1.22e5):.1f}" y="{y - 7}" width="{X(3.10e6) - X(1.22e5):.1f}" height="14" rx="7" class="realbar"/>')
     b.append(T(X(1.22e5), y + 24, "1.22 × 10⁵", "t xs", "middle"))
     b.append(T(X(3.10e6), y + 24, "3.10 × 10⁶", "t xs", "middle"))
-    y = 166
+    y = 146
+    label(y, "Greek tactical UAVs", "cruise to top speed")
+    lo_g = min(r["re_cruise_3048m"] for r in GREEK)
+    hi_g = max(max(r["re_top_sea_level"]) for r in GREEK)
+    b.append(f'<rect x="{X(lo_g):.1f}" y="{y - 6}" width="{X(hi_g) - X(lo_g):.1f}" height="12" rx="6" class="greekbar"/>')
+    for r in GREEK:
+        b.append(f'<circle cx="{X(r["re_cruise_3048m"]):.1f}" cy="{y}" r="3" class="enddot"/>')
+    b.append(T(X(hi_g) + 8, y + 4, "LOTUS 11 m", "t xs mut"))
+    b.append(T(X(lo_g), y + 20, f"{fmt_sci(lo_g)} (cruise) – {fmt_sci(hi_g)} (LOTUS 11 m, top speed; AR 8 assumed)", "t xs mut"))
+    y = 196
     for t in TYPES:
         a, c = LOCAL_RE[t]
         label(y, NAMES[t], "local Re, focus" if t == "bwb" else "")
@@ -497,7 +515,7 @@ svg .lvl { fill: var(--accent-soft); stroke: var(--accent); } svg .lvldot { fill
 svg .arrow { stroke: var(--muted); stroke-width: 2; fill: none; }
 svg .reg { opacity: 1; } svg .r1 { fill: var(--hot-soft); } svg .r2 { fill: var(--amber-soft); } svg .r3 { fill: var(--amber-soft); opacity: .6; }
 svg .r4 { fill: var(--good-soft); opacity: .7; } svg .r5 { fill: var(--accent-soft); opacity: .7; }
-svg .realbar { fill: var(--good); opacity: .85; } svg .localbar { stroke: var(--ink); stroke-width: 3; } svg .enddot { fill: var(--ink); }
+svg .realbar { fill: var(--good); opacity: .85; } svg .greekbar { fill: var(--amber, #9A6200); opacity: .75; } svg .localbar { stroke: var(--ink); stroke-width: 3; } svg .enddot { fill: var(--ink); }
 svg .oldbar { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; } svg .oldmean { fill: var(--muted); opacity: .55; }
 svg .incomp { fill: var(--grid); } svg .nowline { stroke: var(--accent); stroke-width: 3; } svg .later { fill: var(--amber); opacity: .75; }
 svg .lam { fill: none; stroke: var(--good); stroke-width: 4; stroke-linecap: round; }
@@ -641,16 +659,16 @@ def page() -> str:
               "The full space is what the generator promises to handle; the focus space is where real Class I–II wings sit, and where most runs go (100 wings per type, plus 5 reference wings).",
               '<div class="figwrap">' + fig_ranges() + "</div>" + size_table()
               + '<p class="note">First approach (left, grey): the focus wings at real size and speed. Now (right): the same shapes in mean chords (c̄).</p>',
-              "The focus space covers the real wings: most real values sit inside it. The BWB is the extreme shape: a root up to 2.83 mean chords and a tip down to 0.10, up to 17 × smaller.")
+              "The focus space covers the real wings: most real values sit inside it, and so does the Greek RX-3 family (BWB, AR 8, sweep 33°; LOTUS and Archytas, 8 Nov). The BWB is the extreme shape: a root up to 2.83 mean chords and a tip down to 0.10, up to 17 × smaller. A survey of 202 fixed-wing UAVs (Mitridis et al. 2023) finds the spread inside each NATO class wide (span and cruise speed against weight: R² < 0.2), so a sampled range, not a trend line, is the right description.")
 
     s3 = step(3, "step-3", "Stage 0 → 1", "Similarity: size and speed become one number, the Re",
               "At low Mach, the shape, the Re and the angle set the flow. So a small slow wing and a large fast wing of the same shape need the same mesh. We build each shape once, at c̄ = 1, and give it the Re.",
               '<div class="figwrap">' + fig_similarity() + '</div><div class="figwrap">' + fig_re() + '</div><div class="figwrap">' + fig_mach() + "</div>"
               + cmp(["each wing at its own size, speed, altitude", "21 meshes per wing, about 42,000 solves",
                      "focus capped at 7 m full span", "Mach 0.03–0.20 from the real speeds"],
-                    ["each shape at c̄ = 1; Re 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ as inputs", "4 meshes per wing, about 8,000 solves",
+                    ["each shape at c̄ = 1; Re 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ as inputs (8 Nov)", "4 meshes per wing, about 8,000 solves",
                      "no size cap: the full span is the aspect ratio", "Mach 0.1 + Prandtl–Glauert; 0.3–0.5 later (pending)"]),
-              "The four Re levels cover all 34 real wings (1.22 × 10⁵ – 3.10 × 10⁶); 10⁵ sits 18 % below the slowest, as a margin. Inside one wing the local Re still spans far more: 9.9 × 10³ at the smallest BWB tip to 8.5 × 10⁶ at the largest BWB root.")
+              f"The four Re levels (since 8 Nov: 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶) cover the real wings (1.22 × 10⁵ – 3.10 × 10⁶) and every cruise point of the Greek tactical UAVs (LOTUS, Archytas, ACTUS; AR 8 assumed); LOTUS 11 m at top speed (up to 6.3 × 10⁶) is an extrapolation. 10⁵ sits 18 % below the slowest real wing, as a margin. Inside one wing the local Re spans far more: {fmt_sci(LOCAL_RE['bwb'][0])} at the smallest BWB tip to {fmt_sci(LOCAL_RE['bwb'][1])} at the largest BWB root.")
 
     s4 = step(4, "step-4", "Stage 1 flow study", "The flow: long laminar runs and bubbles, not fully turbulent",
               "2-D XFOIL strips along each wing (smooth wing, calm air). At our Re the flow stays laminar for a long way, often forms a laminar separation bubble, and turns turbulent late.",
@@ -688,9 +706,9 @@ def page() -> str:
               + '<p class="note">The 7 Nov count can be redone: layers to 2 chords from the first cell (y⁺ = 1), growth 1.25 at VC; wing blocks only. The 6 Nov estimate (15.2 M and 10.9 M) did not record its wall-layer rule and used the first wings. Stage 3 sets the real wall-layer rule.</p>',
               "F is 6.9 M cells (median) on the wing blocks, about 9–11 M with the C-H wake lines, inside the target. VC runs on the desktop (0.7 M); with +36 GB the desktop also takes C and M (wing blocks only); F needs the HPC.")
 
-    status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 7 Nov 2026</span><h2>Built, pending, next</h2>'
+    status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 8 Nov 2026</span><h2>Built, pending, next</h2>'
               '<div class="status"><div><span class="k ok">Built and checked</span><ul><li>Similarity, nose fix, 722 wings rebuilt</li>'
-              '<li>New surface rules; 1,724 of 1,724 builds pass</li><li>Section tables rebuilt; refine map at the Re levels</li></ul></div>'
+              '<li>New surface rules; 1,724 of 1,724 builds pass</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope); tables to 1.5 × 10⁷</li></ul></div>'
               '<div><span class="k you">Your calls</span><ul><li>Decision 77: growth by the family rule; station growth 1.2</li>'
               '<li>Upper band: 0–85 % c written, or 0–100 % c (+0.4 % cells at F)</li><li>Solver split (76); Stage 0 leftovers</li></ul></div>'
               '<div><span class="k next">Before Stage 3</span><ul><li>pyGeo tests and build on your machine</li>'
@@ -700,7 +718,7 @@ def page() -> str:
             '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">\n'
             f"<style>{CSS}</style>\n")
-    intro = ('<header style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">CFD_Automation · Stages 0–3 · updated 7 Nov 2026</span>'
+    intro = ('<header style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">CFD_Automation · Stages 0–3 · updated 8 Nov 2026</span>'
              '<h1>From a wing shape to a mesh that serves four Re levels</h1>'
              '<p class="lede">The flow of thought after the 4–7 Nov decisions, in seven steps. Wings and airfoil are drawn by the generator itself '
              '(reference wing 0 of each type, at unit mean chord). Click a step to jump to it.</p></header>')

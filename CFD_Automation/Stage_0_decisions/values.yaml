@@ -117,7 +117,9 @@ D3_conditions_and_measurement:
     supersonic_flow: none          # no supersonic regime or phenomena, not even small pockets (owner, 4 Nov 2026)
     stage1_data_max: 0.2           # Stage 1 section tables at Mach 0, 0.1 and 0.2
     solve_mach: 0.1                # owner, 6 Nov 2026 (similarity): Prandtl-Glauert correction on CL and CM
-    reason: The owner's scope. The focus wings fly at Mach 0.03-0.2.
+    reason: >-
+      The owner's scope. The focus wings fly at Mach 0.03-0.2. Greek tactical UAVs (8 Nov 2026): LOTUS at top
+      speed Mach 0.18-0.20, the Patroller up to 0.22-0.26; Prandtl-Glauert from Mach 0.1 adds +1.1 to +2.9 %.
     proposal: >-
       Pending: core data at Mach <= 0.2 now; Mach 0.3-0.5 later with a fast-UAV family (real fast UAVs,
       thinner sections, section tables to Mach 0.5). At Mach 0.5 angles capped near 4 deg by a
@@ -125,7 +127,7 @@ D3_conditions_and_measurement:
       near stall at 0.3).
     sources: []
   reynolds_levels:
-    value: [1.0e5, 3.0e5, 1.5e6, 3.0e6]
+    value: [1.0e5, 3.0e5, 1.0e6, 4.0e6]   # owner, 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
     unit: on the mean chord = area / full span (not the MAC, which on a BWB is 1.09-2.06x larger; the code has always used area / span)
     reason: >-
       Level 1e5 added on 30 Oct 2026 (Mike): real Class I wings fly at 1.2-3e5 (Black Swift S0, eBee)
@@ -143,9 +145,36 @@ D3_conditions_and_measurement:
       Re 1.2e5 to 3.1e6. The top is the NTNU Aludra MK1 row at its listed top speed (3.1e6; area from full
       span and aspect ratio), 3 % above the top level; its listed chord (0.60 m) disagrees with full span / AR
       (0.74 m). Levels unchanged.
+      8 Nov 2026 (owner): levels 1e5, 3e5, 1e6, 4e6. (1) The Greek tactical BWB programmes are in scope. No wing
+      area is published, so AR 8 is assumed (the AUTh RX-3 papers); cruise at 3,048 m, top speed at sea level:
+      Archytas (6.4 m; 120 / 158 km/h) 1.4e6 -> 2.4e6; RX-3 (7.2 m; 180 / 241 km/h; the base of LOTUS)
+      2.4e6 -> 4.1e6; LOTUS sub-scale demonstrator (about 7 m; RX-3 speeds) 2.3e6 -> 4.0e6; LOTUS full (11 m;
+      EDIDP, then ACTUS) cruise 2.8e6 (20,000 ft) to 3.7e6 (10,000 ft), top speed (about 220-240 km/h, planned)
+      5.8-6.3e6; Safran Patroller (ACTUS; 18 m; 92 / 265-314 km/h) 1.3e6 -> 4.9-5.8e6. ACTUS is an EDF 2023
+      project (Intracom Defense, Dec 2024 - 2028) that develops and certifies LOTUS and the Patroller, not an
+      aircraft. 4e6 covers every cruise point and the 6-7 m versions at top speed (RX-3 3 % above); LOTUS 11 m
+      low and fast (4.7-6.3e6) and the Patroller at top speed are extrapolations. LOTUS 11 m (500-700 kg) and
+      the Patroller (1.2 t) are NATO Class III by weight (> 600 kg). Rows: Stage_1_geometry/configs/real_uavs.yaml.
+      (2) Check C4 on the 2-D section tables (13 sections, 0-6 deg, Mach 0.1, drag read between the levels in
+      log Re): with transition the old 3e5 -> 1.5e6 gap (x5) misread drag by a median 3-5 %, 90th percentile up
+      to 17 % (at 6e5); with 1e6 that falls to 9 %. Over 1e5-4e6 the new levels give a median 3.0 %, 90th
+      percentile 7.3 %, worst 20 % (old levels 3.3 / 8.0 / 26 %); fully turbulent 0.7 / 1.3 / 6 % (old 0.8 / 1.3
+      / 6 %). The price: between 1e6 and 4e6 the 90th percentile rises from 2.5-3.7 % to 6.8-7.0 % (fully
+      turbulent 0.1-0.2 % to 0.4-0.5 %). Above the top (6e6): 7.8 % with transition (old levels 12.0 %), 0.7 %
+      fully turbulent (scripts: Stage_1_geometry/scripts/re_ladder_check.py, greek_uavs.py).
+      (3) Cost: still four levels and 8,000 solves; at F the 1e6 and 4e6 meshes together have 0.5 % fewer cells
+      than the 1.5e6 and 3e6 ones; the largest F wing-block mesh 9.99 M cells (was 9.74 M). The section tables
+      gain rows 1e7 and 1.5e7: at 4e6 the root strips of the built sets reach a local Re of 1.0e7 (focus BWB) to
+      1.44e7 (full-space BWB); the extreme full-space BWB corner (root 4.9 mean chords) reaches 1.96e7, read at the
+      table edge (marked re_clamped).
+      Scope reference (Mitridis et al. 2023; 202 fixed-wing UAVs by NATO class): Class I small 15-150 kg below
+      5,000 ft, Class II tactical 150-600 kg below 18,000 ft; median cruise about 120 / 180 km/h and top speed
+      about 160 / 190 km/h (small / tactical, read from the box plots); full spans about 1-8 m and 2-16 m.
+      Within a class the fits are weak (R2 < 0.2), so the spread sets the range. It gives no aspect ratio or
+      wing area, so it cannot give Re by itself.
     input: Re on the mean chord, so every shape runs at all four levels   # owner, 6 Nov 2026 (similarity)
-    proposal: "Pending: the Re levels; check C4 adds a level near 7e5-1e6 only if needed."
-    sources: [nato2009jcguav, icao1993isa, sutherland1893]
+    proposal: "Done on 2-D data (8 Nov): the 1e6 level is in. Check C4 with the solver still to run."
+    sources: [nato2009jcguav, icao1993isa, sutherland1893, mitridis2023aerospace, antoniou2023aerospace, kapsalis2025drones]
   similarity:   # owner, 6 Nov 2026; being built in the Stage 1 code now (all hashes change)
     value:
       reference_length: unit mean chord

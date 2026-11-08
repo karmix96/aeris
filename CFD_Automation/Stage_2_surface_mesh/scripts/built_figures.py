@@ -33,7 +33,11 @@ GREY = "#8C98A4"
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
 COLS = {"bwb": BWB, "flying_wing": AMBER, "cranked": ACC, "tapered": VIOLET}
-RE_LEVELS = (1.0e5, 3.0e5, 1.5e6, 3.0e6)
+sys.path.insert(0, str(HERE.parents[2]))           # CFD_Automation: the cfdauto package
+from cfdauto.paths import re_levels  # noqa: E402
+
+RE_LEVELS = re_levels()     # Stage 0 values.yaml: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
+RE_LAB = {1e5: "10⁵", 3e5: "3 × 10⁵", 1e6: "10⁶", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶", 4e6: "4 × 10⁶"}
 FAM_COL = {"tailless": BWB, "conventional": ACC, "delta": VIOLET}
 AIRFOILS = ("naca4415", "e387", "sd7032", "mh104", "mh61", "mh45", "mh60", "s5010", "la2573a", "naca25118")
 AF_NAME = {"naca4415": "NACA 4415", "e387": "E387", "sd7032": "SD7032", "mh104": "MH 104", "mh61": "MH 61",
@@ -194,22 +198,30 @@ def fig_similarity() -> None:
     rr = sorted([r for r in uav if r.get("re_low") and r.get("re_high") and r.get("use") == "ranges"], key=lambda r: r["re_low"])
     for i, r in enumerate(rr):
         a.plot([r["re_low"], r["re_high"]], [i, i], color=FAM_COL.get(r["family"], GREY), lw=2.2, solid_capstyle="butt")
+    gk = json.loads((STAGE1 / "docs" / "greek_uavs.json").read_text())["rows"]      # 8 Nov 2026: estimates (AR 8 assumed)
+    gk = sorted(gk, key=lambda r: r["re_cruise_3048m"])
+    for k, r in enumerate(gk):
+        y = len(rr) + 1.2 + k
+        a.plot([r["re_cruise_3048m"], max(r["re_top_sea_level"])], [y, y], color=BWB if r["family"] == "tailless" else ACC,
+               lw=2.2, ls=(0, (3, 1.5)), solid_capstyle="butt")
+        a.text(r["re_cruise_3048m"] / 1.08, y, r["name"], fontsize=6.6, color=MUTED, ha="right", va="center")
+    top_y = len(rr) + 1.2 + len(gk)
     for re in RE_LEVELS:
         a.axvline(re, color=AMBER, lw=1.2, ls="--")
-    a.text(1.0e5 * 0.97, len(rr) + 0.6, "10⁵", color=AMBER, fontsize=8, ha="right")
-    for re, lab in ((3e5, "3 × 10⁵"), (1.5e6, "1.5 × 10⁶"), (3e6, "3 × 10⁶")):
-        a.text(re * 1.04, len(rr) + 0.6, lab, color=AMBER, fontsize=8)
+    a.text(1.0e5 * 0.97, top_y + 0.4, "10⁵", color=AMBER, fontsize=8, ha="right")
+    for re in RE_LEVELS[1:]:
+        a.text(re * 1.04, top_y + 0.4, RE_LAB.get(re, f"{re:.2g}"), color=AMBER, fontsize=8)
     lo = rr[0]["re_low"]
     a.annotate(f"slowest real UAV: {lo / 1e5:.2f} × 10⁵\n(10⁵ is {100 * (1 - 1e5 / lo):.0f} % below it: a margin)",
                xy=(lo, 0), xytext=(1.06e5, 0.78 * len(rr)), fontsize=7.6, color=INK,
                arrowprops=dict(arrowstyle="->", color=MUTED, lw=0.8))
-    a.set_xscale("log"); a.set_xlim(6e4, 8e6); a.set_ylim(-1, len(rr) + 2)
+    a.set_xscale("log"); a.set_xlim(6e4, 8e6); a.set_ylim(-1, top_y + 1.6)
     a.set_yticks([]); a.set_xlabel("Re on the mean chord (area / full span), cruise to top speed")
     for fam, col in FAM_COL.items():
         if any(r["family"] == fam for r in rr):
             a.plot([], [], color=col, lw=2.2, label=f"{fam} ({sum(r['family'] == fam for r in rr)})")
-    a.set_title(f"the four Re levels (dashed) against the {len(rr)} real UAVs that set the\nStage 1 ranges: "
-                f"{rr[0]['re_low'] / 1e5:.2f} × 10⁵ to {max(r['re_high'] for r in rr) / 1e6:.2f} × 10⁶", fontsize=9.5)
+    a.set_title(f"Re levels (8 Nov) against {len(rr)} real UAVs ({rr[0]['re_low'] / 1e5:.2f} × 10⁵ – "
+                f"{max(r['re_high'] for r in rr) / 1e6:.2f} × 10⁶)\nand the Greek tactical UAVs (dashed bars, AR 8 assumed)", fontsize=9.5)
     a.legend(loc="lower right", fontsize=7.5, frameon=False)
     save(fig, "similarity_check.png")
 

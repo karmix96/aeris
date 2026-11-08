@@ -5,8 +5,8 @@
   "re_levels": [
    100000.0,
    300000.0,
-   1500000.0,
-   3000000.0
+   1000000.0,
+   4000000.0
   ],
   "search": "all corners of aspect_ratio, c2_ratio, c3_ratio, c4_ratio, b3_ratio, split_ratio; others mid-range"
  },
@@ -426,7 +426,7 @@
    0.2
   ],
   "re_tip_min": 9868.9491885887,
-  "re_root_max": 8493043.27563641,
+  "re_root_max": 11324057.700848548,
   "root_over_tip_max": 16.666666666666668
  },
  "bwb/full": {
@@ -845,7 +845,7 @@
    0.25
   ],
   "re_tip_min": 5510.037539970161,
-  "re_root_max": 14710981.693423787,
+  "re_root_max": 19614642.257898383,
   "root_over_tip_max": 25.0
  },
  "flying_wing/focus": {
@@ -1264,7 +1264,7 @@
    0.9000000000000001
   ],
   "re_tip_min": 46155.40978284336,
-  "re_root_max": 4615603.261631799,
+  "re_root_max": 6154137.682175732,
   "root_over_tip_max": 3.3333333333333335
  },
  "flying_wing/full": {
@@ -1683,7 +1683,7 @@
    1.0
   ],
   "re_tip_min": 33333.88480273214,
-  "re_root_max": 5000320.033176448,
+  "re_root_max": 6667093.377568598,
   "root_over_tip_max": 5.0
  },
  "cranked/focus": {
@@ -2102,7 +2102,7 @@
    0.85
   ],
   "re_tip_min": 43921.05205750269,
-  "re_root_max": 4106860.6775001963,
+  "re_root_max": 5475814.236666928,
   "root_over_tip_max": 2.6315789473684212
  },
  "cranked/full": {
@@ -2521,7 +2521,7 @@
    1.0
   ],
   "re_tip_min": 23421.629789688686,
-  "re_root_max": 7082181.11179353,
+  "re_root_max": 9442908.14905804,
   "root_over_tip_max": 5.9523809523809526
  },
  "tapered/focus": {
@@ -2940,7 +2940,7 @@
    1.0
   ],
   "re_tip_min": 57143.56957400598,
-  "re_root_max": 4285803.202752692,
+  "re_root_max": 5714404.270336921,
   "root_over_tip_max": 2.5
  },
  "tapered/full": {
@@ -3359,7 +3359,7 @@
    1.0
   ],
   "re_tip_min": 40000.12597362727,
-  "re_root_max": 4800089.346922693,
+  "re_root_max": 6400119.129230257,
   "root_over_tip_max": 4.0
  }
 }

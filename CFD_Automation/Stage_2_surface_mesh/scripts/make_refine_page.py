@@ -333,7 +333,7 @@ __RE_SECTION__
 
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
-RE_KEYS = (("1e+05", "10⁵"), ("3e+05", "3 × 10⁵"), ("1.5e+06", "1.5 × 10⁶"), ("3e+06", "3 × 10⁶"))
+RE_NAME = {1e5: "10⁵", 3e5: "3 × 10⁵", 1e6: "10⁶", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶", 4e6: "4 × 10⁶"}
 FIG_CLASS = {"refine_re_transition.png": "tall", "refine_re_coverage.png": "mid", "refine_re_no_answer.png": "mid"}
 
 
@@ -354,7 +354,7 @@ def re_section() -> str:
     d = json.loads(DATA_RE.read_text())
     s, ab = d["summary"], d["as_built"]
     rows = []
-    for k, name in RE_KEYS:
+    for k, name in ((k, RE_NAME.get(float(k), k)) for k in next(iter(s.values())).keys()):     # the levels the map ran at
         cells = "".join(f"<td class='num'>{100 * s[t][k]['to_8']['upper']['covered_share']:.0f} % "
                         f"({100 * s[t][k]['to_8']['upper']['transition_inside_share']:.0f} %)</td>" for t in TYPES)
         rows.append(f"<tr><td class='num'>{name}</td>{cells}</tr>")
@@ -377,8 +377,8 @@ def re_section() -> str:
     n16 = len(ab["builds"])
     return f"""
 <section class="re" id="re-levels">
-  <h2>Refine map at the Re levels (7 Nov)</h2>
-  <p><strong>What was done.</strong> The map has a Re mode now (similarity, decision 70): each of the 20 reference wings (5 per type, the new picks) at the four Re levels on the mean chord (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶) and root angles −5° to 12°, at unit mean chord and sea level, with the 2-D section tables read at Mach 0.1 and rebuilt on the fixed nose (decision 64). 13 strips per half wing (3 per panel). For each wing, Re level, strip and side: where transition sits from −5° to 8° (and to 12°); the band it needs, as before (transition ± 10 % c, the bubbles, the separation start); whether the bands hold it; and the strips with no XFOIL answer. Then an as-built check on {n16} built surfaces (wing 0 of each type at the four Re levels, level VC). In the figures, the decided upper band is the written one, 0–85 % c. Code: the Re mode of <code>cfdauto/mesh/refine_map.py</code>; <code>scripts/refine_map_re.py</code>; data <code>data/studies/refine_map_re.json</code>; note <code>decisions/refine_map_re.md</code>.</p>
+  <h2>Refine map at the Re levels (7 Nov; redone 8 Nov at the new levels)</h2>
+  <p><strong>What was done.</strong> The map has a Re mode now (similarity, decision 70): each of the 20 reference wings (5 per type, the new picks) at the four Re levels on the mean chord (10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ since 8 Nov; the 7 Nov run at 1.5 × 10⁶ and 3 × 10⁶ is kept in <code>data/studies/refine_map_re_levels_7nov.json</code>) and root angles −5° to 12°, at unit mean chord and sea level, with the 2-D section tables read at Mach 0.1 and rebuilt on the fixed nose (decision 64). 13 strips per half wing (3 per panel). For each wing, Re level, strip and side: where transition sits from −5° to 8° (and to 12°); the band it needs, as before (transition ± 10 % c, the bubbles, the separation start); whether the bands hold it; and the strips with no XFOIL answer. Then an as-built check on {n16} built surfaces (wing 0 of each type at the four Re levels, level VC). In the figures, the decided upper band is the written one, 0–85 % c. Code: the Re mode of <code>cfdauto/mesh/refine_map.py</code>; <code>scripts/refine_map_re.py</code>; data <code>data/studies/refine_map_re.json</code>; note <code>decisions/refine_map_re.md</code>.</p>
   <p><strong>Result.</strong> The lower band (0–100 % c) holds every strip at every Re level. The upper band as written (0–85 % c) does not hold the upper transition at low Re and low angle. Share of the strips whose band fits inside 0–85 % c, −5° to 8° (65 strips per type); in brackets, the share whose transition itself stays inside:</p>
   {table}
   <p>Where it does not fit, the cause is always the transition itself (+ 10 % c), never a bubble or a separation: at −5° and Re 10⁵ the median upper transition sits at 88–100 % c, and at 10⁵ some strips stay laminar to the trailing edge.</p>

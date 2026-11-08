@@ -1,0 +1,152 @@
+# Greek tactical UAV programmes and the Re levels (owner, 8 Nov 2026: "our range must include LOTUS, Archytas, ACTUS").
+#
+# Rule: a number is here only if a source states it; null = not found. A source that disagrees with another is kept,
+# with both values, in `conflict`. Anything not published but needed for a Re sits in `assumed`, with its reason: no
+# wing area is published for any Greek aircraft here, so the mean chord comes from an assumed aspect ratio, and every
+# Re below is an estimate, not a sourced value.
+# The Re method is the one of real_uavs.yaml: mean chord = area / full span; Re low = cruise at 3,048 m, Re high = top
+# speed at sea level (ISA, Sutherland). scripts/greek_uavs.py computes them (docs/greek_uavs.json, docs/greek_uavs.png).
+# stype: manufacturer, paper (peer-reviewed), government, secondary (trade press, Wikipedia, enthusiast sites).
+# Compiled and checked 8 Nov 2026 (every source read on that day). Re-check a row before quoting it in the paper.
+
+nato_classes:   # Mitridis et al. 2023 (Aerospace 10, 382; AUTh; 202 fixed-wing UAVs), Table 2 and Figures 6, 27, 28
+  source: mitridis2023aerospace
+  table:        # NATO UAV classification by gross take-off weight (Table 2)
+    - {class: I,   category: micro,    gtow_kg: [0, 2],     altitude_ft_below: 200}
+    - {class: I,   category: mini,     gtow_kg: [2, 15],    altitude_ft_below: 3000}
+    - {class: I,   category: small,    gtow_kg: [15, 150],  altitude_ft_below: 5000}
+    - {class: II,  category: tactical, gtow_kg: [150, 600], altitude_ft_below: 18000}
+    - {class: III, category: MALE / HALE / strike, gtow_kg: [600, null], altitude_ft_below: 65000}
+  read_from_plots:   # our reading of the paper's box plots (2005-2015) and of Figure 6; approximate (about +-10 %)
+    cruise_kmh_median: {micro_mini: 60, small: 120, tactical: 180}
+    top_kmh_median:    {micro_mini: 95, small: 160, tactical: 190}
+    full_span_m:       {micro_mini: [0.7, 3.5], small: [1.0, 8.0], tactical: [2.0, 16.0]}
+  fits_within_class: "full span vs weight and cruise speed vs weight: R2 < 0.2 for small and tactical (Tables 5, 9)"
+  no_area: "aspect ratio and wing area were not collected (no solid data), so the paper cannot give Re by itself"
+
+aircraft:
+  - name: Archytas
+    maker: Hellenic Aerospace Industry (HAI); aerodynamic design Aristotle University of Thessaloniki (AUTh)
+    family: tailless          # "a blended wing body with high swept wings" (EDR); "fixed wing BWB platform" (RedStar)
+    vtol: lift and cruise (two lift rotors, battery; pusher thermal engine, 30 hp)
+    span_m: 6.4               # EDR and RedStar agree
+    length_m: 3.5             # RedStar ("~3,5")
+    mass_kg: null             # EDR: "maximum take-off weight not being announced"; RedStar: "~180 - 200" (no source given)
+    cruise_kmh: 120           # EDR and RedStar agree
+    top_kmh: 158              # EDR and RedStar agree
+    stall_kmh: 74             # EDR 74; RedStar 70-74
+    ceiling_ft: 27000         # EDR; RedStar 8,229 m
+    endurance_h: 4
+    area_m2: null
+    assumed: {ar: 8, why: "not published; AUTh's tactical BWB, the RX-3, has AR 8 (Kapsalis et al. 2025)"}
+    conflict: "MTOW: not disclosed (EDR, DEFEA 2023) against about 180-200 kg (RedStar)"
+    sources:
+      - {url: "https://www.edrmagazine.eu/?p=29561", stype: secondary, date: 2023-05}
+      - {url: "https://www.redstar.gr/en/greek-aviation/hellenic-aerial-means-af/hellenic-aerospace-industry-s-a-hai/vtol-uav-archytas.html", stype: secondary}
+  - name: Archytas II
+    maker: HAI
+    family: tailless
+    span_m: 6.0
+    length_m: 4.0
+    payload_kg: 30
+    endurance_h: 9
+    cruise_kmh: null          # no speed published: no Re
+    top_kmh: null
+    area_m2: null
+    sources:
+      - {url: "https://greekcitytimes.com/2025/02/18/greece-develops-archytas-ii-drone-a-rival-to-turkeys-bayraktar/", stype: secondary, date: 2025-02-18}
+  - name: HCUAV (RX-1)
+    maker: AUTh Laboratory of Fluid Mechanics and Turbomachinery (coordinator), with Intracom Defense and others
+    family: null              # not stated in the source
+    span_m: 6.4
+    length_m: 4.035
+    mass_kg: 185
+    cruise_kmh: 160
+    top_kmh: 190
+    stall_kmh: 70
+    endurance_h: 11
+    area_m2: null
+    assumed: {ar: 8, why: "not published; as for the RX-3 that came from it"}
+    sources:
+      - {url: "https://en.wikipedia.org/wiki/HCUAV", stype: secondary}
+  - name: RX-3
+    maker: AUTh (design), Carbon Fiber Technologies (manufacture), Intracom Defense; developed into LOTUS
+    family: tailless          # "Blended Wing Body" (Wikipedia); AR 8, sweep 33 deg (Kapsalis et al. 2025, peer-reviewed)
+    span_m: 7.2
+    length_m: 4.15
+    mass_kg: 190
+    cruise_kmh: 180           # 97 kn
+    top_kmh: 241              # 130 kn; Wikipedia also writes "250 km/h (130 kn)", but 130 kn is 241 km/h
+    endurance_h: 10
+    area_m2: null
+    ar: 8                     # stated for the RX-3 by Kapsalis et al. 2025 (peer-reviewed), with a 33 deg sweep
+    conflict: >-
+      A paper airframe "closely resembling the RX-3" (Antoniou et al. 2023) has S 4.9 m2, AR 8, MAC 1.005 m, MTOW 260 kg,
+      cruise 160 km/h, so a full span of 6.26 m, not 7.2 m; top speed 250 km/h against 130 kn (241 km/h)
+    plot_note: a paper airframe like it has 6.26 m
+    sources:
+      - {url: "https://en.wikipedia.org/wiki/DELAER_RX-3", stype: secondary}
+      - {url: "https://www.ellinikos-stratos.com/arthra/lotus", stype: secondary, date: 2024-09-01}
+      - {url: "https://www.mdpi.com/2504-446x/9/12/862", stype: paper, key: kapsalis2025drones}
+      - {url: "https://mdpi.com/2226-4310/10/8/720", stype: paper, key: antoniou2023aerospace}
+  - name: LOTUS demonstrator
+    maker: Intracom Defense (IDE), EDIDP project LOTUS (2020; EUR 9.7 M; 11 partners incl. AUTh and the University of Patras)
+    family: tailless          # LOTUS is based on the RX-3 (Ellinikos Stratos; Wikipedia, HCUAV page)
+    span_m: 7.0               # "about 3 m long and 7 m span" sub-scale demonstrator (Doureios 2024; Ellinikos Stratos 2024)
+    length_m: 3.0
+    cruise_kmh: null
+    top_kmh: null
+    area_m2: null
+    assumed: {ar: 8, cruise_kmh: 180, top_kmh: 241, why: "no speed or area published for the demonstrator: the RX-3's"}
+    conflict: "span 7 m (Doureios, Ellinikos Stratos, 2024) against 6 m and about 230 kg (RUA, 2025); a '1:3' scale is in no source"
+    sources:
+      - {url: "https://doureios.com/se-kali-trohiua-to-programma-lotus-mellontiki-dynatotita-metaforas-oplon/", stype: secondary, date: 2024-06-05}
+      - {url: "https://www.ellinikos-stratos.com/arthra/lotus", stype: secondary, date: 2024-09-01}
+      - {url: "https://en.rua.gr/2025/07/25/lotus-drone-is-a-symbol-of-the-return-of-greece-to-the-independent-production-of-high-tech-combat-systems/", stype: secondary, date: 2025-07-25}
+  - name: LOTUS
+    maker: Intracom Defense; EDIDP LOTUS, then the EDF project ACTUS (below)
+    family: tailless          # "innovative Blended Wing Body (BWB) configuration" (Ellinikos Stratos)
+    span_m: 11.0              # Doureios, Ellinikos Stratos, Greek City Times agree
+    length_m: 6.0
+    mass_kg: [500, 700]       # "total weight 500-600 kg" (Doureios, Ellinikos Stratos, 2024); "approximately 700 kg" (Greek City Times, 2026)
+    cruise_kmh: null
+    top_kmh: [220, 240]       # "about 220-240 km/h" (Doureios, Ellinikos Stratos; planned values)
+    ceiling_ft: 20000
+    endurance_h: 18
+    carries: four tube-launched drones with folding wings ("mothership")
+    area_m2: null
+    assumed: {ar: 8, cruise_kmh: 180, why: "not published; the RX-3's AR and cruise (180 km/h is also the tactical median of Mitridis et al. 2023); AR 6 would raise every Re by a third"}
+    conflict: "weight 500-600 kg (2024) against about 700 kg (2026); speeds are planned values from the press"
+    plot_note: top speed planned (press)
+    sources:
+      - {url: "https://doureios.com/se-kali-trohiua-to-programma-lotus-mellontiki-dynatotita-metaforas-oplon/", stype: secondary, date: 2024-06-05}
+      - {url: "https://www.ellinikos-stratos.com/arthra/lotus", stype: secondary, date: 2024-09-01}
+      - {url: "https://greekcitytimes.com/2026/07/10/lotus-greeces-stealth-drone-mothership-poised-to-transform-air-defense/", stype: secondary, date: 2026-07-10}
+      - {url: "https://www.intracomdefense.com/lotus-next-generation-tactical-uav-from-intracom-defensefor-isr-missions/", stype: manufacturer}
+  - name: Patroller
+    maker: Safran (France); developed from the Stemme S15 motor glider; in the EDF project ACTUS
+    family: conventional
+    span_m: 18.0              # Wikipedia and the French Ministry of Armed Forces agree
+    length_m: 8.5
+    mass_kg: 1200             # "Weight: 1.2 tonnes" (French MoD); payload 250 kg (Wikipedia)
+    cruise_kmh: 92            # Wikipedia only
+    top_kmh: [265, 314]       # 314 km/h (Wikipedia, Patroller) is above the S15's never-exceed speed, 265 km/h
+    ceiling_ft: 25000
+    area_m2: null
+    assumed: {area_m2: 17.4, why: "the Stemme S15 wing (Wikipedia: 17.4 m2, AR 18.6), which the Patroller comes from"}
+    conflict: "endurance 14 h (French MoD) against 20-30 h (Wikipedia); top speed 314 km/h against the S15's 265 km/h"
+    plot_note: top speed 265-314 km/h (sources disagree)
+    sources:
+      - {url: "https://en.wikipedia.org/wiki/Safran_Patroller", stype: secondary}
+      - {url: "https://prod-site-internet-minarm-admin.cloud.defense.gouv.fr/sites/default/files/eurosatory/ESY22_carte%20d%27identit%C3%A9_SDT%20PATROLLER_finale%20EN.pdf", stype: government}
+      - {url: "https://en.wikipedia.org/wiki/Stemme_ASP_S15", stype: secondary}
+
+projects:
+  - name: ACTUS
+    what: >-
+      Advanced Capabilities & Certification for Tactical UAV Systems: an EDF 2023 project (grant EUR 42 M, 48 months,
+      kick-off 17-18 Dec 2024), coordinated by Intracom Defense with 23-24 partners from 9-11 countries. It develops and
+      certifies two tactical UAVs, LOTUS and the Patroller. It is a project, not an aircraft.
+    sources:
+      - {url: "https://www.intracomdefense.com/intracom-defense-launches-the-actus-project/", stype: manufacturer, date: 2025-02-03}
+      - {url: "https://www.signalgenerix.com/projects/actus-advanced-capabilities-certification-for-tactical-uav-systems/", stype: manufacturer}

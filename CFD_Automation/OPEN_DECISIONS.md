@@ -83,9 +83,9 @@
 32. **TE opening now follows pyGeo** (linear ramp over the last 10 % of chord, half up, half down,
     as `readAirfoilFile(bluntTe=True, bluntTaperRange=0.1)`). Replaces the uncited 65 % start.
     The sample sets in `data/sets/` must be rebuilt with pyGeo (`--all`): surfaces changed aft of 90 %.
-33. **Middle Re level.** Levels now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle level to about
+33. ~~**Middle Re level.** Levels now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle level to about
     9.5 × 10⁵ (log-middle of 3 × 10⁵ and 3 × 10⁶), or keep 1.5 × 10⁶? Mini Class I wings fly at 1.2–2 × 10⁵ (eBee,
-    Black Swift S0), below the low level: this is item 2 with numbers now.
+    Black Swift S0), below the low level: this is item 2 with numbers now.~~ **Decided 8 Nov 2026 (78):** 1 × 10⁶.
 34. **Class II, partly closed (29 Oct 2026).** Götten et al. 2021 (CEAS Aeronaut. J., Table 2) give
     wing areas for five Class II wings (150–230 kg; anonymised; from images and three-views, about
     10–15 % accuracy): mean chord 0.55–0.62 m, AR 7.8–16, Re ≤ 1.5 × 10⁶ at loiter. Conventional and
@@ -361,4 +361,14 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     at M (8 at VC), as decided; the plan file of Study 8 used 1.25 and 7 gaps per panel, so the built rules have
     7–14 more stations (about +17 %, so about 17 % more cells). If the plan file's values were meant, they need a
     decision. Pending: the owner confirms. See `surface_rules.md`, sections 13–14.
-
+78. **Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶** (owner, 8 Nov 2026; were 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶).
+    (1) The Greek tactical BWB programmes are in scope (LOTUS, Archytas, and ACTUS, the EDF project that develops
+    LOTUS and the Safran Patroller): 4 × 10⁶ covers all their cruise points and the 6–7 m versions at top speed;
+    LOTUS 11 m and the Patroller at top speed (4.9–6.3 × 10⁶) are extrapolations; no wing area is published, so
+    their Re rests on AR 8 (`Stage_1_geometry/configs/greek_uavs.yaml`, `scripts/greek_uavs.py`). (2) Check C4 on
+    2-D data (`Stage_1_geometry/scripts/re_ladder_check.py`): with transition, drag read between the levels is off by
+    8.8 % instead of 16.9 % at 6 × 10⁵ (90th percentile), but 6.8–7.0 % instead of 2.5–3.7 % between 1 × 10⁶ and
+    4 × 10⁶; fully turbulent 0.4–0.8 % throughout. (3) Same 8,000 solves; at F −0.5 % cells on the two moved
+    levels; the largest F wing-block mesh 9.99 M cells. The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷.
+    Closes 33 and the 2-D part of C4 (70); the solver check of C4 is still to run. The code reads the levels from
+    Stage 0 `values.yaml` (`cfdauto.paths.re_levels()`); the studies run at the old levels keep their own as records.

@@ -26,8 +26,8 @@ Mach mode, DECIDED_BAND in the Re mode.
 Limits, inherited from the dataset: 2-D strips, e^N with N_crit 9 (calm air), a uniform (elliptic) induced
 angle, no crossflow transition on swept panels, no 3-D relief of bubbles, no tip effects. Where a strip has
 no XFOIL answer (beyond the section's 2-D stall, or a failed point) the band falls back to the generic one for
-that strip. A strip whose local Re is outside the tables (1.5 × 10⁴ – 6 × 10⁶) is read at the table edge: the
-field "re_clamped" marks it.
+that strip. A strip whose local Re is outside the tables (1.5 × 10⁴ – 1.5 × 10⁷; 6 × 10⁶ until 8 Nov 2026) is read at
+the table edge: the field "re_clamped" marks it.
 """
 
 from __future__ import annotations
@@ -36,13 +36,15 @@ import math
 
 import numpy as np
 
+from ..paths import re_levels
+
 GENERIC_BAND = {"upper": (0.0, 0.85), "lower": (0.60, 1.0)}     # first approach (record); Study 8's option B
 DECIDED_BAND = {"upper": (0.0, 0.85), "lower": (0.0, 1.0)}      # decided 7 Nov 2026 (decision 74, option A)
 MACHS = (0.03, 0.05, 0.08, 0.10, 0.13, 0.16, 0.20)
 ALPHAS = tuple(float(a) for a in range(-5, 13))      # root angle; from -5 deg since 6 Nov 2026 (was -2)
 ALTS = (0.0, 3000.0)
 FOCUS_MACH = {"tailless": (0.03, 0.13), "conventional": (0.03, 0.20)}
-RE_LEVELS = (1.0e5, 3.0e5, 1.5e6, 3.0e6)             # Re on the mean chord (decision 70; Stage 0 levels)
+RE_LEVELS = re_levels()     # Re on the mean chord (decision 70; Stage 0 values.yaml): 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026
 MACH_SIMILARITY = 0.1                                # Mach of the 2-D tables in the Re mode (decision 70)
 
 

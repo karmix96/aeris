@@ -1,4 +1,4 @@
-# Stage_1 — Handover to the surface mesh (Stage 2 input; updated 7 Nov 2026)
+# Stage_1 — Handover to the surface mesh (Stage 2 input; updated 8 Nov 2026)
 
 Input for the surface/volume-mesh chat: where the baseline mesh must be fine, per family, before the whole mesh is
 refined by r ≥ 1.3, and what the two Stage 1 changes of 7 Nov 2026 change for the mesh. Source: Stage 1 (geometry +
@@ -15,7 +15,8 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 >   chord left the vector: 18 → 17 names (c2_ratio, c3_ratio, c4_ratio, semi_span_m, aspect_ratio, b3_ratio,
 >   split_ratio, sweep1–3_deg, twist0–3_deg, dihedral_p1–3_deg, plus 4 airfoils); 16 sampled for bwb and cranked,
 >   12 for tapered and flying_wing. Semi-span = AR / 2; root chord = 1 / K. The Re on the mean chord is an input of
->   each solve: the four Stage 0 levels 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶, kept. Real Class I–II wings fly at
+>   each solve: the four Stage 0 levels, since 8 Nov 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (were 1.5 × 10⁶ and
+>   3 × 10⁶; decision 78: the Greek tactical BWBs LOTUS and Archytas in cruise, and check C4 on 2-D data). Real Class I–II wings fly at
 >   1.22 × 10⁵ – 3.10 × 10⁶ (on area / full span), so 1 × 10⁵ sits 18 % below the slowest real UAV: kept as a
 >   margin (Mike, 7 Nov). Mach 0.1 with a Prandtl–Glauert correction on CL and CM is on the solver side.
 > - **Trailing edge: 0.2 % of the local chord on every wing.** The floors (0.5 mm Class I, 1.0 mm Class II), the
@@ -119,8 +120,9 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
   full), tip down to 0.099 (focus; 0.055 full), up to 17 × from root to tip (focus); the flying wing and the
   conventional types stay within 0.23–2.36 even in the full space.
 - Local Re: at the lowest level (1 × 10⁵ on the mean chord) the smallest focus BWB tip runs at about 9.9 × 10³ (full
-  space 5.5 × 10³); at the top level (3 × 10⁶) the largest focus BWB root at 8.5 × 10⁶ (full space 1.5 × 10⁷). The
-  other types stay within about 4.4 × 10⁴ – 4.6 × 10⁶ (focus). First approach (real size and speed): 1.4 × 10⁴
+  space 5.5 × 10³); at the top level (4 × 10⁶ since 8 Nov) the largest focus BWB root at 1.13 × 10⁷ (full space
+  1.96 × 10⁷; at 3 × 10⁶ they were 8.5 × 10⁶ and 1.5 × 10⁷). The other types stay within about 4.4 × 10⁴ – 6.2 × 10⁶
+  (focus). The section tables reach 1.5 × 10⁷ since 8 Nov (rows 1 × 10⁷ and 1.5 × 10⁷ added). First approach (real size and speed): 1.4 × 10⁴
   (smallest tips, slowest) to 5.5 × 10⁶ (largest BWB roots); up to 17 × from root to tip on a BWB.
 
 ## Where the baseline must be fine
@@ -159,7 +161,7 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
   station count); a separate BWB rule only if the 3-D check shows the centre body needs one.
 - Similarity checks (CFD, to run): C1 scale (mean chord 0.3 m against 1 m), C2 Mach (0.05 / 0.1 / 0.2; CL and CM
   after Prandtl–Glauert), C3 trailing edge (0.1 / 0.2 / 0.3 % c and the real floor 0.42 % c), C4 Re levels
-  (interpolation).
+  (interpolation; done on 2-D data on 8 Nov, which added the 1 × 10⁶ level: `scripts/re_ladder_check.py`).
 
 ## Decided at the close of G1
 

@@ -37,8 +37,13 @@ OUT = STAGE2 / "docs" / "page"
 LEVELS = ("VC", "C", "M", "F")
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
-RE_LEVELS = (1.0e5, 3.0e5, 1.5e6, 3.0e6)
-RE_NAME = {1.0e5: "10⁵", 3.0e5: "3 × 10⁵", 1.5e6: "1.5 × 10⁶", 3.0e6: "3 × 10⁶"}
+sys.path.insert(0, str(HERE.parents[2]))           # CFD_Automation: the cfdauto package
+from cfdauto.paths import re_levels  # noqa: E402
+
+RE_LEVELS = re_levels()     # Stage 0 values.yaml: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
+RE_NAME = {1.0e5: "10⁵", 3.0e5: "3 × 10⁵", 1.0e6: "10⁶", 1.5e6: "1.5 × 10⁶", 3.0e6: "3 × 10⁶", 4.0e6: "4 × 10⁶"}
+OLD_PARTS = PARTS / "levels_7nov"   # the reference parts at the 7 Nov Re levels (1e5, 3e5, 1.5e6, 3e6), kept as the record
+DATE_SETS, DATE_REF = "2026-11-07", "2026-11-08"   # the sets at Re 3e5 (7 Nov); the reference wings at the 8 Nov levels
 SPACINGS = ("nose_root", "nose_tip", "te_root", "band_root", "band_tip", "root_gap", "tip_gap", "base_cell")
 SPACING_NAME = {"nose_root": "nose cell, root", "nose_tip": "nose cell, tip", "te_root": "trailing-edge cell",
                 "band_root": "band cell, root", "band_tip": "band cell, tip", "root_gap": "first station gap",
@@ -91,6 +96,38 @@ def _sort(rows):
     return sorted(rows, key=lambda r: (TYPES.index(r["wing_type"]), r["set"], r["index"], r["re_mean"]))
 
 
+def same_meshes(parts: dict) -> dict:
+    """The parts carry two mesh-code hashes when the mesh code changed between them (8 Nov 2026: only
+    cfdauto/mesh/refine_map.py and a help text, which the surface mesher does not use). Accept that only if the
+    reference wings rebuilt with the new code at the Re levels they share with the 7 Nov reference parts give the
+    very same nodes (node_hash) at every level; else stop."""
+    key = lambda r: (r["wing_type"], r["index"], float(r["re_mean"]))
+    n = same = 0
+    diff = []
+    for lev in LEVELS:
+        new = parts.get(f"ref_{lev}")
+        f = OLD_PARTS / f"ref_{lev}.json"
+        if new is None or not f.exists():
+            continue
+        old = {key(r): r for r in json.loads(f.read_text())["rows"] if r["built"]}
+        for r in new["rows"]:
+            k = key(r)
+            if r["built"] and k in old:
+                n += 1
+                if old[k]["node_hash"] == r["node_hash"]:
+                    same += 1
+                else:
+                    diff.append(f"{lev} {k[0]} {k[1]} Re {k[2]:.1e}")
+    if n == 0 or diff:
+        raise SystemExit(f"the parts were built with different mesh code and {len(diff)} of {n} rebuilt meshes differ: {diff[:5]}")
+    hashes = sorted({d["mesh_code_hash"] for d in parts.values() if d.get("finished")})
+    print(f"mesh code hashes {', '.join(h[:12] for h in hashes)}: {same} of {n} rebuilt reference meshes have the same nodes")
+    return {"hashes": hashes, "rebuilt_same_nodes": same, "rebuilt_compared": n,
+            "note": "the mesh code changed only in cfdauto/mesh/refine_map.py and a help text (8 Nov 2026), which the "
+                    "surface mesher does not use; the reference wings rebuilt at the shared Re levels (1e5, 3e5) give "
+                    "the very same nodes at every level, so the 7 Nov set parts stand"}
+
+
 def merge(final: bool = True) -> dict:
     sys.path.insert(0, str(HERE.parent))
     from screen import summarise
@@ -101,8 +138,9 @@ def merge(final: bool = True) -> dict:
             parts[name] = d
     heads = {n: d for n, d in parts.items() if d.get("finished")}
     hashes = {d["mesh_code_hash"] for d in heads.values()}
+    out["hash_check"] = None
     if len(hashes) > 1:
-        raise SystemExit(f"the parts were built with different mesh code: {hashes}")
+        out["hash_check"] = same_meshes(parts)      # raises unless the rebuilt rows give the very same nodes
     for lev in ("VC", "F"):
         names = [f"ref_{lev}"] + [f"{lev}_{t}" for t in TYPES]
         rows = _sort([r for n in names if n in parts for r in parts[n]["rows"]])
@@ -112,7 +150,11 @@ def merge(final: bool = True) -> dict:
         if final and done and rows:
             head = {k: h[k] for k in ("code_version", "mesh_code_hash", "level", "config", "rules", "check_rules",
                                       "cell_estimate")}
-            head |= {"date": "2026-11-07", "parts": names, "summary": summarise(rows)}
+            head |= {"date": f"{DATE_SETS} (sets at Re 3e5); {DATE_REF} (reference wings at the 8 Nov Re levels)",
+                     "parts": names, "summary": summarise(rows)}
+            if out["hash_check"]:
+                head |= {"mesh_code_hash_parts": {n: heads[n]["mesh_code_hash"] for n in names if n in heads},
+                         "hash_check": out["hash_check"]}
             write_rows_json(STUDIES / f"screen_{lev}.json", head, rows)
             print(f"wrote screen_{lev}.json: {head['summary']['passed']} of {head['summary']['total']} passed")
     ref = {lev: parts[f"ref_{lev}"]["rows"] for lev in LEVELS if f"ref_{lev}" in parts}
@@ -122,7 +164,7 @@ def merge(final: bool = True) -> dict:
         rows = [r for lev in LEVELS for r in _sort(ref[lev])]
         h = heads["ref_VC"]
         head = {"code_version": h["code_version"], "mesh_code_hash": h["mesh_code_hash"], "config": h["config"],
-                "date": "2026-11-07", "levels": list(LEVELS), "re_levels": list(RE_LEVELS),
+                "date": DATE_REF, "levels": list(LEVELS), "re_levels": list(RE_LEVELS),
                 "rules": {lev: heads[f"ref_{lev}"]["rules"] for lev in LEVELS},
                 "check_rules": {lev: heads[f"ref_{lev}"]["check_rules"] for lev in LEVELS},
                 "cell_estimate": h["cell_estimate"],
@@ -249,7 +291,8 @@ def family(ref: dict) -> dict:
 
 
 def summary(m: dict) -> dict:
-    s = {"date": "2026-11-07", "desktop_cells": DESKTOP, "desktop_36_cells": DESKTOP_36,
+    s = {"date": f"{DATE_SETS} (sets); {DATE_REF} (reference wings at the 8 Nov Re levels)", "re_levels": list(RE_LEVELS),
+         "hash_check": m.get("hash_check"), "desktop_cells": DESKTOP, "desktop_36_cells": DESKTOP_36,
          "ram": f"{RAM_BASE} GiB + {RAM_PER_M} GiB per million cells (ADflow; AERIS ADR-0020)",
          "asked_F": list(ASKED), "F_estimate_6nov": F_ESTIMATE_6NOV,
          "complete": {"VC": m["VC"]["complete"], "F": m["F"]["complete"], "reference": m["ref_complete"]},

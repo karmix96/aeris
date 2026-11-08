@@ -23,6 +23,7 @@ BibTeX: `references.bib`.
 | celik2008 | Celik et al. Procedure for Estimation and Reporting of Uncertainty Due to Discretization in CFD Applications. J. Fluids Eng. 130, 2008. | 10.1115/1.2960953 |
 | roache1994 | Roache. A Method for Uniform Reporting of Grid Refinement Studies. J. Fluids Eng. 116, 1994. | 10.1115/1.2910291 |
 | eca2014 | Eça, Hoekstra. A procedure for the estimation of the numerical uncertainty of CFD calculations… J. Comput. Phys. 262, 2014. | 10.1016/j.jcp.2014.01.006 |
+| anderson2011 | Anderson. Fundamentals of Aerodynamics, 5th ed. McGraw-Hill, 2011. §1.7–1.8, §11.4–11.6, §15.2, §15.6. | ISBN 978-0-07-339810-5 |
 | crivellini2014 | Crivellini et al. Study of laminar separation bubble on low Re airfoils: RANS modelling… J. Phys. Conf. Ser. 501, 2014. | 10.1088/1742-6596/501/1/012024 |
 | adflow_options | MDO Lab. ADflow options documentation (L2Convergence: relative to the freestream residual for the NK solver, to the initial fine-grid residual for multigrid). | https://mdolab-adflow.readthedocs-hosted.com/en/latest/options.html |
 | spalart2007 | Spalart, Rumsey. Effective inflow conditions for turbulence models in aerodynamic calculations. AIAA J. 45(10), 2007. | 10.2514/1.29373 |

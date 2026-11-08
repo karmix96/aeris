@@ -43,8 +43,8 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 >   0.12°). **The 6 Nov note that the nose finding was "overstated" (item 75) was wrong**: the one-sided formula on
 >   the raw points saw the same split because the built section passes through those points; the defect sat
 >   between them.
-> - **Every geometry hash changed.** The pyGeo `build --all` on Mike's machine is still owed (the manifests must
->   then say pygeo).
+> - **Every geometry hash changed.** The pyGeo `build --all` ran on Mike's machine on 8 Nov: 722 of 722 (pyGeo tests 24
+>   of 24; the manifests, which then say pygeo, still to push).
 > - **Not rebuilt: the Stage 1 flow dataset and flow maps** (`cfdauto/flowmap`). They were made at real size and
 >   real speed (first approach) and stay the record. The 2-D section tables are size-free and were rebuilt on
 >   the fixed nose (7 Nov; no Stage 1 conclusion changes: `decisions/flow_maps.md`).
@@ -56,7 +56,7 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 > angles 0–10°. Proposals (pending): one matched C-H volume mesh for both solvers (SU2 has no overset); ADflow SA for
 > mesh studies and fully turbulent data, SU2 SST + LM on about 20 % of the wings; relaxed band (0.5 % c where local
 > Re ≥ 4 × 10⁵); fine level 15.2 M cells median with the planned rules, 10.9 M with the relaxed band; core Mach
-> ≤ 0.2 now. Open: pyGeo tests and one `build --all`; push the raw XFOIL data.
+> ≤ 0.2 now. Open: push the pyGeo manifests (the pyGeo tests and `build --all` ran on 8 Nov); push the raw XFOIL data.
 
 ## What the two changes mean for the mesh (Stage 2)
 
@@ -105,7 +105,7 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 - First-approach pictures and data kept as the record: `Stage_1_geometry/docs/first_approach/` (real size, before
   7 Nov).
 - The rename changed the geometry code hash, so every input hash changed; on 7 Nov every hash changed again. The
-  pending pyGeo `build --all` refreshes the manifests.
+  pyGeo `build --all` of 8 Nov (Mike's machine, 722 of 722) refreshes the manifests once pushed.
 
 ## The wings
 

@@ -109,8 +109,11 @@ The sections below are updated to match.
 
 **Open**
 - **Still open from Stage 0:** grid share 65 %, pitching moment 0.002, the iteration share, a D5.
-- **pyGeo tests and one `build --all`** on the owner's machine: the nose fix and similarity (7 Nov)
-  changed every hash; the sets here use the numpy loft.
+- **pyGeo run on the owner's machine: done on 8 Nov, except the new levels.** pyGeo tests 24 of 24 (the pyGeo and
+  numpy lofts agree within 10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all`
+  with pyGeo 722 of 722, Stage 2 tests 41; the VC screen of the 20 reference wings at the old levels: 80 of 80
+  pass, the same ring nodes and stations as the numpy screen on 80 of 80. Left: push the pyGeo manifests and
+  screen at the new levels (VC and F) with pyGeo.
 
 ---
 
@@ -479,6 +482,8 @@ at all four levels.
   paper's box plots); full spans about 1–8 m and 2–16 m. Within a class the fits are weak (R² < 0.2), so the
   spread, not a trend line, sets the range. The paper gives no aspect ratio or wing area, so it cannot give
   Re by itself.
+- **No 5th level (owner, 8 Nov).** The levels stay as they are: LOTUS 11 m and the Patroller at top speed
+  (4.9–6.3 × 10⁶) stay extrapolations.
 
 ### Similarity: unit mean chord, Re as the input, Mach 0.1 (owner, 6 Nov 2026)
 - **In practice:** every wing is solved at a mean chord of 1, and the Reynolds number on that chord is
@@ -665,7 +670,7 @@ CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works. No wing has bee
   method; that was wrong, because it compared built and raw only at the raw points, where they agree by
   construction. A third check with one curvature method along the surface found the real defect between
   the points (NACA 4415: a 0.18 % c nose cell turned 9.47° built against 4.31° true). Fixed in Stage 1;
-  every geometry hash changed and the sets were rebuilt. The pyGeo `build --all` is still owed.
+  every geometry hash changed and the sets were rebuilt. The pyGeo `build --all` ran on 8 Nov (722 of 722).
 - **The new scope needs data.** −5° to post-stall and Mach toward 0.5 lie outside the Stage 1 data (root
   angles 0–10°, Mach ≤ 0.2). The mesh rules were set from those ranges, so they must be checked again
   for the new ones.

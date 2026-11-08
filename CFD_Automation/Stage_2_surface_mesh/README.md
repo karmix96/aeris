@@ -9,7 +9,8 @@
 > nose fix (decision 64) and similarity (decision 70: every wing at unit mean chord; the sets rebuilt). The new screen
 > on the rebuilt sets (section 14): 1,724 of 1,724 builds passed at VC, C, M and F. Still to come: Mike's
 > confirmation of two builder choices (decision 77; the third, the nose, is answered: solved at every level, the
-> strictest wins), the pyGeo run, the matched C-H volume mesh (Stage 3).
+> strictest wins), the pyGeo screen at the new Re levels (the pyGeo build and the VC screen at the old levels ran on
+> 8 Nov), the matched C-H volume mesh (Stage 3).
 
 One wing surface (the Stage 1 loft) in, one structured surface mesh out: a closed ring of points
 around the section at every spanwise station, root to tip, plus one patch that closes the flat tip.

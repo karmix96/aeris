@@ -118,8 +118,11 @@
 42. **Mixed shares (decided 29 Oct 2026).** Equal, 1/4 per type.
 43. ~~**Smallest generated wings.**~~ **Decided 29 Oct 2026:** kept (micro Class I). Spans start at 0.4–0.6 m (small root chord with low AR); the
     smallest real wing with an area is 0.96 m; the Wasp (0.33 m, designation-systems.net) and Black Widow (0.15 m, AIAA 2001-0127) are smaller.
-44. **pyGeo run pending.** Sets built with the numpy loft in the cloud; run `pytest` and
-    `build --all` with pyGeo locally before Stage 2.
+44. **pyGeo run: done on Mike's machine (8 Nov), except the new levels.** pyGeo tests 24 of 24 (the pyGeo and numpy
+    lofts agree within 10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all` with pyGeo
+    722 of 722, Stage 2 tests 41; VC screen of the 20 reference wings at the old levels: 80 of 80 pass, with the same
+    ring nodes and stations as the numpy screen on 80 of 80. Left: push the pyGeo manifests; screen at the new levels
+    (VC and F) with pyGeo.
 45. **Shape ranges from sources (decided 29 Oct 2026).** Every shape range and airfoil now has its source
     (`Stage_1_geometry/decisions/shape_ranges.md`). BWB airfoils MH 104 / MH 61 (was MH 91 / E374 / NLF1015);
     tailed sweep −5…15°, washout ≤ 5°, dihedral 0–5°. Open: check Raymer's taper and washout values
@@ -177,7 +180,7 @@
 54. **Model plan deferred (Mike, 2 Nov 2026).** The turbulence-model choice (52 a) and the SA inflow value (52 b)
     are made in a later stage. Until then the mesh is built transition-ready (y+ <= 1 per station, transition
     band upper 10-85 % c, lower 60-100 % c), so both options stay open. Mike also owes: the pyGeo tests and set
-    rebuild on his machine; push the raw XFOIL data (33 MB) or accept the 40-minute rebuild.
+    rebuild on his machine (done 8 Nov, see 44); push the raw XFOIL data (33 MB) or accept the 40-minute rebuild.
 55. **Checks of the flow results (Mike, 2 Nov 2026).** None is needed before the mesh stage: the mesh rules come from
     ranges (0-10 deg, all section sets), which the checks would not move. Needed before the paper quotes flow numbers:
     the 3-D transition-model check on 2-3 reference wings (BWB centre body first), the first runs of the mesh stage.
@@ -373,3 +376,5 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     1.7 % above 10 M. The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷.
     Closes 33 and the 2-D part of C4 (70); the solver check of C4 is still to run. The code reads the levels from
     Stage 0 `values.yaml` (`cfdauto.paths.re_levels()`); the studies run at the old levels keep their own as records.
+    (4) No 5th level (Mike, 8 Nov): the levels stay as they are; LOTUS 11 m and the Patroller at top speed stay
+    extrapolations.

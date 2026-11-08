@@ -174,6 +174,8 @@ D3_conditions_and_measurement:
       about 160 / 190 km/h (small / tactical, read from the box plots); full spans about 1-8 m and 2-16 m.
       Within a class the fits are weak (R2 < 0.2), so the spread sets the range. It gives no aspect ratio or
       wing area, so it cannot give Re by itself.
+      No 5th level (owner, 8 Nov 2026): the levels stay as they are; LOTUS 11 m and the Patroller at top speed
+      (4.9-6.3e6) stay extrapolations.
     input: Re on the mean chord, so every shape runs at all four levels   # owner, 6 Nov 2026 (similarity)
     proposal: "Done on 2-D data (8 Nov): the 1e6 level is in. Check C4 with the solver still to run."
     sources: [nato2009jcguav, icao1993isa, sutherland1893, mitridis2023aerospace, antoniou2023aerospace, kapsalis2025drones]

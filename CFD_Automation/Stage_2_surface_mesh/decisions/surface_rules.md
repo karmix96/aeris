@@ -161,7 +161,8 @@ nose spacing by 10 % until it passes (32 of 790 builds, one round each).
 Every built wing of every type and set (730: reference, training_focus, training_full, corner1, corner2)
 at level C and Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels: 790 builds,
 790 passed every check, 0 refusals, 0 crashes (`data/studies/screen_C.json`, `docs/screen_C.png`). With the
-numpy twin of the loft; the pyGeo run is still owed.
+numpy twin of the loft. The pyGeo check came later, on the new rules (Mike's machine, 8 Nov: the same ring
+nodes and stations on the 80 reference builds at VC, old Re levels).
 
 | Type (builds) | Ring nodes min–median–max | Stations | Quads | Build time [s] | Wing quads J min / median | Cap quads J min / median |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -503,3 +504,17 @@ code hashes with this check.
   mesh (largest 1.02 M); with +36 GB (about 5.0 M) every C and M mesh (largest M 4.69 M); F needs the HPC.
 - The refine map and its as-built check at the new levels: `decisions/refine_map_re.md` (update of 8 Nov).
 
+
+## 18. The pyGeo loft on Mike's machine (8 Nov 2026)
+
+Run by Mike on the 7 Nov code (commit 25cbfea0, the old Re levels; the geometry and mesh code that builds the
+surfaces is unchanged since), with pyGeo installed: pyGeo tests 24 of 24 (pyGeo and the numpy twin agree within
+10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), `build --all` 722 of 722, Stage 2 tests 41.
+
+The VC screen of the 20 reference wings × 4 Re (10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶), built on the pyGeo loft: 80 of 80
+pass. Against the numpy screen of 7 Nov: the same ring nodes and stations on 80 of 80 builds, cells within 0.005 M
+(the rounding of the printout); cells median 0.70 M, largest 0.99 M (numpy: 0.70, 0.99). Median build time 3.1 s
+(cloud 5.1 s).
+
+Not shown yet: F and the new Re levels with pyGeo, and agreement node by node (the screen stores a node hash, which
+differs as soon as the two lofts differ by round-off).

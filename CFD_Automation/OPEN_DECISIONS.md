@@ -270,6 +270,9 @@
     is no gap: on 16 built surfaces at VC the largest upper cell over 85–99.5 % c is 0.950–0.995 × the band cell (one
     node list, 60). The written band stays 0–85 % c (58). No XFOIL answer only on the tailless wings at negative root
     angles (up to 46 % BWB and 43 % flying-wing strips at −5°). Still a candidate: the 3-D check comes first.
+    **8 Nov (owner): the upper band is written 0–100 % c** (`configs/surface.yaml`), so the written rule says what the
+    mesh does; the cost was measured on 7 Nov (the same mesh at VC, +2 ring nodes at F on 42 of 80 reference builds,
+    +0.39 % cells). Built and screened in the family screen (80; Stage 2 Study 12).
 66. **Upgrade the flow dataset with AVL and NeuralFoil (proposal, 3 Nov 2026).** Today: 2-D XFOIL strips with
     one uniform induced angle (elliptic) for the whole wing, section tables with trilinear lookup, blends
     of the parents' answers between sections, 1.5–4 % failed XFOIL points filled. AVL would give the
@@ -353,7 +356,7 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
 77. **Builder choices in the built rules (7 Nov).** All are stricter than decided; numbered as in
     `Stage_2_surface_mesh/decisions/surface_rules.md`, section 13. (1) The growth limits follow the family rule:
     along the ring 1.25 at VC (decided) gives 1.107 at F; between station gaps 1.3 at VC (not in 71–72) gives 1.127
-    at F; the kink check uses each level's turning limit. Pending: the owner confirms. (2) **The nose — answered
+    at F; the kink check uses each level's turning limit. **Confirmed by the owner (8 Nov).** (2) **The nose — answered
     7 Nov (owner): solved at every level, the strictest wins.** First it was solved at VC and at F only, and the
     smaller spacing won. On the rebuilt sets M then needed one repair (nose × 0.9) on all 20 flying-wing reference
     builds, because F's spacing × 1.3 turned those noses just past M's 10.02°; the nose cell then stepped by 1.44
@@ -366,7 +369,8 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     their own angle asks (VC 14.6–16.1° against 16.9°). (3) The station growth stays 1.2 and the gaps per panel 12
     at M (8 at VC), as decided; the plan file of Study 8 used 1.25 and 7 gaps per panel, so the built rules have
     7–14 more stations (about +17 %, so about 17 % more cells). If the plan file's values were meant, they need a
-    decision. Pending: the owner confirms. See `surface_rules.md`, sections 13–14.
+    decision. **Confirmed by the owner (8 Nov): the decided values stand** (growth 1.2, at least 12 gaps per panel at
+    M). See `surface_rules.md`, sections 13–14.
 78. **Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶** (owner, 8 Nov 2026; were 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶).
     (1) The Greek tactical BWB programmes are in scope (LOTUS, Archytas, and ACTUS, the EDF project that develops
     LOTUS and the Safran Patroller): 4 × 10⁶ covers all their cruise points and the 6–7 m versions at top speed;
@@ -398,3 +402,11 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     hashes equal the 7 Nov build on all 722; the labels changed on exactly the 2 wings (now equal to pyGeo's on 721,
     and on the 722nd pyGeo gets the same new label). The meshes are the same: the mesher reads only the loft (5 builds
     re-meshed at VC, both relabelled wings among them: the same node hashes). Owed: one pyGeo `build --all` (Mike).
+80. **The nose repair belongs to the family (owner, 8 Nov 2026).** The ratio between levels stays exactly 1.3, also
+    when a nose repair is needed, and a repaired mesh is labelled. Built: a repair round (every station's nose spacing
+    × 0.9) is needed only where a ring turns past its level's check limit (the angle + 0.2°; before, the solve's own
+    tolerance of 0.02°, which triggered 4 of 782 F builds at 0.003–0.006° over); `build_family` builds every level of
+    one wing at one Re with one factor (0.9^n, n the most rounds any level needed), so every spacing refines by
+    exactly 1.3; every mesh carries `nose_repair` and `nose_family` (the factor, the rounds, the levels that needed
+    them, the label) in `quality.json` and `manifest.json`. A test forces a repair and checks that the factor goes
+    on every level with the ratio exact. Screened: Stage 2 Study 12 (the family screen, every set at VC, C, M, F).

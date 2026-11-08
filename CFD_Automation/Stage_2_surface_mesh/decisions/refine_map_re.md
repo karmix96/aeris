@@ -98,8 +98,8 @@ same ring and station counts on 80 of 80, no node moved by more than 3.0 × 10�
 10⁻¹² c, so 63 of the 80 hashes differ). At F, 0–100 % c adds 2 ring nodes (one per side) on 42 of 80 builds (BWB 16,
 cranked 12, tapered 13, flying wing 1), the stations unchanged: +0.39 % cells median, +0.55 % at most. With 0–85 % c
 the upper cells over 85–100 % c at F can sit a little above the band cell, inside the 1 % check (BWB reference wing 0
-at Re 3 × 10⁵: 0.00501 c against 0.0050 c). So the written rule stays 0–85 % c (7 Nov): writing 0–100 % c is for the
-owner to decide, and the screen would need a re-run (about 1.5 h on two cores).
+at Re 3 × 10⁵: 0.00501 c against 0.0050 c). So the written rule stayed 0–85 % c (7 Nov) until the owner wrote it
+0–100 % c on 8 Nov; the screen was re-run in the family screen (Stage 2 Study 12).
 
 **No XFOIL answer.**
 
@@ -169,5 +169,5 @@ Written per side, the upper band (0–85 % c) does not hold the upper transition
 both sides share one node distribution and the lower band is 0–100 % c; so no mesh change is needed, but the rule
 as written should say that the upper side's aft part comes from the lower band (or the upper band be written as
 0–100 % c, which gives the same 16 surfaces to round-off at VC, but 2 more ring nodes at F on 42 of the 80 reference
-builds, +0.39 % cells, and a re-run of the screen). The rules text now says what the built mesh does; the written
-band stays 0–85 % c. For the owner to decide.
+builds, +0.39 % cells, and a re-run of the screen). The rules text now says what the built mesh does. **Decided
+8 Nov (owner): the upper band is written 0–100 % c**, built and screened (Stage 2 Study 12).

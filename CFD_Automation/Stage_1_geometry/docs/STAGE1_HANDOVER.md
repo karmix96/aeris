@@ -82,8 +82,8 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
   has a Re mode: the condition is the Re on the mean chord (speed = Re / (ρ/μ) / mean chord), the tables are read
   at Mach 0.1. On the 20 reference wings, −5° to 8° (`Stage_2_surface_mesh/decisions/refine_map_re.md`): the lower
   band 0–100 % c holds every strip at every level; the upper transition sits past 85 % c at low Re (at 10⁵ only
-  0–31 % of the strips fit 0–85 % c). As built there is no gap: band cells reach 100 % c on both sides (one node
-  list, lower band 0–100 % c). First: a Mach × angle × altitude grid with the chords read as metres; at unit mean
+  0–31 % of the strips fit 0–85 % c). As built there was no gap: band cells reached 100 % c on both sides (one node
+  list, lower band 0–100 % c); since 8 Nov the upper band is written 0–100 % c (owner). First: a Mach × angle × altitude grid with the chords read as metres; at unit mean
   chord it missed the two lowest levels (1 × 10⁵, 3 × 10⁵).
 
 ## Repo layout (renamed 2 Nov 2026)
@@ -133,7 +133,7 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 | Where | Rule from G1 | Differs by family? | How sure |
 | --- | --- | --- | --- |
 | Chord: leading edge | no cell turns the surface by more than 10° (law 1); since 7 Nov the nose follows the airfoil file (201 points per side) | no | geometry rule; nose checked along the arc |
-| Chord: transition band | fine cells, growth along the surface ≤ 1.25; upper from the leading edge on every wing (written 0–85 % c; band cells reach 100 % c as built; proposal: write 0–100 % c), lower 0–100 % c (decision 74, 7 Nov; first 60–100 % c); a per-wing band from the refine map is a candidate (decision 65; now at the Re levels) | at the Re levels the refine map finds the upper transition past 85 % c at low Re (10⁵: 0–31 % of strips fit 0–85 % c); the lower band 0–100 % c holds every strip | 2-D, calm air; 3-D check pending |
+| Chord: transition band | fine cells, growth along the surface ≤ 1.25; upper from the leading edge on every wing (written 0–100 % c since 8 Nov, owner; 0–85 % c before, with band cells to 100 % c as built), lower 0–100 % c (decision 74, 7 Nov; first 60–100 % c); a per-wing band from the refine map is a candidate (decision 65; now at the Re levels) | at the Re levels the refine map finds the upper transition past 85 % c at low Re (10⁵: 0–31 % of strips fit 0–85 % c); the lower band 0–100 % c holds every strip | 2-D, calm air; 3-D check pending |
 | Chord: bubbles in the band | resolve the bubble: about 0.4 c long at Re 6 × 10⁴, 0.1 c at 4 × 10⁵, down to about 0.015 c at roots above 10⁶ | long on small tips / at the lowest level; short on large roots / at the top level | XFOIL lengths; about 20 cells per bubble (Ansys CFX guidance), proposed as a fine-level target (pending); not met at the shortest root bubbles |
 | Chord: trailing edge | 0.1 % c spacing; 8 cells across the blunt base (0.2 % c on every wing since 7 Nov) | no | rule |
 | Spanwise: breaks | a station exactly on b1 and b2; spanwise growth ≤ 1.3 (done in Stage 2: a station on every loft station; since 7 Nov the loft stations are b0–b3 only) | all; on the BWB b1 is the centre-body edge | geometry |

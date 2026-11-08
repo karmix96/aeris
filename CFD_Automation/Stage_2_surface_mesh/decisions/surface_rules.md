@@ -224,8 +224,8 @@ level C: the same node hash before and after the change).
 
 - `configs/surface.yaml`: levels VC, C, M, F. Every value that changes with the level carries its anchor level, for
   example `nose_turning_deg: {value: 10.0, at: M, why: "accuracy target, decision 71"}`. The lower band is 0–100 % c
-  (decision 74, option A); the upper band stays 0–85 % c as written (as built the upper side gets band-size cells
-  to the trailing edge too, through the one node list; section 16). The first config is `configs/surface_first.yaml`, unchanged,
+  (decision 74, option A); the upper band stayed 0–85 % c as written (as built the upper side got band-size cells
+  to the trailing edge too, through the one node list; section 16) until 8 Nov: now 0–100 % c (owner; section 19). The first config is `configs/surface_first.yaml`, unchanged,
   with a header that says how to use it.
 - `laws.py` moves each value from its anchor level a to level k in whole steps of r = 1.3: spacings and turning angles
   × r^(a − k); counts (cells per bubble, base cells, gaps per panel) × r^(k − a); growth ratios, built and checked, to
@@ -269,8 +269,8 @@ level C: the same node hash before and after the change).
 | y⁺ of the first wall cell (law 13) | 1 at VC (hard minimum) | 1.00 | 0.77 | 0.59 | 0.46 |
 | Tip gap (law 10) | 2 × s0 at every level (decision 72) | 2 × s0 | 2 × s0 | 2 × s0 | 2 × s0 |
 
-The same at every level: the bands (upper 0–85 % c, lower 0–100 % c; through the one node list the upper side also
-gets band-size cells over 85–100 % c, section 16), the bubble table (0.40, 0.30, 0.10, 0.10 c at
+The same at every level: the bands (upper 0–85 % c until 8 Nov, now 0–100 % c; lower 0–100 % c; through the one
+node list the upper side already got band-size cells over 85–100 % c, section 16), the bubble table (0.40, 0.30, 0.10, 0.10 c at
 local Re 6 × 10⁴, 10⁵, 4 × 10⁵, 10⁶; log-log between the points, constant outside), the nose envelope (1.15), the
 turning tolerance (0.02°) and every check tolerance. At local Re 6 × 10⁴ the band cell is the largest cell on every
 level (0.40 c / 9.10 = 4.4 % c at VC is above 3.38 % c). The two counts are whole numbers, so they do not refine by

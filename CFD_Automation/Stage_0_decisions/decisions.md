@@ -615,11 +615,11 @@ at all four levels.
   - solver split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about
     20 % of the wings first;
   - (the lower transition band is decided: from the leading edge, Stage 2 decision 74, owner 7 Nov);
-  - upper transition band 0–100 % of chord (7 Nov; was 0–85 %): the refine map at the Re levels puts the
-    upper transition past 85 % c at low Re (at Re 10⁵ only 0–31 % of strips fit 0–85 % c). The built mesh
-    already has about band-size cells to the trailing edge on both sides (one node list for both sides, lower
-    band 0–100 % c; at F within 0.2 % of the band cell). Writing it gives the same mesh at VC and 2 more ring
-    nodes on 42 of the 80 reference builds at F (+0.4 % cells, median).
+  - ~~upper transition band 0–100 % of chord~~ **decided 8 Nov (owner), built**: the refine map at the Re levels
+    puts the upper transition past 85 % c at low Re (at Re 10⁵ only 0–31 % of strips fit 0–85 % c). The built mesh
+    already had about band-size cells to the trailing edge on both sides (one node list for both sides, lower
+    band 0–100 % c). Written 0–100 % c: the same mesh at VC and 2 more ring nodes on some F builds (Stage 2
+    Study 12).
 - **Why:** Stage 1 (2-D XFOIL strips, smooth wing in calm air) found a long laminar run and laminar
   bubbles on most of these wings; fully turbulent SA overpredicts the profile drag by a median
   +62 % (+69 % in level flight). What a mesh must resolve depends on the model, so a mesh tuned only

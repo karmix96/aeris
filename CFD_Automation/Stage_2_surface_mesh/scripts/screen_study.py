@@ -2,6 +2,10 @@
 
     python scripts/screen_study.py                 # merge the parts; the study files; the figures
     python scripts/screen_study.py --figures-only  # the figures from the study files already written
+    python scripts/screen_study.py --family        # Study 12 (8 Nov): the family screen (screen.py --family), every
+                                                   # set at VC, C, M and F, one nose factor per family, upper band
+                                                   # 0-100 % c: data/studies/screen_family_<level>.json,
+                                                   # screen_family_summary.json, docs/page/family_*.png
 
 The screen runs in parts (scripts/screen.py --resume, one process at a time; data/meshes/run_screen.sh):
   ref_VC, ref_C, ref_M, ref_F   the 20 reference wings x the four Re levels on the mean chord, at each level
@@ -42,6 +46,9 @@ from cfdauto.paths import re_levels  # noqa: E402
 
 RE_LEVELS = re_levels()     # Stage 0 values.yaml: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
 RE_NAME = {1.0e5: "10⁵", 3.0e5: "3 × 10⁵", 1.0e6: "10⁶", 1.5e6: "1.5 × 10⁶", 3.0e6: "3 × 10⁶", 4.0e6: "4 × 10⁶"}
+FAMILY = STAGE2 / "data" / "meshes" / "screen_family"   # the family screen (8 Nov), one part per process
+TAGS = ("bwb_cranked", "flying_wing_tapered")
+FIG_PREFIX = "screen_new_"                               # "family_" with --family
 OLD_PARTS = PARTS / "levels_7nov"   # the reference parts at the 7 Nov Re levels (1e5, 3e5, 1.5e6, 3e6), kept as the record
 DATE_SETS, DATE_REF = "2026-11-07", "2026-11-08"   # the sets at Re 3e5 (7 Nov); the reference wings at the 8 Nov levels
 SPACINGS = ("nose_root", "nose_tip", "te_root", "band_root", "band_tip", "root_gap", "tip_gap", "base_cell")
@@ -373,6 +380,7 @@ def nose_levels_check(ref_new: dict) -> dict:
 # --- figures ----------------------------------------------------------------------------------------------
 def save(fig, name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    name = name.replace("screen_new_", FIG_PREFIX)
     fig.tight_layout()
     fig.savefig(OUT / name)
     plt.close(fig)
@@ -433,8 +441,9 @@ def fig_cells(m: dict, s: dict) -> None:
     x = np.arange(len(LEVELS))
     for off, (lab, rowsf, col) in enumerate((
             ("20 reference wings × 4 Re levels", lambda lev: [r for r in ref.get(lev, []) if r["built"]], ACC),
-            ("every set at Re 3 × 10⁵ (VC and F only)",
-             lambda lev: [r for r in m.get(lev, {}).get("rows", []) if r["built"] and r["re_mean"] == 3.0e5] if lev in ("VC", "F") else [],
+            ("every set at Re 3 × 10⁵" + (" (VC and F only)" if FIG_PREFIX == "screen_new_" else ""),
+             lambda lev: [r for r in m.get(lev, {}).get("rows", []) if r["built"] and r["re_mean"] == 3.0e5]
+             if (lev in ("VC", "F") or FIG_PREFIX != "screen_new_") else [],
              AMBER))):
         med, mx, xs = [], [], []
         for i, lev in enumerate(LEVELS):
@@ -460,7 +469,9 @@ def fig_cells(m: dict, s: dict) -> None:
     sec.set_ylabel("RAM for ADflow [GiB]")
     a = ax[1]
     rv = s["reference"].get("F")
-    names = ["first estimate, 6 Nov\n(wall-layer rule not\nrecorded; old wings)", "this count, 7 Nov\n(built rules; the\npages use it)",
+    names = ["first estimate, 6 Nov\n(wall-layer rule not\nrecorded; old wings)",
+             ("this count, 7 Nov\n(built rules; the\npages use it)" if FIG_PREFIX == "screen_new_" else
+              "this count, 8 Nov\n(family screen; the\npages use it)"),
              "this count\n+ C-H wake lines\n(rough +30–60 %)"]
     if rv:
         f = rv["cells_est"]
@@ -536,8 +547,9 @@ def fig_checks(s: dict) -> None:
              ("chord_growth", "growth along the ring"), ("band_spacing", "band cell"), ("te_spacing", "trailing-edge cell"),
              ("span_growth", "growth between station gaps"), ("tip_gap", "tip gap"), ("wing_quads", "wing quads"),
              ("cap_quads", "cap quads")]
-    sets = [("VC", s["full"].get("VC")), ("C", s["reference"].get("C")), ("M", s["reference"].get("M")),
-            ("F", s["full"].get("F"))]
+    sets = ([(lev, s["full"].get(lev)) for lev in LEVELS] if FIG_PREFIX != "screen_new_" else
+            [("VC", s["full"].get("VC")), ("C", s["reference"].get("C")), ("M", s["reference"].get("M")),
+             ("F", s["full"].get("F"))])
     sets = [(lev, d) for lev, d in sets if d]
     fig, ax = plt.subplots(1, 2, figsize=(14.5, 4.6), gridspec_kw={"width_ratios": [1.6, 1]})
     a = ax[0]
@@ -550,7 +562,8 @@ def fig_checks(s: dict) -> None:
     a.set_yticks(y, [n for _, n in names], fontsize=8.5); a.set_xlim(0, 1.25)
     a.set_xlabel("share of the room to the limit used by the worst build (1 = at the limit)")
     a.legend(loc="lower right", fontsize=7.6, frameon=False)
-    a.set_title("how close the worst build came to each refusal limit (VC and F: every set; C and M: the reference wings)",
+    a.set_title("how close the worst build came to each refusal limit " +
+                ("(VC and F: every set; C and M: the reference wings)" if FIG_PREFIX == "screen_new_" else "(every set, every level)"),
                 fontsize=9.2)
     a = ax[1]
     angle = {"VC": 16.9, "C": 13.0, "M": 10.0, "F": 7.69}
@@ -577,6 +590,154 @@ def fig_checks(s: dict) -> None:
     save(fig, "screen_new_checks.png")
 
 
+# --- the family screen (Study 12, 8 Nov 2026) ---------------------------------------------------------------
+def merge_family(final: bool = True) -> dict:
+    """The parts of screen.py --family: every set at every level, one nose factor per family (wing and Re)."""
+    sys.path.insert(0, str(HERE.parent))
+    from screen import summarise
+    parts = {}
+    for tag in TAGS:
+        for lev in LEVELS:
+            f = FAMILY / f"{tag}_{lev}.json"
+            if f.exists():
+                parts[f"{tag}_{lev}"] = json.loads(f.read_text()) | {"finished": True}
+        if not all(f"{tag}_{lev}" in parts for lev in LEVELS):
+            jl = FAMILY / f"{tag}.jsonl"
+            rows = []
+            if jl.exists():
+                for line in jl.read_text().splitlines():
+                    try:
+                        rows.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        pass
+            for lev in LEVELS:
+                parts[f"{tag}_{lev}"] = {"rows": [r for r in rows if r["level"] == lev], "finished": False}
+    heads = {n: d for n, d in parts.items() if d.get("finished")}
+    hashes = {d["mesh_code_hash"] for d in heads.values()}
+    if len(hashes) > 1:
+        raise SystemExit(f"the family parts were built with different mesh code: {sorted(h[:12] for h in hashes)}")
+    out = {"hash_check": None, "heads": heads}
+    for lev in LEVELS:
+        names = [f"{tag}_{lev}" for tag in TAGS]
+        rows = _sort([r for n in names for r in parts[n]["rows"]])
+        done = all(n in heads for n in names)
+        out[lev] = {"rows": rows, "complete": done}
+        if final and done and rows:
+            h = heads[names[0]]
+            head = {k: h[k] for k in ("code_version", "mesh_code_hash", "level", "config", "rules", "check_rules",
+                                      "cell_estimate")}
+            head |= {"date": "2026-11-08 (the family screen: every set at VC, C, M, F; one nose factor per family; "
+                             "upper band 0-100 % c)", "parts": names, "summary": summarise(rows)}
+            write_rows_json(STUDIES / f"screen_family_{lev}.json", head, rows)
+            print(f"wrote screen_family_{lev}.json: {head['summary']['passed']} of {head['summary']['total']} passed")
+    out["ref"] = {lev: [r for r in out[lev]["rows"] if r["set"] == "reference"] for lev in LEVELS}
+    out["ref_complete"] = all(out[lev]["complete"] for lev in LEVELS)
+    return out
+
+
+def family_all(m: dict) -> dict:
+    """Ratios between neighbouring levels over every family (wing and Re), as family() does on the reference wings."""
+    idx = {lev: {(r["wing_type"], r["set"], r["index"], r["re_mean"]): r for r in m[lev]["rows"] if r["built"]} for lev in LEVELS}
+    out = {}
+    for a, b in zip(LEVELS[:-1], LEVELS[1:]):
+        keys = sorted(set(idx[a]) & set(idx[b]))
+        if not keys:
+            continue
+        d = {"pairs": len(keys), "spacings": {}, "counts": {}}
+        for q in SPACINGS:
+            d["spacings"][q] = mmm([idx[a][k]["spacings"][q] / idx[b][k]["spacings"][q] for k in keys])
+        for c in ("n_ring", "n_span", "wall_layers", "cells_est"):
+            d["counts"][c] = mmm([idx[b][k][c] / idx[a][k][c] for k in keys])
+        out[f"{a}/{b}"] = d
+    return out
+
+
+def nose_family_numbers(m: dict) -> dict:
+    """The family nose factor: how many families needed a repair, and whether every level of a family carries the same
+    factor (the label) with no round of its own."""
+    fams = {}
+    for lev in LEVELS:
+        for r in m[lev]["rows"]:
+            if r["built"]:
+                fams.setdefault((r["wing_type"], r["set"], r["index"], r["re_mean"]), {})[lev] = r
+    rep = [k for k, v in fams.items() if any((x.get("nose_family") or {}).get("rounds", 0) > 0 for x in v.values())]
+    same = sum(1 for v in fams.values() if len({round(x.get("nose_factor", 1.0), 15) for x in v.values()}) == 1)
+    own = sum(1 for v in fams.values() for x in v.values() if x.get("turning_repairs", 0) > 0)
+    labels = {}
+    for v in fams.values():
+        for x in v.values():
+            lab = (x.get("nose_repair") or {}).get("label", "?")
+            labels[lab] = labels.get(lab, 0) + 1
+    return {"families": len(fams), "complete_families": sum(1 for v in fams.values() if len(v) == len(LEVELS)),
+            "repaired_families": len(rep), "repaired": [f"{k[0]} {k[1]} {k[2]} Re {k[3]:.1e}" for k in sorted(rep)],
+            "same_factor_at_every_level": same, "rounds_of_their_own": own, "labels": labels,
+            "trigger": "the level's check limit (its angle + 0.2 deg)"}
+
+
+def against_before(m: dict) -> dict:
+    """The family screen against the screens it replaces (7 Nov sets at VC and F; 8 Nov reference wings at every level):
+    the same wing, Re and level, by node hash and counts."""
+    key = lambda r: (r["wing_type"], r["set"], r["index"], float(r["re_mean"]))
+    old = {}
+    for lev in ("VC", "F"):
+        f = STUDIES / f"screen_{lev}.json"
+        if f.exists():
+            old[lev] = {key(r): r for r in json.loads(f.read_text())["rows"] if r.get("built")}
+    f = STUDIES / "screen_reference_new.json"
+    if f.exists():
+        for r in json.loads(f.read_text())["rows"]:
+            if r.get("built"):
+                old.setdefault(r["level"], {})[key(r)] = r
+    out = {}
+    for lev in LEVELS:
+        if lev not in old:
+            continue
+        n = same = same_counts = 0
+        ring, cells, rep_before, rep_now = [], [], 0, 0
+        for r in m[lev]["rows"]:
+            o = old[lev].get(key(r))
+            if not (r["built"] and o):
+                continue
+            n += 1
+            same += int(o["node_hash"] == r["node_hash"])
+            same_counts += int(o["n_ring"] == r["n_ring"] and o["n_span"] == r["n_span"] and o["cells_est"] == r["cells_est"])
+            ring.append(r["n_ring"] - o["n_ring"])
+            cells.append(r["cells_est"] / o["cells_est"])
+            rep_before += int(o.get("turning_repairs", 0) > 0)
+            rep_now += int(r.get("turning_repairs", 0) > 0 or (r.get("nose_family") or {}).get("rounds", 0) > 0)
+        if n:
+            ra = {}
+            for x in ring:
+                ra[str(x)] = ra.get(str(x), 0) + 1
+            out[lev] = {"compared": n, "same_nodes": same, "same_counts": same_counts, "ring_nodes_added": ra,
+                        "cells_ratio": mmm(cells),
+                        "repairs_before": rep_before, "repairs_now": rep_now}
+    return out
+
+
+def summary_family(m: dict) -> dict:
+    s = {"date": "2026-11-08 (the family screen)", "re_levels": list(RE_LEVELS), "desktop_cells": DESKTOP,
+         "desktop_36_cells": DESKTOP_36, "ram": f"{RAM_BASE} GiB + {RAM_PER_M} GiB per million cells (ADflow; AERIS ADR-0020)",
+         "asked_F": list(ASKED), "F_estimate_6nov": F_ESTIMATE_6NOV,
+         "complete": {lev: m[lev]["complete"] for lev in LEVELS},
+         "full": {lev: level_numbers(m[lev]["rows"]) for lev in LEVELS if m[lev]["rows"]},
+         "full_re3e5": {lev: level_numbers([r for r in m[lev]["rows"] if r["re_mean"] == 3.0e5]) for lev in LEVELS if m[lev]["rows"]},
+         "reference": {lev: level_numbers(rows) for lev, rows in m["ref"].items() if rows},
+         "family": family(m["ref"]), "family_all": family_all(m), "nose_family": nose_family_numbers(m),
+         "against_before": against_before(m)}
+    if m["heads"]:
+        h = next(iter(m["heads"].values()))
+        s["mesh_code_hash"] = h["mesh_code_hash"]
+        s["code_version"] = h["code_version"]
+        s["band_upper"] = h["rules"].get("band_upper")
+    rv = s["reference"]
+    if "F" in rv and rv["F"]["builds"]:
+        f = rv["F"]["cells_est"]
+        s["F_reference_median_cells"] = f["median"]
+        s["F_reference_vs_6nov"] = f["median"] / F_ESTIMATE_6NOV
+    return s
+
+
 def load_studies() -> dict:
     """The merged study files (after a full run), for --figures-only."""
     m = {"heads": {}}
@@ -591,6 +752,23 @@ def load_studies() -> dict:
 
 
 def main() -> None:
+    global FIG_PREFIX, OUT
+    if "--family" in sys.argv:
+        FIG_PREFIX = "family_"
+        draft = "--draft" in sys.argv
+        if draft:
+            OUT = Path(sys.argv[sys.argv.index("--draft") + 1])
+        m = merge_family(final=not draft)
+        s = summary_family(m)
+        target = (OUT if draft else STUDIES) / "screen_family_summary.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(s, indent=1))
+        print("wrote", target)
+        fig_counts(m)
+        fig_cells(m, s)
+        fig_family(s)
+        fig_checks(s)
+        return
     figs_only = "--figures-only" in sys.argv
     m = load_studies() if figs_only else merge(final="--draft" not in sys.argv)
     s = summary(m)
@@ -598,7 +776,6 @@ def main() -> None:
         (STUDIES / "screen_new_summary.json").write_text(json.dumps(s, indent=1))
         print("wrote screen_new_summary.json")
     if "--draft" in sys.argv:
-        global OUT
         OUT = Path(sys.argv[sys.argv.index("--draft") + 1])
         (OUT / "screen_new_summary.json").parent.mkdir(parents=True, exist_ok=True)
         (OUT / "screen_new_summary.json").write_text(json.dumps(s, indent=1))

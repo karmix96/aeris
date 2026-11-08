@@ -263,10 +263,13 @@ D3_conditions_and_measurement:
       wall_normal_growth: 1.107    # 1.25 at VC; just above the 1.1 a transition model asks for; 1.23 at VC would give exactly 1.1 (Stage 2 decision 57)
       band_cell_c_where_local_Re_ge_4e5: 0.005   # the bubble-length table stops at 0.10 c from local Re 4e5 up
       lower_band_c: [0.0, 1.0]     # owner, 7 Nov 2026 (Stage 2 decision 74, option A): from the leading edge; no extra cells (shared node list)
-      upper_band_c: [0.0, 1.0]     # proposal, pending (7 Nov 2026): the refine map at the Re levels puts the upper transition past 85 % c at low Re
-                                   # (Re 1e5: 0-31 % of strips fit 0-85 % c); the built mesh already has about band-size cells to 100 % c on both sides
-                                   # (shared node list, lower band 0-100 % c; at F within 0.2 % of the band cell). Writing it: same mesh at VC,
-                                   # +2 ring nodes on 42 of 80 reference builds at F (+0.4 % cells, median); was 0-85 % c
+      upper_band_c: [0.0, 1.0]     # owner, 8 Nov 2026 (built; was 0-85 % c): the refine map at the Re levels puts the upper transition past 85 % c at low Re
+                                   # (Re 1e5: 0-31 % of strips fit 0-85 % c); the built mesh already had about band-size cells to 100 % c on both sides
+                                   # (shared node list, lower band 0-100 % c). Stage 2 Study 12 (every set at every level): +2 ring nodes on
+                                   # VC 44 of 782 and F 383 of 782 meshes, cells at most +1.1 %
+      nose_repair: one factor for the whole family   # owner, 8 Nov 2026 (Stage 2 decision 80): a round (x 0.9) only past a level's check limit
+                                   # (angle + 0.2 deg), then the same factor on VC, C, M and F, so the 1.3 step holds; every mesh labelled.
+                                   # Study 12: 0 of 782 families needed one; 3,128 of 3,128 builds pass
     proposal:   # pending
       solver_split: ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about 20 % of the wings first
     # SU2 smoke test (4 Nov 2026), not a result: SU2 8.6.0, SA and LM on one Stage 2 ring mesh (a section extruded

@@ -740,7 +740,8 @@ def family_screen_section(sf: dict) -> str:
     neg = {lev: sum(v for k, v in ab[lev]["ring_nodes_added"].items() if int(k) < 0) for lev in ab}
     band_c = (f"The upper band written 0–100 % c moved nodes but hardly the counts: {pos_s} ring nodes on {plus_s} meshes, "
               f"the cells by at most +{100 * max(ab[lev]['cells_ratio']['max'] - 1 for lev in ab):.1f} %"
-              + ("; " + ", ".join(f"{n} {lev} meshes have fewer ring nodes, the builds that had a nose repair before"
+              + ("; " + ", ".join(f"{n} {lev} meshes have 2 fewer ring nodes: {n} of the {ab[lev]['repairs_before']} builds that "
+                                  f"had a nose repair before, which need none now"
                                   for lev, n in neg.items() if n) if any(neg.values()) else "") + "." if ab else "")
     # the cells
     cells_s = ", ".join(f"{lev} {full[lev]['cells_est']['median'] / 1e6:.2f} ({full[lev]['cells_est']['max'] / 1e6:.2f})" for lev in LEVELS)
@@ -1017,7 +1018,8 @@ def build_page(d: dict) -> tuple[str, str]:
                        f'ready to close.</div><p>Every set at every level passed ({ok_f:,} of {n_f:,}, Study 12); both builder choices '
                        f'and the upper band were decided on 8 Nov and built. The pyGeo loft on Mike\'s machine gives the same '
                        f'meshes as the numpy loft on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 '
-                       f'each). Left: Mike\'s word to close, then Stage 3, the matched C-H volume mesh.</p></div>')
+                       f'each). Left: one pyGeo <code>build --all</code> on Mike\'s machine (new input hashes after the label fix; the '
+                       f'surfaces are the same) and Mike\'s word to close; then Stage 3, the matched C-H volume mesh.</p></div>')
         screen_box = (f'<div class="box good"><h3>The family screen (8 Nov)</h3><div class="big">{ok_f:,} of {n_f:,} builds passed</div>'
                       f'<p>Every set at VC, C, M and F: {fams_f} families ({vcx["wings"] - 20} wings at Re 3 × 10⁵; the 20 reference '
                       f'wings at all four Re levels) × 4 levels. {crash_f} crashes. One nose factor per family at every level: '
@@ -1036,7 +1038,8 @@ def build_page(d: dict) -> tuple[str, str]:
                     f'meshed on the numpy loft only. All in <a href="#open">Weak points</a>.</p></div>')
         done_f = f" the family screen (8 Nov): every set at every level, {ok_f:,} of {n_f:,} passed, one nose factor per family (Study 12);"
         not_done_box = (f'<div class="box verdict"><h3>Not finished</h3><div class="big">the close</div><p>Nothing is left in '
-                        f'Stage 2 but the owner\'s word to close. Every mesh here is on the numpy loft; on Mike\'s machine (8 Nov) '
+                        f'Stage 2 but one pyGeo <code>build --all</code> on Mike\'s machine (new input hashes after the label fix, '
+                        f'the same surfaces) and the owner\'s word to close. Every mesh here is on the numpy loft; on Mike\'s machine (8 Nov) '
                         f'the pyGeo loft gave the same meshes on the 20 reference wings (VC and F: the same ring nodes and stations '
                         f'on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). Both builder choices were confirmed and the '
                         f'upper band decided (8 Nov); the nose repair now belongs to the family. Then Stage 3 starts.</p></div>')
@@ -1147,10 +1150,10 @@ def build_page(d: dict) -> tuple[str, str]:
   {chg("The primer's overset plan (R-V.6 and M3: boxes, overset export, overlap gate) is replaced by the matched C-H mesh (Stage 3). R-S.4 (trailing edge 0.1 % c) and R-S.5 (nose 10°) are now accuracy targets met at M (built 7 Nov), so they hold on M and F and are looser on VC and C. R-S.7 (the family rule) now also moves the growth limits and the counts from their anchor level.")}
 </section>"""
 
-    steps = """
+    steps = f"""
 <section id="steps">
   <h2>What was done, step by step</h2>
-  <p>In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–18 are the new approach (6–7 Nov).</p>
+  <p>In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–22 are the new approach (6–8 Nov).</p>
   <div class="steps">
     <div class="step"><span class="k">1 · inputs</span><h3>Read the handover and the primer</h3><p>Stage 0 values, the Stage 1 handover table (where the mesh must be fine), Annex G recipe R-S and step M1, and the S8 surface code (section_o.py, strategy_s8.py: the ring, the turning solve, the tip cap).</p></div>
     <div class="step"><span class="k">2 · one tool</span><h3>The spacing tool</h3><p>One function set for both directions: a target cell size along a line, a growth limit, and points placed so every cell holds the same share of ∫ds/h. S8's two-sided tanh stretching could only set the two end cells; the band needs a set size in the middle of a side.</p></div>
@@ -1171,6 +1174,9 @@ def build_page(d: dict) -> tuple[str, str]:
     <div class="step"><span class="k">17 · 7 Nov</span><h3>Stage 1: the nose fix and similarity</h3><p>The nose re-measured with one curvature method: the defect was real, the 6 Nov correction wrong; the new rule (apex, one cubic spline, 201 points per side, a nose gate) built (64). Similarity built (70): unit mean chord, 17 numbers, trailing edge 0.2 % c; the sets rebuilt (722 of 722), every hash new, 13 of 20 reference wings new picks.</p></div>
     <div class="step"><span class="k">18 · 7 Nov</span><h3>Stage 2: the new rules, built and screened</h3><p>Levels VC, C, M, F with anchored values (71), the lighter rules (72), the lower band from the leading edge (74, A) in <code>configs/surface.yaml</code> and <code>laws.py</code>; the first approach kept in <code>configs/surface_first.yaml</code>. The nose first solved at VC and F; M then needed a repair on the flying wings, so the nose is now solved at every level and the strictest wins (owner, 7 Nov). The new screen (Study 9) and the similarity check (Study 10); this page, the summary, the status and the decisions updated.</p></div>
     <div class="step"><span class="k">19 · 7 Nov</span><h3>The refine map at the Re levels; the upper band checked</h3><p>The refine map in its Re mode on the new reference wings and the rebuilt section tables (Study 11). The upper band as written (0–85 % c) misses the upper transition at low Re, while the built mesh has band-size cells there. Written as 0–100 % c it is the same mesh at VC to round-off, but 2 more ring nodes at F on 42 of 80 reference builds; the owner chose 0–100 % c on 8 Nov (Study 12).</p></div>
+    <div class="step"><span class="k">20 · 8 Nov</span><h3>The Re levels 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶</h3><p>The owner moved the two upper levels (decision 78): the Greek tactical UAVs in cruise, and 10⁶ fills the old gap. The 20 reference wings screened again at every level (320 of 320; the 160 builds at 10⁵ and 3 × 10⁵ have the very same nodes); the refine map redone; the 2-D section tables to 1.5 × 10⁷.</p></div>
+    <div class="step"><span class="k">21 · 8 Nov</span><h3>pyGeo on Mike's machine; the label fix</h3><p>The 20 reference wings on the pyGeo loft give the same meshes as on the numpy loft (VC and F: the same ring nodes and stations, 80 of 80 each). One label differed at an exact threshold; every label rule got its tolerance in Stage 1 (decision 79): new input hashes, the same surfaces, so every mesh stands.</p></div>
+    <div class="step"><span class="k">22 · 8 Nov</span><h3>The owner's choices built; the family screen</h3><p>Decision 77 confirmed (the growth limits by the family rule; the station growth 1.2); the upper band written 0–100 % c; the nose repair belongs to the family (80): one nose factor for all four levels of a wing at one Re, triggered only past a level's check limit, and every mesh labelled. Then every set at every level for the first time{f': {ok_f:,} of {n_f:,} builds passed, {rep_f} families needed a repair' if sf else ''} (Study 12).</p></div>
   </div>
 </section>"""
 

@@ -46,8 +46,10 @@ _EXT = json.loads((STAGE1 / "docs" / "size_extremes.json").read_text())
 LOCAL_RE = {t: (_EXT[f"{t}/focus"]["re_tip_min"], _EXT[f"{t}/focus"]["re_root_max"]) for t in TYPES}
 # Stage 1 docs/greek_uavs.json (8 Nov 2026): the Greek tactical UAVs, cruise at 3,048 m to top speed at sea level
 GREEK = json.loads((STAGE1 / "docs" / "greek_uavs.json").read_text())["rows"]
-# Stage 2 data/studies/screen_new_summary.json (Study 9; the reference wings at the 8 Nov levels): cells per level
-_SN = json.loads((STAGE2 / "data" / "studies" / "screen_new_summary.json").read_text())["reference"]
+# Stage 2 data/studies/screen_family_summary.json (Study 12, 8 Nov: every set at every level, upper band 0-100 % c;
+# the reference wings at the 8 Nov levels): cells per level; Study 9's file if Study 12 is missing
+_SF = STAGE2 / "data" / "studies" / "screen_family_summary.json"
+_SN = json.loads((_SF if _SF.exists() else STAGE2 / "data" / "studies" / "screen_new_summary.json").read_text())["reference"]
 CELLS = {lv: (_SN[lv]["cells_est"]["median"] / 1e6, _SN[lv]["cells_est"]["max"] / 1e6, _SN[lv]["cells_est"]["min"] / 1e6)
          for lv in ("VC", "C", "M", "F")}
 
@@ -688,9 +690,9 @@ def page() -> str:
               + cmp(["levels C, M, F, FF; every rule met at C", "band cell = bubble / 20 at C", "lower band 60–100 % c", "station gap 0.2 c at C; last tip gap = s0",
                      "790 of 790 builds pass (first wings)"],
                     ["levels VC, C, M, F; anchors at VC, M and F", "band cell = bubble / 20 at F; 0.5 % c at F from local Re 4 × 10⁵",
-                     "lower band 0–100 % c (option A); upper 0–85 % c written, band-size cells to 100 % c as built",
-                     "station gap 0.25 c at M; last tip gap = 2 × s0; the nose solved at every level",
-                     "1,724 of 1,724 builds pass (4 F builds after one nose repair)"]),
+                     "lower band 0–100 % c (option A); upper band 0–100 % c (8 Nov)",
+                     "station gap 0.25 c at M; last tip gap = 2 × s0; the nose solved at every level; a nose repair on the whole family",
+                     "3,128 of 3,128 builds pass: every set at every level, 0 nose repairs"]),
               "The surface mesher did not change, only its rule values. The coarse levels are now coarser (good enough for the SA mesh studies), and F holds the transition targets that SU2 with LM needs.")
 
     s6 = step(6, "step-6", "Stage 3 plan", "Volume mesh: one matched C-H mesh for both solvers",
@@ -707,16 +709,16 @@ def page() -> str:
               laws_table()
               + '<p class="note">Values per level follow the family rule: spacings and angles ÷ 1.3 per finer level, counts × 1.3, growth g^(1/1.3). "First at its finest (FF)" is the first rule carried to its fourth level, the place of F on the ladder.</p>'
               + '<div class="figwrap">' + fig_budget() + '</div><div class="figwrap">' + fig_levels_cells() + "</div>"
-              + '<p class="note">The 7 Nov count can be redone: layers to 2 chords from the first cell (y⁺ = 1), growth 1.25 at VC; wing blocks only. The 6 Nov estimate (15.2 M and 10.9 M) did not record its wall-layer rule and used the first wings. Stage 3 sets the real wall-layer rule.</p>',
+              + '<p class="note">The 7–8 Nov count can be redone: layers to 2 chords from the first cell (y⁺ = 1), growth 1.25 at VC; wing blocks only. The 6 Nov estimate (15.2 M and 10.9 M) did not record its wall-layer rule and used the first wings. Stage 3 sets the real wall-layer rule.</p>',
               f"F is {CELLS['F'][0]:.1f} M cells (median; largest {CELLS['F'][1]:.1f} M, at 4 × 10⁶) on the wing blocks, about 9–11 M with the C-H wake lines, inside the target. VC runs on the desktop ({CELLS['VC'][0]:.2f} M median); with +36 GB the desktop also takes C and M (wing blocks only); F needs the HPC.")
 
     status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 8 Nov 2026</span><h2>Built, pending, next</h2>'
               '<div class="status"><div><span class="k ok">Built and checked</span><ul><li>Similarity, nose fix, 722 wings rebuilt</li>'
-              '<li>New surface rules; 1,724 of 1,724 builds pass</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li><li>8 Nov: label tolerance (79): 2 labels; new input hashes, the same surfaces</li></ul></div>'
-              '<div><span class="k you">Your calls</span><ul><li>Decision 77: growth by the family rule; station growth 1.2</li>'
-              '<li>Upper band: 0–85 % c written, or 0–100 % c (+0.4 % cells at F)</li><li>Solver split (76); Stage 0 leftovers</li></ul></div>'
+              '<li>New surface rules; every set at every level: 3,128 of 3,128 builds pass, 0 nose repairs</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li><li>8 Nov: label tolerance (79): 2 labels; new input hashes, the same surfaces</li><li>8 Nov, your calls built: decision 77 confirmed; upper band 0–100 % c; a nose repair on the whole family (80)</li></ul></div>'
+              '<div><span class="k you">Your calls</span><ul><li>Close Stage 2</li>'
+              '<li>Solver split (76); Stage 0 leftovers</li></ul></div>'
               '<div><span class="k next">Before Stage 3</span><ul><li>One more pyGeo build --all on your machine (new input hashes)</li>'
-              '<li>Fix the 4 F nose repairs; screen M on the full sets</li><li>Close Stage 2; start the C-H volume mesh</li></ul></div></div></section>')
+              '<li>Start the C-H volume mesh on one wing; count its cells</li></ul></div></div></section>')
 
     head = ('<title>CFD Automation Approach Map</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
             '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'

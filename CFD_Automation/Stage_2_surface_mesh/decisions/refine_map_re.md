@@ -99,7 +99,10 @@ same ring and station counts on 80 of 80, no node moved by more than 3.0 × 10�
 cranked 12, tapered 13, flying wing 1), the stations unchanged: +0.39 % cells median, +0.55 % at most. With 0–85 % c
 the upper cells over 85–100 % c at F can sit a little above the band cell, inside the 1 % check (BWB reference wing 0
 at Re 3 × 10⁵: 0.00501 c against 0.0050 c). So the written rule stayed 0–85 % c (7 Nov) until the owner wrote it
-0–100 % c on 8 Nov; the screen was re-run in the family screen (Stage 2 Study 12).
+0–100 % c on 8 Nov; the screen was re-run in the family screen (Stage 2 Study 12). It confirms this check on the
+reference wings (VC: the same counts on 80 of 80; F: 2 more ring nodes on 42 of 80; C 3 of 80, M 24 of 80). On the
+full sets at Re 3 × 10⁵, which this check did not cover, VC gained 2 ring nodes on 44 of 702 wings and F on 341 of
+702; cells at most +1.1 % on any mesh.
 
 **No XFOIL answer.**
 
@@ -170,4 +173,4 @@ both sides share one node distribution and the lower band is 0–100 % c; so no 
 as written should say that the upper side's aft part comes from the lower band (or the upper band be written as
 0–100 % c, which gives the same 16 surfaces to round-off at VC, but 2 more ring nodes at F on 42 of the 80 reference
 builds, +0.39 % cells, and a re-run of the screen). The rules text now says what the built mesh does. **Decided
-8 Nov (owner): the upper band is written 0–100 % c**, built and screened (Stage 2 Study 12).
+8 Nov (owner): the upper band is written 0–100 % c**, built and screened (Stage 2 Study 12): 3,128 of 3,128 builds pass; cells at most +1.1 %.

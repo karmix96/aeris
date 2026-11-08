@@ -17,6 +17,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from cfdauto.paths import STAGE2  # noqa: E402
 
 DATA = STAGE2 / "data" / "studies" / "refine_map_reference.json"        # the first approach (3 Nov; from -5 deg on 7 Nov)
+
+
+def _family_band_s() -> str:
+    """What the upper band at 0-100 % c changed on every set at every level (Stage 2 Study 12), if that file exists."""
+    f = STAGE2 / "data" / "studies" / "screen_family_summary.json"
+    if not f.exists():
+        return ""
+    ab = json.loads(f.read_text()).get("against_before", {})
+    if not ab:
+        return ""
+    plus = ", ".join(f"{lev} {sum(v for k, v in d['ring_nodes_added'].items() if int(k) > 0)} of {d['compared']}"
+                     for lev, d in ab.items())
+    top = max(d["cells_ratio"]["max"] for d in ab.values())
+    return f": 2 more ring nodes on {plus} meshes (every set at VC and F, the reference wings at C and M), cells at most +{100 * (top - 1):.1f} %"
 DATA_RE = STAGE2 / "data" / "studies" / "refine_map_re.json"           # the Re levels (7 Nov; scripts/refine_map_re.py)
 PAGE = STAGE2 / "docs" / "page"
 OUT = STAGE2 / "docs" / "REFINE_MAP.html"
@@ -372,7 +386,8 @@ def re_section() -> str:
              f"({100 * (f['cells_ratio']['median'] - 1):.2f} % more cells, median; {100 * (f['cells_ratio']['max'] - 1):.2f} % at most), "
              f"because with 0–85 % c the upper cells over 85–100 % c at F can sit a little above the band cell, inside the 1 % check "
              f"(on BWB reference wing 0 at Re 3 × 10⁵: 0.00501 c against 0.0050 c). "
-             f"On 8 Nov the owner wrote the upper band as 0–100 % c, and the screen was re-run (Stage 2 Study 12). "
+             f"On 8 Nov the owner wrote the upper band as 0–100 % c, and the screen was re-run (Stage 2 Study 12)"
+             + _family_band_s() + ". "
              f"Data: <code>data/studies/upper_band_check.json</code>.")
     n16 = len(ab["builds"])
     return f"""

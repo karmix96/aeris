@@ -8,7 +8,7 @@ Standalone; merged into AERIS when finished.
 
 - **Stage 0** (done): starting values — `Stage_0_decisions/` (open `decisions.html` for the readable version).
 - **Stage 1** (done): the wing generator and the flow dataset — `Stage_1_geometry/` (see its `README.md`).
-- **Stage 2** (new rules built and screened on 7 Nov 2026: 1,724 of 1,724 builds pass; closing): the surface mesh —
+- **Stage 2** (new rules built and screened on 7 Nov 2026; every set at every level on 8 Nov: 3,128 of 3,128 builds pass, 0 nose repairs; ready to close): the surface mesh —
   `Stage_2_surface_mesh/` (see its `README.md`).
 - Next: **Stage 3**, the volume mesh (one matched C-H mesh for ADflow and SU2, decided 6 Nov) and the CGNS export —
   `Stage_3_volume_mesh/`.

@@ -188,4 +188,5 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
   coarse files (about 61 points) the raw file itself does not settle the nose turning at the smallest cells better
   than about ±15 %.
 - The pyGeo build ran on 8 Nov (722 of 722; Mike's machine). Stage 2 screened the 7 Nov wings on 7 Nov: 1,724 of 1,724 builds pass (every set at
-  VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels; 4 F builds after one nose repair).
+  VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels); on 8 Nov every set at every level:
+  3,128 of 3,128, with no nose repair (one factor per family, Stage 2 decision 80).

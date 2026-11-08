@@ -90,10 +90,17 @@ The sections below are updated to match.
   (was 9.74 M), 1.7 % above 10 M. The 2-D tables gain the rows 1 × 10⁷ and 1.5 × 10⁷. Details: D3, Reynolds.
 - **Section tables and refine map redone (7 Nov).** The 2-D XFOIL tables were rebuilt on the fixed nose:
   no Stage 1 conclusion changes. The refine map now runs at the 4 Re levels; it finds the upper transition
-  past 85 % c at low Re (proposal below: write the upper band as 0–100 % c; +0.4 % cells at F).
+  past 85 % c at low Re (so the upper band is written 0–100 % c since 8 Nov: below).
 - **Stage 2 screen on the 7 Nov wings (7 Nov).** 1,724 of 1,724 builds pass: every set except the hold-outs at VC
-  and F (782 builds each), and the 20 reference wings at all four levels and Re levels. 4 of the 782 F builds still
+  and F (782 builds each), and the 20 reference wings at all four levels and Re levels. 4 of the 782 F builds then
   needed one nose repair.
+- **Stage 2 choices of the owner (8 Nov), built.** Both builder choices confirmed (decision 77: the growth limits by
+  the family rule; the station growth 1.2 with at least 12 gaps per panel at M). The upper transition band written
+  0–100 % c (was 0–85 %). A nose repair belongs to the family (decision 80): a round only past a level's check limit,
+  then one factor on all four levels, so the 1.3 step holds; every mesh labelled.
+- **Stage 2 family screen (8 Nov).** Every set except the hold-outs at all four levels: 782 families × 4 = 3,128
+  builds, 3,128 pass, 0 nose repairs. Fine level F: 5.91 M cells median on the wing blocks over every set, 6.73 M on
+  the reference wings, largest 10.21 M; the upper band at 0–100 % c added at most +1.1 % cells.
 - **First SU2 smoke test (4 Nov), not a result.** It shows the mesh path works; no wing has been run
   (note at the end of D3).
 
@@ -104,8 +111,6 @@ The sections below are updated to match.
 - **Angles.** Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about
   2.5° steps.
 - **Check C4 with the solver.** Done on 2-D data on 8 Nov (1 × 10⁶ added); the solver check is still to run.
-- **Upper transition band 0–100 % of chord (7 Nov; was 0–85 %).** The built mesh is already close (one node
-  list for both sides; lower band 0–100 % c): same mesh at VC, +0.4 % cells at F (median).
 
 **Open**
 - **Still open from Stage 0:** grid share 65 %, pitching moment 0.002, the iteration share, a D5.
@@ -599,10 +604,11 @@ at all four levels.
   (decision 54). Our ADflow build has SA only (SST aborted) and no transition model, so transition
   comes from SU2 (SST + LM γ-Reθ).
 - **The mesh stays transition-ready:** first cell y+ ≤ 1 at each case's speed; at least 30 cells
-  across the boundary layer at every station; the transition band as built in Stage 2: upper surface
-  0–85 % of chord (from the leading edge on every wing, Stage 2 decision 58; Stage 1 asked 10–85 %,
-  from the leading edge on swept panels), lower surface 60–100 %; band cell = bubble length ÷ 20 at
-  level C (Stage 2 decision 56). Every drag number carries a model band next to the mesh error.
+  across the boundary layer at every station; the transition band as built in Stage 2: upper and lower
+  surface 0–100 % of chord since 8 Nov (first upper 0–85 %, from the leading edge on every wing, Stage 2
+  decision 58, where Stage 1 asked 10–85 %; lower 60–100 %, then 0–100 % by decision 74 on 7 Nov); band
+  cell = bubble length ÷ 20 at level F (at level C in the first approach, Stage 2 decision 56). Every drag
+  number carries a model band next to the mesh error.
 - **Decided (owner, 6 Nov):**
   - about 20 cells per bubble at level F, instead of at level C as built (Ansys CFX transition-model grid
     guidance: 20 nodes per bubble, wall-normal growth about 1.1, y+ about 1, 75–100 nodes from the leading
@@ -618,8 +624,8 @@ at all four levels.
   - ~~upper transition band 0–100 % of chord~~ **decided 8 Nov (owner), built**: the refine map at the Re levels
     puts the upper transition past 85 % c at low Re (at Re 10⁵ only 0–31 % of strips fit 0–85 % c). The built mesh
     already had about band-size cells to the trailing edge on both sides (one node list for both sides, lower
-    band 0–100 % c). Written 0–100 % c: the same mesh at VC and 2 more ring nodes on some F builds (Stage 2
-    Study 12).
+    band 0–100 % c). Written 0–100 % c: 2 more ring nodes on some meshes (VC 44 of 782, F 383 of 782), cells at most
+    +1.1 % (Stage 2 Study 12).
 - **Why:** Stage 1 (2-D XFOIL strips, smooth wing in calm air) found a long laminar run and laminar
   bubbles on most of these wings; fully turbulent SA overpredicts the profile drag by a median
   +62 % (+69 % in level flight). What a mesh must resolve depends on the model, so a mesh tuned only

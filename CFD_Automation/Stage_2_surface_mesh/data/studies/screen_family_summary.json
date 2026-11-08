@@ -1,0 +1,6709 @@
+{
+ "date": "2026-11-08 (the family screen)",
+ "re_levels": [
+  100000.0,
+  300000.0,
+  1000000.0,
+  4000000.0
+ ],
+ "desktop_cells": 1200000.0,
+ "desktop_36_cells": 5000000.0,
+ "ram": "1.51 GiB + 9.46 GiB per million cells (ADflow; AERIS ADR-0020)",
+ "asked_F": [
+  9000000.0,
+  11000000.0
+ ],
+ "F_estimate_6nov": 10900000.0,
+ "complete": {
+  "VC": true,
+  "C": true,
+  "M": true,
+  "F": true
+ },
+ "full": {
+  "VC": {
+   "builds": 782,
+   "passed": 782,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 120.0,
+    "median": 220.0,
+    "max": 240.0,
+    "n": 782
+   },
+   "n_span": {
+    "min": 51.0,
+    "median": 63.0,
+    "max": 84.0,
+    "n": 782
+   },
+   "quads": {
+    "min": 6768.0,
+    "median": 14456.0,
+    "max": 19690.0,
+    "n": 782
+   },
+   "cap_quads": {
+    "min": 416.0,
+    "median": 816.0,
+    "max": 896.0,
+    "n": 782
+   },
+   "seconds": {
+    "min": 2.94,
+    "median": 4.51,
+    "max": 6.9,
+    "n": 782
+   },
+   "cells_est": {
+    "min": 241776.0,
+    "median": 596580.0,
+    "max": 1020600.0,
+    "n": 782
+   },
+   "wall_layers": {
+    "min": 36.0,
+    "median": 41.0,
+    "max": 54.0,
+    "n": 782
+   },
+   "ram_gib": {
+    "min": 3.7972009600000005,
+    "median": 7.153646800000001,
+    "max": 11.164876,
+    "n": 782
+   },
+   "fits_desktop": 782,
+   "fits_desktop_36": 782,
+   "nose_solved_at_stations": {
+    "F": 44137,
+    "M": 5319
+   },
+   "nose_set_by_stations": {
+    "F": 44137,
+    "M": 5319
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 696,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.9864295875309104,
+     "value": 16.11357041246909,
+     "limit": 17.1,
+     "kind": "max",
+     "at": "bwb training_full 9 Re 3.0e+05",
+     "used_max": 0.9423140592087187
+    },
+    "geometry_kinks": {
+     "min_margin": 17.1,
+     "value": 0.0,
+     "limit": 17.1,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15533145117828018,
+     "value": 1.0061685488217198,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.038195348741299075
+    },
+    "chord_growth": {
+     "min_margin": 0.06088918246838948,
+     "value": 1.2016108175316105,
+     "limit": 1.2625,
+     "kind": "max",
+     "at": "bwb corner1 4 Re 3.0e+05",
+     "used_max": 0.7680412096442305
+    },
+    "band_spacing": {
+     "min_margin": 0.010046781966559504,
+     "value": 0.9999532180334405,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_focus 4 Re 3.0e+05",
+     "used_max": -0.00467819665594948
+    },
+    "te_spacing": {
+     "min_margin": 0.0097653725187834,
+     "value": 1.0002346274812166,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked corner2 3 Re 3.0e+05",
+     "used_max": 0.023462748121660916
+    },
+    "span_growth": {
+     "min_margin": 0.06672427205077303,
+     "value": 1.233275727949227,
+     "limit": 1.3,
+     "kind": "max",
+     "at": "bwb reference 3 Re 4.0e+06",
+     "used_max": 0.7775857598307566
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009943035545252332,
+     "value": 1.0000569644547477,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "flying_wing reference 0 Re 1.0e+05",
+     "used_max": 0.14097234776298265
+    },
+    "planar_stations": {
+     "min_margin": 9.999928945726425e-10,
+     "value": 7.105427357601002e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "cranked corner1 7 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.04424354535671593,
+     "value": 0.09424354535671593,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5305403124505538
+    },
+    "cap_quads": {
+     "min_margin": 0.024901884166557378,
+     "value": 0.07490188416655738,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.6675399498471399
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.029587237525059058,
+     "value": 0.029587237525059058,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 238.0,
+     "limit": 238.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 14.628956172651856,
+    "median": 15.863604243812382,
+    "max": 16.11357041246909,
+    "n": 782
+   },
+   "wing_quads_J": {
+    "min": 0.09424354535671593,
+    "median": 0.9269429927486643,
+    "max": 0.9994389175672508,
+    "n": 782
+   },
+   "cap_quads_J": {
+    "min": 0.07490188416655738,
+    "median": 0.1271972697891548,
+    "max": 0.39750201065003377,
+    "n": 782
+   },
+   "chord_growth": {
+    "min": 1.2001669293482353,
+    "median": 1.2003564990344682,
+    "max": 1.2016108175316105,
+    "n": 782
+   },
+   "span_growth": {
+    "min": 1.1942488162131322,
+    "median": 1.1991529612605942,
+    "max": 1.233275727949227,
+    "n": 782
+   },
+   "tip_gap": {
+    "min": 0.9718055304474035,
+    "median": 0.9877733079516712,
+    "max": 1.0000569644547477,
+    "n": 782
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 164.0,
+      "median": 238.0,
+      "max": 240.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 53.0,
+      "median": 62.0,
+      "max": 80.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 9120.0,
+      "median": 15406.0,
+      "max": 19690.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 344584.0,
+      "median": 659835.0,
+      "max": 1020600.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 3.35,
+      "median": 4.6850000000000005,
+      "max": 6.42,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.09424354535671593,
+      "median": 0.8193283729641382,
+      "max": 0.9372873782307126,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.07490188416655738,
+      "median": 0.09899182094716523,
+      "max": 0.3456064645298607,
+      "n": 200
+     }
+    },
+    "flying_wing": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 138.0,
+      "median": 224.0,
+      "max": 240.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 51.0,
+      "median": 61.0,
+      "max": 79.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 7388.0,
+      "median": 14272.0,
+      "max": 18960.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 264168.0,
+      "median": 582692.0,
+      "max": 1000746.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 3.51,
+      "median": 4.6,
+      "max": 6.32,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.48460329569355776,
+      "median": 0.8866427820860594,
+      "max": 0.9927444590073281,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.07716059772134555,
+      "median": 0.10364307456946342,
+      "max": 0.34459021000960127,
+      "n": 191
+     }
+    },
+    "cranked": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 120.0,
+      "median": 206.0,
+      "max": 238.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 55.0,
+      "median": 63.0,
+      "max": 84.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 6896.0,
+      "median": 13767.0,
+      "max": 19076.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 246312.0,
+      "median": 563299.0,
+      "max": 953472.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 3.2,
+      "median": 4.385,
+      "max": 6.9,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.3913508716613334,
+      "median": 0.97972269653452,
+      "max": 0.9965177013029015,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.09176827958376402,
+      "median": 0.3380284102042069,
+      "max": 0.3970733993360859,
+      "n": 200
+     }
+    },
+    "tapered": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 122.0,
+      "median": 210.0,
+      "max": 238.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 53.0,
+      "median": 63.0,
+      "max": 82.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 6768.0,
+      "median": 13796.0,
+      "max": 18636.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 241776.0,
+      "median": 563094.0,
+      "max": 964860.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 2.94,
+      "median": 4.42,
+      "max": 5.86,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.5648410946871834,
+      "median": 0.9851603256972348,
+      "max": 0.9994389175672508,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.08993546374821508,
+      "median": 0.33961678151773356,
+      "max": 0.39750201065003377,
+      "n": 191
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 120.0,
+      "median": 133.0,
+      "max": 176.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 51.0,
+      "median": 56.0,
+      "max": 63.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 241776.0,
+      "median": 292374.0,
+      "max": 415974.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 200.0,
+      "median": 220.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 57.0,
+      "median": 61.5,
+      "max": 68.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 505243.0,
+      "median": 593167.5,
+      "max": 680217.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 220.0,
+      "median": 226.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 63.0,
+      "median": 68.0,
+      "max": 74.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 672198.0,
+      "median": 746925.0,
+      "max": 827568.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 220.0,
+      "median": 226.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 70.0,
+      "median": 75.0,
+      "max": 82.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 839592.0,
+      "median": 926250.0,
+      "max": 1020600.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "C": {
+   "builds": 782,
+   "passed": 782,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 154.0,
+    "median": 284.0,
+    "max": 308.0,
+    "n": 782
+   },
+   "n_span": {
+    "min": 65.0,
+    "median": 80.0,
+    "max": 108.0,
+    "n": 782
+   },
+   "quads": {
+    "min": 10976.0,
+    "median": 23756.0,
+    "max": 32336.0,
+    "n": 782
+   },
+   "cap_quads": {
+    "min": 670.0,
+    "median": 1320.0,
+    "max": 1440.0,
+    "n": 782
+   },
+   "seconds": {
+    "min": 4.05,
+    "median": 5.71,
+    "max": 8.05,
+    "n": 782
+   },
+   "cells_est": {
+    "min": 512770.0,
+    "median": 1260525.5,
+    "max": 2192400.0,
+    "n": 782
+   },
+   "wall_layers": {
+    "min": 47.0,
+    "median": 53.0,
+    "max": 70.0,
+    "n": 782
+   },
+   "ram_gib": {
+    "min": 6.3608042,
+    "median": 13.43457123,
+    "max": 22.250104000000004,
+    "n": 782
+   },
+   "fits_desktop": 264,
+   "fits_desktop_36": 782,
+   "nose_solved_at_stations": {
+    "F": 56192,
+    "M": 6590
+   },
+   "nose_set_by_stations": {
+    "F": 56192,
+    "M": 6590
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 738,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.43263605115716786,
+     "value": 12.767363948842831,
+     "limit": 13.2,
+     "kind": "max",
+     "at": "bwb training_full 9 Re 3.0e+05",
+     "used_max": 0.9672245415790024
+    },
+    "geometry_kinks": {
+     "min_margin": 13.2,
+     "value": 0.0,
+     "limit": 13.2,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.1567726408197614,
+     "value": 1.0047273591802386,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.029271573871446372
+    },
+    "chord_growth": {
+     "min_margin": 0.04764258518725284,
+     "value": 1.151490919425333,
+     "limit": 1.199133504612586,
+     "kind": "max",
+     "at": "flying_wing training_full 7 Re 3.0e+05",
+     "used_max": 0.7607505312582057
+    },
+    "band_spacing": {
+     "min_margin": 0.010018127457910864,
+     "value": 0.9999818725420891,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "flying_wing training_focus 22 Re 3.0e+05",
+     "used_max": -0.0018127457910854779
+    },
+    "te_spacing": {
+     "min_margin": 0.009642372463910531,
+     "value": 1.0003576275360895,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb training_focus 15 Re 3.0e+05",
+     "used_max": 0.03576275360894773
+    },
+    "span_growth": {
+     "min_margin": 0.04315724916728314,
+     "value": 1.1804688525552278,
+     "limit": 1.223626101722511,
+     "kind": "max",
+     "at": "tapered training_full 0 Re 3.0e+05",
+     "used_max": 0.80701157496885
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009945982546800902,
+     "value": 1.000054017453199,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.11472711230422208
+    },
+    "planar_stations": {
+     "min_margin": 9.99991118215803e-10,
+     "value": 8.881784197001252e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "cranked corner2 1 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.04428095782818764,
+     "value": 0.09428095782818764,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5303297839964377
+    },
+    "cap_quads": {
+     "min_margin": 0.0303749376697056,
+     "value": 0.0803749376697056,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.6220844637599723
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.02518414387289996,
+     "value": 0.02518414387289996,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 306.0,
+     "limit": 306.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 11.870283591622748,
+    "median": 12.527224429821235,
+    "max": 12.767363948842831,
+    "n": 782
+   },
+   "wing_quads_J": {
+    "min": 0.09428095782818764,
+    "median": 0.9270346623565716,
+    "max": 0.9994396235668105,
+    "n": 782
+   },
+   "cap_quads_J": {
+    "min": 0.0803749376697056,
+    "median": 0.13185832691746224,
+    "max": 0.4039346457340061,
+    "n": 782
+   },
+   "chord_growth": {
+    "min": 1.1506346955374802,
+    "median": 1.1510818481639793,
+    "max": 1.151490919425333,
+    "n": 782
+   },
+   "span_growth": {
+    "min": 1.1475198769833208,
+    "median": 1.1513967634040998,
+    "max": 1.1804688525552278,
+    "n": 782
+   },
+   "tip_gap": {
+    "min": 0.9770545775391556,
+    "median": 0.9915015724781515,
+    "max": 1.000054017453199,
+    "n": 782
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 210.0,
+      "median": 306.0,
+      "max": 308.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 67.0,
+      "median": 79.0,
+      "max": 102.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 14810.0,
+      "median": 25184.0,
+      "max": 32336.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 722456.0,
+      "median": 1395240.0,
+      "max": 2192400.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 4.78,
+      "median": 5.865,
+      "max": 7.85,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.09428095782818764,
+      "median": 0.8193386413189785,
+      "max": 0.9372930431523483,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.0803749376697056,
+      "median": 0.10296095303611238,
+      "max": 0.3567646946749287,
+      "n": 200
+     }
+    },
+    "flying_wing": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 176.0,
+      "median": 288.0,
+      "max": 308.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 65.0,
+      "median": 78.0,
+      "max": 102.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 12220.0,
+      "median": 23306.0,
+      "max": 31488.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 571285.0,
+      "median": 1233575.0,
+      "max": 2134316.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 4.31,
+      "median": 5.85,
+      "max": 8.05,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.48465798315911646,
+      "median": 0.8867148869719917,
+      "max": 0.9927445872445559,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.08230568496431592,
+      "median": 0.1079372184258526,
+      "max": 0.35409816446240866,
+      "n": 191
+     }
+    },
+    "cranked": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 154.0,
+      "median": 266.0,
+      "max": 306.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 68.0,
+      "median": 80.0,
+      "max": 108.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 10988.0,
+      "median": 22604.0,
+      "max": 31708.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 513287.0,
+      "median": 1198621.5,
+      "max": 2041423.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 4.05,
+      "median": 5.495,
+      "max": 7.24,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.39113692697946667,
+      "median": 0.9797319342732647,
+      "max": 0.9965181457474866,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.09593921679023669,
+      "median": 0.3502963634934796,
+      "max": 0.4039346457340061,
+      "n": 200
+     }
+    },
+    "tapered": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 154.0,
+      "median": 270.0,
+      "max": 306.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 67.0,
+      "median": 80.0,
+      "max": 104.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 10976.0,
+      "median": 22580.0,
+      "max": 30572.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 512770.0,
+      "median": 1192553.0,
+      "max": 2041423.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 4.39,
+      "median": 5.59,
+      "max": 7.67,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.5648648834933293,
+      "median": 0.9851805033977498,
+      "max": 0.9994396235668105,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.09437449914289794,
+      "median": 0.35108961116625353,
+      "max": 0.40272648042509285,
+      "n": 191
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 154.0,
+      "median": 169.0,
+      "max": 226.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 66.0,
+      "median": 71.0,
+      "max": 79.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 512770.0,
+      "median": 608251.0,
+      "max": 864950.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 258.0,
+      "median": 284.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 73.0,
+      "median": 78.0,
+      "max": 87.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1082207.0,
+      "median": 1258061.0,
+      "max": 1463560.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 284.0,
+      "median": 291.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 81.0,
+      "median": 86.0,
+      "max": 95.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1430337.0,
+      "median": 1593840.0,
+      "max": 1800225.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 284.0,
+      "median": 291.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 90.0,
+      "median": 95.0,
+      "max": 104.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1794930.0,
+      "median": 1978178.0,
+      "max": 2192400.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "M": {
+   "builds": 782,
+   "passed": 782,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 198.0,
+    "median": 368.0,
+    "max": 398.0,
+    "n": 782
+   },
+   "n_span": {
+    "min": 82.0,
+    "median": 100.0,
+    "max": 136.0,
+    "n": 782
+   },
+   "quads": {
+    "min": 17604.0,
+    "median": 39180.0,
+    "max": 53264.0,
+    "n": 782
+   },
+   "cap_quads": {
+    "min": 1190.0,
+    "median": 2380.0,
+    "max": 2590.0,
+    "n": 782
+   },
+   "seconds": {
+    "min": 5.18,
+    "median": 7.23,
+    "max": 10.25,
+    "n": 782
+   },
+   "cells_est": {
+    "min": 1068842.0,
+    "median": 2696520.0,
+    "max": 4691596.0,
+    "n": 782
+   },
+   "wall_layers": {
+    "min": 60.0,
+    "median": 69.0,
+    "max": 91.0,
+    "n": 782
+   },
+   "ram_gib": {
+    "min": 11.62124532,
+    "median": 27.019079200000004,
+    "max": 45.89249816,
+    "n": 782
+   },
+   "fits_desktop": 8,
+   "fits_desktop_36": 782,
+   "nose_solved_at_stations": {
+    "F": 71174,
+    "M": 7942
+   },
+   "nose_set_by_stations": {
+    "F": 71174,
+    "M": 7942
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 749,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.182134625999808,
+     "value": 10.017865374000191,
+     "limit": 10.2,
+     "kind": "max",
+     "at": "flying_wing training_full 37 Re 3.0e+05",
+     "used_max": 0.9821436641176658
+    },
+    "geometry_kinks": {
+     "min_margin": 10.2,
+     "value": 0.0,
+     "limit": 10.2,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15748775357214218,
+     "value": 1.0040122464278578,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.024843631132246455
+    },
+    "chord_growth": {
+     "min_margin": 0.03625856567632679,
+     "value": 1.1163041773160325,
+     "limit": 1.1525627429923593,
+     "kind": "max",
+     "at": "bwb training_full 18 Re 3.0e+05",
+     "used_max": 0.7623366952825258
+    },
+    "band_spacing": {
+     "min_margin": 0.010027737757361876,
+     "value": 0.9999722622426381,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_focus 56 Re 3.0e+05",
+     "used_max": -0.002773775736186754
+    },
+    "te_spacing": {
+     "min_margin": 0.009574305097227231,
+     "value": 1.0004256949027728,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_full 18 Re 3.0e+05",
+     "used_max": 0.04256949027727771
+    },
+    "span_growth": {
+     "min_margin": 0.02495501728207694,
+     "value": 1.1429892032873137,
+     "limit": 1.1679442205693906,
+     "kind": "max",
+     "at": "bwb training_focus 97 Re 3.0e+05",
+     "used_max": 0.8514088951827544
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009967838277821217,
+     "value": 1.0000321617221788,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "tapered training_focus 25 Re 3.0e+05",
+     "used_max": 0.0803188030647395
+    },
+    "planar_stations": {
+     "min_margin": 9.999928945726425e-10,
+     "value": 7.105427357601002e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "cranked corner1 7 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.04432113150372084,
+     "value": 0.09432113150372085,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5301039035778273
+    },
+    "cap_quads": {
+     "min_margin": 0.007310350596040398,
+     "value": 0.0573103505960404,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.872442752137945
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.022785140596674813,
+     "value": 0.022785140596674813,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 396.0,
+     "limit": 396.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 9.536368157509173,
+    "median": 9.830075783404242,
+    "max": 10.017865374000191,
+    "n": 782
+   },
+   "wing_quads_J": {
+    "min": 0.09432113150372085,
+    "median": 0.9270839179927185,
+    "max": 0.9994400125537019,
+    "n": 782
+   },
+   "cap_quads_J": {
+    "min": 0.0573103505960404,
+    "median": 0.11017188370656357,
+    "max": 0.33569756759143216,
+    "n": 782
+   },
+   "chord_growth": {
+    "min": 1.1140672932944824,
+    "median": 1.1145316277175947,
+    "max": 1.1163041773160325,
+    "n": 782
+   },
+   "span_growth": {
+    "min": 1.1130331016037263,
+    "median": 1.1163660280553955,
+    "max": 1.1429892032873137,
+    "n": 782
+   },
+   "tip_gap": {
+    "min": 0.9839362393870521,
+    "median": 0.9931743438012219,
+    "max": 1.0000321617221788,
+    "n": 782
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 270.0,
+      "median": 396.0,
+      "max": 398.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 83.0,
+      "median": 100.0,
+      "max": 129.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 23834.0,
+      "median": 41384.0,
+      "max": 53264.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 1520128.0,
+      "median": 2978817.5,
+      "max": 4691596.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 5.4,
+      "median": 7.455,
+      "max": 9.96,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.09432113150372085,
+      "median": 0.8193442415393293,
+      "max": 0.937296384417463,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.0573103505960404,
+      "median": 0.07747852716776346,
+      "max": 0.3190030191337653,
+      "n": 200
+     }
+    },
+    "flying_wing": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 226.0,
+      "median": 372.0,
+      "max": 398.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 82.0,
+      "median": 98.0,
+      "max": 129.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 19692.0,
+      "median": 38386.0,
+      "max": 51914.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 1196271.0,
+      "median": 2634903.0,
+      "max": 4557168.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 5.63,
+      "median": 7.38,
+      "max": 10.25,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.484687415378124,
+      "median": 0.8867660828786811,
+      "max": 0.9927446630892274,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.0634287435133574,
+      "median": 0.08547003830122352,
+      "max": 0.316327017019977,
+      "n": 191
+     }
+    },
+    "cranked": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 198.0,
+      "median": 344.0,
+      "max": 396.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 86.0,
+      "median": 101.0,
+      "max": 136.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 18020.0,
+      "median": 37143.0,
+      "max": 52060.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 1076100.0,
+      "median": 2531712.5,
+      "max": 4339302.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 5.18,
+      "median": 7.0,
+      "max": 9.47,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.39050191849373667,
+      "median": 0.9797421805226816,
+      "max": 0.9965183917589027,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.07136497216434329,
+      "median": 0.31289401558931285,
+      "max": 0.33569756759143216,
+      "n": 200
+     }
+    },
+    "tapered": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 200.0,
+      "median": 350.0,
+      "max": 396.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 83.0,
+      "median": 101.0,
+      "max": 133.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 17604.0,
+      "median": 37196.0,
+      "max": 50956.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 1068842.0,
+      "median": 2539545.0,
+      "max": 4421688.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 5.43,
+      "median": 6.97,
+      "max": 9.74,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.5648779648629169,
+      "median": 0.9851899068601335,
+      "max": 0.9994400125537019,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.06980219364883083,
+      "median": 0.31374476997571354,
+      "max": 0.3313049896844557,
+      "n": 191
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 198.0,
+      "median": 218.0,
+      "max": 290.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 82.0,
+      "median": 89.0,
+      "max": 101.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1068842.0,
+      "median": 1286641.0,
+      "max": 1834560.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 334.0,
+      "median": 367.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 91.0,
+      "median": 99.0,
+      "max": 110.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2269296.0,
+      "median": 2684279.0,
+      "max": 3086352.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 368.0,
+      "median": 377.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 102.0,
+      "median": 109.0,
+      "max": 121.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 3065678.0,
+      "median": 3414528.0,
+      "max": 3792096.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 368.0,
+      "median": 377.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 114.0,
+      "median": 121.0,
+      "max": 133.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 3846966.0,
+      "median": 4201056.0,
+      "max": 4691596.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "F": {
+   "builds": 782,
+   "passed": 782,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 254.0,
+    "median": 476.0,
+    "max": 514.0,
+    "n": 782
+   },
+   "n_span": {
+    "min": 106.0,
+    "median": 131.0,
+    "max": 177.0,
+    "n": 782
+   },
+   "quads": {
+    "min": 29372.0,
+    "median": 65840.0,
+    "max": 89788.0,
+    "n": 782
+   },
+   "cap_quads": {
+    "min": 1962.0,
+    "median": 3960.0,
+    "max": 4302.0,
+    "n": 782
+   },
+   "seconds": {
+    "min": 7.02,
+    "median": 9.34,
+    "max": 13.78,
+    "n": 782
+   },
+   "cells_est": {
+    "min": 2282670.0,
+    "median": 5913900.0,
+    "max": 10213490.0,
+    "n": 782
+   },
+   "wall_layers": {
+    "min": 78.0,
+    "median": 89.0,
+    "max": 118.0,
+    "n": 782
+   },
+   "ram_gib": {
+    "min": 23.104058200000004,
+    "median": 57.45549400000001,
+    "max": 98.1296154,
+    "n": 782
+   },
+   "fits_desktop": 0,
+   "fits_desktop_36": 75,
+   "nose_solved_at_stations": {
+    "F": 92427,
+    "M": 10415
+   },
+   "nose_set_by_stations": {
+    "F": 92427,
+    "M": 10415
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 755,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.1741640447277062,
+     "value": 7.718143647579986,
+     "limit": 7.892307692307692,
+     "kind": "max",
+     "at": "tapered training_full 22 Re 3.0e+05",
+     "used_max": 0.9779324309799202
+    },
+    "geometry_kinks": {
+     "min_margin": 7.892307692307692,
+     "value": 0.0,
+     "limit": 7.892307692307692,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.1578107382211329,
+     "value": 1.003689261778867,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "tapered training_full 38 Re 3.0e+05",
+     "used_max": 0.02284372618493549
+    },
+    "chord_growth": {
+     "min_margin": 0.029544606039030974,
+     "value": 1.08842894693826,
+     "limit": 1.117973552977291,
+     "kind": "max",
+     "at": "cranked training_full 13 Re 3.0e+05",
+     "used_max": 0.7495658535882352
+    },
+    "band_spacing": {
+     "min_margin": 0.010004064210895836,
+     "value": 0.9999959357891042,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_focus 59 Re 3.0e+05",
+     "used_max": -0.0004064210895826644
+    },
+    "te_spacing": {
+     "min_margin": 0.009409211891877378,
+     "value": 1.0005907881081226,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb training_full 23 Re 3.0e+05",
+     "used_max": 0.059078810812263016
+    },
+    "span_growth": {
+     "min_margin": 0.01951110436247494,
+     "value": 1.107331231849722,
+     "limit": 1.1268423362121969,
+     "kind": "max",
+     "at": "bwb training_focus 58 Re 3.0e+05",
+     "used_max": 0.8461782954719909
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009972267944806212,
+     "value": 1.0000277320551938,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "bwb training_focus 56 Re 3.0e+05",
+     "used_max": 0.05901301014258288
+    },
+    "planar_stations": {
+     "min_margin": 9.99991118215803e-10,
+     "value": 8.881784197001252e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "tapered corner2 3 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.044350607475188625,
+     "value": 0.09435060747518863,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5299382943893446
+    },
+    "cap_quads": {
+     "min_margin": 0.01072406152680868,
+     "value": 0.06072406152680868,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.8233968338551567
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.019119095137721778,
+     "value": 0.019119095137721778,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 512.0,
+     "limit": 512.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 7.598851031542974,
+    "median": 7.672753457293313,
+    "max": 7.718143647579986,
+    "n": 782
+   },
+   "wing_quads_J": {
+    "min": 0.09435060747518863,
+    "median": 0.9271354845276869,
+    "max": 0.9994403532228452,
+    "n": 782
+   },
+   "cap_quads_J": {
+    "min": 0.06072406152680868,
+    "median": 0.11271923256317262,
+    "max": 0.3136012770382902,
+    "n": 782
+   },
+   "chord_growth": {
+    "min": 1.0867405936218337,
+    "median": 1.0868396452279891,
+    "max": 1.08842894693826,
+    "n": 782
+   },
+   "span_growth": {
+    "min": 1.086340775662116,
+    "median": 1.0892266308109386,
+    "max": 1.107331231849722,
+    "n": 782
+   },
+   "tip_gap": {
+    "min": 0.9881973979714834,
+    "median": 0.9944940015395287,
+    "max": 1.0000277320551938,
+    "n": 782
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 348.0,
+      "median": 512.0,
+      "max": 514.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 108.0,
+      "median": 129.0,
+      "max": 168.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 40044.0,
+      "median": 69820.0,
+      "max": 89788.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 3314771.0,
+      "median": 6551048.0,
+      "max": 10213490.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 7.3,
+      "median": 9.65,
+      "max": 13.37,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.09435060747518863,
+      "median": 0.819347374135384,
+      "max": 0.9372984245598401,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.06072406152680868,
+      "median": 0.07948303894619023,
+      "max": 0.30543806961586173,
+      "n": 200
+     }
+    },
+    "flying_wing": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 292.0,
+      "median": 480.0,
+      "max": 514.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 106.0,
+      "median": 127.0,
+      "max": 167.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 32964.0,
+      "median": 64476.0,
+      "max": 86826.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 2595861.0,
+      "median": 5741820.0,
+      "max": 9879240.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 7.23,
+      "median": 9.61,
+      "max": 13.78,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.484722615361297,
+      "median": 0.8868093968045512,
+      "max": 0.9927447097118767,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.06678383993509458,
+      "median": 0.08711087527722303,
+      "max": 0.26643646520673725,
+      "n": 191
+     }
+    },
+    "cranked": {
+     "builds": 200,
+     "passed": 200,
+     "n_ring": {
+      "min": 254.0,
+      "median": 444.0,
+      "max": 512.0,
+      "n": 200
+     },
+     "n_span": {
+      "min": 113.0,
+      "median": 131.0,
+      "max": 177.0,
+      "n": 200
+     },
+     "quads": {
+      "min": 30410.0,
+      "median": 62356.0,
+      "max": 87736.0,
+      "n": 200
+     },
+     "cells_est": {
+      "min": 2363244.0,
+      "median": 5536378.5,
+      "max": 9540720.0,
+      "n": 200
+     },
+     "seconds": {
+      "min": 7.02,
+      "median": 9.09,
+      "max": 11.98,
+      "n": 200
+     },
+     "wing_quads_J": {
+      "min": 0.38819891843875165,
+      "median": 0.979750677358497,
+      "max": 0.9965186639758609,
+      "n": 200
+     },
+     "cap_quads_J": {
+      "min": 0.07365721491513655,
+      "median": 0.2844127236013593,
+      "max": 0.3136012770382902,
+      "n": 200
+     }
+    },
+    "tapered": {
+     "builds": 191,
+     "passed": 191,
+     "n_ring": {
+      "min": 256.0,
+      "median": 452.0,
+      "max": 512.0,
+      "n": 191
+     },
+     "n_span": {
+      "min": 108.0,
+      "median": 131.0,
+      "max": 172.0,
+      "n": 191
+     },
+     "quads": {
+      "min": 29372.0,
+      "median": 62504.0,
+      "max": 85356.0,
+      "n": 191
+     },
+     "cells_est": {
+      "min": 2282670.0,
+      "median": 5551286.0,
+      "max": 9625905.0,
+      "n": 191
+     },
+     "seconds": {
+      "min": 7.3,
+      "median": 9.08,
+      "max": 11.8,
+      "n": 191
+     },
+     "wing_quads_J": {
+      "min": 0.5648909787107202,
+      "median": 0.9851986522734353,
+      "max": 0.9994403532228452,
+      "n": 191
+     },
+     "cap_quads_J": {
+      "min": 0.07231150198565424,
+      "median": 0.28341610043309284,
+      "max": 0.3090557010576601,
+      "n": 191
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 254.0,
+      "median": 281.0,
+      "max": 374.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 106.0,
+      "median": 116.0,
+      "max": 131.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2282670.0,
+      "median": 2795671.0,
+      "max": 3993696.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 430.0,
+      "median": 474.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 118.0,
+      "median": 128.5,
+      "max": 143.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 4955808.0,
+      "median": 5881380.0,
+      "max": 6743184.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 476.0,
+      "median": 487.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 132.0,
+      "median": 142.0,
+      "max": 157.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 6713500.0,
+      "median": 7448800.5,
+      "max": 8283450.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 476.0,
+      "median": 487.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 147.0,
+      "median": 157.5,
+      "max": 172.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 8370320.0,
+      "median": 9212494.5,
+      "max": 10213490.0,
+      "n": 20
+     }
+    }
+   }
+  }
+ },
+ "full_re3e5": {
+  "VC": {
+   "builds": 722,
+   "passed": 722,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 186.0,
+    "median": 220.0,
+    "max": 240.0,
+    "n": 722
+   },
+   "n_span": {
+    "min": 52.0,
+    "median": 63.0,
+    "max": 84.0,
+    "n": 722
+   },
+   "quads": {
+    "min": 11282.0,
+    "median": 14456.0,
+    "max": 19690.0,
+    "n": 722
+   },
+   "cap_quads": {
+    "min": 680.0,
+    "median": 816.0,
+    "max": 896.0,
+    "n": 722
+   },
+   "seconds": {
+    "min": 2.94,
+    "median": 4.5,
+    "max": 6.9,
+    "n": 722
+   },
+   "cells_est": {
+    "min": 449000.0,
+    "median": 593627.0,
+    "max": 882495.0,
+    "n": 722
+   },
+   "wall_layers": {
+    "min": 40.0,
+    "median": 41.0,
+    "max": 45.0,
+    "n": 722
+   },
+   "ram_gib": {
+    "min": 5.75754,
+    "median": 7.12571142,
+    "max": 9.858402700000001,
+    "n": 722
+   },
+   "fits_desktop": 722,
+   "fits_desktop_36": 722,
+   "nose_solved_at_stations": {
+    "F": 40479,
+    "M": 4970
+   },
+   "nose_set_by_stations": {
+    "F": 40479,
+    "M": 4970
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 647,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.9864295875309104,
+     "value": 16.11357041246909,
+     "limit": 17.1,
+     "kind": "max",
+     "at": "bwb training_full 9 Re 3.0e+05",
+     "used_max": 0.9423140592087187
+    },
+    "geometry_kinks": {
+     "min_margin": 17.1,
+     "value": 0.0,
+     "limit": 17.1,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15533145117828018,
+     "value": 1.0061685488217198,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.038195348741299075
+    },
+    "chord_growth": {
+     "min_margin": 0.06088918246838948,
+     "value": 1.2016108175316105,
+     "limit": 1.2625,
+     "kind": "max",
+     "at": "bwb corner1 4 Re 3.0e+05",
+     "used_max": 0.7680412096442305
+    },
+    "band_spacing": {
+     "min_margin": 0.010046781966559504,
+     "value": 0.9999532180334405,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_focus 4 Re 3.0e+05",
+     "used_max": -0.00467819665594948
+    },
+    "te_spacing": {
+     "min_margin": 0.0097653725187834,
+     "value": 1.0002346274812166,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked corner2 3 Re 3.0e+05",
+     "used_max": 0.023462748121660916
+    },
+    "span_growth": {
+     "min_margin": 0.06930334173520714,
+     "value": 1.230696658264793,
+     "limit": 1.3,
+     "kind": "max",
+     "at": "bwb training_focus 92 Re 3.0e+05",
+     "used_max": 0.768988860882643
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009981990524430495,
+     "value": 1.0000180094755695,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "flying_wing training_focus 46 Re 3.0e+05",
+     "used_max": 0.12961423873999348
+    },
+    "planar_stations": {
+     "min_margin": 9.999928945726425e-10,
+     "value": 7.105427357601002e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "cranked corner1 7 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.04424354535671593,
+     "value": 0.09424354535671593,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5305403124505538
+    },
+    "cap_quads": {
+     "min_margin": 0.03801620544536641,
+     "value": 0.08801620544536641,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "flying_wing training_full 6 Re 3.0e+05",
+     "used_max": 0.5680772051805403
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.029587237525059058,
+     "value": 0.029587237525059058,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 238.0,
+     "limit": 238.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 14.628956172651856,
+    "median": 15.857488415313442,
+    "max": 16.11357041246909,
+    "n": 722
+   },
+   "wing_quads_J": {
+    "min": 0.09424354535671593,
+    "median": 0.9269429927486643,
+    "max": 0.9994389175672508,
+    "n": 722
+   },
+   "cap_quads_J": {
+    "min": 0.08801620544536641,
+    "median": 0.1271972697891548,
+    "max": 0.39750201065003377,
+    "n": 722
+   },
+   "chord_growth": {
+    "min": 1.2001669293482353,
+    "median": 1.2003704467815886,
+    "max": 1.2016108175316105,
+    "n": 722
+   },
+   "span_growth": {
+    "min": 1.1949681649311967,
+    "median": 1.199102060807257,
+    "max": 1.230696658264793,
+    "n": 722
+   },
+   "tip_gap": {
+    "min": 0.9740771522520013,
+    "median": 0.9876685710267299,
+    "max": 1.0000180094755695,
+    "n": 722
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 230.0,
+      "median": 238.0,
+      "max": 240.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 56.0,
+      "median": 62.0,
+      "max": 80.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 13860.0,
+      "median": 15406.0,
+      "max": 19690.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 589302.0,
+      "median": 659835.0,
+      "max": 882495.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 3.35,
+      "median": 4.68,
+      "max": 5.87,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.09424354535671593,
+      "median": 0.8206936547563372,
+      "max": 0.9372873782307126,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.097726334157004,
+      "median": 0.09899182094719598,
+      "max": 0.3456064645298607,
+      "n": 185
+     }
+    },
+    "flying_wing": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 198.0,
+      "median": 224.0,
+      "max": 240.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 52.0,
+      "median": 61.0,
+      "max": 76.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 12416.0,
+      "median": 14272.0,
+      "max": 16928.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 494400.0,
+      "median": 582692.0,
+      "max": 708120.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 3.51,
+      "median": 4.575,
+      "max": 6.18,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.48460329569355776,
+      "median": 0.8825088919416015,
+      "max": 0.9927444590073281,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.08801620544536641,
+      "median": 0.10364260677681403,
+      "max": 0.34459021000960127,
+      "n": 176
+     }
+    },
+    "cranked": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 186.0,
+      "median": 206.0,
+      "max": 238.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 55.0,
+      "median": 63.0,
+      "max": 84.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 11282.0,
+      "median": 13736.0,
+      "max": 19076.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 449000.0,
+      "median": 560675.0,
+      "max": 816699.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 3.26,
+      "median": 4.38,
+      "max": 6.9,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.3913508716613334,
+      "median": 0.9784406930481343,
+      "max": 0.9965177013029015,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.09176827958376402,
+      "median": 0.33802830574767523,
+      "max": 0.3970733993360859,
+      "n": 185
+     }
+    },
+    "tapered": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 186.0,
+      "median": 210.0,
+      "max": 238.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 55.0,
+      "median": 63.0,
+      "max": 79.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 11404.0,
+      "median": 13796.0,
+      "max": 18188.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 453880.0,
+      "median": 563094.0,
+      "max": 760788.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 2.94,
+      "median": 4.4,
+      "max": 5.82,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.5648410946871834,
+      "median": 0.9850562480953541,
+      "max": 0.9994389175672508,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.08993546374821508,
+      "median": 0.3388201154605924,
+      "max": 0.39750201065003377,
+      "n": 176
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 20,
+     "passed": 20
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "3.0e+05": {
+     "n_ring": {
+      "min": 200.0,
+      "median": 220.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 57.0,
+      "median": 61.5,
+      "max": 68.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 505243.0,
+      "median": 593167.5,
+      "max": 680217.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "C": {
+   "builds": 722,
+   "passed": 722,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 238.0,
+    "median": 284.0,
+    "max": 308.0,
+    "n": 722
+   },
+   "n_span": {
+    "min": 65.0,
+    "median": 80.0,
+    "max": 108.0,
+    "n": 722
+   },
+   "quads": {
+    "min": 18226.0,
+    "median": 23756.0,
+    "max": 32336.0,
+    "n": 722
+   },
+   "cap_quads": {
+    "min": 1090.0,
+    "median": 1320.0,
+    "max": 1440.0,
+    "n": 722
+   },
+   "seconds": {
+    "min": 4.05,
+    "median": 5.695,
+    "max": 8.05,
+    "n": 722
+   },
+   "cells_est": {
+    "min": 944008.0,
+    "median": 1254881.0,
+    "max": 1901865.0,
+    "n": 722
+   },
+   "wall_layers": {
+    "min": 52.0,
+    "median": 53.0,
+    "max": 59.0,
+    "n": 722
+   },
+   "ram_gib": {
+    "min": 10.440315680000001,
+    "median": 13.381174260000002,
+    "max": 19.501642900000004,
+    "n": 722
+   },
+   "fits_desktop": 244,
+   "fits_desktop_36": 722,
+   "nose_solved_at_stations": {
+    "F": 51541,
+    "M": 6146
+   },
+   "nose_set_by_stations": {
+    "F": 51541,
+    "M": 6146
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 681,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.43263605115716786,
+     "value": 12.767363948842831,
+     "limit": 13.2,
+     "kind": "max",
+     "at": "bwb training_full 9 Re 3.0e+05",
+     "used_max": 0.9672245415790024
+    },
+    "geometry_kinks": {
+     "min_margin": 13.2,
+     "value": 0.0,
+     "limit": 13.2,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.1567726408197614,
+     "value": 1.0047273591802386,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.029271573871446372
+    },
+    "chord_growth": {
+     "min_margin": 0.04764258518725284,
+     "value": 1.151490919425333,
+     "limit": 1.199133504612586,
+     "kind": "max",
+     "at": "flying_wing training_full 7 Re 3.0e+05",
+     "used_max": 0.7607505312582057
+    },
+    "band_spacing": {
+     "min_margin": 0.010018127457910864,
+     "value": 0.9999818725420891,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "flying_wing training_focus 22 Re 3.0e+05",
+     "used_max": -0.0018127457910854779
+    },
+    "te_spacing": {
+     "min_margin": 0.009642372463910531,
+     "value": 1.0003576275360895,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb training_focus 15 Re 3.0e+05",
+     "used_max": 0.03576275360894773
+    },
+    "span_growth": {
+     "min_margin": 0.04315724916728314,
+     "value": 1.1804688525552278,
+     "limit": 1.223626101722511,
+     "kind": "max",
+     "at": "tapered training_full 0 Re 3.0e+05",
+     "used_max": 0.80701157496885
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009945982546800902,
+     "value": 1.000054017453199,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.11472711230422208
+    },
+    "planar_stations": {
+     "min_margin": 9.99991118215803e-10,
+     "value": 8.881784197001252e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "cranked corner2 1 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.04428095782818764,
+     "value": 0.09428095782818764,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5303297839964377
+    },
+    "cap_quads": {
+     "min_margin": 0.04296174470566501,
+     "value": 0.09296174470566501,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "flying_wing training_full 6 Re 3.0e+05",
+     "used_max": 0.5378556540468312
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.02518414387289996,
+     "value": 0.02518414387289996,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 306.0,
+     "limit": 306.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 11.870283591622748,
+    "median": 12.527079820732258,
+    "max": 12.767363948842831,
+    "n": 722
+   },
+   "wing_quads_J": {
+    "min": 0.09428095782818764,
+    "median": 0.9270346623565716,
+    "max": 0.9994396235668105,
+    "n": 722
+   },
+   "cap_quads_J": {
+    "min": 0.09296174470566501,
+    "median": 0.13185832691746224,
+    "max": 0.4039346457340061,
+    "n": 722
+   },
+   "chord_growth": {
+    "min": 1.1506346955374802,
+    "median": 1.151095408948263,
+    "max": 1.151490919425333,
+    "n": 722
+   },
+   "span_growth": {
+    "min": 1.1475198769833208,
+    "median": 1.1513738389748611,
+    "max": 1.1804688525552278,
+    "n": 722
+   },
+   "tip_gap": {
+    "min": 0.9770545775391556,
+    "median": 0.9912788406647939,
+    "max": 1.000054017453199,
+    "n": 722
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 294.0,
+      "median": 306.0,
+      "max": 308.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 72.0,
+      "median": 79.0,
+      "max": 102.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 22852.0,
+      "median": 25060.0,
+      "max": 32336.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 1246590.0,
+      "median": 1395240.0,
+      "max": 1901865.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 4.78,
+      "median": 5.86,
+      "max": 7.46,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.09428095782818764,
+      "median": 0.8211129685753447,
+      "max": 0.9372930431523483,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.10142457413600146,
+      "median": 0.1029609547893537,
+      "max": 0.3567646946749287,
+      "n": 185
+     }
+    },
+    "flying_wing": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 256.0,
+      "median": 288.0,
+      "max": 308.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 65.0,
+      "median": 78.0,
+      "max": 97.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 20194.0,
+      "median": 23267.0,
+      "max": 27868.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 1050244.0,
+      "median": 1231084.0,
+      "max": 1500174.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 4.31,
+      "median": 5.8149999999999995,
+      "max": 8.05,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.48465798315911646,
+      "median": 0.8825637842816467,
+      "max": 0.9927445872445559,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.09296174470566501,
+      "median": 0.1079368597676032,
+      "max": 0.35409816446240866,
+      "n": 176
+     }
+    },
+    "cranked": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 238.0,
+      "median": 264.0,
+      "max": 306.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 70.0,
+      "median": 80.0,
+      "max": 108.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 18226.0,
+      "median": 22550.0,
+      "max": 31708.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 944008.0,
+      "median": 1193613.0,
+      "max": 1769656.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 4.05,
+      "median": 5.48,
+      "max": 7.24,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.39113692697946667,
+      "median": 0.9784413622689436,
+      "max": 0.9965181457474866,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.09593921679023669,
+      "median": 0.35003237182873564,
+      "max": 0.4039346457340061,
+      "n": 185
+     }
+    },
+    "tapered": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 238.0,
+      "median": 270.0,
+      "max": 306.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 70.0,
+      "median": 80.0,
+      "max": 100.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 18776.0,
+      "median": 22580.0,
+      "max": 29900.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 972556.0,
+      "median": 1192553.0,
+      "max": 1609470.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 4.39,
+      "median": 5.57,
+      "max": 7.46,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.5648648834933293,
+      "median": 0.9850888740142477,
+      "max": 0.9994396235668105,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.09437449914289794,
+      "median": 0.3508248982509584,
+      "max": 0.40272648042509285,
+      "n": 176
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 20,
+     "passed": 20
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "3.0e+05": {
+     "n_ring": {
+      "min": 258.0,
+      "median": 284.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 73.0,
+      "median": 78.0,
+      "max": 87.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1082207.0,
+      "median": 1258061.0,
+      "max": 1463560.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "M": {
+   "builds": 722,
+   "passed": 722,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 310.0,
+    "median": 368.0,
+    "max": 398.0,
+    "n": 722
+   },
+   "n_span": {
+    "min": 83.0,
+    "median": 100.0,
+    "max": 136.0,
+    "n": 722
+   },
+   "quads": {
+    "min": 30184.0,
+    "median": 39163.0,
+    "max": 53264.0,
+    "n": 722
+   },
+   "cap_quads": {
+    "min": 1974.0,
+    "median": 2380.0,
+    "max": 2590.0,
+    "n": 722
+   },
+   "seconds": {
+    "min": 5.29,
+    "median": 7.22,
+    "max": 10.23,
+    "n": 722
+   },
+   "cells_est": {
+    "min": 2016231.0,
+    "median": 2696520.0,
+    "max": 4038336.0,
+    "n": 722
+   },
+   "wall_layers": {
+    "min": 67.0,
+    "median": 69.0,
+    "max": 76.0,
+    "n": 722
+   },
+   "ram_gib": {
+    "min": 20.583545260000005,
+    "median": 27.019079200000004,
+    "max": 39.71265856,
+    "n": 722
+   },
+   "fits_desktop": 0,
+   "fits_desktop_36": 722,
+   "nose_solved_at_stations": {
+    "F": 65256,
+    "M": 7424
+   },
+   "nose_set_by_stations": {
+    "F": 65256,
+    "M": 7424
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 690,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.182134625999808,
+     "value": 10.017865374000191,
+     "limit": 10.2,
+     "kind": "max",
+     "at": "flying_wing training_full 37 Re 3.0e+05",
+     "used_max": 0.9821436641176658
+    },
+    "geometry_kinks": {
+     "min_margin": 10.2,
+     "value": 0.0,
+     "limit": 10.2,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15748775357214218,
+     "value": 1.0040122464278578,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb corner1 2 Re 3.0e+05",
+     "used_max": 0.024843631132246455
+    },
+    "chord_growth": {
+     "min_margin": 0.03625856567632679,
+     "value": 1.1163041773160325,
+     "limit": 1.1525627429923593,
+     "kind": "max",
+     "at": "bwb training_full 18 Re 3.0e+05",
+     "used_max": 0.7623366952825258
+    },
+    "band_spacing": {
+     "min_margin": 0.010027737757361876,
+     "value": 0.9999722622426381,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_focus 56 Re 3.0e+05",
+     "used_max": -0.002773775736186754
+    },
+    "te_spacing": {
+     "min_margin": 0.009574305097227231,
+     "value": 1.0004256949027728,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_full 18 Re 3.0e+05",
+     "used_max": 0.04256949027727771
+    },
+    "span_growth": {
+     "min_margin": 0.02495501728207694,
+     "value": 1.1429892032873137,
+     "limit": 1.1679442205693906,
+     "kind": "max",
+     "at": "bwb training_focus 97 Re 3.0e+05",
+     "used_max": 0.8514088951827544
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009967838277821217,
+     "value": 1.0000321617221788,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "tapered training_focus 25 Re 3.0e+05",
+     "used_max": 0.0803188030647395
+    },
+    "planar_stations": {
+     "min_margin": 9.999928945726425e-10,
+     "value": 7.105427357601002e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "cranked corner1 7 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.04432113150372084,
+     "value": 0.09432113150372085,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5301039035778273
+    },
+    "cap_quads": {
+     "min_margin": 0.01826520437170588,
+     "value": 0.06826520437170588,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "flying_wing training_full 6 Re 3.0e+05",
+     "used_max": 0.73243756405897
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.022785140596674813,
+     "value": 0.022785140596674813,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 396.0,
+     "limit": 396.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 9.536368157509173,
+    "median": 9.82996567821898,
+    "max": 10.017865374000191,
+    "n": 722
+   },
+   "wing_quads_J": {
+    "min": 0.09432113150372085,
+    "median": 0.9270839179927185,
+    "max": 0.9994400125537019,
+    "n": 722
+   },
+   "cap_quads_J": {
+    "min": 0.06826520437170588,
+    "median": 0.11017188370656357,
+    "max": 0.33569756759143216,
+    "n": 722
+   },
+   "chord_growth": {
+    "min": 1.1140672932944824,
+    "median": 1.1145327410339259,
+    "max": 1.1163041773160325,
+    "n": 722
+   },
+   "span_growth": {
+    "min": 1.1130331016037263,
+    "median": 1.1163361887723848,
+    "max": 1.1429892032873137,
+    "n": 722
+   },
+   "tip_gap": {
+    "min": 0.9839362393870521,
+    "median": 0.993067535932017,
+    "max": 1.0000321617221788,
+    "n": 722
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 382.0,
+      "median": 396.0,
+      "max": 398.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 90.0,
+      "median": 99.0,
+      "max": 129.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 37436.0,
+      "median": 41384.0,
+      "max": 53264.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 2665411.0,
+      "median": 2972592.0,
+      "max": 4038336.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 5.4,
+      "median": 7.45,
+      "max": 9.22,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.09432113150372085,
+      "median": 0.8214489837742625,
+      "max": 0.937296384417463,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.07629469905086,
+      "median": 0.07747867196891121,
+      "max": 0.3190030191337653,
+      "n": 185
+     }
+    },
+    "flying_wing": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 330.0,
+      "median": 372.0,
+      "max": 398.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 83.0,
+      "median": 98.0,
+      "max": 122.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 32924.0,
+      "median": 38219.0,
+      "max": 45668.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 2233052.0,
+      "median": 2626657.5,
+      "max": 3143502.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 5.84,
+      "median": 7.35,
+      "max": 10.23,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.484687415378124,
+      "median": 0.8826027170916,
+      "max": 0.9927446630892274,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.06826520437170588,
+      "median": 0.08547003830119415,
+      "max": 0.316327017019977,
+      "n": 176
+     }
+    },
+    "cranked": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 310.0,
+      "median": 342.0,
+      "max": 396.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 87.0,
+      "median": 101.0,
+      "max": 136.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 30184.0,
+      "median": 36878.0,
+      "max": 52060.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 2016231.0,
+      "median": 2522868.0,
+      "max": 3738600.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 5.29,
+      "median": 7.0,
+      "max": 9.16,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.39050191849373667,
+      "median": 0.9784414242456225,
+      "max": 0.9965183917589027,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.07136497216434329,
+      "median": 0.3126748471020948,
+      "max": 0.33569756759143216,
+      "n": 185
+     }
+    },
+    "tapered": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 310.0,
+      "median": 350.0,
+      "max": 396.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 88.0,
+      "median": 101.0,
+      "max": 128.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 30890.0,
+      "median": 37033.0,
+      "max": 48944.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 2063466.0,
+      "median": 2539545.0,
+      "max": 3417750.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 5.43,
+      "median": 6.9399999999999995,
+      "max": 9.74,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.5648779648629169,
+      "median": 0.9851137175220872,
+      "max": 0.9994400125537019,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.06980219364883083,
+      "median": 0.31331116202884957,
+      "max": 0.3313049896844557,
+      "n": 176
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 20,
+     "passed": 20
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "3.0e+05": {
+     "n_ring": {
+      "min": 334.0,
+      "median": 367.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 91.0,
+      "median": 99.0,
+      "max": 110.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2269296.0,
+      "median": 2684279.0,
+      "max": 3086352.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "F": {
+   "builds": 722,
+   "passed": 722,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 722,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 400.0,
+    "median": 476.0,
+    "max": 514.0,
+    "n": 722
+   },
+   "n_span": {
+    "min": 108.0,
+    "median": 131.0,
+    "max": 177.0,
+    "n": 722
+   },
+   "quads": {
+    "min": 50876.0,
+    "median": 65840.0,
+    "max": 89788.0,
+    "n": 722
+   },
+   "cap_quads": {
+    "min": 3276.0,
+    "median": 3960.0,
+    "max": 4302.0,
+    "n": 722
+   },
+   "seconds": {
+    "min": 7.02,
+    "median": 9.31,
+    "max": 13.37,
+    "n": 722
+   },
+   "cells_est": {
+    "min": 4415859.0,
+    "median": 5902122.0,
+    "max": 8872479.0,
+    "n": 722
+   },
+   "wall_layers": {
+    "min": 87.0,
+    "median": 89.0,
+    "max": 99.0,
+    "n": 722
+   },
+   "ram_gib": {
+    "min": 43.28402614,
+    "median": 57.34407412,
+    "max": 85.44365134,
+    "n": 722
+   },
+   "fits_desktop": 0,
+   "fits_desktop_36": 55,
+   "nose_solved_at_stations": {
+    "F": 84738,
+    "M": 9739
+   },
+   "nose_set_by_stations": {
+    "F": 84738,
+    "M": 9739
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 695,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.1741640447277062,
+     "value": 7.718143647579986,
+     "limit": 7.892307692307692,
+     "kind": "max",
+     "at": "tapered training_full 22 Re 3.0e+05",
+     "used_max": 0.9779324309799202
+    },
+    "geometry_kinks": {
+     "min_margin": 7.892307692307692,
+     "value": 0.0,
+     "limit": 7.892307692307692,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.1578107382211329,
+     "value": 1.003689261778867,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "tapered training_full 38 Re 3.0e+05",
+     "used_max": 0.02284372618493549
+    },
+    "chord_growth": {
+     "min_margin": 0.029544606039030974,
+     "value": 1.08842894693826,
+     "limit": 1.117973552977291,
+     "kind": "max",
+     "at": "cranked training_full 13 Re 3.0e+05",
+     "used_max": 0.7495658535882352
+    },
+    "band_spacing": {
+     "min_margin": 0.010004064210895836,
+     "value": 0.9999959357891042,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "cranked training_focus 59 Re 3.0e+05",
+     "used_max": -0.0004064210895826644
+    },
+    "te_spacing": {
+     "min_margin": 0.009409211891877378,
+     "value": 1.0005907881081226,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb training_full 23 Re 3.0e+05",
+     "used_max": 0.059078810812263016
+    },
+    "span_growth": {
+     "min_margin": 0.01951110436247494,
+     "value": 1.107331231849722,
+     "limit": 1.1268423362121969,
+     "kind": "max",
+     "at": "bwb training_focus 58 Re 3.0e+05",
+     "used_max": 0.8461782954719909
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009972267944806212,
+     "value": 1.0000277320551938,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "bwb training_focus 56 Re 3.0e+05",
+     "used_max": 0.05901301014258288
+    },
+    "planar_stations": {
+     "min_margin": 9.99991118215803e-10,
+     "value": 8.881784197001252e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "tapered corner2 3 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.044350607475188625,
+     "value": 0.09435060747518863,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb corner2 6 Re 3.0e+05",
+     "used_max": 0.5299382943893446
+    },
+    "cap_quads": {
+     "min_margin": 0.02070701772428435,
+     "value": 0.07070701772428435,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "flying_wing training_full 6 Re 3.0e+05",
+     "used_max": 0.7071433870251819
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.019119095137721778,
+     "value": 0.019119095137721778,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "tapered training_full 8 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 512.0,
+     "limit": 512.0,
+     "kind": "eq",
+     "at": "bwb corner1 0 Re 3.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 7.598851031542974,
+    "median": 7.672698107614718,
+    "max": 7.718143647579986,
+    "n": 722
+   },
+   "wing_quads_J": {
+    "min": 0.09435060747518863,
+    "median": 0.9271354845276869,
+    "max": 0.9994403532228452,
+    "n": 722
+   },
+   "cap_quads_J": {
+    "min": 0.07070701772428435,
+    "median": 0.11271923256317262,
+    "max": 0.3136012770382902,
+    "n": 722
+   },
+   "chord_growth": {
+    "min": 1.0867405936218337,
+    "median": 1.08683964932621,
+    "max": 1.08842894693826,
+    "n": 722
+   },
+   "span_growth": {
+    "min": 1.086340775662116,
+    "median": 1.089154267051815,
+    "max": 1.107331231849722,
+    "n": 722
+   },
+   "tip_gap": {
+    "min": 0.9881973979714834,
+    "median": 0.9943943698272478,
+    "max": 1.0000277320551938,
+    "n": 722
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 492.0,
+      "median": 512.0,
+      "max": 514.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 116.0,
+      "median": 129.0,
+      "max": 168.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 62420.0,
+      "median": 69820.0,
+      "max": 89788.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 5720400.0,
+      "median": 6551048.0,
+      "max": 8872479.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 8.07,
+      "median": 9.62,
+      "max": 13.37,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.09435060747518863,
+      "median": 0.8217221862334606,
+      "max": 0.9372984245598401,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.07821621373115924,
+      "median": 0.07948311673085844,
+      "max": 0.30543806961586173,
+      "n": 185
+     }
+    },
+    "flying_wing": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 426.0,
+      "median": 480.0,
+      "max": 514.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 108.0,
+      "median": 127.0,
+      "max": 159.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 55872.0,
+      "median": 64476.0,
+      "max": 76892.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 4906440.0,
+      "median": 5727150.0,
+      "max": 6907410.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 7.23,
+      "median": 9.555,
+      "max": 12.57,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.484722615361297,
+      "median": 0.8826333871343857,
+      "max": 0.9927447097118767,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.07070701772428435,
+      "median": 0.08711056806482233,
+      "max": 0.26643646520673725,
+      "n": 176
+     }
+    },
+    "cranked": {
+     "builds": 185,
+     "passed": 185,
+     "n_ring": {
+      "min": 400.0,
+      "median": 442.0,
+      "max": 512.0,
+      "n": 185
+     },
+     "n_span": {
+      "min": 113.0,
+      "median": 131.0,
+      "max": 177.0,
+      "n": 185
+     },
+     "quads": {
+      "min": 50876.0,
+      "median": 62310.0,
+      "max": 87736.0,
+      "n": 185
+     },
+     "cells_est": {
+      "min": 4415859.0,
+      "median": 5506074.0,
+      "max": 8143080.0,
+      "n": 185
+     },
+     "seconds": {
+      "min": 7.02,
+      "median": 9.08,
+      "max": 11.89,
+      "n": 185
+     },
+     "wing_quads_J": {
+      "min": 0.38819891843875165,
+      "median": 0.9784415496505467,
+      "max": 0.9965186639758609,
+      "n": 185
+     },
+     "cap_quads_J": {
+      "min": 0.07365721491513655,
+      "median": 0.2845957383112176,
+      "max": 0.3136012770382902,
+      "n": 185
+     }
+    },
+    "tapered": {
+     "builds": 176,
+     "passed": 176,
+     "n_ring": {
+      "min": 400.0,
+      "median": 452.0,
+      "max": 512.0,
+      "n": 176
+     },
+     "n_span": {
+      "min": 115.0,
+      "median": 131.0,
+      "max": 165.0,
+      "n": 176
+     },
+     "quads": {
+      "min": 51792.0,
+      "median": 62504.0,
+      "max": 82004.0,
+      "n": 176
+     },
+     "cells_est": {
+      "min": 4495464.0,
+      "median": 5551286.0,
+      "max": 7448259.0,
+      "n": 176
+     },
+     "seconds": {
+      "min": 7.3,
+      "median": 9.06,
+      "max": 11.38,
+      "n": 176
+     },
+     "wing_quads_J": {
+      "min": 0.5648909787107202,
+      "median": 0.9851359567621438,
+      "max": 0.9994403532228452,
+      "n": 176
+     },
+     "cap_quads_J": {
+      "min": 0.07231150198565424,
+      "median": 0.283420007049693,
+      "max": 0.3090557010576601,
+      "n": 176
+     }
+    }
+   },
+   "by_set": {
+    "corner1": {
+     "builds": 112,
+     "passed": 112
+    },
+    "corner2": {
+     "builds": 30,
+     "passed": 30
+    },
+    "reference": {
+     "builds": 20,
+     "passed": 20
+    },
+    "training_focus": {
+     "builds": 400,
+     "passed": 400
+    },
+    "training_full": {
+     "builds": 160,
+     "passed": 160
+    }
+   },
+   "by_re": {
+    "3.0e+05": {
+     "n_ring": {
+      "min": 430.0,
+      "median": 474.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 118.0,
+      "median": 128.5,
+      "max": 143.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 4955808.0,
+      "median": 5881380.0,
+      "max": 6743184.0,
+      "n": 20
+     }
+    }
+   }
+  }
+ },
+ "reference": {
+  "VC": {
+   "builds": 80,
+   "passed": 80,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 20,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 120.0,
+    "median": 220.0,
+    "max": 238.0,
+    "n": 80
+   },
+   "n_span": {
+    "min": 51.0,
+    "median": 65.0,
+    "max": 82.0,
+    "n": 80
+   },
+   "quads": {
+    "min": 6768.0,
+    "median": 15375.0,
+    "max": 18976.0,
+    "n": 80
+   },
+   "cap_quads": {
+    "min": 416.0,
+    "median": 816.0,
+    "max": 888.0,
+    "n": 80
+   },
+   "seconds": {
+    "min": 3.17,
+    "median": 4.645,
+    "max": 6.42,
+    "n": 80
+   },
+   "cells_est": {
+    "min": 241776.0,
+    "median": 680217.0,
+    "max": 1020600.0,
+    "n": 80
+   },
+   "wall_layers": {
+    "min": 36.0,
+    "median": 44.5,
+    "max": 54.0,
+    "n": 80
+   },
+   "ram_gib": {
+    "min": 3.7972009600000005,
+    "median": 7.94485282,
+    "max": 11.164876,
+    "n": 80
+   },
+   "fits_desktop": 80,
+   "fits_desktop_36": 80,
+   "nose_solved_at_stations": {
+    "F": 4784,
+    "M": 466
+   },
+   "nose_set_by_stations": {
+    "F": 4784,
+    "M": 466
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 66,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 1.1286665308335593,
+     "value": 15.971333469166442,
+     "limit": 17.1,
+     "kind": "max",
+     "at": "tapered reference 3 Re 1.0e+06",
+     "used_max": 0.933996109307979
+    },
+    "geometry_kinks": {
+     "min_margin": 17.1,
+     "value": 0.0,
+     "limit": 17.1,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.1579160264852506,
+     "value": 1.0035839735147494,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+06",
+     "used_max": 0.022191786469036363
+    },
+    "chord_growth": {
+     "min_margin": 0.06089009968531678,
+     "value": 1.2016099003146832,
+     "limit": 1.2625,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+06",
+     "used_max": 0.7680377154845075
+    },
+    "band_spacing": {
+     "min_margin": 0.010380729686409018,
+     "value": 0.999619270313591,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb reference 2 Re 1.0e+05",
+     "used_max": -0.038072968640900894
+    },
+    "te_spacing": {
+     "min_margin": 0.009765372519315418,
+     "value": 1.0002346274806846,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "tapered reference 1 Re 1.0e+06",
+     "used_max": 0.02346274806845903
+    },
+    "span_growth": {
+     "min_margin": 0.06672427205077303,
+     "value": 1.233275727949227,
+     "limit": 1.3,
+     "kind": "max",
+     "at": "bwb reference 3 Re 4.0e+06",
+     "used_max": 0.7775857598307566
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.009943035545252332,
+     "value": 1.0000569644547477,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "flying_wing reference 0 Re 1.0e+05",
+     "used_max": 0.14097234776298265
+    },
+    "planar_stations": {
+     "min_margin": 9.999937827510622e-10,
+     "value": 6.217248937900877e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "tapered reference 2 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.5201537460728707,
+     "value": 0.5701537460728707,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 4 Re 3.0e+05",
+     "used_max": 0.08769564410370384
+    },
+    "cap_quads": {
+     "min_margin": 0.024901884166557378,
+     "value": 0.07490188416655738,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.6675399498471399
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.061690162376695536,
+     "value": 0.061690162376695536,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "flying_wing reference 1 Re 1.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 170.0,
+     "limit": 170.0,
+     "kind": "eq",
+     "at": "bwb reference 0 Re 1.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 15.495864053797044,
+    "median": 15.913671557809693,
+    "max": 15.971333469166442,
+    "n": 80
+   },
+   "wing_quads_J": {
+    "min": 0.5701537460728707,
+    "median": 0.9246895492771776,
+    "max": 0.9954605298651478,
+    "n": 80
+   },
+   "cap_quads_J": {
+    "min": 0.07490188416655738,
+    "median": 0.2055891789815229,
+    "max": 0.34532314593086794,
+    "n": 80
+   },
+   "chord_growth": {
+    "min": 1.200248414568112,
+    "median": 1.2002721577004674,
+    "max": 1.2016099003146832,
+    "n": 80
+   },
+   "span_growth": {
+    "min": 1.1942488162131322,
+    "median": 1.1996853206461306,
+    "max": 1.233275727949227,
+    "n": 80
+   },
+   "tip_gap": {
+    "min": 0.9718055304474035,
+    "median": 0.9900771882926109,
+    "max": 1.0000569644547477,
+    "n": 80
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 164.0,
+      "median": 238.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 53.0,
+      "median": 64.5,
+      "max": 77.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 9120.0,
+      "median": 16001.0,
+      "max": 18976.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 344584.0,
+      "median": 725452.5,
+      "max": 1020600.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 3.77,
+      "median": 4.92,
+      "max": 6.42,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.5701537460728707,
+      "median": 0.815291867083102,
+      "max": 0.9148825648080005,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.07490188416655738,
+      "median": 0.09899126418739926,
+      "max": 0.09900234933326692,
+      "n": 20
+     }
+    },
+    "flying_wing": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 138.0,
+      "median": 232.0,
+      "max": 232.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 51.0,
+      "median": 65.5,
+      "max": 79.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 7388.0,
+      "median": 15760.0,
+      "max": 18960.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 264168.0,
+      "median": 682737.0,
+      "max": 1000746.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 3.78,
+      "median": 4.9399999999999995,
+      "max": 6.32,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.7758311855338079,
+      "median": 0.8866932403873317,
+      "max": 0.9345579100902446,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.07716059772134555,
+      "median": 0.10638669865393485,
+      "max": 0.10639358224733847,
+      "n": 20
+     }
+    },
+    "cranked": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 120.0,
+      "median": 212.0,
+      "max": 220.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 55.0,
+      "median": 66.5,
+      "max": 81.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 6896.0,
+      "median": 14697.0,
+      "max": 18416.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 246312.0,
+      "median": 637498.5,
+      "max": 953472.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 3.2,
+      "median": 4.4,
+      "max": 5.54,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.9027873130753664,
+      "median": 0.984332283870161,
+      "max": 0.9924054198806208,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.30478477571570733,
+      "median": 0.34207154347853574,
+      "max": 0.34532314593086794,
+      "n": 20
+     }
+    },
+    "tapered": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 122.0,
+      "median": 220.0,
+      "max": 220.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 53.0,
+      "median": 66.5,
+      "max": 82.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 6768.0,
+      "median": 15155.0,
+      "max": 18636.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 241776.0,
+      "median": 650712.5,
+      "max": 964860.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 3.17,
+      "median": 4.615,
+      "max": 5.86,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.9705509398126018,
+      "median": 0.9920313934573691,
+      "max": 0.9954605298651478,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.3057614191316926,
+      "median": 0.3453179030535234,
+      "max": 0.3453231459307906,
+      "n": 20
+     }
+    }
+   },
+   "by_set": {
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 120.0,
+      "median": 133.0,
+      "max": 176.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 51.0,
+      "median": 56.0,
+      "max": 63.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 241776.0,
+      "median": 292374.0,
+      "max": 415974.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 200.0,
+      "median": 220.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 57.0,
+      "median": 61.5,
+      "max": 68.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 505243.0,
+      "median": 593167.5,
+      "max": 680217.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 220.0,
+      "median": 226.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 63.0,
+      "median": 68.0,
+      "max": 74.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 672198.0,
+      "median": 746925.0,
+      "max": 827568.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 220.0,
+      "median": 226.0,
+      "max": 238.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 70.0,
+      "median": 75.0,
+      "max": 82.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 839592.0,
+      "median": 926250.0,
+      "max": 1020600.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "C": {
+   "builds": 80,
+   "passed": 80,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 20,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 154.0,
+    "median": 284.0,
+    "max": 306.0,
+    "n": 80
+   },
+   "n_span": {
+    "min": 66.0,
+    "median": 82.5,
+    "max": 104.0,
+    "n": 80
+   },
+   "quads": {
+    "min": 10976.0,
+    "median": 25293.0,
+    "max": 31488.0,
+    "n": 80
+   },
+   "cap_quads": {
+    "min": 670.0,
+    "median": 1320.0,
+    "max": 1430.0,
+    "n": 80
+   },
+   "seconds": {
+    "min": 4.58,
+    "median": 6.03,
+    "max": 7.85,
+    "n": 80
+   },
+   "cells_est": {
+    "min": 512770.0,
+    "median": 1455020.0,
+    "max": 2192400.0,
+    "n": 80
+   },
+   "wall_layers": {
+    "min": 47.0,
+    "median": 57.5,
+    "max": 70.0,
+    "n": 80
+   },
+   "ram_gib": {
+    "min": 6.3608042,
+    "median": 15.274489200000001,
+    "max": 22.250104000000004,
+    "n": 80
+   },
+   "fits_desktop": 28,
+   "fits_desktop_36": 80,
+   "nose_solved_at_stations": {
+    "F": 6082,
+    "M": 592
+   },
+   "nose_set_by_stations": {
+    "F": 6082,
+    "M": 592
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 76,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.48556937373371944,
+     "value": 12.71443062626628,
+     "limit": 13.2,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+05",
+     "used_max": 0.9632144413838092
+    },
+    "geometry_kinks": {
+     "min_margin": 13.2,
+     "value": 0.0,
+     "limit": 13.2,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15887098533060784,
+     "value": 1.0026290146693921,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb reference 3 Re 3.0e+05",
+     "used_max": 0.016278728603047295
+    },
+    "chord_growth": {
+     "min_margin": 0.04772425771260025,
+     "value": 1.1514092468999857,
+     "limit": 1.199133504612586,
+     "kind": "max",
+     "at": "flying_wing reference 0 Re 1.0e+05",
+     "used_max": 0.7603403917113408
+    },
+    "band_spacing": {
+     "min_margin": 0.010191682617336828,
+     "value": 0.9998083173826632,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "tapered reference 0 Re 1.0e+05",
+     "used_max": -0.019168261733681895
+    },
+    "te_spacing": {
+     "min_margin": 0.00964237246449362,
+     "value": 1.0003576275355064,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb reference 1 Re 3.0e+05",
+     "used_max": 0.035762753550638814
+    },
+    "span_growth": {
+     "min_margin": 0.047256496540705184,
+     "value": 1.1763696051818058,
+     "limit": 1.223626101722511,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+05",
+     "used_max": 0.7886807659002886
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.010007438117168754,
+     "value": 0.9999925618828313,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "tapered reference 0 Re 4.0e+06",
+     "used_max": 0.08994265211372089
+    },
+    "planar_stations": {
+     "min_margin": 9.999928945726425e-10,
+     "value": 7.105427357601002e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "tapered reference 2 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.5201536681981325,
+     "value": 0.5701536681981325,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 4 Re 1.0e+05",
+     "used_max": 0.08769565608165945
+    },
+    "cap_quads": {
+     "min_margin": 0.0303749376697056,
+     "value": 0.0803749376697056,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.6220844637599723
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.05270222158863226,
+     "value": 0.05270222158863226,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "flying_wing reference 3 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 218.0,
+     "limit": 218.0,
+     "kind": "eq",
+     "at": "bwb reference 0 Re 1.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 12.093410498316423,
+    "median": 12.55176515934064,
+    "max": 12.71443062626628,
+    "n": 80
+   },
+   "wing_quads_J": {
+    "min": 0.5701536681981325,
+    "median": 0.9248434794874567,
+    "max": 0.9954738621202438,
+    "n": 80
+   },
+   "cap_quads_J": {
+    "min": 0.0803749376697056,
+    "median": 0.21589527763282934,
+    "max": 0.3570932688054456,
+    "n": 80
+   },
+   "chord_growth": {
+    "min": 1.1507238782681217,
+    "median": 1.1508781598424693,
+    "max": 1.1514092468999857,
+    "n": 80
+   },
+   "span_growth": {
+    "min": 1.1484049984459286,
+    "median": 1.1517148554290586,
+    "max": 1.1763696051818058,
+    "n": 80
+   },
+   "tip_gap": {
+    "min": 0.9820114695772558,
+    "median": 0.9921615982417251,
+    "max": 0.9999925618828313,
+    "n": 80
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 210.0,
+      "median": 306.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 67.0,
+      "median": 82.0,
+      "max": 99.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 14810.0,
+      "median": 26216.0,
+      "max": 31418.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 722456.0,
+      "median": 1541965.0,
+      "max": 2192400.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 4.91,
+      "median": 6.155,
+      "max": 7.85,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.5701536681981325,
+      "median": 0.8155220391109042,
+      "max": 0.9151119209519367,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.0803749376697056,
+      "median": 0.10295932615705705,
+      "max": 0.10297058351228158,
+      "n": 20
+     }
+    },
+    "flying_wing": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 176.0,
+      "median": 298.0,
+      "max": 298.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 66.0,
+      "median": 83.0,
+      "max": 102.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 12220.0,
+      "median": 25740.0,
+      "max": 31488.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 571285.0,
+      "median": 1453051.0,
+      "max": 2134316.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 5.01,
+      "median": 6.295,
+      "max": 7.78,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.7759230078654238,
+      "median": 0.8867482147862613,
+      "max": 0.9345975487740121,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.08230568496431592,
+      "median": 0.11058313704354154,
+      "max": 0.11058828879911933,
+      "n": 20
+     }
+    },
+    "cranked": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 154.0,
+      "median": 273.0,
+      "max": 284.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 68.0,
+      "median": 84.5,
+      "max": 104.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 10988.0,
+      "median": 24096.0,
+      "max": 30572.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 513287.0,
+      "median": 1347063.0,
+      "max": 2041423.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 4.58,
+      "median": 5.395,
+      "max": 7.24,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.9027877707476358,
+      "median": 0.9843833110677866,
+      "max": 0.9924117894258423,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.3212022664665393,
+      "median": 0.35409152475532596,
+      "max": 0.3570932688054456,
+      "n": 20
+     }
+    },
+    "tapered": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 154.0,
+      "median": 284.0,
+      "max": 284.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 67.0,
+      "median": 84.5,
+      "max": 104.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 10976.0,
+      "median": 25034.0,
+      "max": 30572.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 512770.0,
+      "median": 1390282.5,
+      "max": 2041423.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 4.72,
+      "median": 6.115,
+      "max": 7.67,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.970611231644997,
+      "median": 0.9920419993579599,
+      "max": 0.9954738621202438,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.32120811441345226,
+      "median": 0.35708716508852856,
+      "max": 0.35709326880541753,
+      "n": 20
+     }
+    }
+   },
+   "by_set": {
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 154.0,
+      "median": 169.0,
+      "max": 226.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 66.0,
+      "median": 71.0,
+      "max": 79.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 512770.0,
+      "median": 608251.0,
+      "max": 864950.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 258.0,
+      "median": 284.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 73.0,
+      "median": 78.0,
+      "max": 87.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1082207.0,
+      "median": 1258061.0,
+      "max": 1463560.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 284.0,
+      "median": 291.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 81.0,
+      "median": 86.0,
+      "max": 95.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1430337.0,
+      "median": 1593840.0,
+      "max": 1800225.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 284.0,
+      "median": 291.0,
+      "max": 306.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 90.0,
+      "median": 95.0,
+      "max": 104.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1794930.0,
+      "median": 1978178.0,
+      "max": 2192400.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "M": {
+   "builds": 80,
+   "passed": 80,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 20,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 198.0,
+    "median": 368.0,
+    "max": 396.0,
+    "n": 80
+   },
+   "n_span": {
+    "min": 82.0,
+    "median": 104.0,
+    "max": 133.0,
+    "n": 80
+   },
+   "quads": {
+    "min": 17604.0,
+    "median": 41760.0,
+    "max": 51914.0,
+    "n": 80
+   },
+   "cap_quads": {
+    "min": 1190.0,
+    "median": 2380.0,
+    "max": 2576.0,
+    "n": 80
+   },
+   "seconds": {
+    "min": 5.18,
+    "median": 7.51,
+    "max": 10.25,
+    "n": 80
+   },
+   "cells_est": {
+    "min": 1068842.0,
+    "median": 3076015.0,
+    "max": 4691596.0,
+    "n": 80
+   },
+   "wall_layers": {
+    "min": 60.0,
+    "median": 75.0,
+    "max": 91.0,
+    "n": 80
+   },
+   "ram_gib": {
+    "min": 11.62124532,
+    "median": 30.609101900000002,
+    "max": 45.89249816,
+    "n": 80
+   },
+   "fits_desktop": 8,
+   "fits_desktop_36": 80,
+   "nose_solved_at_stations": {
+    "F": 7733,
+    "M": 694
+   },
+   "nose_set_by_stations": {
+    "F": 7733,
+    "M": 694
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 78,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.188118371495559,
+     "value": 10.01188162850444,
+     "limit": 10.2,
+     "kind": "max",
+     "at": "flying_wing reference 3 Re 1.0e+06",
+     "used_max": 0.9815570224023962
+    },
+    "geometry_kinks": {
+     "min_margin": 10.2,
+     "value": 0.0,
+     "limit": 10.2,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15920273017924602,
+     "value": 1.002297269820754,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+05",
+     "used_max": 0.014224580933461026
+    },
+    "chord_growth": {
+     "min_margin": 0.03668528085726841,
+     "value": 1.1158774621350909,
+     "limit": 1.1525627429923593,
+     "kind": "max",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.7595397137090955
+    },
+    "band_spacing": {
+     "min_margin": 0.010271724828542994,
+     "value": 0.999728275171457,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": -0.027172482854298494
+    },
+    "te_spacing": {
+     "min_margin": 0.009638755278627453,
+     "value": 1.0003612447213726,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05",
+     "used_max": 0.036124472137255524
+    },
+    "span_growth": {
+     "min_margin": 0.028451334055348942,
+     "value": 1.1394928865140417,
+     "limit": 1.1679442205693906,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+05",
+     "used_max": 0.830590573710195
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.010246914240121363,
+     "value": 0.9997530857598786,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "flying_wing reference 4 Re 3.0e+05",
+     "used_max": 0.07496691412027746
+    },
+    "planar_stations": {
+     "min_margin": 9.999928945726425e-10,
+     "value": 7.105427357601002e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "tapered reference 2 Re 3.0e+05"
+    },
+    "wing_quads": {
+     "min_margin": 0.5201537296486408,
+     "value": 0.5701537296486409,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 4 Re 1.0e+05",
+     "used_max": 0.08769564662992325
+    },
+    "cap_quads": {
+     "min_margin": 0.007310350596040398,
+     "value": 0.0573103505960404,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.872442752137945
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.04472397601057107,
+     "value": 0.04472397601057107,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "bwb reference 3 Re 1.0e+06",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 280.0,
+     "limit": 280.0,
+     "kind": "eq",
+     "at": "bwb reference 0 Re 1.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 9.798100728936902,
+    "median": 9.852297927792343,
+    "max": 10.01188162850444,
+    "n": 80
+   },
+   "wing_quads_J": {
+    "min": 0.5701537296486409,
+    "median": 0.9249786192123857,
+    "max": 0.9954799037723413,
+    "n": 80
+   },
+   "cap_quads_J": {
+    "min": 0.0573103505960404,
+    "median": 0.18606171029143545,
+    "max": 0.31896375189620846,
+    "n": 80
+   },
+   "chord_growth": {
+    "min": 1.114236889861998,
+    "median": 1.1143797663713246,
+    "max": 1.1158774621350909,
+    "n": 80
+   },
+   "span_growth": {
+    "min": 1.113589257458471,
+    "median": 1.1164943478777674,
+    "max": 1.1394928865140417,
+    "n": 80
+   },
+   "tip_gap": {
+    "min": 0.9850066171759445,
+    "median": 0.9935779316826068,
+    "max": 0.9997530857598786,
+    "n": 80
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 270.0,
+      "median": 396.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 83.0,
+      "median": 103.0,
+      "max": 125.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 23834.0,
+      "median": 42968.0,
+      "max": 51680.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1520128.0,
+      "median": 3257816.0,
+      "max": 4691596.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 6.25,
+      "median": 8.07,
+      "max": 9.96,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.5701537296486409,
+      "median": 0.8157061452831094,
+      "max": 0.9153544210952245,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.0573103505960404,
+      "median": 0.07747765961626757,
+      "max": 0.07748676196122045,
+      "n": 20
+     }
+    },
+    "flying_wing": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 226.0,
+      "median": 386.0,
+      "max": 386.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 82.0,
+      "median": 105.5,
+      "max": 129.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 19692.0,
+      "median": 42733.0,
+      "max": 51914.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1196271.0,
+      "median": 3109613.5,
+      "max": 4557168.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 5.63,
+      "median": 7.930000000000001,
+      "max": 10.25,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.7760124488646619,
+      "median": 0.88679679162167,
+      "max": 0.9346268325645927,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.0634287435133574,
+      "median": 0.08779861800316283,
+      "max": 0.08780521569125561,
+      "n": 20
+     }
+    },
+    "cranked": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 198.0,
+      "median": 354.0,
+      "max": 368.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 86.0,
+      "median": 106.5,
+      "max": 132.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 18020.0,
+      "median": 40016.0,
+      "max": 50588.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1076100.0,
+      "median": 2897929.5,
+      "max": 4339302.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 5.18,
+      "median": 7.31,
+      "max": 9.47,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.9027880755742558,
+      "median": 0.9844074721570177,
+      "max": 0.9924191741590074,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.2843182048916153,
+      "median": 0.31635542919173043,
+      "max": 0.31896375189620846,
+      "n": 20
+     }
+    },
+    "tapered": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 200.0,
+      "median": 368.0,
+      "max": 368.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 83.0,
+      "median": 106.5,
+      "max": 133.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 17604.0,
+      "median": 41156.0,
+      "max": 50956.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1068842.0,
+      "median": 2979044.5,
+      "max": 4421688.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 5.67,
+      "median": 7.3,
+      "max": 9.06,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.970646235218911,
+      "median": 0.9920538195006241,
+      "max": 0.9954799037723413,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.2848589675054854,
+      "median": 0.318955314500033,
+      "max": 0.3189636630276505,
+      "n": 20
+     }
+    }
+   },
+   "by_set": {
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 198.0,
+      "median": 218.0,
+      "max": 290.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 82.0,
+      "median": 89.0,
+      "max": 101.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 1068842.0,
+      "median": 1286641.0,
+      "max": 1834560.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 334.0,
+      "median": 367.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 91.0,
+      "median": 99.0,
+      "max": 110.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2269296.0,
+      "median": 2684279.0,
+      "max": 3086352.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 368.0,
+      "median": 377.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 102.0,
+      "median": 109.0,
+      "max": 121.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 3065678.0,
+      "median": 3414528.0,
+      "max": 3792096.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 368.0,
+      "median": 377.0,
+      "max": 396.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 114.0,
+      "median": 121.0,
+      "max": 133.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 3846966.0,
+      "median": 4201056.0,
+      "max": 4691596.0,
+      "n": 20
+     }
+    }
+   }
+  },
+  "F": {
+   "builds": 80,
+   "passed": 80,
+   "refused": 0,
+   "crashed": 0,
+   "wings": 20,
+   "failed_checks": {},
+   "repairs": 0,
+   "repair_rounds_max": 0,
+   "repaired": [],
+   "repaired_by_type": {
+    "bwb": 0,
+    "flying_wing": 0,
+    "cranked": 0,
+    "tapered": 0
+   },
+   "n_ring": {
+    "min": 254.0,
+    "median": 476.0,
+    "max": 512.0,
+    "n": 80
+   },
+   "n_span": {
+    "min": 106.0,
+    "median": 135.5,
+    "max": 172.0,
+    "n": 80
+   },
+   "quads": {
+    "min": 29372.0,
+    "median": 70364.0,
+    "max": 86826.0,
+    "n": 80
+   },
+   "cap_quads": {
+    "min": 1962.0,
+    "median": 3960.0,
+    "max": 4284.0,
+    "n": 80
+   },
+   "seconds": {
+    "min": 7.08,
+    "median": 10.094999999999999,
+    "max": 13.78,
+    "n": 80
+   },
+   "cells_est": {
+    "min": 2282670.0,
+    "median": 6728342.0,
+    "max": 10213490.0,
+    "n": 80
+   },
+   "wall_layers": {
+    "min": 78.0,
+    "median": 96.5,
+    "max": 118.0,
+    "n": 80
+   },
+   "ram_gib": {
+    "min": 23.104058200000004,
+    "median": 65.16011532000002,
+    "max": 98.1296154,
+    "n": 80
+   },
+   "fits_desktop": 0,
+   "fits_desktop_36": 21,
+   "nose_solved_at_stations": {
+    "F": 10047,
+    "M": 905
+   },
+   "nose_set_by_stations": {
+    "F": 10047,
+    "M": 905
+   },
+   "builds_with_a_VC_nose": 0,
+   "builds_with_a_C_or_M_nose": 80,
+   "checks": {
+    "nose_turning": {
+     "min_margin": 0.18986663896843314,
+     "value": 7.702441053339259,
+     "limit": 7.892307692307692,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+05",
+     "used_max": 0.9759428235225183
+    },
+    "geometry_kinks": {
+     "min_margin": 7.892307692307692,
+     "value": 0.0,
+     "limit": 7.892307692307692,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05",
+     "used_max": 0.0
+    },
+    "nose_envelope": {
+     "min_margin": 0.15961534468896454,
+     "value": 1.0018846553110354,
+     "limit": 1.1615,
+     "kind": "max",
+     "at": "bwb reference 3 Re 1.0e+05",
+     "used_max": 0.011669692328392772
+    },
+    "chord_growth": {
+     "min_margin": 0.029860298273351793,
+     "value": 1.0881132547039392,
+     "limit": 1.117973552977291,
+     "kind": "max",
+     "at": "bwb reference 0 Re 3.0e+05",
+     "used_max": 0.7468898959150643
+    },
+    "band_spacing": {
+     "min_margin": 0.010272153455515243,
+     "value": 0.9997278465444848,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "flying_wing reference 1 Re 3.0e+05",
+     "used_max": -0.02721534555152336
+    },
+    "te_spacing": {
+     "min_margin": 0.00941133436869257,
+     "value": 1.0005886656313074,
+     "limit": 1.01,
+     "kind": "max",
+     "at": "bwb reference 4 Re 1.0e+06",
+     "used_max": 0.05886656313074384
+    },
+    "span_growth": {
+     "min_margin": 0.020112570675845376,
+     "value": 1.1067297655363515,
+     "limit": 1.1268423362121969,
+     "kind": "max",
+     "at": "bwb reference 3 Re 4.0e+06",
+     "used_max": 0.8414364535024119
+    },
+    "loft_stations_hit": {
+     "min_margin": 1e-12,
+     "value": 0.0,
+     "limit": 1e-12,
+     "kind": "max",
+     "at": "bwb reference 0 Re 1.0e+05"
+    },
+    "tip_gap": {
+     "min_margin": 0.010314907927610473,
+     "value": 0.9996850920723895,
+     "limit": [
+      0.8,
+      1.01
+     ],
+     "kind": "band",
+     "at": "tapered reference 1 Re 1.0e+05",
+     "used_max": 0.0574470871906957
+    },
+    "planar_stations": {
+     "min_margin": 9.999937827510622e-10,
+     "value": 6.217248937900877e-15,
+     "limit": 1e-09,
+     "kind": "max",
+     "at": "tapered reference 2 Re 1.0e+06"
+    },
+    "wing_quads": {
+     "min_margin": 0.5201538890712981,
+     "value": 0.5701538890712982,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 4 Re 1.0e+06",
+     "used_max": 0.08769562210904688
+    },
+    "cap_quads": {
+     "min_margin": 0.01072406152680868,
+     "value": 0.06072406152680868,
+     "limit": 0.05,
+     "kind": "min",
+     "at": "bwb reference 1 Re 1.0e+05",
+     "used_max": 0.8233968338551567
+    },
+    "cap_nose_corners": {
+     "min_margin": 0.0366786891732611,
+     "value": 0.0366786891732611,
+     "limit": 0.0,
+     "kind": "min",
+     "at": "bwb reference 1 Re 3.0e+05",
+     "used_max": 0.0
+    },
+    "ring_count": {
+     "min_margin": -0.0,
+     "value": 362.0,
+     "limit": 362.0,
+     "kind": "eq",
+     "at": "bwb reference 0 Re 1.0e+05"
+    }
+   },
+   "nose_turning": {
+    "min": 7.6104180014997045,
+    "median": 7.6763896573802555,
+    "max": 7.702441053339259,
+    "n": 80
+   },
+   "wing_quads_J": {
+    "min": 0.5701538890712982,
+    "median": 0.9250886249154937,
+    "max": 0.9954879822260346,
+    "n": 80
+   },
+   "cap_quads_J": {
+    "min": 0.06072406152680868,
+    "median": 0.18494421170375341,
+    "max": 0.2957568084607439,
+    "n": 80
+   },
+   "chord_growth": {
+    "min": 1.0868117607231504,
+    "median": 1.0868396452258704,
+    "max": 1.0881132547039392,
+    "n": 80
+   },
+   "span_growth": {
+    "min": 1.0869549237169405,
+    "median": 1.0896900520410309,
+    "max": 1.1067297655363515,
+    "n": 80
+   },
+   "tip_gap": {
+    "min": 0.9885105825618609,
+    "median": 0.9953985760114512,
+    "max": 0.9996850920723895,
+    "n": 80
+   },
+   "by_type": {
+    "bwb": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 348.0,
+      "median": 512.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 108.0,
+      "median": 133.5,
+      "max": 162.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 40044.0,
+      "median": 72124.0,
+      "max": 86716.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 3314771.0,
+      "median": 7128436.0,
+      "max": 10213490.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 7.3,
+      "median": 10.370000000000001,
+      "max": 12.23,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.5701538890712982,
+      "median": 0.8158521200019084,
+      "max": 0.9155537728378481,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.06072406152680868,
+      "median": 0.07948233729077306,
+      "max": 0.0794907085273236,
+      "n": 20
+     }
+    },
+    "flying_wing": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 292.0,
+      "median": 498.0,
+      "max": 498.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 106.0,
+      "median": 136.5,
+      "max": 167.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 32964.0,
+      "median": 71494.0,
+      "max": 86826.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2595861.0,
+      "median": 6750488.5,
+      "max": 9879240.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 7.23,
+      "median": 11.17,
+      "max": 13.78,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.7760840421281855,
+      "median": 0.8868321521409157,
+      "max": 0.9346500919155604,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.06678383993509458,
+      "median": 0.0892889376363705,
+      "max": 0.0892946019999261,
+      "n": 20
+     }
+    },
+    "cranked": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 254.0,
+      "median": 458.0,
+      "max": 476.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 113.0,
+      "median": 139.0,
+      "max": 172.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 30410.0,
+      "median": 67580.0,
+      "max": 85356.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2363244.0,
+      "median": 6317025.0,
+      "max": 9540720.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 7.08,
+      "median": 9.495000000000001,
+      "max": 11.98,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.9027883364228219,
+      "median": 0.9844422612366428,
+      "max": 0.9924259690256615,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.2805938214075807,
+      "median": 0.2826048742958822,
+      "max": 0.29352742453379776,
+      "n": 20
+     }
+    },
+    "tapered": {
+     "builds": 20,
+     "passed": 20,
+     "n_ring": {
+      "min": 256.0,
+      "median": 476.0,
+      "max": 476.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 108.0,
+      "median": 139.0,
+      "max": 172.0,
+      "n": 20
+     },
+     "quads": {
+      "min": 29372.0,
+      "median": 69584.0,
+      "max": 85356.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2282670.0,
+      "median": 6507617.0,
+      "max": 9625905.0,
+      "n": 20
+     },
+     "seconds": {
+      "min": 7.47,
+      "median": 9.3,
+      "max": 11.8,
+      "n": 20
+     },
+     "wing_quads_J": {
+      "min": 0.9706899793456334,
+      "median": 0.9920593879885256,
+      "max": 0.9954879822260346,
+      "n": 20
+     },
+     "cap_quads_J": {
+      "min": 0.28059382140769773,
+      "median": 0.2808099708782438,
+      "max": 0.2957568084607439,
+      "n": 20
+     }
+    }
+   },
+   "by_set": {
+    "reference": {
+     "builds": 80,
+     "passed": 80
+    }
+   },
+   "by_re": {
+    "1.0e+05": {
+     "n_ring": {
+      "min": 254.0,
+      "median": 281.0,
+      "max": 374.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 106.0,
+      "median": 116.0,
+      "max": 131.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 2282670.0,
+      "median": 2795671.0,
+      "max": 3993696.0,
+      "n": 20
+     }
+    },
+    "3.0e+05": {
+     "n_ring": {
+      "min": 430.0,
+      "median": 474.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 118.0,
+      "median": 128.5,
+      "max": 143.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 4955808.0,
+      "median": 5881380.0,
+      "max": 6743184.0,
+      "n": 20
+     }
+    },
+    "1.0e+06": {
+     "n_ring": {
+      "min": 476.0,
+      "median": 487.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 132.0,
+      "median": 142.0,
+      "max": 157.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 6713500.0,
+      "median": 7448800.5,
+      "max": 8283450.0,
+      "n": 20
+     }
+    },
+    "4.0e+06": {
+     "n_ring": {
+      "min": 476.0,
+      "median": 487.0,
+      "max": 512.0,
+      "n": 20
+     },
+     "n_span": {
+      "min": 147.0,
+      "median": 157.5,
+      "max": 172.0,
+      "n": 20
+     },
+     "cells_est": {
+      "min": 8370320.0,
+      "median": 9212494.5,
+      "max": 10213490.0,
+      "n": 20
+     }
+    }
+   }
+  }
+ },
+ "family": {
+  "VC/C": {
+   "pairs": 80,
+   "spacings": {
+    "nose_root": {
+     "min": 1.297642977379578,
+     "median": 1.2992720617743772,
+     "max": 1.3016359097745924,
+     "n": 80
+    },
+    "nose_tip": {
+     "min": 1.2968070769845246,
+     "median": 1.298534911970597,
+     "max": 1.3008059692908818,
+     "n": 80
+    },
+    "te_root": {
+     "min": 1.2996627566089354,
+     "median": 1.2998031995357548,
+     "max": 1.29985855153324,
+     "n": 80
+    },
+    "band_root": {
+     "min": 1.2691814550580538,
+     "median": 1.29906812435052,
+     "max": 1.3199578652075379,
+     "n": 80
+    },
+    "band_tip": {
+     "min": 1.2691818351929347,
+     "median": 1.2990681591898592,
+     "max": 1.31995835173771,
+     "n": 80
+    },
+    "root_gap": {
+     "min": 1.192702017243066,
+     "median": 1.2499999999999791,
+     "max": 1.3280913779382604,
+     "n": 80
+    },
+    "tip_gap": {
+     "min": 1.2689069759402491,
+     "median": 1.2964623624447065,
+     "max": 1.3185714301092342,
+     "n": 80
+    },
+    "base_cell": {
+     "min": 1.249999999999991,
+     "median": 1.2500000000000004,
+     "max": 1.2500000000000266,
+     "n": 80
+    }
+   },
+   "counts": {
+    "n_ring": {
+     "min": 1.2622950819672132,
+     "median": 1.2857142857142858,
+     "max": 1.2941176470588236,
+     "n": 80
+    },
+    "n_span": {
+     "min": 1.2363636363636363,
+     "median": 1.2695360195360195,
+     "max": 1.2941176470588236,
+     "n": 80
+    },
+    "wall_layers": {
+     "min": 1.2702702702702702,
+     "median": 1.2926829268292683,
+     "max": 1.3170731707317074,
+     "n": 80
+    },
+    "quads": {
+     "min": 1.583403420241099,
+     "median": 1.6384829353278914,
+     "max": 1.6616289801568989,
+     "n": 80
+    },
+    "cells_est": {
+     "min": 2.055081342572704,
+     "median": 2.1198263302171227,
+     "max": 2.1778948614728866,
+     "n": 80
+    },
+    "ring_cells": {
+     "min": 1.2644628099173554,
+     "median": 1.2869198312236287,
+     "max": 1.2955665024630543,
+     "n": 80
+    },
+    "station_gaps": {
+     "min": 1.2407407407407407,
+     "median": 1.2733499377334994,
+     "max": 1.3,
+     "n": 80
+    }
+   },
+   "spacings_no_repair": {
+    "nose_root": {
+     "min": 1.297642977379578,
+     "median": 1.2992720617743772,
+     "max": 1.3016359097745924,
+     "n": 80
+    },
+    "nose_tip": {
+     "min": 1.2968070769845246,
+     "median": 1.298534911970597,
+     "max": 1.3008059692908818,
+     "n": 80
+    },
+    "te_root": {
+     "min": 1.2996627566089354,
+     "median": 1.2998031995357548,
+     "max": 1.29985855153324,
+     "n": 80
+    },
+    "band_root": {
+     "min": 1.2691814550580538,
+     "median": 1.29906812435052,
+     "max": 1.3199578652075379,
+     "n": 80
+    },
+    "band_tip": {
+     "min": 1.2691818351929347,
+     "median": 1.2990681591898592,
+     "max": 1.31995835173771,
+     "n": 80
+    },
+    "root_gap": {
+     "min": 1.192702017243066,
+     "median": 1.2499999999999791,
+     "max": 1.3280913779382604,
+     "n": 80
+    },
+    "tip_gap": {
+     "min": 1.2689069759402491,
+     "median": 1.2964623624447065,
+     "max": 1.3185714301092342,
+     "n": 80
+    },
+    "base_cell": {
+     "min": 1.249999999999991,
+     "median": 1.2500000000000004,
+     "max": 1.2500000000000266,
+     "n": 80
+    }
+   },
+   "repaired_pairs": 0,
+   "repaired": []
+  },
+  "C/M": {
+   "pairs": 80,
+   "spacings": {
+    "nose_root": {
+     "min": 1.2986825615293076,
+     "median": 1.299566478831588,
+     "max": 1.3001575997027655,
+     "n": 80
+    },
+    "nose_tip": {
+     "min": 1.2985664165038124,
+     "median": 1.2990929862320486,
+     "max": 1.3000251833423166,
+     "n": 80
+    },
+    "te_root": {
+     "min": 1.2999777552476637,
+     "median": 1.2999914909194268,
+     "max": 1.3000806513766583,
+     "n": 80
+    },
+    "band_root": {
+     "min": 1.2779638254338266,
+     "median": 1.2986440946496507,
+     "max": 1.3207829978165546,
+     "n": 80
+    },
+    "band_tip": {
+     "min": 1.2779638168578138,
+     "median": 1.2986442002418268,
+     "max": 1.3207832541249438,
+     "n": 80
+    },
+    "root_gap": {
+     "min": 1.1552650676847196,
+     "median": 1.20000000000001,
+     "max": 1.263815184347439,
+     "n": 80
+    },
+    "tip_gap": {
+     "min": 1.277675189616207,
+     "median": 1.2992732805553868,
+     "max": 1.311263914710513,
+     "n": 80
+    },
+    "base_cell": {
+     "min": 1.399999999999959,
+     "median": 1.3999999999999981,
+     "max": 1.4000000000000317,
+     "n": 80
+    }
+   },
+   "counts": {
+    "n_ring": {
+     "min": 1.2808988764044944,
+     "median": 1.2953020134228188,
+     "max": 1.3,
+     "n": 80
+    },
+    "n_span": {
+     "min": 1.2388059701492538,
+     "median": 1.2625631313131311,
+     "max": 1.2828282828282829,
+     "n": 80
+    },
+    "wall_layers": {
+     "min": 1.2708333333333333,
+     "median": 1.297872340425532,
+     "max": 1.3064516129032258,
+     "n": 80
+    },
+    "quads": {
+     "min": 1.603862973760933,
+     "median": 1.645768028352045,
+     "max": 1.6743347639484978,
+     "n": 80
+    },
+    "cells_est": {
+     "min": 2.07486308494373,
+     "median": 2.129376788347593,
+     "max": 2.1745746154567884,
+     "n": 80
+    },
+    "ring_cells": {
+     "min": 1.2824858757062148,
+     "median": 1.2962962962962963,
+     "max": 1.3011583011583012,
+     "n": 80
+    },
+    "station_gaps": {
+     "min": 1.2424242424242424,
+     "median": 1.2655644536295532,
+     "max": 1.2857142857142858,
+     "n": 80
+    }
+   },
+   "spacings_no_repair": {
+    "nose_root": {
+     "min": 1.2986825615293076,
+     "median": 1.299566478831588,
+     "max": 1.3001575997027655,
+     "n": 80
+    },
+    "nose_tip": {
+     "min": 1.2985664165038124,
+     "median": 1.2990929862320486,
+     "max": 1.3000251833423166,
+     "n": 80
+    },
+    "te_root": {
+     "min": 1.2999777552476637,
+     "median": 1.2999914909194268,
+     "max": 1.3000806513766583,
+     "n": 80
+    },
+    "band_root": {
+     "min": 1.2779638254338266,
+     "median": 1.2986440946496507,
+     "max": 1.3207829978165546,
+     "n": 80
+    },
+    "band_tip": {
+     "min": 1.2779638168578138,
+     "median": 1.2986442002418268,
+     "max": 1.3207832541249438,
+     "n": 80
+    },
+    "root_gap": {
+     "min": 1.1552650676847196,
+     "median": 1.20000000000001,
+     "max": 1.263815184347439,
+     "n": 80
+    },
+    "tip_gap": {
+     "min": 1.277675189616207,
+     "median": 1.2992732805553868,
+     "max": 1.311263914710513,
+     "n": 80
+    },
+    "base_cell": {
+     "min": 1.399999999999959,
+     "median": 1.3999999999999981,
+     "max": 1.4000000000000317,
+     "n": 80
+    }
+   },
+   "repaired_pairs": 0,
+   "repaired": []
+  },
+  "M/F": {
+   "pairs": 80,
+   "spacings": {
+    "nose_root": {
+     "min": 1.2984644156558487,
+     "median": 1.2995883590664778,
+     "max": 1.3013102292479481,
+     "n": 80
+    },
+    "nose_tip": {
+     "min": 1.2985132520855138,
+     "median": 1.2993775106584522,
+     "max": 1.301053935242629,
+     "n": 80
+    },
+    "te_root": {
+     "min": 1.299595166787607,
+     "median": 1.2997264572329579,
+     "max": 1.2997583131965478,
+     "n": 80
+    },
+    "band_root": {
+     "min": 1.2813916688703506,
+     "median": 1.2990986114272074,
+     "max": 1.3159092835341413,
+     "n": 80
+    },
+    "band_tip": {
+     "min": 1.281391671014276,
+     "median": 1.2990985834495623,
+     "max": 1.3159094408972885,
+     "n": 80
+    },
+    "root_gap": {
+     "min": 1.2886469396936826,
+     "median": 1.333333333333329,
+     "max": 1.361467095508163,
+     "n": 80
+    },
+    "tip_gap": {
+     "min": 1.2860654783001217,
+     "median": 1.2982638640936517,
+     "max": 1.312731118331572,
+     "n": 80
+    },
+    "base_cell": {
+     "min": 1.2857142857142432,
+     "median": 1.2857142857142863,
+     "max": 1.285714285714301,
+     "n": 80
+    }
+   },
+   "counts": {
+    "n_ring": {
+     "min": 1.278688524590164,
+     "median": 1.292929292929293,
+     "max": 1.2967032967032968,
+     "n": 80
+    },
+    "n_span": {
+     "min": 1.2871287128712872,
+     "median": 1.3,
+     "max": 1.313953488372093,
+     "n": 80
+    },
+    "wall_layers": {
+     "min": 1.278688524590164,
+     "median": 1.2950819672131149,
+     "max": 1.3114754098360655,
+     "n": 80
+    },
+    "quads": {
+     "min": 1.6618313689936537,
+     "median": 1.679914038579219,
+     "max": 1.6979034617259874,
+     "n": 80
+    },
+    "cells_est": {
+     "min": 2.1318455912754453,
+     "median": 2.1769753848232307,
+     "max": 2.2101620601560548,
+     "n": 80
+    },
+    "ring_cells": {
+     "min": 1.2798353909465021,
+     "median": 1.2936708860759494,
+     "max": 1.2975206611570247,
+     "n": 80
+    },
+    "station_gaps": {
+     "min": 1.29,
+     "median": 1.3027522935779816,
+     "max": 1.3176470588235294,
+     "n": 80
+    }
+   },
+   "spacings_no_repair": {
+    "nose_root": {
+     "min": 1.2984644156558487,
+     "median": 1.2995883590664778,
+     "max": 1.3013102292479481,
+     "n": 80
+    },
+    "nose_tip": {
+     "min": 1.2985132520855138,
+     "median": 1.2993775106584522,
+     "max": 1.301053935242629,
+     "n": 80
+    },
+    "te_root": {
+     "min": 1.299595166787607,
+     "median": 1.2997264572329579,
+     "max": 1.2997583131965478,
+     "n": 80
+    },
+    "band_root": {
+     "min": 1.2813916688703506,
+     "median": 1.2990986114272074,
+     "max": 1.3159092835341413,
+     "n": 80
+    },
+    "band_tip": {
+     "min": 1.281391671014276,
+     "median": 1.2990985834495623,
+     "max": 1.3159094408972885,
+     "n": 80
+    },
+    "root_gap": {
+     "min": 1.2886469396936826,
+     "median": 1.333333333333329,
+     "max": 1.361467095508163,
+     "n": 80
+    },
+    "tip_gap": {
+     "min": 1.2860654783001217,
+     "median": 1.2982638640936517,
+     "max": 1.312731118331572,
+     "n": 80
+    },
+    "base_cell": {
+     "min": 1.2857142857142432,
+     "median": 1.2857142857142863,
+     "max": 1.285714285714301,
+     "n": 80
+    }
+   },
+   "repaired_pairs": 0,
+   "repaired": []
+  }
+ },
+ "family_all": {
+  "VC/C": {
+   "pairs": 782,
+   "spacings": {
+    "nose_root": {
+     "min": 1.295909374433057,
+     "median": 1.299325714426863,
+     "max": 1.3037909506239762,
+     "n": 782
+    },
+    "nose_tip": {
+     "min": 1.2962366284831,
+     "median": 1.2986122481748446,
+     "max": 1.3026979440198982,
+     "n": 782
+    },
+    "te_root": {
+     "min": 1.2996526401992015,
+     "median": 1.2998054006630961,
+     "max": 1.2998701364534566,
+     "n": 782
+    },
+    "band_root": {
+     "min": 1.2691814550580538,
+     "median": 1.2987498298864988,
+     "max": 1.3199578652075379,
+     "n": 782
+    },
+    "band_tip": {
+     "min": 1.2691818351929347,
+     "median": 1.298749828515413,
+     "max": 1.31995835173771,
+     "n": 782
+    },
+    "root_gap": {
+     "min": 1.1716098992481978,
+     "median": 1.2499999999999545,
+     "max": 1.3468867455670752,
+     "n": 782
+    },
+    "tip_gap": {
+     "min": 1.2689069759402491,
+     "median": 1.295656769654582,
+     "max": 1.3258432349555975,
+     "n": 782
+    },
+    "base_cell": {
+     "min": 1.249999999999927,
+     "median": 1.2500000000000002,
+     "max": 1.2500000000000961,
+     "n": 782
+    }
+   },
+   "counts": {
+    "n_ring": {
+     "min": 1.2622950819672132,
+     "median": 1.2857142857142858,
+     "max": 1.2959183673469388,
+     "n": 782
+    },
+    "n_span": {
+     "min": 1.2363636363636363,
+     "median": 1.2698412698412698,
+     "max": 1.3,
+     "n": 782
+    },
+    "wall_layers": {
+     "min": 1.2682926829268293,
+     "median": 1.2926829268292683,
+     "max": 1.3170731707317074,
+     "n": 782
+    },
+    "cells_est": {
+     "min": 2.0410241329240724,
+     "median": 2.117497249410757,
+     "max": 2.182669104204753,
+     "n": 782
+    }
+   }
+  },
+  "C/M": {
+   "pairs": 782,
+   "spacings": {
+    "nose_root": {
+     "min": 1.2961656967335178,
+     "median": 1.2995639624962045,
+     "max": 1.3034327988670888,
+     "n": 782
+    },
+    "nose_tip": {
+     "min": 1.296236511319479,
+     "median": 1.2992617643102526,
+     "max": 1.3035575469206193,
+     "n": 782
+    },
+    "te_root": {
+     "min": 1.2998928228714954,
+     "median": 1.2999952993566382,
+     "max": 1.300080653771325,
+     "n": 782
+    },
+    "band_root": {
+     "min": 1.2779638254338266,
+     "median": 1.2995057053761288,
+     "max": 1.3207829978165546,
+     "n": 782
+    },
+    "band_tip": {
+     "min": 1.2779638168578138,
+     "median": 1.2995057034264232,
+     "max": 1.3207832541249438,
+     "n": 782
+    },
+    "root_gap": {
+     "min": 1.1211565649632294,
+     "median": 1.1999999999999837,
+     "max": 1.3573778603081452,
+     "n": 782
+    },
+    "tip_gap": {
+     "min": 1.2750969870801,
+     "median": 1.2976008444192173,
+     "max": 1.316609525802085,
+     "n": 782
+    },
+    "base_cell": {
+     "min": 1.399999999999782,
+     "median": 1.3999999999999988,
+     "max": 1.4000000000001291,
+     "n": 782
+    }
+   },
+   "counts": {
+    "n_ring": {
+     "min": 1.2808988764044944,
+     "median": 1.2941176470588236,
+     "max": 1.3037037037037038,
+     "n": 782
+    },
+    "n_span": {
+     "min": 1.2328767123287672,
+     "median": 1.2597402597402598,
+     "max": 1.2873563218390804,
+     "n": 782
+    },
+    "wall_layers": {
+     "min": 1.2708333333333333,
+     "median": 1.2962962962962963,
+     "max": 1.3148148148148149,
+     "n": 782
+    },
+    "cells_est": {
+     "min": 2.0717530178870387,
+     "median": 2.1305237808549067,
+     "max": 2.1861761908878705,
+     "n": 782
+    }
+   }
+  },
+  "M/F": {
+   "pairs": 782,
+   "spacings": {
+    "nose_root": {
+     "min": 1.295290811757224,
+     "median": 1.2995851001617478,
+     "max": 1.3030184717100362,
+     "n": 782
+    },
+    "nose_tip": {
+     "min": 1.2958320534350056,
+     "median": 1.299430755281541,
+     "max": 1.3032825387537612,
+     "n": 782
+    },
+    "te_root": {
+     "min": 1.2995951667869243,
+     "median": 1.2997258933038114,
+     "max": 1.2998429047825573,
+     "n": 782
+    },
+    "band_root": {
+     "min": 1.2813916688703506,
+     "median": 1.2990919310840643,
+     "max": 1.3159092835341413,
+     "n": 782
+    },
+    "band_tip": {
+     "min": 1.281391671014276,
+     "median": 1.299091902762004,
+     "max": 1.3159094408972885,
+     "n": 782
+    },
+    "root_gap": {
+     "min": 1.2429714375147094,
+     "median": 1.3333333333332933,
+     "max": 1.3872763583845156,
+     "n": 782
+    },
+    "tip_gap": {
+     "min": 1.2815414951644437,
+     "median": 1.2985974481392375,
+     "max": 1.3127412954727462,
+     "n": 782
+    },
+    "base_cell": {
+     "min": 1.2857142857141315,
+     "median": 1.2857142857142854,
+     "max": 1.2857142857144577,
+     "n": 782
+    }
+   },
+   "counts": {
+    "n_ring": {
+     "min": 1.278688524590164,
+     "median": 1.2923976608187135,
+     "max": 1.2988505747126438,
+     "n": 782
+    },
+    "n_span": {
+     "min": 1.2815533980582525,
+     "median": 1.3,
+     "max": 1.3195876288659794,
+     "n": 782
+    },
+    "wall_layers": {
+     "min": 1.278688524590164,
+     "median": 1.2941176470588236,
+     "max": 1.3114754098360655,
+     "n": 782
+    },
+    "cells_est": {
+     "min": 2.1318455912754453,
+     "median": 2.1803779112890673,
+     "max": 2.229930158366218,
+     "n": 782
+    }
+   }
+  }
+ },
+ "nose_family": {
+  "families": 782,
+  "complete_families": 782,
+  "repaired_families": 0,
+  "repaired": [],
+  "same_factor_at_every_level": 782,
+  "rounds_of_their_own": 0,
+  "labels": {
+   "none": 3128
+  },
+  "trigger": "the level's check limit (its angle + 0.2 deg)"
+ },
+ "against_before": {
+  "VC": {
+   "compared": 782,
+   "same_nodes": 50,
+   "same_counts": 738,
+   "ring_nodes_added": {
+    "0": 738,
+    "2": 44
+   },
+   "cells_ratio": {
+    "min": 1.0,
+    "median": 1.0,
+    "max": 1.0107466516962067,
+    "n": 782
+   },
+   "repairs_before": 0,
+   "repairs_now": 0
+  },
+  "C": {
+   "compared": 80,
+   "same_nodes": 14,
+   "same_counts": 77,
+   "ring_nodes_added": {
+    "0": 77,
+    "2": 3
+   },
+   "cells_ratio": {
+    "min": 1.0,
+    "median": 1.0,
+    "max": 1.0090227474901512,
+    "n": 80
+   },
+   "repairs_before": 0,
+   "repairs_now": 0
+  },
+  "M": {
+   "compared": 80,
+   "same_nodes": 12,
+   "same_counts": 56,
+   "ring_nodes_added": {
+    "0": 56,
+    "2": 24
+   },
+   "cells_ratio": {
+    "min": 1.0,
+    "median": 1.0,
+    "max": 1.006075334143378,
+    "n": 80
+   },
+   "repairs_before": 0,
+   "repairs_now": 0
+  },
+  "F": {
+   "compared": 782,
+   "same_nodes": 22,
+   "same_counts": 396,
+   "ring_nodes_added": {
+    "2": 383,
+    "0": 396,
+    "-2": 3
+   },
+   "cells_ratio": {
+    "min": 0.9955646985016268,
+    "median": 1.0,
+    "max": 1.005456160385738,
+    "n": 782
+   },
+   "repairs_before": 4,
+   "repairs_now": 0
+  }
+ },
+ "seconds_total": 21109.14,
+ "mesh_code_hash": "c613b058dfd814d28571adb31b1acd56744a3d8add7e9159155a124f803305ec",
+ "code_version": "0.7.0",
+ "band_upper": [
+  0.0,
+  1.0
+ ],
+ "F_reference_median_cells": 6728342.0,
+ "F_reference_vs_6nov": 0.6172790825688074
+}

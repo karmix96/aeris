@@ -12,31 +12,31 @@ CFD_Automation · Stage 2 · surface mesh · cfdauto 0.7.0 · 2 Nov 2026 · upda
 
 # Surface Mesh
 
-What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the *first approach*). A new approach was decided on 4–6 Nov and **built on 7 Nov**: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed 1724 of 1724 builds ([Study 9](#study9)). The section [What was first, and what changes](#change) says what changed; an amber *What changes* box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–11 are new.
+What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the *first approach*). A new approach was decided on 4–6 Nov and **built on 7 Nov**: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed 1,724 of 1,724 builds ([Study 9](#study9)). The family screen (8 Nov) meshed every set at all four levels for the first time, one nose factor per wing and Re: 3,128 of 3,128 passed, 0 families needed a nose repair ([Study 12](#study12)). The section [What was first, and what changes](#change) says what changed; an amber *What changes* box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–12 are new.
 
 ## At a glance
 
 ### Is the surface mesh finished?
 
-**Built and screened with the new rules (7 Nov). Not closed yet.**
+**Yes, on the numpy loft: ready to close.**
 
-The pyGeo loft on Mike's machine (8 Nov) gives the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) on the 20 reference wings. Left: two builder choices for Mike to confirm (both stricter than decided), then close Stage 2 and start Stage 3, the matched C-H volume mesh.
+Every set at every level passed (3,128 of 3,128, Study 12); both builder choices and the upper band were decided on 8 Nov and built. The pyGeo loft on Mike's machine gives the same meshes as the numpy loft on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 each). Left: one pyGeo `build --all` on Mike's machine (new input hashes after the label fix; the surfaces are the same) and Mike's word to close; then Stage 3, the matched C-H volume mesh.
 
-### The new screen (7 Nov; reference wings 8 Nov)
+### The family screen (8 Nov)
 
-**1724 of 1724 builds passed**
+**3,128 of 3,128 builds passed**
 
-Every set at VC and at F (722 wings at Re 3 × 10⁵; the 20 reference wings at all four Re levels), and the reference wings at C and M. 0 crashes. The nose solved at every level: no nose repair on the reference builds; 4 of 782 F builds needed one round. Build time median 4.3 s at VC, 8.9 s at F.
+Every set at VC, C, M and F: 782 families (702 wings at Re 3 × 10⁵; the 20 reference wings at all four Re levels) × 4 levels. 0 crashes. One nose factor per family at every level: no family needed a repair. Build time median 4.5 s at VC, 9.3 s at F.
 
 ### The mesh (new rules)
 
 **one ring per station + a tip cap**
 
-At VC: ring of 120–240 nodes, 51–84 stations. At F: 254–514 nodes, 106–177 stations. Fine level F: 6.7 M cells median on the wing blocks (20 reference wings × 4 Re; an estimate, the C-H wake lines add a rough +30–60 %), against 9–11 M asked.
+At VC: ring of 120–240 nodes, 51–84 stations. At F: 254–514 nodes, 106–177 stations. Fine level F: 6.73 M cells median on the wing blocks (20 reference wings × 4 Re; every set: 5.91 M, largest 10.21 M; an estimate, the C-H wake lines add a rough +30–60 %), against 9–11 M asked.
 
 ### Rules and checks
 
-**10 rules · 13 checks · 41 tests**
+**10 rules · 13 checks · 43 tests**
 
 Every rule in one YAML with its anchor level and source (`configs/surface.yaml`; the first approach in `configs/surface_first.yaml`); every check with a value, a limit and a margin; a refused mesh writes only `refusal.json`. Code in `CFD_Automation/cfdauto/mesh/`, the rest in `Stage_2_surface_mesh/` (branch stage2-surface-mesh).
 
@@ -44,7 +44,7 @@ Every rule in one YAML with its anchor level and source (`configs/surface.yaml`;
 
 **numpy loft, no solve, cap quads near the limit**
 
-The cap quads come close to the 0.05 limit (lowest 0.075 at VC, 0.061 at F); 17 % more stations than the plan file; the coarse levels do not resolve transition; the upper band as written misses the upper transition at low Re (the built mesh covers it); Studies 1–8 used the old 20 reference shapes. All in [Weak points](#open).
+The cap quads come close to the 0.05 limit (lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F); 17 % more stations than the plan file; the coarse levels do not resolve transition; Studies 1–8 used the old 20 reference shapes; the full sets were meshed on the numpy loft only. All in [Weak points](#open).
 
 ### The first screen (2–3 Nov)
 
@@ -420,7 +420,7 @@ Studies 1–7 were run while building the mesher with the first approach (2–3 
 
 **Conclusion.** The mesher is robust on the sets we have: 0 refusals in 790 builds at level C, so, by the rule of three (Stage 0, D2), the true failure rate on this design space is below about 0.4 % with 95 % confidence, for the surface alone. What the screen does not show: whether the volume march accepts these surfaces, whether 20 nodes per bubble is the right coarse level, and anything about the flow. It was run on the numpy loft; on 8 Nov the pyGeo loft gave the same meshes on the 20 reference wings (Mike's machine).
 
-**Updated 7 Nov 2026.** Done on 7 Nov: the new screen of the built rules on the rebuilt sets (unit mean chord, the nose fix; new hashes) is [Study 9](#study9): every set at VC and F, the 20 reference wings at all four levels and Re levels; 1724 of 1724 builds passed.
+**Updated 7 Nov 2026.** Done on 7 Nov: the new screen of the built rules on the rebuilt sets (unit mean chord, the nose fix; new hashes) is [Study 9](#study9): every set at VC and F, the 20 reference wings at all four levels and Re levels; 1,724 of 1,724 builds passed.
 
 ### Study 2 · The family ratios (C, M, F; first approach)
 
@@ -694,9 +694,49 @@ Studies 1–7 were run while building the mesher with the first approach (2–3 
 
 **Conclusion.** The lower band (0–100 % c) holds every strip at every Re level. The upper band as written (0–85 % c) does not hold the upper transition at low Re and low angle: at 10⁵ and 3 × 10⁵ only 0–49 % of the strips fit, short by up to 15 % c (to the trailing edge), and the cause is always the transition itself, never a bubble or a separation. As built this is no gap: on the 16 surfaces the largest upper cell over 85–99.5 % c is 0.950–0.995 × the band cell, because both sides share one node list (decision 60) and the lower band is 0–100 % c. So no mesh change was needed. The owner wrote the upper band as 0–100 % c on 8 Nov, to match: on 7 Nov, at the Re levels of that day: at VC the same mesh to round-off (80 of 80 reference builds with the same counts, no node moved by more than 3.0 × 10⁻¹³ c); at F 2 more ring nodes on 42 of 80 (0.39 % more cells, median), so the screen was re-run: Study 12) (Study 12). No XFOIL answer: only on the tailless wings at negative root angles, up to 46 % (BWB) and 42 % (flying wing) of the strips at −5°, where the outboard sections are below the lowest angle XFOIL converges at; the band there rests on the other angles. Limits: 2-D strips in calm air with one induced angle; no crossflow, no 3-D relief, no tip effects. The per-wing band (decision 65) stays a candidate until a 3-D transition check.
 
+### Study 12 · The family screen: every set at every level, one nose factor per family (8 Nov 2026)
+
+**What was done.** Two decisions of the owner (8 Nov), built. (1) **The nose repair belongs to the family**, one wing at one Re: a repair round (every station's nose spacing × 0.9) is needed only where a ring turns past its level's check limit (the angle + 0.2°; before, 0.02° past the angle was enough, and 4 of 782 F builds took a round for 0.003–0.006°). If any level of a family needs a round, the same factor goes on all four levels and all four are rebuilt, so every spacing still refines by exactly 1.3; every mesh carries the label (none, or family repair with its factor and the level that needed it). (2) **The upper band is written 0–100 % c** (was 0–85 % c; the built mesh already had band cells there). Then every set at all four levels for the first time: the 702 wings of training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵, and the 20 reference wings at the four Re levels: 782 families × 4 levels = 3,128 builds, with the numpy loft, in two processes (about 2.9 h each). Code: `scripts/screen.py --family` (`cfdauto.mesh.surface.build_family`), `scripts/screen_study.py --family`; data: `data/studies/screen_family_VC.json` to `screen_family_F.json`, `screen_family_summary.json`.
+
+**Result.**
+
+- **Passed:** 3,128 of 3,128 builds (0 refused, 0 crashed; refusals by check: none).
+- **The nose repair:** 0 of 782 families needed one (none). Every family carries one factor at every level (782 of 782); no level kept a round of its own (0). Labels over the 3,128 meshes: none: 3128.
+- **Against the screens it replaces** (the sets of 7 Nov at VC and F; the reference wings of 8 Nov at every level; the same wing, Re and level): VC: the same ring nodes, stations and cells on 738 of 782; 44 gained ring nodes (+2: 44), the cells by at most +1.07 %; C: the same ring nodes, stations and cells on 77 of 80; 3 gained ring nodes (+2: 3), the cells by at most +0.90 %; M: the same ring nodes, stations and cells on 56 of 80; 24 gained ring nodes (+2: 24), the cells by at most +0.61 %; F: the same ring nodes, stations and cells on 396 of 782; 383 gained ring nodes (+2: 383), the cells by at most +0.55 %; 3 lost ring nodes (−2: 3), the cells by at most −0.44 %; nose repairs 4 before, 0 now.
+- **Cells** (wing blocks, estimate), median (largest) over every family, in millions: VC 0.60 (1.02), C 1.26 (2.19), M 2.70 (4.69), F 5.91 (10.21).
+- **The nose:** largest turning VC 16.11°, C 12.77°, M 10.02°, F 7.72° (angles 16.9°, 13°, 10°, 7.69°; check limits 17.1°, 13.2°, 10.2°, 7.89°): every ring inside its check limit, so no round was needed; a few rings pass their angle by up to 0.03° (the solve's tolerance is 0.02°), which a round would have repaired before.
+
+| Level | Builds (families) | Passed | Families with a nose repair | Ring nodes min–median–max | Stations    | Cells \[M\] min–median–max | Largest turning (angle) | Build time \[s\] median (max) |
+|-------|-------------------|--------|-----------------------------|---------------------------|-------------|----------------------------|-------------------------|-------------------------------|
+| VC    | 782               | 782    | 0                           | 120–220–240               | 51–63–84    | 0.24–0.60–1.02             | 16.11° (16.9°)          | 4.5 (6.9)                     |
+| C     | 782               | 782    | 0                           | 154–284–308               | 65–80–108   | 0.51–1.26–2.19             | 12.77° (13°)            | 5.7 (8.1)                     |
+| M     | 782               | 782    | 0                           | 198–368–398               | 82–100–136  | 1.07–2.70–4.69             | 10.02° (10°)            | 7.2 (10.2)                    |
+| F     | 782               | 782    | 0                           | 254–476–514               | 106–131–177 | 2.28–5.91–10.21            | 7.72° (7.69°)           | 9.3 (13.8)                    |
+
+| Per type, every set at Re 3 × 10⁵: cells \[M\] median (largest) | VC          | C           | M           | F           |
+|-----------------------------------------------------------------|-------------|-------------|-------------|-------------|
+| BWB (185 wings)                                                 | 0.66 (0.88) | 1.40 (1.90) | 2.97 (4.04) | 6.55 (8.87) |
+| flying wing (176 wings)                                         | 0.58 (0.71) | 1.23 (1.50) | 2.63 (3.14) | 5.73 (6.91) |
+| cranked (185 wings)                                             | 0.56 (0.82) | 1.19 (1.77) | 2.52 (3.74) | 5.51 (8.14) |
+| tapered (176 wings)                                             | 0.56 (0.76) | 1.19 (1.61) | 2.54 (3.42) | 5.55 (7.45) |
+
+*\[Figure: Cells per mesh per level (wing blocks, the estimate of Study 9), median (bar) and largest (tick): the 20 reference wings × 4 Re (blue) and every set at Re 3 × 10⁵ (amber), now at every level, with the RAM ADflow needs (right axis). Right: the fine level F on the reference wings against the first estimate of 6 Nov and with a rough +30–60 % for the C-H wake lines.\]*
+
+**Conclusion.** Every level is now counted on every set. The desktop today (about 1.2 M cells) takes all of the VC meshes; with +36 GB (about 5.0 M) it takes all at C and all at M; F needs the HPC (median 5.91 M, largest 10.21 M).
+
+*\[Figure: Left: for every check, how much of the room to its limit the worst build used (1 = at the limit), every set at every level. Right: which level's solve set the nose of the stations, and the largest turning per level.\]*
+
+**Conclusion.** No check was crossed at any level. The cap quads remain the closest by themselves: 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, against the refusal limit 0.05.
+
+*\[Figure: Every spacing and count between neighbouring levels, on the 20 reference wings × 4 Re (as Study 9): spacings coarser / finer (left), counts finer / coarser (right).\]*
+
+**Conclusion.** Over every family (782 pairs per step) the delivered nose and trailing-edge cells refine by 1.295–1.304 per step (the asked nose spacing by exactly 1.3; the rest is whole node counts), the band and tip-gap cells by 1.269–1.326 (whole cells per band and per gap), and the cells grow by 2.12, 2.13, 2.18 per step (median), close to 1.3³ = 2.2.
+
+**Conclusion.** The rules mesh every wing at every level: 3,128 of 3,128 builds passed, so, by the rule of three, the true failure rate per level on this design space is below about 0.38 % with 95 % confidence, for the surface alone. The family rule now holds by construction, also for the nose: one nose factor per family at every level; no family needed a repair. The upper band written 0–100 % c moved nodes but hardly the counts: +2 ring nodes on VC 44 of 782, C 3 of 80, M 24 of 80, F 383 of 782 meshes, the cells by at most +1.1 %; 3 F meshes have 2 fewer ring nodes: 3 of the 4 builds that had a nose repair before, which need none now. What this does not show: the volume mesh (Stage 3), the solver, and node-by-node agreement with pyGeo on the full sets (checked on the reference wings).
+
 ## What was done, step by step
 
-In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–18 are the new approach (6–7 Nov).
+In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–22 are the new approach (6–8 Nov).
 
 **1 · inputs**
 
@@ -812,6 +852,24 @@ Levels VC, C, M, F with anchored values (71), the lighter rules (72), the lower 
 
 The refine map in its Re mode on the new reference wings and the rebuilt section tables (Study 11). The upper band as written (0–85 % c) misses the upper transition at low Re, while the built mesh has band-size cells there. Written as 0–100 % c it is the same mesh at VC to round-off, but 2 more ring nodes at F on 42 of 80 reference builds; the owner chose 0–100 % c on 8 Nov (Study 12).
 
+**20 · 8 Nov**
+
+### The Re levels 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶
+
+The owner moved the two upper levels (decision 78): the Greek tactical UAVs in cruise, and 10⁶ fills the old gap. The 20 reference wings screened again at every level (320 of 320; the 160 builds at 10⁵ and 3 × 10⁵ have the very same nodes); the refine map redone; the 2-D section tables to 1.5 × 10⁷.
+
+**21 · 8 Nov**
+
+### pyGeo on Mike's machine; the label fix
+
+The 20 reference wings on the pyGeo loft give the same meshes as on the numpy loft (VC and F: the same ring nodes and stations, 80 of 80 each). One label differed at an exact threshold; every label rule got its tolerance in Stage 1 (decision 79): new input hashes, the same surfaces, so every mesh stands.
+
+**22 · 8 Nov**
+
+### The owner's choices built; the family screen
+
+Decision 77 confirmed (the growth limits by the family rule; the station growth 1.2); the upper band written 0–100 % c; the nose repair belongs to the family (80): one nose factor for all four levels of a wing at one Re, triggered only past a level's check limit, and every mesh labelled. Then every set at every level for the first time: 3,128 of 3,128 builds passed, 0 families needed a repair (Study 12).
+
 ## Assumptions
 
 | \#  | Assumption                                                                                                                                                                                        | Why                                                                                                                                                                                                                                                                                                                                                               | What it leaves out / risk                                                                                                                                  |
@@ -864,13 +922,13 @@ All logged in `CFD_Automation/OPEN_DECISIONS.md` (56–66; the new approach 67�
 
 **both approaches built and screened**
 
-The first approach (2–3 Nov): the mesher, its rules, its checks, the screen, the family rule, 14 tests then. The new approach (7 Nov): levels VC, C, M, F with anchored targets, the lighter rules, the lower band from the leading edge, in the code; the nose fix and similarity in Stage 1; the new screen (1724 of 1724 passed); 41 tests now (6 for the refine map by Re level); this page and the decisions.
+The first approach (2–3 Nov): the mesher, its rules, its checks, the screen, the family rule, 14 tests then. The new approach (7 Nov): levels VC, C, M, F with anchored targets, the lighter rules, the lower band from the leading edge, in the code; the nose fix and similarity in Stage 1; the new screen (1,724 of 1,724 passed); the family screen (8 Nov): every set at every level, 3,128 of 3,128 passed, one nose factor per family (Study 12); 43 tests now (6 for the refine map by Re level, 2 for the family nose); this page and the decisions.
 
 ### Not finished
 
-**Mike's two confirmations, the close**
+**the close**
 
-Every mesh here is on the numpy loft; on Mike's machine (8 Nov) the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) on the 20 reference wings. Two builder choices go past the decisions (both stricter) and need Mike's yes: the growth limits by the family rule; the station growth 1.2 (+17 % stations against the plan). The third, the nose, is answered: solved at every level, the strictest wins. Then Stage 2 closes and Stage 3 starts.
+Nothing is left in Stage 2 but one pyGeo `build --all` on Mike's machine (new input hashes after the label fix, the same surfaces) and the owner's word to close. Every mesh here is on the numpy loft; on Mike's machine (8 Nov) the pyGeo loft gave the same meshes on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). Both builder choices were confirmed and the upper band decided (8 Nov); the nose repair now belongs to the family. Then Stage 3 starts.
 
 ### Not known
 
@@ -882,14 +940,14 @@ No solve has been run. Whether the surface gives a good C-H volume mesh and a co
 
 - **Numpy loft here; pyGeo checked on the reference wings only.** Every mesh on this page was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
-- **The cap quads come close to the limit.** Lowest 0.075 at VC and 0.061 at F, against the refusal limit 0.05 (Study 9). Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). The march will say whether this matters.
+- **The cap quads come close to the limit.** Lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, against the refusal limit 0.05 (every set at every level, Study 12). Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). The march will say whether this matters.
 - **The stations are 17 % more than the plan.** The decided station growth (1.2) and gaps per panel (12 at M) give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.
-- **The cell count is an estimate, and it hangs on the wall-layer rule.** Two counts exist: the first estimate (6 Nov: F 10.9 M; its wall-layer rule not recorded; the first-approach reference wings) and this one (Study 9: F 6.7 M median; one layer count per block, 2 chords deep, growth 1.25 at VC by the family rule, s0 from y⁺ per station). The pages use this one because it can be redone. Both leave out the C-H wake lines (+30–60 %, rough) and the outboard blocks. Stage 3 sets the real wall-layer rule.
+- **The cell count is an estimate, and it hangs on the wall-layer rule.** Two counts exist: the first estimate (6 Nov: F 10.9 M; its wall-layer rule not recorded; the first-approach reference wings) and this one (Study 12: F 6.73 M median on the reference wings; one layer count per block, 2 chords deep, growth 1.25 at VC by the family rule, s0 from y⁺ per station). The pages use this one because it can be redone. Both leave out the C-H wake lines (+30–60 %, rough) and the outboard blocks. Stage 3 sets the real wall-layer rule.
 - **The coarse levels get a finer nose than they ask.** The nose is solved at every level and the strictest wins (owner, 7 Nov), so VC, C and M take the nose of a finer level where it is stricter (VC 14.6–16.1° against 16.9°), and a build pays up to four solves per station. This keeps the family rule exact; the first build (VC and F only) needed a repair at M on the flying wings, and that is gone (Study 9).
 - **The coarse levels do not resolve transition.** VC and C have 9.1 and 11.8 cells per bubble: transition results there must not be trusted. The LM error bar needs M and F.
 - **The band rule rests on one source** (one vendor guide, one model), and the lighter band gives the shortest high-Re root bubbles (about 1.5 % c) only about 3 cells: fine for SA, wrong for LM.
 - **Two studies read the flow at real size.** The first refine map (Study 7) and the band count (Study 8) read the flow dataset per flight speed at real size; the refine map at the Re levels (Study 11) replaces Study 7 on the new reference wings.
-- **The upper band written 0–85 % c missed the upper transition at low Re** (Study 11: 0–49 % of the strips fit at Re 10⁵ and 3 × 10⁵). Fixed on 8 Nov: written 0–100 % c (owner); the built mesh already had band-size cells there (one node list), so only F changed a little (Study 12).
+- **The upper band written 0–85 % c missed the upper transition at low Re** (Study 11: 0–49 % of the strips fit at Re 10⁵ and 3 × 10⁵). Fixed on 8 Nov: written 0–100 % c (owner). The built mesh already had band-size cells there (one node list), so the counts hardly moved: +2 ring nodes on VC 44 of 782, C 3 of 80, M 24 of 80, F 383 of 782 meshes, the cells by at most +1.1 % (Study 12).
 - **No XFOIL answer on many tailless strips at −5°** (up to 46 % BWB, 43 % flying wing): the band there rests on the other angles.
 - **Studies 1–8 used the old 20 reference shapes**, 13 of which were replaced on 7 Nov; their numbers are for those shapes (Study 10 shows the size alone changes no ring).
 - **Starting values without a ladder:** the station gap, the 12 per panel, the tip gap, the 2 % c cap, the 10° nose angle.

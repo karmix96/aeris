@@ -316,7 +316,8 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     at F (1.25 at VC gives 1.107 at F).
     **Built 7 Nov** (`configs/surface.yaml`, `cfdauto/mesh/laws.py`; the first approach kept in
     `configs/surface_first.yaml`); screened on the rebuilt sets (Stage 2 Study 9): 1,724 of 1,724 builds
-    passed; F 6.9 M cells median on the wing blocks (20 reference wings × 4 Re), below the 9–11 M asked.
+    passed; F 6.9 M cells median on the wing blocks (20 reference wings × 4 Re), below the 9–11 M asked. On 8 Nov
+    every set at every level (Study 12): 3,128 of 3,128; F 6.73 M median on the reference wings at the new Re levels.
     The pages use this count, because its rule is written down and it can be redone (n = the largest over the
     stations of ceil(ln(1 + (g − 1) D / s0) / ln g); D = 2 local chords; g = 1.25, 1.187, 1.141, 1.107 at VC, C, M, F;
     s0 from y⁺ = 1, 0.77, 0.59, 0.46 at each station's local Re). The first estimate (6 Nov) gave 10.9 M; its
@@ -409,4 +410,7 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     one wing at one Re with one factor (0.9^n, n the most rounds any level needed), so every spacing refines by
     exactly 1.3; every mesh carries `nose_repair` and `nose_family` (the factor, the rounds, the levels that needed
     them, the label) in `quality.json` and `manifest.json`. A test forces a repair and checks that the factor goes
-    on every level with the ratio exact. Screened: Stage 2 Study 12 (the family screen, every set at VC, C, M, F).
+    on every level with the ratio exact. Screened: Stage 2 Study 12 (the family screen, every set at VC, C, M, F):
+    3,128 of 3,128 builds pass (782 families × 4 levels), 0 families needed a repair, every family carries one factor
+    at every level, all labelled "none"; the largest turning stays inside every check limit (M 10.02°, F 7.72°).
+    The upper band at 0–100 % c added 2 ring nodes on some meshes (VC 44 of 782, F 383 of 782; cells at most +1.1 %).

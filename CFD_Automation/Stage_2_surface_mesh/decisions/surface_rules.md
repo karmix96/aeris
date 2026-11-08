@@ -530,3 +530,50 @@ pyGeo, to round-off. The full sets were not meshed on pyGeo.
 **Then (8 Nov): the label fix in Stage 1 (decision 79).** Every wing's input hash changed (the geometry code hash
 aa6ccb5d → 51e670d2); no surface did (the same surface hash on all 722). The mesher reads only the loft, so every
 mesh and screen above stands; 5 builds re-meshed at VC (the two relabelled wings among them) have the same node hashes.
+
+
+## 19. The family screen (8 Nov 2026; decision 80 and the upper band 0–100 % c)
+
+**What was decided (owner, 8 Nov).** Decision 77 confirmed (the growth limits by the family rule; the station growth
+1.2 with at least 12 gaps per panel at M). The upper band written 0–100 % c (was 0–85 % c, decision 58). The ratio
+between levels stays exactly 1.3, also with a nose repair, and a repaired mesh is labelled (decision 80).
+
+**What was built.** A repair round (every station's nose spacing × 0.9) is needed only where a ring turns past its
+level's check limit: the angle + 10 × the solve's tolerance, 0.2° (`REPAIR_TOL_STEPS`). Before, 0.02° past the angle
+was enough, and 4 of 782 F builds took a round for 0.003–0.006°. `build_family` builds all four levels of one wing
+at one Re with one nose factor 0.9^n (n the most rounds any level needed), so every asked spacing still refines by
+exactly 1.3; every mesh carries `nose_repair` (its own rounds, the family factor, the label) and `nose_family` (the
+levels, the factor, the rounds, which levels needed them) in `quality.json` and `manifest.json`. Tests: a forced
+repair goes on every level with the ratio exact; no repair gives the label "none" (43 tests).
+
+**The screen.** Every set at VC, C, M and F for the first time: the 702 wings of training_focus, training_full,
+corner1 and corner2 at Re 3 × 10⁵, and the 20 reference wings at the four Re levels: 782 families × 4 levels =
+3,128 builds (numpy loft; two processes, about 2.9 h each). Code: `scripts/screen.py --family`,
+`scripts/screen_study.py --family`; data: `data/studies/screen_family_*.json`; figures `docs/page/family_*.png`.
+
+| Level | Builds | Passed | Ring nodes | Stations | Cells [M] min–median–max | Largest turning (check limit) | Lowest cap quad | Build time [s] median (max) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| VC | 782 | 782 | 120–220–240 | 51–63–84 | 0.24–0.60–1.02 | 16.11° (17.1°) | 0.075 | 4.5 (6.9) |
+| C | 782 | 782 | 154–284–308 | 65–80–108 | 0.51–1.26–2.19 | 12.77° (13.2°) | 0.080 | 5.7 (8.1) |
+| M | 782 | 782 | 198–368–398 | 82–100–136 | 1.07–2.70–4.69 | 10.02° (10.2°) | 0.057 | 7.2 (10.2) |
+| F | 782 | 782 | 254–476–514 | 106–131–177 | 2.28–5.91–10.21 | 7.72° (7.89°) | 0.061 | 9.3 (13.8) |
+
+- **The nose repair:** 0 of 782 families needed one; every family carries one factor at every level (782 of 782);
+  the label is "none" on all 3,128 meshes. A few rings pass their angle by up to 0.03° (M 10.02°, F 7.72°), inside
+  the check limits.
+- **The family rule over all 782 families:** the delivered nose and trailing-edge cells refine by 1.295–1.304 per
+  step, the band and tip-gap cells by 1.269–1.326 (whole cells per band and gap), the cells by 2.12, 2.13 and 2.18
+  (medians).
+- **Against the screens it replaces** (the sets of 7 Nov at VC and F, the reference wings of 8 Nov at every level):
+  the same counts on VC 738 of 782, C 77 of 80, M 56 of 80, F 396 of 782. The upper band added 2 ring nodes on VC 44,
+  C 3, M 24 and F 383 meshes (cells at most +1.1 %); 3 F meshes have 2 fewer: 3 of the 4 builds with a nose repair
+  on 7 Nov, which need none now. Node positions moved on most meshes (the same node hash on VC 50 of 782, F 22 of
+  782): the band now runs to the trailing edge on the upper side.
+- **Cells,** every set at Re 3 × 10⁵, F median (largest): BWB 6.55 (8.87) M, flying wing 5.73 (6.91), cranked 5.51
+  (8.14), tapered 5.55 (7.45). The reference wings × 4 Re: F 6.73 M median, largest 10.21 M (BWB reference wing 3 at
+  4 × 10⁶; 10.17 M before the band change).
+
+**Conclusion.** The rules mesh every wing at every level: 3,128 of 3,128 builds pass, so the failure rate per level
+is below about 0.38 % (rule of three, 95 % confidence), for the surface alone. The family rule holds by construction,
+also for the nose, and no family needed a repair. The upper band at 0–100 % c costs at most +1.1 % cells. Not shown:
+the volume mesh (Stage 3), the solver, and pyGeo on the full sets (checked on the reference wings only).

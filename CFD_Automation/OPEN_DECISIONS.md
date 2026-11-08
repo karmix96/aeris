@@ -214,7 +214,9 @@
     (one node list, 60, and the lower band 0–100 % c, 74); at the Re levels the upper transition sits past 85 % c at
     low Re (65). Writing it as 0–100 % c is for the owner to decide: the same mesh at VC to round-off (80 of 80
     reference builds), 2 more ring nodes at F on 42 of 80 (+0.39 % cells median), and a re-run of the screen (about
-    1.5 h; `Stage_2_surface_mesh/data/studies/upper_band_check.json`).
+    1.5 h; `Stage_2_surface_mesh/data/studies/upper_band_check.json`). **8 Nov: written 0–100 % c (owner)**; Study 12
+    confirms it on the reference wings and finds, on every set, 2 more ring nodes on VC 44 of 782 and F 383 of 782
+    meshes, cells at most +1.1 %.
 59. **One surface per wing and Re level**; the mesh name is `mesh_<level>_<wing_hash8>_re<Re>` (the Stage 0
     name plus the Re on the mean chord). The tip gap (s0) and the band cell depend on Re. Building one takes
     3–6 s.
@@ -272,7 +274,8 @@
     angles (up to 46 % BWB and 43 % flying-wing strips at −5°). Still a candidate: the 3-D check comes first.
     **8 Nov (owner): the upper band is written 0–100 % c** (`configs/surface.yaml`), so the written rule says what the
     mesh does; the cost was measured on 7 Nov (the same mesh at VC, +2 ring nodes at F on 42 of 80 reference builds,
-    +0.39 % cells). Built and screened in the family screen (80; Stage 2 Study 12).
+    +0.39 % cells). Built and screened in the family screen (80; Stage 2 Study 12): on every set, 2 more ring nodes
+    on VC 44 of 782 and F 383 of 782 meshes (the reference wings as measured on 7 Nov), cells at most +1.1 %.
 66. **Upgrade the flow dataset with AVL and NeuralFoil (proposal, 3 Nov 2026).** Today: 2-D XFOIL strips with
     one uniform induced angle (elliptic) for the whole wing, section tables with trilinear lookup, blends
     of the parents' answers between sections, 1.5–4 % failed XFOIL points filled. AVL would give the

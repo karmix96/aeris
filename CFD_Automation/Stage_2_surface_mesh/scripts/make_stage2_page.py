@@ -31,6 +31,7 @@ from cfdauto.mesh.laws import first_cell_c, rules  # noqa: E402
 
 FIRST = ROOT / "configs" / "surface_first.yaml"    # the first approach (2-3 Nov): every first-approach value
 LEVELS = ("VC", "C", "M", "F")                     # the new levels (built 7 Nov)
+N_TESTS = 43                                       # pytest Stage_2_surface_mesh/tests, 8 Nov 2026 (2 for the family nose)
 STAGE1 = ROOT.parent / "Stage_1_geometry"
 DOCS = ROOT / "docs"
 PAGE = DOCS / "page"
@@ -712,7 +713,7 @@ def family_screen_section(sf: dict) -> str:
     rep = nf["repaired_families"]
     rep_s = ("none" if rep == 0 else _and(nf["repaired"][:6]) + (" …" if rep > 6 else ""))
     lab_s = ", ".join(f"{k}: {v}" for k, v in nf["labels"].items())
-    secs = sum(d["seconds"]["median"] * d["builds"] for d in full.values() if d.get("seconds"))
+    secs = sf.get("seconds_total") or sum(d["seconds"]["median"] * d["builds"] for d in full.values() if d.get("seconds"))
     fails = {}
     for d in full.values():
         for k, v in d["failed_checks"].items():
@@ -724,20 +725,35 @@ def family_screen_section(sf: dict) -> str:
         d = ab.get(lev)
         if not d:
             continue
-        plus = sum(v for k, v in d["ring_nodes_added"].items() if k != "0")
+        gain = {int(k): v for k, v in d["ring_nodes_added"].items() if int(k) > 0}
+        lose = {int(k): v for k, v in d["ring_nodes_added"].items() if int(k) < 0}
         ab_s.append(f"{lev}: the same ring nodes, stations and cells on {d['same_counts']} of {d['compared']}"
-                    + (f"; {plus} gained ring nodes ({', '.join(f'+{k}: {v}' for k, v in sorted(d['ring_nodes_added'].items()) if k != '0')}), "
-                       f"the cells by at most +{100 * (d['cells_ratio']['max'] - 1):.2f} %" if plus else "")
+                    + (f"; {sum(gain.values())} gained ring nodes ({', '.join(f'+{k}: {v}' for k, v in sorted(gain.items()))}), "
+                       f"the cells by at most +{100 * (d['cells_ratio']['max'] - 1):.2f} %" if gain else "")
+                    + (f"; {sum(lose.values())} lost ring nodes ({', '.join(f'−{-k}: {v}' for k, v in sorted(lose.items()))}), "
+                       f"the cells by at most −{100 * (1 - d['cells_ratio']['min']):.2f} %" if lose else "")
                     + (f"; nose repairs {d['repairs_before']} before, {d['repairs_now']} now" if d["repairs_before"] or d["repairs_now"] else ""))
     ab_txt = "; ".join(ab_s)
+    pos_s = " or ".join(f"+{k}" for k in sorted({int(k) for lev in ab for k in ab[lev]["ring_nodes_added"] if int(k) > 0}))
+    plus_s = ", ".join(f"{lev} {sum(v for k, v in ab[lev]['ring_nodes_added'].items() if int(k) > 0)} of {ab[lev]['compared']}"
+                       for lev in LEVELS if lev in ab)
+    neg = {lev: sum(v for k, v in ab[lev]["ring_nodes_added"].items() if int(k) < 0) for lev in ab}
+    band_c = (f"The upper band written 0–100 % c moved nodes but hardly the counts: {pos_s} ring nodes on {plus_s} meshes, "
+              f"the cells by at most +{100 * max(ab[lev]['cells_ratio']['max'] - 1 for lev in ab):.1f} %"
+              + ("; " + ", ".join(f"{n} {lev} meshes have fewer ring nodes, the builds that had a nose repair before"
+                                  for lev, n in neg.items() if n) if any(neg.values()) else "") + "." if ab else "")
     # the cells
     cells_s = ", ".join(f"{lev} {full[lev]['cells_est']['median'] / 1e6:.2f} ({full[lev]['cells_est']['max'] / 1e6:.2f})" for lev in LEVELS)
     turn_s = ", ".join(f"{lev} {full[lev]['nose_turning']['max']:.2f}°" for lev in LEVELS)
     angle = {"VC": 16.9, "C": 13.0, "M": 10.0, "F": 7.69}
     fa = sf.get("family_all", {})
-    keys6 = ("nose_root", "nose_tip", "te_root", "band_root", "band_tip", "tip_gap")
-    sp_lo = min(fa[p]["spacings"][k]["min"] for p in fa for k in keys6) if fa else float("nan")
-    sp_hi = max(fa[p]["spacings"][k]["max"] for p in fa for k in keys6) if fa else float("nan")
+    def _rng(keys):                          # the delivered spacing, coarser / finer, over every family and step
+        if not fa:
+            return float("nan"), float("nan")
+        return (min(fa[p]["spacings"][k]["min"] for p in fa for k in keys),
+                max(fa[p]["spacings"][k]["max"] for p in fa for k in keys))
+    nt_lo, nt_hi = _rng(("nose_root", "nose_tip", "te_root"))
+    bt_lo, bt_hi = _rng(("band_root", "band_tip", "tip_gap"))
     cells_r = [fa[p]["counts"]["cells_est"]["median"] for p in ("VC/C", "C/M", "M/F") if p in fa]
     pairs = fa.get("VC/C", {}).get("pairs", 0)
     desk = {lev: (full[lev]["fits_desktop"], full[lev]["fits_desktop_36"], full[lev]["builds"]) for lev in LEVELS}
@@ -769,25 +785,27 @@ def family_screen_section(sf: dict) -> str:
                 f"No check was crossed at any level. The cap quads remain the closest by themselves: {capmin['VC']:.3f} at VC, {capmin['C']:.3f} at C, {capmin['M']:.3f} at M, {capmin['F']:.3f} at F, against the refusal limit 0.05.")
     fig3 = figc("family_family.png",
                 "Every spacing and count between neighbouring levels, on the 20 reference wings × 4 Re (as Study 9): spacings coarser / finer (left), counts finer / coarser (right).",
-                (f"Over every family ({pairs} pairs per step) the nose, trailing-edge, band and tip-gap cells refine by {sp_lo:.3f}–{sp_hi:.3f} per step, and the cells grow by "
-                 + ", ".join(f"{x:.2f}" for x in cells_r) + " (median), close to 1.3³ = 2.2." if fa else "–"))
+                (f"Over every family ({pairs} pairs per step) the delivered nose and trailing-edge cells refine by {nt_lo:.3f}–{nt_hi:.3f} per step "
+                 f"(the asked nose spacing by exactly 1.3; the rest is whole node counts), the band and tip-gap cells by {bt_lo:.3f}–{bt_hi:.3f} "
+                 f"(whole cells per band and per gap), and the cells grow by "
+                 + ", ".join(f"{x:.2f}" for x in cells_r) + " per step (median), close to 1.3³ = 2.2." if fa else "–"))
     return f"""
   <h3 id="study12">Study 12 · The family screen: every set at every level, one nose factor per family (8 Nov 2026)</h3>
-  <p><strong>What was done.</strong> Two decisions of the owner (8 Nov), built. (1) <strong>The nose repair belongs to the family</strong>, one wing at one Re: a repair round (every station's nose spacing × 0.9) is needed only where a ring turns past its level's check limit (the angle + 0.2°; before, 0.02° past the angle was enough, and 4 of 782 F builds took a round for 0.003–0.006°). If any level of a family needs a round, the same factor goes on all four levels and all four are rebuilt, so every spacing still refines by exactly 1.3; every mesh carries the label (none, or family repair with its factor and the level that needed it). (2) <strong>The upper band is written 0–100 % c</strong> (was 0–85 % c; the built mesh already had band cells there). Then every set at all four levels for the first time: the {n_other} wings of training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵, and the 20 reference wings at the four Re levels: {fams} families × 4 levels = {builds} builds, with the numpy loft, in two processes (about {secs / 3600 / 2:.1f} h each). Code: <code>scripts/screen.py --family</code> (<code>cfdauto.mesh.surface.build_family</code>), <code>scripts/screen_study.py --family</code>; data: <code>data/studies/screen_family_VC.json</code> to <code>screen_family_F.json</code>, <code>screen_family_summary.json</code>.</p>
+  <p><strong>What was done.</strong> Two decisions of the owner (8 Nov), built. (1) <strong>The nose repair belongs to the family</strong>, one wing at one Re: a repair round (every station's nose spacing × 0.9) is needed only where a ring turns past its level's check limit (the angle + 0.2°; before, 0.02° past the angle was enough, and 4 of 782 F builds took a round for 0.003–0.006°). If any level of a family needs a round, the same factor goes on all four levels and all four are rebuilt, so every spacing still refines by exactly 1.3; every mesh carries the label (none, or family repair with its factor and the level that needed it). (2) <strong>The upper band is written 0–100 % c</strong> (was 0–85 % c; the built mesh already had band cells there). Then every set at all four levels for the first time: the {n_other} wings of training_focus, training_full, corner1 and corner2 at Re 3 × 10⁵, and the 20 reference wings at the four Re levels: {fams} families × 4 levels = {builds:,} builds, with the numpy loft, in two processes (about {secs / 3600 / 2:.1f} h each). Code: <code>scripts/screen.py --family</code> (<code>cfdauto.mesh.surface.build_family</code>), <code>scripts/screen_study.py --family</code>; data: <code>data/studies/screen_family_VC.json</code> to <code>screen_family_F.json</code>, <code>screen_family_summary.json</code>.</p>
   <p><strong>Result.</strong></p>
   <ul>
-    <li><strong>Passed:</strong> {ok} of {builds} builds ({refused} refused, {crashed} crashed; refusals by check: {fail_s}).</li>
-    <li><strong>The nose repair:</strong> {rep} of {fams} families needed one ({rep_s}). Every family carries one factor at every level ({nf['same_factor_at_every_level']} of {fams}); no level kept a round of its own ({nf['rounds_of_their_own']}). Labels over the {builds} meshes: {lab_s}.</li>
+    <li><strong>Passed:</strong> {ok:,} of {builds:,} builds ({refused} refused, {crashed} crashed; refusals by check: {fail_s}).</li>
+    <li><strong>The nose repair:</strong> {rep} of {fams} families needed one ({rep_s}). Every family carries one factor at every level ({nf['same_factor_at_every_level']} of {fams}); no level kept a round of its own ({nf['rounds_of_their_own']}). Labels over the {builds:,} meshes: {lab_s}.</li>
     <li><strong>Against the screens it replaces</strong> (the sets of 7 Nov at VC and F; the reference wings of 8 Nov at every level; the same wing, Re and level): {ab_txt}.</li>
     <li><strong>Cells</strong> (wing blocks, estimate), median (largest) over every family, in millions: {cells_s}.</li>
-    <li><strong>The nose:</strong> largest turning {turn_s} (angles 16.9°, 13°, 10°, 7.69°).</li>
+    <li><strong>The nose:</strong> largest turning {turn_s} (angles 16.9°, 13°, 10°, 7.69°; check limits 17.1°, 13.2°, 10.2°, 7.89°): {"every ring inside its check limit, so no round was needed" if all(full[lev]['nose_turning']['max'] <= angle[lev] + 0.2 for lev in LEVELS) else "some rings past their check limit took a family round"}{"; a few rings pass their angle by up to " + f"{max(full[lev]['nose_turning']['max'] - angle[lev] for lev in LEVELS):.2f}° (the solve's tolerance is 0.02°), which a round would have repaired before" if any(full[lev]['nose_turning']['max'] - angle[lev] > 0.02 for lev in LEVELS) else ""}.</li>
   </ul>
   {"".join(t)}
   {"".join(t2)}
   {fig1}
   {fig2}
   {fig3}
-  {cbox(f"The rules mesh every wing at every level: {ok} of {builds} builds passed" + (f", so, by the rule of three, the true failure rate per level on this design space is below about {300 / full['VC']['builds']:.2f} % with 95 % confidence, for the surface alone" if ok == builds else "") + f". The family rule now holds by construction, also for the nose: one nose factor per family at every level; {'no family needed a repair' if rep == 0 else f'{rep} families needed one, and it went on every level'}. The upper band written 0–100 % c changed only F, by at most 2 ring nodes. What this does not show: the volume mesh (Stage 3), the solver, and node-by-node agreement with pyGeo on the full sets (checked on the reference wings).")}"""
+  {cbox(f"The rules mesh every wing at every level: {ok:,} of {builds:,} builds passed" + (f", so, by the rule of three, the true failure rate per level on this design space is below about {300 / full['VC']['builds']:.2f} % with 95 % confidence, for the surface alone" if ok == builds else "") + f". The family rule now holds by construction, also for the nose: one nose factor per family at every level; {'no family needed a repair' if rep == 0 else f'{rep} families needed one, and it went on every level'}. {band_c} What this does not show: the volume mesh (Stage 3), the solver, and node-by-node agreement with pyGeo on the full sets (checked on the reference wings).")}"""
 
 
 def refine_re_section(rre: dict, uc: dict) -> str:
@@ -980,11 +998,61 @@ def build_page(d: dict) -> tuple[str, str]:
     crash_new = vcf["crashed"] + ff["crashed"] + rv["C"]["crashed"] + rv["M"]["crashed"]
     rep_new = vcf["repairs"] + ff["repairs"] + rv["C"]["repairs"] + rv["M"]["repairs"]
     fcell = rv["F"]["cells_est"]
+    sf_path = STUDIES / "screen_family_summary.json"
+    sf = json.loads(sf_path.read_text()) if sf_path.exists() else None
+    if sf:                                   # Study 12 (8 Nov): every set at every level; the pages use it from here on
+        fs = sf["full"]
+        n_f = sum(x["builds"] for x in fs.values()); ok_f = sum(x["passed"] for x in fs.values())
+        crash_f = sum(x["crashed"] for x in fs.values())
+        rep_f, fams_f = sf["nose_family"]["repaired_families"], sf["nose_family"]["families"]
+        vcx, fx = fs["VC"], fs["F"]
+        fcell = sf["reference"]["F"]["cells_est"]
+        cap_s = ", ".join(f"{fs[lev]['cap_quads_J']['min']:.3f} at {lev}" for lev in LEVELS)
+        ab = sf.get("against_before", {})
+        plus_s = ", ".join(f"{lev} {sum(v for k, v in ab[lev]['ring_nodes_added'].items() if int(k) > 0)} of {ab[lev]['compared']}"
+                           for lev in LEVELS if lev in ab)
+        lede_f = (f" The family screen (8 Nov) meshed every set at all four levels for the first time, one nose factor per "
+                  f"wing and Re: {ok_f:,} of {n_f:,} passed, {rep_f} families needed a nose repair (<a href=\"#study12\">Study 12</a>).")
+        verdict_box = (f'<div class="box verdict"><h3>Is the surface mesh finished?</h3><div class="big">Yes, on the numpy loft: '
+                       f'ready to close.</div><p>Every set at every level passed ({ok_f:,} of {n_f:,}, Study 12); both builder choices '
+                       f'and the upper band were decided on 8 Nov and built. The pyGeo loft on Mike\'s machine gives the same '
+                       f'meshes as the numpy loft on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 '
+                       f'each). Left: Mike\'s word to close, then Stage 3, the matched C-H volume mesh.</p></div>')
+        screen_box = (f'<div class="box good"><h3>The family screen (8 Nov)</h3><div class="big">{ok_f:,} of {n_f:,} builds passed</div>'
+                      f'<p>Every set at VC, C, M and F: {fams_f} families ({vcx["wings"] - 20} wings at Re 3 × 10⁵; the 20 reference '
+                      f'wings at all four Re levels) × 4 levels. {crash_f} crashes. One nose factor per family at every level: '
+                      f'{"no family needed a repair" if rep_f == 0 else f"{rep_f} families needed one, on every level"}. '
+                      f'Build time median {vcx["seconds"]["median"]:.1f} s at VC, {fx["seconds"]["median"]:.1f} s at F.</p></div>')
+        mesh_box = (f'<div class="box"><h3>The mesh (new rules)</h3><div class="big">one ring per station + a tip cap</div><p>At VC: '
+                    f'ring of {vcx["n_ring"]["min"]:.0f}–{vcx["n_ring"]["max"]:.0f} nodes, {vcx["n_span"]["min"]:.0f}–'
+                    f'{vcx["n_span"]["max"]:.0f} stations. At F: {fx["n_ring"]["min"]:.0f}–{fx["n_ring"]["max"]:.0f} nodes, '
+                    f'{fx["n_span"]["min"]:.0f}–{fx["n_span"]["max"]:.0f} stations. Fine level F: {fcell["median"] / 1e6:.2f} M '
+                    f'cells median on the wing blocks (20 reference wings × 4 Re; every set: {fx["cells_est"]["median"] / 1e6:.2f} M, '
+                    f'largest {fx["cells_est"]["max"] / 1e6:.2f} M; an estimate, the C-H wake lines add a rough +30–60 %), '
+                    f'against 9–11 M asked.</p></div>')
+        weak_box = (f'<div class="box bad"><h3>Weak points</h3><div class="big">numpy loft, no solve, cap quads near the limit</div>'
+                    f'<p>The cap quads come close to the 0.05 limit (lowest {cap_s}); 17 % more stations than the plan file; the '
+                    f'coarse levels do not resolve transition; Studies 1–8 used the old 20 reference shapes; the full sets were '
+                    f'meshed on the numpy loft only. All in <a href="#open">Weak points</a>.</p></div>')
+        done_f = f" the family screen (8 Nov): every set at every level, {ok_f:,} of {n_f:,} passed, one nose factor per family (Study 12);"
+        not_done_box = (f'<div class="box verdict"><h3>Not finished</h3><div class="big">the close</div><p>Nothing is left in '
+                        f'Stage 2 but the owner\'s word to close. Every mesh here is on the numpy loft; on Mike\'s machine (8 Nov) '
+                        f'the pyGeo loft gave the same meshes on the 20 reference wings (VC and F: the same ring nodes and stations '
+                        f'on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). Both builder choices were confirmed and the '
+                        f'upper band decided (8 Nov); the nose repair now belongs to the family. Then Stage 3 starts.</p></div>')
+        pos_s = " or ".join(f"+{k}" for k in sorted({int(k) for lev in ab for k in ab[lev]["ring_nodes_added"] if int(k) > 0}))
+        band_s = (f"Fixed on 8 Nov: written 0–100 % c (owner). The built mesh already had band-size cells there (one node list), "
+                  f"so the counts hardly moved: {pos_s} ring nodes on {plus_s} meshes, the cells by at most "
+                  f"+{100 * max(ab[lev]['cells_ratio']['max'] - 1 for lev in ab):.1f} % (Study 12)." if ab else
+                  "Fixed on 8 Nov: written 0–100 % c (owner) (Study 12).")
+    else:
+        lede_f = done_f = ""
+        verdict_box = screen_box = mesh_box = weak_box = not_done_box = band_s = None
     head = f"""
 <header>
   <div class="eyebrow">CFD_Automation · Stage 2 · surface mesh · cfdauto {__version__} · 2 Nov 2026 · updated 8 Nov 2026</div>
   <h1>Surface Mesh</h1>
-  <p class="lede">What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the <em>first approach</em>). A new approach was decided on 4–6 Nov and <strong>built on 7 Nov</strong>: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed {ok_new} of {n_new} builds (<a href="#study9">Study 9</a>). The section <a href="#change">What was first, and what changes</a> says what changed; an amber <em>What changes</em> box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–11 are new.</p>
+  <p class="lede">What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the <em>first approach</em>). A new approach was decided on 4–6 Nov and <strong>built on 7 Nov</strong>: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed {ok_new:,} of {n_new:,} builds (<a href="#study9">Study 9</a>).{lede_f} The section <a href="#change">What was first, and what changes</a> says what changed; an amber <em>What changes</em> box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–{12 if sf else 11} are new.</p>
   <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes</a><a href="#why">Why structured</a><a href="#what">What Stage 2 is</a><a href="#primer">What the primer asks</a><a href="#how">The steps, one by one</a><a href="#rules">The rules</a><a href="#studies">Studies and conclusions</a><a href="#study9">Study 9: the new screen</a><a href="#study10">Study 10: similarity</a><a href="#study11">Study 11: refine map by Re</a><a href="#study12">Study 12: the family screen</a><a href="#steps">What was done, step by step</a><a href="#assumptions">Assumptions</a><a href="#findings">Findings and decisions</a><a href="#open">Open, weak points, to do</a><a href="#handover">Handover to Stage 3</a><a href="#files">Files and commands</a></nav>
 </header>"""
 
@@ -992,11 +1060,11 @@ def build_page(d: dict) -> tuple[str, str]:
 <section id="glance">
   <h2>At a glance</h2>
   <div class="three">
-    <div class="box verdict"><h3>Is the surface mesh finished?</h3><div class="big">Built and screened with the new rules (7 Nov). Not closed yet.</div><p>The pyGeo loft on Mike's machine (8 Nov) gives the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) on the 20 reference wings. Left: two builder choices for Mike to confirm (both stricter than decided), then close Stage 2 and start Stage 3, the matched C-H volume mesh.</p></div>
-    <div class="box good"><h3>The new screen (7 Nov; reference wings 8 Nov)</h3><div class="big">{ok_new} of {n_new} builds passed</div><p>Every set at VC and at F ({vcf['wings']} wings at Re 3 × 10⁵; the 20 reference wings at all four Re levels), and the reference wings at C and M. {crash_new} crashes. The nose solved at every level: {'no nose repair' if rep_new == 0 else f"no nose repair on the reference builds; {ff['repairs']} of {ff['builds']} F builds needed one round"}. Build time median {vcf['seconds']['median']:.1f} s at VC, {ff['seconds']['median']:.1f} s at F.</p></div>
-    <div class="box"><h3>The mesh (new rules)</h3><div class="big">one ring per station + a tip cap</div><p>At VC: ring of {vcf['n_ring']['min']:.0f}–{vcf['n_ring']['max']:.0f} nodes, {vcf['n_span']['min']:.0f}–{vcf['n_span']['max']:.0f} stations. At F: {ff['n_ring']['min']:.0f}–{ff['n_ring']['max']:.0f} nodes, {ff['n_span']['min']:.0f}–{ff['n_span']['max']:.0f} stations. Fine level F: {fcell['median'] / 1e6:.1f} M cells median on the wing blocks (20 reference wings × 4 Re; an estimate, the C-H wake lines add a rough +30–60 %), against 9–11 M asked.</p></div>
-    <div class="box"><h3>Rules and checks</h3><div class="big">10 rules · 13 checks · 41 tests</div><p>Every rule in one YAML with its anchor level and source (<code>configs/surface.yaml</code>; the first approach in <code>configs/surface_first.yaml</code>); every check with a value, a limit and a margin; a refused mesh writes only <code>refusal.json</code>. Code in <code>CFD_Automation/cfdauto/mesh/</code>, the rest in <code>Stage_2_surface_mesh/</code> (branch stage2-surface-mesh).</p></div>
-    <div class="box bad"><h3>Weak points</h3><div class="big">numpy loft, no solve, cap quads near the limit</div><p>The cap quads come close to the 0.05 limit (lowest {vcf['cap_quads_J']['min']:.3f} at VC, {ff['cap_quads_J']['min']:.3f} at F); 17 % more stations than the plan file; the coarse levels do not resolve transition; the upper band as written misses the upper transition at low Re (the built mesh covers it); Studies 1–8 used the old 20 reference shapes. All in <a href="#open">Weak points</a>.</p></div>
+    {verdict_box or f'''<div class="box verdict"><h3>Is the surface mesh finished?</h3><div class="big">Built and screened with the new rules (7 Nov). Not closed yet.</div><p>The pyGeo loft on Mike's machine (8 Nov) gives the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) on the 20 reference wings. Left: the family screen (Study 12), then close Stage 2 and start Stage 3, the matched C-H volume mesh.</p></div>'''}
+    {screen_box or f'''<div class="box good"><h3>The new screen (7 Nov; reference wings 8 Nov)</h3><div class="big">{ok_new:,} of {n_new:,} builds passed</div><p>Every set at VC and at F ({vcf['wings']} wings at Re 3 × 10⁵; the 20 reference wings at all four Re levels), and the reference wings at C and M. {crash_new} crashes. The nose solved at every level: {'no nose repair' if rep_new == 0 else f"no nose repair on the reference builds; {ff['repairs']} of {ff['builds']} F builds needed one round"}. Build time median {vcf['seconds']['median']:.1f} s at VC, {ff['seconds']['median']:.1f} s at F.</p></div>'''}
+    {mesh_box or f'''<div class="box"><h3>The mesh (new rules)</h3><div class="big">one ring per station + a tip cap</div><p>At VC: ring of {vcf['n_ring']['min']:.0f}–{vcf['n_ring']['max']:.0f} nodes, {vcf['n_span']['min']:.0f}–{vcf['n_span']['max']:.0f} stations. At F: {ff['n_ring']['min']:.0f}–{ff['n_ring']['max']:.0f} nodes, {ff['n_span']['min']:.0f}–{ff['n_span']['max']:.0f} stations. Fine level F: {fcell['median'] / 1e6:.1f} M cells median on the wing blocks (20 reference wings × 4 Re; an estimate, the C-H wake lines add a rough +30–60 %), against 9–11 M asked.</p></div>'''}
+    <div class="box"><h3>Rules and checks</h3><div class="big">10 rules · 13 checks · {N_TESTS} tests</div><p>Every rule in one YAML with its anchor level and source (<code>configs/surface.yaml</code>; the first approach in <code>configs/surface_first.yaml</code>); every check with a value, a limit and a margin; a refused mesh writes only <code>refusal.json</code>. Code in <code>CFD_Automation/cfdauto/mesh/</code>, the rest in <code>Stage_2_surface_mesh/</code> (branch stage2-surface-mesh).</p></div>
+    {weak_box or f'''<div class="box bad"><h3>Weak points</h3><div class="big">numpy loft, no solve, cap quads near the limit</div><p>The cap quads come close to the 0.05 limit (lowest {vcf['cap_quads_J']['min']:.3f} at VC, {ff['cap_quads_J']['min']:.3f} at F); 17 % more stations than the plan file; the coarse levels do not resolve transition; Studies 1–8 used the old 20 reference shapes. All in <a href="#open">Weak points</a>.</p></div>'''}
     <div class="box"><h3>The first screen (2–3 Nov)</h3><div class="big">{tot['passed']} of {tot['total']} builds passed</div><p>The first rules at level C, on the geometry of before 7 Nov: {tot['n_wings']} wings of 4 types and 5 sets at Re 3 × 10⁵; the 20 reference wings at all four Re levels. {tot['crashed']} crashes. Build time median {tot['sec_med']:.1f} s, max {tot['sec_max']:.1f} s.</p></div>
   </div>
 </section>"""
@@ -1253,7 +1321,7 @@ def build_page(d: dict) -> tuple[str, str]:
   {figc("screen_dist.png", "Distributions over the screen at Re 3 × 10⁵: ring nodes and stations per type, and the lowest scaled Jacobian of the wing quads and of the cap quads per wing, per type (dashed: the refusal limit 0.05).",
         "The wing quads are good on all types (median 0.82–0.98); the few wings below 0.3 are corner wings with an 85°-swept first panel. The cap quads are the weaker part (median 0.19–0.43): the H patch is squeezed between a thin section and the many chordwise cells. Both are far from the refusal limit; the march will say whether the cap quality matters.")}
   {cbox("The mesher is robust on the sets we have: 0 refusals in 790 builds at level C, so, by the rule of three (Stage 0, D2), the true failure rate on this design space is below about 0.4 % with 95 % confidence, for the surface alone. What the screen does not show: whether the volume march accepts these surfaces, whether 20 nodes per bubble is the right coarse level, and anything about the flow. It was run on the numpy loft; on 8 Nov the pyGeo loft gave the same meshes on the 20 reference wings (Mike's machine).")}
-  {chg(f"Done on 7 Nov: the new screen of the built rules on the rebuilt sets (unit mean chord, the nose fix; new hashes) is <a href='#study9'>Study 9</a>: every set at VC and F, the 20 reference wings at all four levels and Re levels; {ok_new} of {n_new} builds passed.", tag="Updated 7 Nov 2026")}
+  {chg(f"Done on 7 Nov: the new screen of the built rules on the rebuilt sets (unit mean chord, the nose fix; new hashes) is <a href='#study9'>Study 9</a>: every set at VC and F, the 20 reference wings at all four levels and Re levels; {ok_new:,} of {n_new:,} builds passed.", tag="Updated 7 Nov 2026")}
 
   <h3>Study 2 · The family ratios (C, M, F; first approach)</h3>
   <p><strong>What was done.</strong> Levels C, M, F of the four reference wings at Re 3 × 10⁵; the ratio of every spacing between levels measured on the built meshes (nose cells at the root and the tip, the trailing-edge cell, the band cell at the root and the tip, the first and last station gap, a base cell), and the counts.</p>
@@ -1361,22 +1429,22 @@ def build_page(d: dict) -> tuple[str, str]:
 <section id="open">
   <h2>Open, weak points, to do, and is it finished?</h2>
   <div class="three">
-    <div class="box good"><h3>Finished</h3><div class="big">both approaches built and screened</div><p>The first approach (2–3 Nov): the mesher, its rules, its checks, the screen, the family rule, 14 tests then. The new approach (7 Nov): levels VC, C, M, F with anchored targets, the lighter rules, the lower band from the leading edge, in the code; the nose fix and similarity in Stage 1; the new screen ({ok_new} of {n_new} passed); 41 tests now (6 for the refine map by Re level); this page and the decisions.</p></div>
-    <div class="box verdict"><h3>Not finished</h3><div class="big">Mike's two confirmations, the close</div><p>Every mesh here is on the numpy loft; on Mike's machine (8 Nov) the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) on the 20 reference wings. Two builder choices go past the decisions (both stricter) and need Mike's yes: the growth limits by the family rule; the station growth 1.2 (+17 % stations against the plan). The third, the nose, is answered: solved at every level, the strictest wins. Then Stage 2 closes and Stage 3 starts.</p></div>
+    <div class="box good"><h3>Finished</h3><div class="big">both approaches built and screened</div><p>The first approach (2–3 Nov): the mesher, its rules, its checks, the screen, the family rule, 14 tests then. The new approach (7 Nov): levels VC, C, M, F with anchored targets, the lighter rules, the lower band from the leading edge, in the code; the nose fix and similarity in Stage 1; the new screen ({ok_new:,} of {n_new:,} passed);{done_f} {N_TESTS} tests now (6 for the refine map by Re level, 2 for the family nose); this page and the decisions.</p></div>
+    {not_done_box or '''<div class="box verdict"><h3>Not finished</h3><div class="big">the family screen, the close</div><p>Every mesh here is on the numpy loft; on Mike's machine (8 Nov) the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) on the 20 reference wings. Both builder choices were confirmed and the upper band decided (8 Nov); the family screen (Study 12) is to run. Then Stage 2 closes and Stage 3 starts.</p></div>'''}
     <div class="box bad"><h3>Not known</h3><div class="big">anything about the flow</div><p>No solve has been run. Whether the surface gives a good C-H volume mesh and a converged run is Stage 3's first result. The cell counts are estimates (surface × wall layers, no wake lines) until a C-H wing is built and counted.</p></div>
   </div>
   <h3>Weak points, said plainly</h3>
   <ul>
     <li><strong>Numpy loft here; pyGeo checked on the reference wings only.</strong> Every mesh on this page was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.</li>
     <li><strong>No solve yet.</strong> Nothing here shows that the surface gives a good volume mesh or a converged run.</li>
-    <li><strong>The cap quads come close to the limit.</strong> Lowest {vcf['cap_quads_J']['min']:.3f} at VC and {ff['cap_quads_J']['min']:.3f} at F, against the refusal limit 0.05 (Study 9). Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). The march will say whether this matters.</li>
+    <li><strong>The cap quads come close to the limit.</strong> {f"Lowest {cap_s}, against the refusal limit 0.05 (every set at every level, Study 12)." if sf else f"Lowest {vcf['cap_quads_J']['min']:.3f} at VC and {ff['cap_quads_J']['min']:.3f} at F, against the refusal limit 0.05 (Study 9)."} Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). The march will say whether this matters.</li>
     <li><strong>The stations are 17 % more than the plan.</strong> The decided station growth (1.2) and gaps per panel (12 at M) give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.</li>
-    <li><strong>The cell count is an estimate, and it hangs on the wall-layer rule.</strong> Two counts exist: the first estimate (6 Nov: F 10.9 M; its wall-layer rule not recorded; the first-approach reference wings) and this one (Study 9: F {fcell['median'] / 1e6:.1f} M median; one layer count per block, 2 chords deep, growth 1.25 at VC by the family rule, s0 from y⁺ per station). The pages use this one because it can be redone. Both leave out the C-H wake lines (+30–60 %, rough) and the outboard blocks. Stage 3 sets the real wall-layer rule.</li>
+    <li><strong>The cell count is an estimate, and it hangs on the wall-layer rule.</strong> Two counts exist: the first estimate (6 Nov: F 10.9 M; its wall-layer rule not recorded; the first-approach reference wings) and this one ({"Study 12" if sf else "Study 9"}: F {fcell['median'] / 1e6:.2f} M median on the reference wings; one layer count per block, 2 chords deep, growth 1.25 at VC by the family rule, s0 from y⁺ per station). The pages use this one because it can be redone. Both leave out the C-H wake lines (+30–60 %, rough) and the outboard blocks. Stage 3 sets the real wall-layer rule.</li>
     <li><strong>The coarse levels get a finer nose than they ask.</strong> The nose is solved at every level and the strictest wins (owner, 7 Nov), so VC, C and M take the nose of a finer level where it is stricter (VC {nt['VC']['min']:.1f}–{nt['VC']['max']:.1f}° against 16.9°), and a build pays up to four solves per station. This keeps the family rule exact; the first build (VC and F only) needed a repair at M on the flying wings, and that is gone (Study 9).</li>
     <li><strong>The coarse levels do not resolve transition.</strong> VC and C have 9.1 and 11.8 cells per bubble: transition results there must not be trusted. The LM error bar needs M and F.</li>
     <li><strong>The band rule rests on one source</strong> (one vendor guide, one model), and the lighter band gives the shortest high-Re root bubbles (about 1.5 % c) only about 3 cells: fine for SA, wrong for LM.</li>
     <li><strong>Two studies read the flow at real size.</strong> The first refine map (Study 7) and the band count (Study 8) read the flow dataset per flight speed at real size; the refine map at the Re levels (Study 11) replaces Study 7 on the new reference wings.</li>
-    <li><strong>The upper band written 0–85 % c missed the upper transition at low Re</strong> (Study 11: 0–49 % of the strips fit at Re 10⁵ and 3 × 10⁵). Fixed on 8 Nov: written 0–100 % c (owner); the built mesh already had band-size cells there (one node list), so only F changed a little (Study 12).</li>
+    <li><strong>The upper band written 0–85 % c missed the upper transition at low Re</strong> (Study 11: 0–49 % of the strips fit at Re 10⁵ and 3 × 10⁵). {band_s or "Fixed on 8 Nov: written 0–100 % c (owner); the built mesh already had band-size cells there (one node list), so the counts hardly move (Study 12)."}</li>
     <li><strong>No XFOIL answer on many tailless strips at −5°</strong> (up to 46 % BWB, 43 % flying wing): the band there rests on the other angles.</li>
     <li><strong>Studies 1–8 used the old 20 reference shapes</strong>, 13 of which were replaced on 7 Nov; their numbers are for those shapes (Study 10 shows the size alone changes no ring).</li>
     <li><strong>Starting values without a ladder:</strong> the station gap, the 12 per panel, the tip gap, the 2 % c cap, the 10° nose angle.</li>

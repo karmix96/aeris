@@ -455,7 +455,8 @@ def fig_cells(m: dict, s: dict) -> None:
             a.bar(xs, med, 0.34, color=col, alpha=0.85, label=f"{lab}: median (bar), largest (tick)")
             a.errorbar(xs, med, yerr=[np.zeros(len(med)), np.array(mx) - np.array(med)], fmt="none", ecolor=INK, capsize=4, lw=1)
             for xx, mm_, xm in zip(xs, med, mx):
-                a.text(xx, xm * 1.12, f"{mm_:.2g}\n({xm:.2g})", ha="center", fontsize=7.4)
+                a.text(xx, xm * 1.15, f"{mm_:.2f}\n({xm:.2f})", ha="center", va="bottom", fontsize=7.4,
+                       bbox=dict(facecolor="white", edgecolor="none", pad=0.4, alpha=0.9))
     a.axhspan(ASKED[0] / 1e6, ASKED[1] / 1e6, color=BWB, alpha=0.12)
     a.text(-0.45, ASKED[1] / 1e6 * 1.05, "F asked: 9–11 M (3 Nov)", color=BWB, fontsize=7.8)
     a.axhline(DESKTOP / 1e6, color=WARN, ls="--", lw=1)
@@ -523,7 +524,13 @@ def fig_family(s: dict) -> None:
     hh, ll = a.get_legend_handles_labels()
     order = sorted(range(len(ll)), key=lambda i: next((k for k, p in enumerate(("VC/C", "C/M", "M/F", "first", "nose")) if ll[i].startswith(p)), 9))
     a.legend([hh[i] for i in order], [ll[i] for i in order], loc="upper left", fontsize=8, frameon=False, ncol=4)
-    a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n(×: the nose cell of the first build, solved at VC and F only, on the flying wings)", fontsize=9.5)
+    a.set_title("every spacing between neighbouring levels: median (bar) and range, 20 reference wings × 4 Re\n"
+                + ("(×: the nose cell of the first build, solved at VC and F only, on the flying wings)"
+                   if FIG_PREFIX == "screen_new_" else
+                   "(the family screen: one nose factor per wing and Re; "
+                   + (lambda n: "no family needed a repair)" if n == 0 else f"{n} families repaired at every level)")(
+                       s.get("nose_family", {}).get("repaired_families", 0))),
+                fontsize=9.5)
     a = ax[1]
     keys = [("ring_cells", "ring cells"), ("station_gaps", "station gaps"), ("wall_layers", "wall layers"),
             ("cells_est", "cells")]
@@ -724,7 +731,8 @@ def summary_family(m: dict) -> dict:
          "full_re3e5": {lev: level_numbers([r for r in m[lev]["rows"] if r["re_mean"] == 3.0e5]) for lev in LEVELS if m[lev]["rows"]},
          "reference": {lev: level_numbers(rows) for lev, rows in m["ref"].items() if rows},
          "family": family(m["ref"]), "family_all": family_all(m), "nose_family": nose_family_numbers(m),
-         "against_before": against_before(m)}
+         "against_before": against_before(m),
+         "seconds_total": sum(r.get("seconds", 0.0) for lev in LEVELS for r in m[lev]["rows"] if r.get("built"))}
     if m["heads"]:
         h = next(iter(m["heads"].values()))
         s["mesh_code_hash"] = h["mesh_code_hash"]

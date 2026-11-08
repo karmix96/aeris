@@ -114,7 +114,7 @@ section, details, .tbl { min-width: 0; max-width: 100%; }
 BODY = """
 <div class="wrap">
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 section tables · 3 Nov 2026 · updated 7 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 section tables · 3 Nov 2026 · updated 8 Nov 2026</div>
   <h1>Where to refine: transition, bubbles and separation, per wing</h1>
   <p class="lede">The transition band of the mesh is generic: one band for every wing. First (2–3 Nov) it was upper surface 0–85 % c, lower 60–100 % c. Since 7 Nov the lower band runs from the leading edge, 0–100 % c (decision 74). The upper band is still written 0–85 % c, but as built the upper side gets band-size cells to the trailing edge too, because both sides share one node list. This page reads the Stage 1 section tables for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip. First section: the map at the four Re levels on the mean chord (7 Nov, new). Below it, the interactive first-approach map, kept as the record.</p>
 </header>

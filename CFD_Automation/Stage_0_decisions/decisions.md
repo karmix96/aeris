@@ -85,8 +85,9 @@ The sections below are updated to match.
   old 3 × 10⁵ → 1.5 × 10⁶ gap: on the 2-D section tables, drag read between the levels (with transition)
   is off by 8.8 % instead of 16.9 % at 6 × 10⁵ (90th percentile). The price: between 1 × 10⁶ and
   4 × 10⁶ it is off by 6.8–7.0 % instead of 2.5–3.7 % (fully turbulent: 0.4–0.5 % instead of 0.1–0.2 %).
-  Same 4 levels and 8,000 solves; at F the two moved levels have 0.5 % fewer cells; the largest F mesh is
-  9.99 M cells (was 9.74 M). The 2-D tables gain the rows 1 × 10⁷ and 1.5 × 10⁷. Details: D3, Reynolds.
+  Same 4 levels and 8,000 solves. Screened on 8 Nov (the 20 reference wings at the new levels: 320 of 320 builds
+  pass): at F the two moved levels have 0.7 % fewer cells; the largest F mesh is 10.17 M cells on the wing blocks
+  (was 9.74 M), 1.7 % above 10 M. The 2-D tables gain the rows 1 × 10⁷ and 1.5 × 10⁷. Details: D3, Reynolds.
 - **Section tables and refine map redone (7 Nov).** The 2-D XFOIL tables were rebuilt on the fixed nose:
   no Stage 1 conclusion changes. The refine map now runs at the 4 Re levels; it finds the upper transition
   past 85 % c at low Re (proposal below: write the upper band as 0–100 % c; +0.4 % cells at F).
@@ -466,9 +467,10 @@ at all four levels.
   rises from 2.5–3.7 % to 6.8–7.0 % (the price of the wider gap). Fully turbulent: median 0.7 %, 90th
   percentile 1.3 % (old 0.8 / 1.3 %). Above the top (6 × 10⁶): 7.8 % with transition (old levels: 12.0 %),
   0.7 % fully turbulent. A 2-D proxy: the solver check is still to run.
-- **Cost.** Still four levels and 8,000 solves. At F, the 1 × 10⁶ and 4 × 10⁶ meshes together have 0.5 %
-  fewer cells than the 1.5 × 10⁶ and 3 × 10⁶ ones; the largest F wing-block mesh is 9.99 M cells (was
-  9.74 M). The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷: at 4 × 10⁶ the root strips reach a
+- **Cost.** Still four levels and 8,000 solves. Screened on 8 Nov (the 20 reference wings at the new levels: 320
+  of 320 builds pass). At F, the 1 × 10⁶ and 4 × 10⁶ meshes together have 0.7 % fewer cells than the 1.5 × 10⁶ and
+  3 × 10⁶ ones; the largest F wing-block mesh is 10.17 M cells (was 9.74 M; 3 more wall layers and 3 more stations
+  at 4 × 10⁶), 1.7 % above 10 M. The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷: at 4 × 10⁶ the root strips reach a
   local Re of 1.0 × 10⁷ (focus BWB) to 1.44 × 10⁷ (full-space BWB) on the built sets; the extreme full-space BWB
   corner (root 4.9 mean chords) reaches 1.96 × 10⁷ and is read at the table edge. The rows up to 6 × 10⁶ are unchanged.
 - **Scope reference (Mitridis et al. 2023, 202 fixed-wing UAVs by NATO class).** By take-off weight: Class

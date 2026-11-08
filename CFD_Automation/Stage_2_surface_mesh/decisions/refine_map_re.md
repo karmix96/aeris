@@ -1,6 +1,36 @@
-# The refine map by Re level (7 Nov 2026)
+# The refine map by Re level (7 Nov 2026; redone 8 Nov at the new Re levels)
 
 Where transition sits on each reference wing at the four Re levels, and whether the decided bands hold it.
+
+## Update 8 Nov 2026: the new Re levels (decision 78)
+
+The Re levels are now 10⁵, 3 × 10⁵, 10⁶ and 4 × 10⁶ (Stage 0, owner, 8 Nov; were 1.5 × 10⁶ and 3 × 10⁶ in place
+of 10⁶ and 4 × 10⁶). The map was run again at the new levels, with the section tables extended to 1.5 × 10⁷ (rows
+up to 6 × 10⁶ unchanged), and the as-built check again on its 16 surfaces. The 7 Nov run at the old levels is kept
+in `data/studies/refine_map_re_levels_7nov.json`; the numbers further down are that run unless they say otherwise.
+
+Upper side, −5° to 8°: share of the strips whose band fits inside 0–85 % c (in brackets: whose transition itself
+stays inside):
+
+| Re | BWB | Flying wing | Cranked | Tapered |
+|---|---|---|---|---|
+| 10⁵ | 31 % (42 %) | 0 % (0 %) | 0 % (0 %) | 0 % (0 %) |
+| 3 × 10⁵ | 49 % (63 %) | 0 % (35 %) | 0 % (17 %) | 0 % (31 %) |
+| 10⁶ (new) | 65 % (94 %) | 35 % (100 %) | 12 % (60 %) | 26 % (54 %) |
+| 4 × 10⁶ (new) | 97 % (100 %) | 100 % (100 %) | 63 % (95 %) | 58 % (98 %) |
+| 1.5 × 10⁶ (7 Nov) | 77 % (97 %) | 51 % (100 %) | 32 % (71 %) | 37 % (66 %) |
+| 3 × 10⁶ (7 Nov) | 94 % (100 %) | 97 % (100 %) | 55 % (92 %) | 52 % (94 %) |
+
+- The lower band (0–100 % c) still holds every strip at every level and angle.
+- No strip is read at a table edge any more: on 7 Nov 5 BWB root strips were above the tables' top (6 × 10⁶) at
+  3 × 10⁶; the tables now reach 1.5 × 10⁷.
+- No XFOIL answer, as before, only on the tailless wings at negative angles: up to 46 % of the BWB and 42 % of
+  the flying-wing strips (43 % on 7 Nov) at −5°.
+- The conclusion stands: the written upper band (0–85 % c) misses the upper transition at 10⁵ and 3 × 10⁵ and on
+  0–88 % of the strips at 10⁶ and 4 × 10⁶; as built the upper side has band-size cells to the trailing edge
+  (as-built check below, redone on 8 Nov at the new levels: all 16 surfaces at VC pass; the largest upper cell over
+  85–99.5 % c is 0.950–0.995 × the band cell, as on 7 Nov; written 0–100 % c, the same ring counts on 16 of 16, no
+  node moved by more than 1.4 × 10⁻¹³ c).
 
 Script: `scripts/refine_map_re.py` (about 10 s; `--built` adds the 16 surfaces of the as-built check, about 5 min).
 Data: `data/studies/refine_map_re.json` (per wing, the same layout as the first approach, with the grid as "re";

@@ -1,18 +1,19 @@
 # Stage_2 — Executive summary: the surface mesh
 
-6 Nov 2026, updated 7 Nov 2026 (evening) · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
+6 Nov 2026, updated 8 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
 
-> **What changed since 3 Nov (updated 7 Nov, evening).** Sections 4–8 hold the details.
+> **What changed since 3 Nov (updated 8 Nov).** Sections 4–8 hold the details.
 >
 > - **Built on 7 Nov**
 >   - The new surface rules (decisions 71, 72, 74): levels VC, C, M, F with each target met at the level that needs it; the lighter band, tip gap and station gap; the lower band from the leading edge (option A, chosen by Mike on 7 Nov). The first approach is kept in `configs/surface_first.yaml`.
 >   - In Stage 1: the nose fix (decision 64; the defect was real, the 6 Nov correction was wrong) and similarity (decision 70: every wing at unit mean chord; the sets rebuilt, 722 of 722).
->   - The new screen (study 9): 1,724 of 1,724 builds pass, at all four levels; F has 6.9 M cells median on the wing blocks (an estimate; the C-H wake lines add a rough +30–60 %), below the 9–11 M asked.
+>   - The new screen (study 9): 1,724 of 1,724 builds pass, at all four levels; F has 6.7 M cells median on the wing blocks (largest 10.2 M; an estimate; the C-H wake lines add a rough +30–60 %), below the 9–11 M asked.
+>   - **8 Nov: the Re levels 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶** (decision 78). The 20 reference wings screened again at the new levels at VC, C, M and F: 320 of 320 pass, and the 160 rebuilt at 10⁵ and 3 × 10⁵ have the very same nodes as on 7 Nov. The refine map and its as-built check redone at the new levels (the same conclusions). The 2-D section tables extended to 1.5 × 10⁷.
 >   - The refine map at the Re levels (study 11): the lower band holds every strip; the upper band as written (0–85 % c) misses the upper transition at low Re, but the built mesh has band-size cells there.
 >   - The nose solved at every level, the strictest wins (Mike's answer, 7 Nov): first it was solved at VC and F only, and M needed a repair (nose × 0.9) on all 20 flying-wing reference builds (nose cell C/M 1.44, M/F 1.17 instead of 1.3). Now: 0 repairs on the reference builds, and the family rule is exact; 4 of 782 F builds of the full sets still needed one round.
 > - **Decided (owner)**
 >   - Transition must be captured, with ADflow and SU2 (4 Nov). The Mach range extends toward 0.5, with no supersonic flow (4 Nov). Angles of attack from −5° to post-stall, plus a separate post-stall study (6 Nov). One matched C-H volume mesh for ADflow and SU2 (6 Nov; Stage 3).
->   - The Re levels stay 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶; 10⁵ is 18 % below the slowest real UAV, kept as a margin (7 Nov).
+>   - The Re levels 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ (8 Nov; were 1.5 × 10⁶ and 3 × 10⁶): 4 × 10⁶ takes in every cruise point of the Greek tactical UAVs (LOTUS, Archytas, ACTUS), and 10⁶ fills the old ×5 gap (check C4 on 2-D data); 10⁵ stays 18 % below the slowest real UAV, as a margin (7 Nov).
 > - **Pending**
 >   - Two builder choices in the built rules, both stricter than decided, for Mike to confirm (decision 77): the growth limits by the family rule; the station growth kept at 1.2 (17 % more stations than the plan file).
 >   - The upper band: kept at 0–85 % c as written; as built the upper side has band-size cells to the trailing edge anyway. Writing 0–100 % c is Mike's choice: the same mesh at VC, 2 more ring nodes at F on 42 of 80 reference builds (+0.39 % cells), and a re-run of the screen (study 11).
@@ -190,26 +191,26 @@ None of them is a flow result: no solver has run on these surfaces. Studies 1–
 
 **Conclusion.** At −5° the lower side becomes the suction side and turns turbulent near the nose (median 1–15 % c per type), in front of the first lower band (60–100 % c) on every strip with an answer; even at 0° on 51–83 % of the strips. Option A (lower band 0–100 % c) covers this; option B (keep 60–100 % c and run transition only from 0° up) does not. Yet A costs no cells: A and B gave the same mesh, node for node, on all 80 pairs (ratio 1.000), because both sides share one node list and the upper band already makes the front part fine. So Mike chose A on 7 Nov, and it is built: transition runs can start at −5°, at no mesh cost.
 
-**Study 9 · The new screen: the built rules on every wing (7 Nov).** The rules built on 7 Nov, on the rebuilt sets (unit mean chord, the nose fix; 722 wings), numpy loft. Every set at VC and at F (all sets at Re 3 × 10⁵, the 20 reference wings at all four Re levels: 782 builds per level), and the 20 reference wings at C and M (80 builds each). The nose is solved at every level. Each level refuses at its own limits. Per build: every check's value, limit and margin, ring nodes, stations, quads, time, which solve set the nose, and the reasons. The cells of the wing blocks are estimated (the count the pages use, because it can be redone): n = the largest over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g) wall layers, cells = (ring nodes − 1)(stations − 1) n + cap quads × n, with g the level's wall growth (1.25 at VC to 1.107 at F), s0 the level's first wall cell at the local Re and D = 2 local chords.
+**Study 9 · The new screen: the built rules on every wing (7 Nov; the reference wings again on 8 Nov at the new Re levels).** The rules built on 7 Nov, on the rebuilt sets (unit mean chord, the nose fix; 722 wings), numpy loft. Every set at VC and at F (all sets at Re 3 × 10⁵, the 20 reference wings at all four Re levels: 782 builds per level), and the 20 reference wings at C and M (80 builds each). On 8 Nov the reference wings were built again at the new levels (10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶); the 160 builds at 10⁵ and 3 × 10⁵ came out node for node the same as on 7 Nov, so the 7 Nov set builds stand. The nose is solved at every level. Each level refuses at its own limits. Per build: every check's value, limit and margin, ring nodes, stations, quads, time, which solve set the nose, and the reasons. The cells of the wing blocks are estimated (the count the pages use, because it can be redone): n = the largest over the stations of ceil(ln(1 + (g − 1) D / s0) / ln g) wall layers, cells = (ring nodes − 1)(stations − 1) n + cap quads × n, with g the level's wall growth (1.25 at VC to 1.107 at F), s0 the level's first wall cell at the local Re and D = 2 local chords.
 
 | Level | Builds | Passed | Ring nodes | Stations | Cells [M], 20 reference wings × 4 Re: median (max) |
 | --- | --- | --- | --- | --- | --- |
-| VC (every set) | 782 | 782 | 120–220–240 | 51–63–84 | 0.70 (0.99) |
-| C (reference wings) | 80 | 80 | 154–284–306 | 66–85–102 | 1.50 (2.09) |
-| M (reference wings) | 80 | 80 | 198–366–396 | 82–107–130 | 3.19 (4.52) |
-| F (every set) | 782 | 782 | 254–474–514 | 106–131–177 | 6.92 (9.74) |
+| VC (every set) | 782 | 782 | 120–220–240 | 51–63–84 | 0.68 (1.02) |
+| C (reference wings) | 80 | 80 | 154–284–306 | 66–82–104 | 1.46 (2.19) |
+| M (reference wings) | 80 | 80 | 198–366–396 | 82–104–133 | 3.07 (4.69) |
+| F (every set) | 782 | 782 | 254–474–514 | 106–131–177 | 6.70 (10.17) |
 
 ![Ring nodes, stations and cells per level and type](page/screen_new_counts.png)
 
 *What it shows.* The 20 reference wings × 4 Re at VC, C, M and F, per wing type: ring nodes, stations, and the cells of the wing blocks (log scale) against the 9–11 M asked for F, the desktop today and with +36 GB.
 
-**Conclusion.** Each finer level has about 1.3 × more nodes around the section and 1.3 × more stations, so about 2.2 × more cells (1.3 × 1.3 × 1.3, with the wall layers). The BWB needs the most nodes around its sections. Above Re 1.5 × 10⁶ the node count stops growing, because the band cell stops shrinking there (the bubble length is held at 0.10 c from local Re 4 × 10⁵ up).
+**Conclusion.** Each finer level has about 1.3 × more nodes around the section and 1.3 × more stations, so about 2.1 × more cells (measured 2.12–2.17; 1.3 × 1.3 × 1.3 = 2.2 with the wall layers). The BWB needs the most nodes around its sections. From Re 10⁶ up the node count stops growing, because the band cell stops shrinking there (the bubble length is held at 0.10 c from local Re 4 × 10⁵ up).
 
 ![How close each check came to its limit, and which solve set the nose](page/screen_new_checks.png)
 
 *What it shows.* Left: for every check, how much of the room to its limit the worst build used (1 = at the limit). Right: which solve set the nose of the stations, and the largest turning delivered per level.
 
-**Conclusion.** No build crossed a limit. The check that comes closest is the quality of the tip cap: worst 0.075 at VC, 0.057 at M and 0.061 at F, against the limit 0.05. The nose size was set by F's limit on 89.8 % of the 167,473 stations and by M's on 10.2 %, never by VC's or C's. So the coarse levels get a finer nose than their own limit asks (the worst bend at VC is 14.6–16.1°, under its 16.9°), and F sits at its limit (7.21–7.71° for 7.69°; the check allows +0.2°).
+**Conclusion.** No build crossed a limit. The check that comes closest is the quality of the tip cap: worst 0.075 at VC, 0.057 at M and 0.061 at F, against the limit 0.05. The nose size was set by F's limit on 89.8 % of the 167,399 stations and by M's on 10.2 %, never by VC's or C's. So the coarse levels get a finer nose than their own limit asks (the worst bend at VC is 14.6–16.1°, under its 16.9°), and F sits at its limit (7.21–7.71° for 7.69°; the check allows +0.2°).
 
 **The nose at every level (Mike's answer, 7 Nov).** Each level has its own bend limit (16.9° at VC down to 7.69° at F). The first build found the nose size for VC and F only and made M from F's size × 1.3. On the 20 flying-wing reference builds that M nose bent just past its limit (10.02° allowed), so M needed a repair (nose × 0.9), which broke the exact 1.3 step between levels. Now the nose size is found for every level, each answer is put on one scale (× 1.3 per level step), the smallest wins, and every level is made from it by exact steps of 1.3: every level meets its own limit and the step stays exact. Against the first build: 80 of 320 reference builds changed, all of them flying wings (the BWB, cranked and tapered builds are the same node for node); nodes around the section changed by 0 at VC and F, 0 to +2 at C, −2 to 0 at M; repairs 20 → 0.
 
@@ -223,13 +224,13 @@ None of them is a flow result: no solver has run on these surfaces. Studies 1–
 
 *What it shows.* Left: cells per mesh per level (this count), median and largest, with the RAM ADflow needs (1.51 GiB + 9.46 GiB per million cells). Right: the fine level F: the first estimate (6 Nov, rule not recorded), this count, and this count with a rough +30–60 % for the C-H wake lines.
 
-**Conclusion.** The built rules mesh every wing: 1,724 of 1,724 builds passed, 0 crashed; build time median 4.3 s at VC and 8.9 s at F. F has 6.9 M cells median (2.3–9.7 M), below the 9–11 M asked.
+**Conclusion.** The built rules mesh every wing: 1,724 of 1,724 builds passed, 0 crashed; build time median 4.3 s at VC and 8.9 s at F. F has 6.7 M cells median (2.3–10.2 M), below the 9–11 M asked. The largest F mesh grew from 9.7 M to 10.2 M with the 4 × 10⁶ level (BWB reference wing 3: 3 more wall layers and 3 more stations), 1.7 % above 10 M.
 
 | Cells around the wing (wing blocks) | First estimate (6 Nov) | This count (7 Nov; used on the pages) |
 | --- | --- | --- |
 | How the wall layers were counted | not written down (only: about 1.30 × more layers per level) | from the first wall cell (y⁺ = 1 at each station's Re) out to 2 chords, each layer 1.25 × the one below at VC (1.187, 1.141, 1.107 at C, M, F) |
 | Which wings | the old reference wings (before 7 Nov), planned surfaces | the rebuilt reference wings (13 of 20 new), built surfaces |
-| Cells at F, median | 10.9 M (15.2 M with the first planned rules) | 6.9 M (2.3–9.7 M) |
+| Cells at F, median | 10.9 M (15.2 M with the first planned rules) | 6.7 M (2.3–10.2 M; 6.9 M and 2.3–9.7 M at the levels until 8 Nov) |
 | Can we check and redo it? | no | yes |
 
 In short: the pages use the 7 Nov count because we can check and redo it. The two counts differ because of how the wall layers were counted and which wings were used, not because of the surfaces (the built ones even have about 17 % more stations). Both count only the cells around the wing; the C-H wake lines (Stage 3) add a rough +30–60 %, so F lands at about 9–11 M. Stage 3 sets the real wall-layer rule. Memory: the desktop today (16 GB, about 1.2 M cells) runs every VC mesh; with +36 GB (about 5.0 M cells) it also runs every C and M mesh (cells around the wing only); F needs the HPC.
@@ -240,15 +241,15 @@ In short: the pages use the 7 Nov count because we can check and redo it. The tw
 
 *What it shows.* The 80 meshes at real size against unit mean chord: ring nodes, stations (arrows: the wings that lost their switch section), the cap quality; and the four Re levels against the Re range of the real UAVs that set the Stage 1 ranges.
 
-**Conclusion.** Similarity does not hurt the mesh. The same shapes at unit mean chord get the same nodes around every section on 80 of 80 meshes. The station count drops by 6–27 on the 8 wings that had a switch section (an extra station the old millimetre trailing-edge rule needed); it is no longer needed. One thing gets worse: the tip cap quality falls on 34 of 80 meshes (most: 0.345 → 0.133, BWB 1 at Re 10⁵). The old rule (at least 0.5 mm) had given small tips a thick trailing edge; now every trailing edge is 0.2 % c, which is thin on a small tip, so the cap cells next to it get flatter. The lowest stays 0.112, above the limit 0.05. The nose fix on top changes the rings by −4 to 0 nodes. The four Re levels cover the real UAVs (1.22 × 10⁵ to 3.10 × 10⁶); 10⁵ is 18 % below the slowest, kept as a margin (Mike, 7 Nov).
+**Conclusion.** Similarity does not hurt the mesh. The same shapes at unit mean chord get the same nodes around every section on 80 of 80 meshes. The station count drops by 6–27 on the 8 wings that had a switch section (an extra station the old millimetre trailing-edge rule needed); it is no longer needed. One thing gets worse: the tip cap quality falls on 34 of 80 meshes (most: 0.345 → 0.133, BWB 1 at Re 10⁵). The old rule (at least 0.5 mm) had given small tips a thick trailing edge; now every trailing edge is 0.2 % c, which is thin on a small tip, so the cap cells next to it get flatter. The lowest stays 0.112, above the limit 0.05. The nose fix on top changes the rings by −4 to 0 nodes. The four Re levels cover the real UAVs (1.22 × 10⁵ to 3.10 × 10⁶); 10⁵ is 18 % below the slowest, kept as a margin (Mike, 7 Nov); since 8 Nov the top level, 4 × 10⁶, also takes in every cruise point of the Greek tactical UAVs (dashed bars; AR 8 assumed).
 
-**Study 11 · The refine map at the Re levels (7 Nov).** The refine map of study 7 in its new Re mode: the 20 new reference wings at the four Re levels on the mean chord, root angles −5° to 12°, unit mean chord, the section tables rebuilt on the fixed nose. Per strip and side: where transition sits from −5° to 8°, the band it needs, and whether the bands hold it. Details: the refine page (`docs/REFINE_MAP.html`, first section) and `decisions/refine_map_re.md`.
+**Study 11 · The refine map at the Re levels (7 Nov; redone 8 Nov at the new levels).** The refine map of study 7 in its new Re mode: the 20 new reference wings at the four Re levels on the mean chord, root angles −5° to 12°, unit mean chord, the section tables rebuilt on the fixed nose. Per strip and side: where transition sits from −5° to 8°, the band it needs, and whether the bands hold it. Details: the refine page (`docs/REFINE_MAP.html`, first section) and `decisions/refine_map_re.md`.
 
 ![Upper side: the strips whose band fits the written upper band, per type and Re](page/refine_re_coverage.png)
 
 *What it shows.* Per type and Re level, −5° to 8°: the share of strips whose band fits inside the written upper band 0–85 % c (bars), the share whose transition itself fits (ticks), and how far the band's aft end goes past 85 % c.
 
-**Conclusion.** The lower band (0–100 % c) holds every strip: on every strip of every wing, at every Re level and angle from −5° to 8°, the lower transition (± 10 % c) falls inside the part of the chord where the mesh is fine. The upper band as written (0–85 % c) does not: at 10⁵ and 3 × 10⁵ the upper transition sits further aft on most strips (only 0–49 % fit; short by up to 15 % c, up to the trailing edge), and at 1.5 × 10⁶ and 3 × 10⁶ on 3–68 % of the strips. As built this is no gap: because both sides share one node list and the lower band reaches 100 % c, the upper side also gets band-size cells to the trailing edge (0.950–0.995 × the band cell on 16 surfaces at VC). Written 0–100 % c, the mesh is the same at VC (to round-off) but has 2 more ring nodes at F on 42 of 80 reference builds (+0.39 % cells), so it stays 0–85 % c until Mike decides. Only the tailless wings lose XFOIL answers in numbers, at negative root angles (up to 46 % of the BWB strips at −5°).
+**Conclusion.** The lower band (0–100 % c) holds every strip: on every strip of every wing, at every Re level and angle from −5° to 8°, the lower transition (± 10 % c) falls inside the part of the chord where the mesh is fine. The upper band as written (0–85 % c) does not: at 10⁵ and 3 × 10⁵ the upper transition sits further aft on most strips (only 0–49 % fit; short by up to 15 % c, up to the trailing edge), and at 10⁶ and 4 × 10⁶ on 0–88 % of the strips (7 Nov, at 1.5 × 10⁶ and 3 × 10⁶: 3–68 %). As built this is no gap: because both sides share one node list and the lower band reaches 100 % c, the upper side also gets band-size cells to the trailing edge (0.950–0.995 × the band cell on 16 surfaces at VC). Written 0–100 % c, the mesh is the same at VC (to round-off; redone on 8 Nov at the new levels: 16 of 16 surfaces) but has 2 more ring nodes at F on 42 of 80 reference builds (+0.39 % cells; 7 Nov, at the levels of that day), so it stays 0–85 % c until Mike decides. Only the tailless wings lose XFOIL answers in numbers, at negative root angles (up to 46 % of the BWB strips at −5°).
 
 ## 5. What was first, and what changed with the new approach
 
@@ -260,11 +261,12 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 | Band cell | bubble length / 20 at C | bubble length / 20 at F; the bubble length stops at 0.10 c from local Re 4 × 10⁵ (0.5 % c at F) | built 7 Nov |
 | Stations, tip | gap 0.2 × chord at C; last gap = s0 | gap 0.25 × chord at M; last gap = 2 × s0; station growth 1.2 kept (+17 % stations against the plan file) | built 7 Nov |
 | Lower band | 60–100 % c, for 0–8° | 0–100 % c (option A, Mike, 7 Nov); costs no cells (study 8) | built 7 Nov |
+| Re levels | 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ | 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ (Mike, 8 Nov; decision 78): the Greek tactical UAVs in cruise; check C4 on 2-D data; same 8,000 solves | screened 8 Nov (study 9) |
 | Volume mesh | O-H body mesh + overset wake box and tip-vortex tube (ADflow only) | one matched C-H mesh for ADflow and SU2; wake lines to the far field; tip vortex in the outboard blocks | decided; Stage 3 |
 | Wing size | real size; trailing edge max(0.5 / 1.0 mm, 0.2 % c) | unit mean chord (area / full span); Re an input (4 levels); Mach 0.1 + Prandtl–Glauert; trailing edge 0.2 % c; root chord out (18 → 17) | built in Stage 1 7 Nov; sets rebuilt; study 10 |
 | Flow, angles, Mach | ADflow SA; 0–8°; Mach 0.03–0.20 | transition with ADflow and SU2; −5° to post-stall; toward Mach 0.5, no supersonic flow | decided; split and core Mach pending |
 | Nose (64) | "the built nose is not round" | real; fixed in Stage 1 (apex leading edge, one cubic spline, 201 points per side, a nose gate) | built in Stage 1 7 Nov; study 4 |
-| Fine level | no target | F 6.9 M cells median (wing blocks; this count, it can be redone), below the 9–11 M asked; the first estimate (6 Nov, rule not recorded) 10.9 M; the C-H wake lines add a rough +30–60 %; Stage 3 sets the real wall-layer rule | counted 7 Nov |
+| Fine level | no target | F 6.7 M cells median (wing blocks; this count, it can be redone; largest 10.2 M), below the 9–11 M asked; the first estimate (6 Nov, rule not recorded) 10.9 M; the C-H wake lines add a rough +30–60 %; Stage 3 sets the real wall-layer rule | counted 7 Nov |
 
 ![Where each rule is met on the four levels, first against new](page/levels_first_new.png)
 
@@ -276,7 +278,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 
 *What it shows.* The estimate of 6 Nov, before the build. Left: cells per mesh at the new levels with the lighter band, median and largest over the 20 reference wings × 4 Re levels (surfaces from the plan file × wall layers by formula; the wing blocks only). Right: the fine level F per rule set.
 
-**Conclusion.** This first estimate put F at 10.9 M cells (median), inside the 9–11 M asked; the planned rules gave 15.2 M. Its wall-layer rule was not recorded, and it used the first-approach reference wings. The pages now use the count of study 9 (F 6.9 M median), because its rule is written down and it can be redone. Both leave out the C-H wake lines (a rough +30–60 %). Stage 3 sets the real wall-layer rule.
+**Conclusion.** This first estimate put F at 10.9 M cells (median), inside the 9–11 M asked; the planned rules gave 15.2 M. Its wall-layer rule was not recorded, and it used the first-approach reference wings. The pages now use the count of study 9 (F 6.7 M median at the levels since 8 Nov; 6.9 M before), because its rule is written down and it can be redone. Both leave out the C-H wake lines (a rough +30–60 %). Stage 3 sets the real wall-layer rule.
 
 ![The volume topology, first against new](page/topology_first_new.png)
 
@@ -298,13 +300,13 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the limit:** 0.075 at VC and 0.061 at F, against 0.05 (study 9). Similarity made some caps worse (study 10).
 - **The stations are 17 % more than the plan.** The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.
-- **The cell count is an estimate, and it hangs on the wall-layer rule.** This count: F 6.9 M (one layer count per block, 2 chords deep). The first estimate of 6 Nov: 10.9 M, its rule not recorded. Both leave out the wake lines and the outboard blocks. Stage 3 sets the real rule.
+- **The cell count is an estimate, and it hangs on the wall-layer rule.** This count: F 6.7 M median, 10.2 M largest (one layer count per block, 2 chords deep). The first estimate of 6 Nov: 10.9 M, its rule not recorded. Both leave out the wake lines and the outboard blocks. Stage 3 sets the real rule.
 - **The coarse levels get a finer nose than they ask.** The nose is solved at every level and the strictest wins, so VC turns 14.6–16.1° against 16.9°: the price of an exact family rule.
 - **The coarse levels do not resolve transition.** VC and C have 9.1 and 11.8 cells per bubble, so transition results there must not be trusted.
 - **The band rule rests on one source.** 20 cells per bubble comes from one vendor guide, for one model. The lighter band gives the shortest high-Re root bubbles (about 1.5 % c) only about 3 cells: fine for SA, wrong for LM.
 - **The band count (study 8) still reads the flow at real size**, per flight speed; the refine map now runs at the Re levels (study 11).
 - **The upper band as written misses the upper transition at low Re** (0–49 % of the strips fit at 10⁵ and 3 × 10⁵). The built mesh has band-size cells there anyway; writing 0–100 % c would change F a little (2 more ring nodes on 42 of 80 reference builds).
-- **No XFOIL answer on many tailless strips at −5°** (up to 46 % BWB, 43 % flying wing): the band there rests on the other angles.
+- **No XFOIL answer on many tailless strips at −5°** (up to 46 % BWB, 42 % flying wing; 43 % on 7 Nov): the band there rests on the other angles.
 - **Studies 1–8 used the old 20 reference shapes**, 13 of which were replaced on 7 Nov.
 - **Starting values without a ladder:** the station gap, the 12 per panel, the tip gap and the 2 % c cap.
 

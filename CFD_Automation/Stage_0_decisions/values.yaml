@@ -162,8 +162,10 @@ D3_conditions_and_measurement:
       / 6 %). The price: between 1e6 and 4e6 the 90th percentile rises from 2.5-3.7 % to 6.8-7.0 % (fully
       turbulent 0.1-0.2 % to 0.4-0.5 %). Above the top (6e6): 7.8 % with transition (old levels 12.0 %), 0.7 %
       fully turbulent (scripts: Stage_1_geometry/scripts/re_ladder_check.py, greek_uavs.py).
-      (3) Cost: still four levels and 8,000 solves; at F the 1e6 and 4e6 meshes together have 0.5 % fewer cells
-      than the 1.5e6 and 3e6 ones; the largest F wing-block mesh 9.99 M cells (was 9.74 M). The section tables
+      (3) Cost: still four levels and 8,000 solves; screened on 8 Nov (the 20 reference wings at the new levels, 320
+      of 320 builds pass): at F the 1e6 and 4e6 meshes together have 0.7 % fewer cells than the 1.5e6 and 3e6 ones;
+      the largest F wing-block mesh is 10.17 M cells (was 9.74 M; BWB reference wing 3: 3 more wall layers and 3 more
+      stations at 4e6), 1.7 % above 10 M. The section tables
       gain rows 1e7 and 1.5e7: at 4e6 the root strips of the built sets reach a local Re of 1.0e7 (focus BWB) to
       1.44e7 (full-space BWB); the extreme full-space BWB corner (root 4.9 mean chords) reaches 1.96e7, read at the
       table edge (marked re_clamped).

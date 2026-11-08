@@ -368,7 +368,8 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     their Re rests on AR 8 (`Stage_1_geometry/configs/greek_uavs.yaml`, `scripts/greek_uavs.py`). (2) Check C4 on
     2-D data (`Stage_1_geometry/scripts/re_ladder_check.py`): with transition, drag read between the levels is off by
     8.8 % instead of 16.9 % at 6 × 10⁵ (90th percentile), but 6.8–7.0 % instead of 2.5–3.7 % between 1 × 10⁶ and
-    4 × 10⁶; fully turbulent 0.4–0.8 % throughout. (3) Same 8,000 solves; at F −0.5 % cells on the two moved
-    levels; the largest F wing-block mesh 9.99 M cells. The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷.
+    4 × 10⁶; fully turbulent 0.4–0.8 % throughout. (3) Same 8,000 solves; screened on 8 Nov (320 of 320 reference
+    builds pass): at F −0.7 % cells on the two moved levels; the largest F wing-block mesh 10.17 M cells (was 9.74 M),
+    1.7 % above 10 M. The 2-D section tables gain the rows 1 × 10⁷ and 1.5 × 10⁷.
     Closes 33 and the 2-D part of C4 (70); the solver check of C4 is still to run. The code reads the levels from
     Stage 0 `values.yaml` (`cfdauto.paths.re_levels()`); the studies run at the old levels keep their own as records.

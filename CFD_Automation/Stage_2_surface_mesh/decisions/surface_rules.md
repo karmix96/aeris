@@ -445,6 +445,7 @@ once with today's code (also the nose fix), against their first meshes at real s
   airfoil does the same (6.0–6.8° with the fix). So the window search stays.
 - **Re levels:** 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ on the mean chord (area / full span). The real UAVs that set the
   Stage 1 ranges run from 1.22 × 10⁵ to 3.10 × 10⁶; 10⁵ is 18 % below the slowest and kept as a margin (owner, 7 Nov).
+  Changed on 8 Nov to 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ (section 17).
 
 
 ## 16. The upper band as built, and the refine map at the Re levels (7 Nov 2026)
@@ -470,3 +471,35 @@ At F the upper cells over 85–100 % c can sit a little above the band cell with
 reference wing 0 at Re 3 × 10⁵: 0.00501 c against 0.0050 c); written 0–100 % c, each side gets one more node. So the
 written band stays 0–85 % c, and this note says what the built mesh does. Writing it as 0–100 % c is for the owner to
 decide: the cost is the numbers above and a re-run of the screen (about 1.5 h on two cores).
+
+
+## 17. The Re levels 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ (owner, 8 Nov 2026; decision 78)
+
+The owner moved two Re levels: 10⁶ and 4 × 10⁶ replace 1.5 × 10⁶ and 3 × 10⁶ (Stage 0, D3). 4 × 10⁶ takes in every
+cruise point of the Greek tactical BWB programmes (LOTUS, Archytas, and ACTUS, which develops LOTUS and the Safran
+Patroller; `Stage_1_geometry/configs/greek_uavs.yaml`); 10⁶ fills the old ×5 gap between 3 × 10⁵ and 1.5 × 10⁶
+(check C4 on 2-D data, `Stage_1_geometry/scripts/re_ladder_check.py`). The code reads the levels from Stage 0
+(`cfdauto.paths.re_levels()`); the rules did not change.
+
+**The reference wings at the new levels** (`scripts/screen.py --sets reference`, at VC, C, M and F; merged by
+`scripts/screen_study.py`): 320 of 320 builds pass every check, 0 repairs. The 160 builds at 10⁵ and 3 × 10⁵ have the
+very same nodes as on 7 Nov: the mesh code changed only in `cfdauto/mesh/refine_map.py` and a help text, which the
+surface mesher does not use, so the 7 Nov builds of the other sets (at 3 × 10⁵) stand, and the merge records the two
+code hashes with this check.
+
+| Level | Cells [M], 20 reference wings × 4 Re: median (max) | At 10⁶ (median) | At 4 × 10⁶ (median) | 7 Nov: median (max) |
+| --- | --- | --- | --- | --- |
+| VC | 0.68 (1.02) | 0.75 | 0.93 | 0.70 (0.99) |
+| C | 1.46 (2.19) | 1.59 | 1.98 | 1.50 (2.09) |
+| M | 3.07 (4.69) | 3.41 | 4.19 | 3.19 (4.52) |
+| F | 6.70 (10.17) | 7.43 | 9.19 | 6.92 (9.74) |
+
+- The ring nodes do not change from 10⁶ up (the band cell is held from local Re 4 × 10⁵ up): VC 220–238, F 474–510.
+- At F the two moved levels together have 0.7 % fewer cells (332.1 M against 334.4 M over the 20 wings): 10⁶ saves
+  what 4 × 10⁶ adds. The largest mesh, BWB reference wing 3 at 4 × 10⁶, has 3 more wall layers (118 against 115) and 3
+  more stations (162 against 159: the last tip gap is 2 × s0, and s0 shrinks with Re) than at 3 × 10⁶: 10.17 M, 1.7 %
+  above 10 M (wing blocks only).
+- Memory (ADflow, 1.51 GiB + 9.46 GiB per million cells): the desktop today (about 1.2 M cells) still takes every VC
+  mesh (largest 1.02 M); with +36 GB (about 5.0 M) every C and M mesh (largest M 4.69 M); F needs the HPC.
+- The refine map and its as-built check at the new levels: `decisions/refine_map_re.md` (update of 8 Nov).
+

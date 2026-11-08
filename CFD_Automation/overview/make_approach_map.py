@@ -37,7 +37,7 @@ RANGES = {  # type: (AR focus, AR full, root focus, root full, tip focus, tip fu
     "cranked": ((4.5, 16.5), (3, 20), (1.015, 1.369), (1.000, 2.361), (0.439, 0.883), (0.234, 1.000)),
     "tapered": ((4.5, 16.5), (3, 20), (1.000, 1.429), (1.000, 1.600), (0.571, 1.000), (0.400, 1.000)),
 }
-from cfdauto.paths import STAGE1, re_levels  # noqa: E402
+from cfdauto.paths import STAGE1, STAGE2, re_levels  # noqa: E402
 
 LEVELS = re_levels()          # Stage 0 values.yaml: 1e5, 3e5, 1e6, 4e6 since 8 Nov 2026 (were 1e5, 3e5, 1.5e6, 3e6)
 LEV_LAB = {1e5: "1 × 10⁵", 3e5: "3 × 10⁵", 1e6: "1 × 10⁶", 1.5e6: "1.5 × 10⁶", 3e6: "3 × 10⁶", 4e6: "4 × 10⁶"}
@@ -46,6 +46,10 @@ _EXT = json.loads((STAGE1 / "docs" / "size_extremes.json").read_text())
 LOCAL_RE = {t: (_EXT[f"{t}/focus"]["re_tip_min"], _EXT[f"{t}/focus"]["re_root_max"]) for t in TYPES}
 # Stage 1 docs/greek_uavs.json (8 Nov 2026): the Greek tactical UAVs, cruise at 3,048 m to top speed at sea level
 GREEK = json.loads((STAGE1 / "docs" / "greek_uavs.json").read_text())["rows"]
+# Stage 2 data/studies/screen_new_summary.json (Study 9; the reference wings at the 8 Nov levels): cells per level
+_SN = json.loads((STAGE2 / "data" / "studies" / "screen_new_summary.json").read_text())["reference"]
+CELLS = {lv: (_SN[lv]["cells_est"]["median"] / 1e6, _SN[lv]["cells_est"]["max"] / 1e6, _SN[lv]["cells_est"]["min"] / 1e6)
+         for lv in ("VC", "C", "M", "F")}
 
 
 def esc(s: str) -> str:
@@ -257,14 +261,13 @@ def fig_re() -> str:
     b.append(T(X(1.22e5), y + 24, "1.22 × 10⁵", "t xs", "middle"))
     b.append(T(X(3.10e6), y + 24, "3.10 × 10⁶", "t xs", "middle"))
     y = 146
-    label(y, "Greek tactical UAVs", "cruise to top speed")
+    label(y, "Greek UAVs", "AR 8 assumed")
     lo_g = min(r["re_cruise_3048m"] for r in GREEK)
     hi_g = max(max(r["re_top_sea_level"]) for r in GREEK)
     b.append(f'<rect x="{X(lo_g):.1f}" y="{y - 6}" width="{X(hi_g) - X(lo_g):.1f}" height="12" rx="6" class="greekbar"/>')
     for r in GREEK:
         b.append(f'<circle cx="{X(r["re_cruise_3048m"]):.1f}" cy="{y}" r="3" class="enddot"/>')
     b.append(T(X(hi_g) + 8, y + 4, "LOTUS 11 m", "t xs mut"))
-    b.append(T(X(lo_g), y + 20, f"{fmt_sci(lo_g)} (cruise) – {fmt_sci(hi_g)} (LOTUS 11 m, top speed; AR 8 assumed)", "t xs mut"))
     y = 196
     for t in TYPES:
         a, c = LOCAL_RE[t]
@@ -411,16 +414,17 @@ def fig_budget() -> str:
     b.append(f'<rect x="{X(9):.1f}" y="20" width="{X(11) - X(9):.1f}" height="236" class="target"/>')
     b.append(T((X(9) + X(11)) / 2, 14, "asked: 9–11 M", "t xs good", "middle"))
     rows = [("6 Nov estimate", "planned rules", 15.2, None, "bold"), ("", "+ lighter band", 10.9, None, "old"),
-            ("7 Nov count", "built rules, wing blocks", 6.9, (2.3, 9.7), "now"),
+            ("7–8 Nov count", "built rules, wing blocks", round(CELLS["F"][0], 1), (round(CELLS["F"][2], 1), round(CELLS["F"][1], 1)), "now"),
             ("", "+ C-H wake lines (rough)", 9.0, (9.0, 11.0), "wake")]
     for i, (grp, lab, v, rng, cls) in enumerate(rows):
         y = 36 + i * 54 + (14 if i >= 2 else 0)
         if grp:
-            b.append(T(x0 - 12, y + 4, grp, "t sm" + (" acc" if "7 Nov" in grp else " mut"), "end"))
+            b.append(T(x0 - 12, y + 4, grp, "t sm" + (" acc" if "Nov count" in grp and "6 Nov" not in grp else " mut"), "end"))
         b.append(T(x0 - 12, y + 20, lab, "t xs", "end"))
         if cls == "wake":
-            b.append(f'<rect x="{X(0):.1f}" y="{y + 6}" width="{X(6.9) - X(0):.1f}" height="18" class="barnow"/>')
-            b.append(f'<rect x="{X(6.9):.1f}" y="{y + 6}" width="{X(11.0) - X(6.9):.1f}" height="18" class="barwake"/>')
+            f_med = round(CELLS["F"][0], 1)
+            b.append(f'<rect x="{X(0):.1f}" y="{y + 6}" width="{X(f_med) - X(0):.1f}" height="18" class="barnow"/>')
+            b.append(f'<rect x="{X(f_med):.1f}" y="{y + 6}" width="{X(11.0) - X(f_med):.1f}" height="18" class="barwake"/>')
             b.append(T(X(11.0) + 6, y + 20, "≈ 9–11 M", "t sm"))
             continue
         b.append(f'<rect x="{X(0):.1f}" y="{y + 6}" width="{X(v) - X(0):.1f}" height="18" class="{"barnow" if cls == "now" else "barold"}"/>')
@@ -441,7 +445,7 @@ def fig_levels_cells() -> str:
     lo, hi = math.log10(0.3), math.log10(16)
     X = lambda m: x0 + (math.log10(m) - lo) / (hi - lo) * (x1 - x0)
     b = []
-    data = [("VC", 0.7, 0.99), ("C", 1.5, 2.1), ("M", 3.2, 4.5), ("F", 6.9, 9.7)]
+    data = [(lv, round(CELLS[lv][0], 2), round(CELLS[lv][1], 2)) for lv in ("VC", "C", "M", "F")]
     for i, (lv, med, mx) in enumerate(data):
         y = 34 + i * 46
         b.append(T(x0 - 12, y + 15, lv, "t lg", "end"))
@@ -704,7 +708,7 @@ def page() -> str:
               + '<p class="note">Values per level follow the family rule: spacings and angles ÷ 1.3 per finer level, counts × 1.3, growth g^(1/1.3). "First at its finest (FF)" is the first rule carried to its fourth level, the place of F on the ladder.</p>'
               + '<div class="figwrap">' + fig_budget() + '</div><div class="figwrap">' + fig_levels_cells() + "</div>"
               + '<p class="note">The 7 Nov count can be redone: layers to 2 chords from the first cell (y⁺ = 1), growth 1.25 at VC; wing blocks only. The 6 Nov estimate (15.2 M and 10.9 M) did not record its wall-layer rule and used the first wings. Stage 3 sets the real wall-layer rule.</p>',
-              "F is 6.9 M cells (median) on the wing blocks, about 9–11 M with the C-H wake lines, inside the target. VC runs on the desktop (0.7 M); with +36 GB the desktop also takes C and M (wing blocks only); F needs the HPC.")
+              f"F is {CELLS['F'][0]:.1f} M cells (median; largest {CELLS['F'][1]:.1f} M, at 4 × 10⁶) on the wing blocks, about 9–11 M with the C-H wake lines, inside the target. VC runs on the desktop ({CELLS['VC'][0]:.2f} M median); with +36 GB the desktop also takes C and M (wing blocks only); F needs the HPC.")
 
     status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 8 Nov 2026</span><h2>Built, pending, next</h2>'
               '<div class="status"><div><span class="k ok">Built and checked</span><ul><li>Similarity, nose fix, 722 wings rebuilt</li>'

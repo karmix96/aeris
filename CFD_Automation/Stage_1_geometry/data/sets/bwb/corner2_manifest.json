@@ -3,7 +3,7 @@
  "set": "corner2",
  "code_version": "0.7.0",
  "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
- "loft_backend": "numpy",
+ "loft_backend": "pygeo",
  "wings": [
   {
    "index": 0,
@@ -11,7 +11,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "efb48deb3d38851ee9bf8774149c1d436706e6107ed2b6fcf74dd2eac897c006",
-   "surface_hash": "d01461e39b3e9a5f16491f25aac9a697504f6661da6eb199425ef61fc7fbaf1f",
+   "surface_hash": "4e849f9c29d5b296f89a7e0ad20ef4c59bfc89bd81d8a18f3eb411a62258b0e8",
    "labels": [
     "tailless",
     "bwb",
@@ -53,7 +53,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "ba51a2e28a2add9655f125b0982cc479aa929fee4413b65f165beff0eff4a91e",
-   "surface_hash": "615205e8c5477dc7062a415c8cfb4fb6710f074a2a28c35b0eabe7c47b9304a4",
+   "surface_hash": "af8b0b4a1550780e48a3f4f54fc7e19168a8e0bc695fab5d8593050b23c8a30f",
    "labels": [
     "tailless",
     "flying_wing",
@@ -95,7 +95,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "f6fb47518c5eb0a28ba838c45c19c93fc8061548e9247619828568fa5b41b0c4",
-   "surface_hash": "c0d05210488001b31ea7df9eface4665e65c14cfae1e174e23b308b53723da59",
+   "surface_hash": "1d36ef48ceaf2164593d2338ad78f4e16be40a1666fafb5b2bbd638048a52f4a",
    "labels": [
     "tailless",
     "flying_wing",
@@ -137,7 +137,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "ecc14077a358f9b0c74f1e5172d45937df7e47a98a636f4905f0f2f21931191e",
-   "surface_hash": "04c0542d12d07332615421f7ca999d80a2c49bfc3ac1bfc431a30ef5c866386f",
+   "surface_hash": "d59febcba320c678295152fe99307b86eff7ace3684b7231af2e72236a3edd97",
    "labels": [
     "tailless",
     "flying_wing",
@@ -180,7 +180,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "925eb2267453ac55deac0a2736300d7ccd30b87fb88fe08b4eacc93f5c3af5e3",
-   "surface_hash": "9c6197504586882330f4b98db7457d370c51dbbbabeece5c923cad2e9c9f6abd",
+   "surface_hash": "5f695037493538368a5a6e1161221b676ceb41ae13af9b1206dfb578869706b5",
    "labels": [
     "tailless",
     "bwb",
@@ -223,7 +223,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "74227b145bd0b6cbb94f2afb8eb07ae2c0ea678570ac0a201a2e5dde6544f5a0",
-   "surface_hash": "a26fe6f4a583d4ca484af28a4521692f32e8cc0b0206c98242e024dd712ce669",
+   "surface_hash": "86476de25ca86426dcaeebbab0c4539b895dfa200401c412ca833d470502ccae",
    "labels": [
     "tailless",
     "flying_wing",
@@ -266,7 +266,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "05d8ab88dff0a01dea0c4c532200466fced4ca7799bad66dca3e18d695832016",
-   "surface_hash": "2bc08517a69921368b350a096989ec7fb95d3118985a66a19a89b3b2b245a156",
+   "surface_hash": "44b7233f7d0e8d56e93f18e494f855001f21ab2417c30c60f85030568d2c886e",
    "labels": [
     "tailless",
     "bwb",
@@ -308,7 +308,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "e193c895ca3b6128f060b8ddb125774c220240c847654a46199c3cb809f0d8ec",
-   "surface_hash": "899f9c0af8b0d9c59c2cefee40a009e0f3593d3ba7a0243a7318076afd40a711",
+   "surface_hash": "232491b6eee2c1a8beaf3dabdaf337d902c0b664a4e2382794cb49a210f9618d",
    "labels": [
     "tailless",
     "bwb",

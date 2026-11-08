@@ -3,7 +3,7 @@
  "set": "reference",
  "code_version": "0.7.0",
  "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
- "loft_backend": "numpy",
+ "loft_backend": "pygeo",
  "wings": [
   {
    "index": 0,
@@ -11,7 +11,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "d9e4d9059202bd2d11b4ffa1ef691e40be2b1684591f05601c9afdcd238547f3",
-   "surface_hash": "223e16f27d0ed7a4021735c4860ced64fafb1d404a387ef6e0a2059b043d64b1",
+   "surface_hash": "f599a46d39921714f46f14ca580a8b423f12ed702a73b4c71eae6e30e0053a2a",
    "labels": [
     "conventional",
     "tapered",
@@ -52,7 +52,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "594e1b67786efd8c852798f4cde95c1019b786ef862e20bd661836e4dc2f14b1",
-   "surface_hash": "9944a36a38b53979595dd3ef36149e49975a6f2e4b9bb76554bd3d5540a32d05",
+   "surface_hash": "9d36e441108a59db2bcdff8475a86357a55578847ca347b0eafd1a81fd7cf7de",
    "labels": [
     "conventional",
     "tapered",
@@ -92,7 +92,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "f345fe6044a53aa7cfbb4406088b7d78436c734a086cc4f04a5273178d037c49",
-   "surface_hash": "3a154643f5baaf66de13e47de22bc8c1d9499d15bbb79700d20b91730e938166",
+   "surface_hash": "383c9ab636888e70590234d1c93276bc74517f8fed850c04deb53c919f8a6485",
    "labels": [
     "conventional",
     "tapered",
@@ -133,7 +133,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "19ea9bcd75f21a6ecad1c451434d8831576d16c8e3301e5f2fc9949428d42730",
-   "surface_hash": "8c0ac4ad2a09599e28dad7e50588f7f7e1ceba25d399a67aa4b7276a7e39cc9c",
+   "surface_hash": "2b8fd75d8f0264364cd388cac4698040535197a48bf6c7f990265a4792917e72",
    "labels": [
     "conventional",
     "tapered",
@@ -174,7 +174,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "e31b519cfa6f3c0841e7ea738625b67ab823851e620a4cb238bac6980b5dee16",
-   "surface_hash": "a741390f9a336dcd33098ed5392ab57c65addc484d411cb52448c252f5828309",
+   "surface_hash": "79dae484f90496430b2d4dc7a5a5a29dd6cae3dd7338b0a137972316bf4a4701",
    "labels": [
     "conventional",
     "tapered",

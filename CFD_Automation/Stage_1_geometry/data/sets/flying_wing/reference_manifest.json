@@ -3,7 +3,7 @@
  "set": "reference",
  "code_version": "0.7.0",
  "code_hash": "aa6ccb5db03feb89e9ebdd67538a708c3939fe2297fa4304c811dd8e9e2ea584",
- "loft_backend": "numpy",
+ "loft_backend": "pygeo",
  "wings": [
   {
    "index": 0,
@@ -11,7 +11,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "2f2c1c109a562ba16aa835a7ec85471d03033a2d2380ced65fbdc67f306f81ac",
-   "surface_hash": "096e9e54881c0c2c6208831f95229e1d814627073d29207aebcf7d1965798398",
+   "surface_hash": "441e20a968dc82e071acec6171b59454974b9a804c764729864efc539a984ed8",
    "labels": [
     "tailless",
     "flying_wing",
@@ -51,7 +51,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "d5930f0f24b53a47f5a550150fbdbf15550faca64037afd18b76ec0ce650e7d0",
-   "surface_hash": "98bf4bdb61aa4fb978aca7bbd3a1b5aea7606638e598c9feeaea484f0b47938e",
+   "surface_hash": "3a3cd9388d1dad32964e49366ec61cab65f1d0a57d4e5471d441270425ff2fc9",
    "labels": [
     "tailless",
     "flying_wing",
@@ -92,7 +92,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "1434948c7f39c5031eef64302771aae85ef1944921be99de3c7b1d72bd2a7fc6",
-   "surface_hash": "2d27d92d33f917831587f308e23dd05e51b7981f24dfe22d72c5150b2a629e33",
+   "surface_hash": "f266eb248d8cbf4c8bf2d349238519fae39bb3fe770bdc5b5f37be4e3fbbf475",
    "labels": [
     "tailless",
     "flying_wing",
@@ -133,7 +133,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "bd90b628fd43a953acf5fe9d632233a70d3147859e8f67e1e02ac26b55728c41",
-   "surface_hash": "752323215a03338ae61805bd2db99e3c85bd117f4b0d470048996046b307721b",
+   "surface_hash": "9130e0a6db65cfbb4458f80a7228b8798bea0ce42d8e294debc4d943c7d07571",
    "labels": [
     "tailless",
     "flying_wing",
@@ -173,7 +173,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "533e74333d3795d0023620055d631e4147490c0c483b7601b97d2da8bb5c23f7",
-   "surface_hash": "9d3fff770bf7113ab0e3daba8e9215b4f4412b9c6a14a5fd3238eba5f7a9c320",
+   "surface_hash": "15fa82c0ffe31c8c6dbc5fe03824ab5dace53c4dd1aed78c8e577e18bc90c04c",
    "labels": [
     "tailless",
     "flying_wing",

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volume Mesh Flowchart</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column read top to bottom, the order the mesher runs; branches (repair, refusal) sit to the right of their question. */
+:root {
+  --bg: #F3F6F9; --surface: #FFFFFF; --ink: #142230; --muted: #5A6878; --line: #D6DEE6; --rail: #9FB3C6;
+  --law: #0C5EA8; --law-soft: #DCE9F6; --dec: #9A6200; --dec-soft: #F6E8CF; --chk: #2E7D4F; --chk-soft: #DDF0E4;
+  --hot: #B03A20; --hot-soft: #F6DED8; --val: #3E5A74; --val-soft: #E8EEF4;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E141A; --surface: #151E27; --ink: #E4ECF3; --muted: #9AA9B7; --line: #2A3743; --rail: #4A6279;
+  --law: #62AEF2; --law-soft: #17324A; --dec: #E7B24F; --dec-soft: #392B12; --chk: #63C691; --chk-soft: #163326;
+  --hot: #F08A72; --hot-soft: #3A201B; --val: #9CC0DE; --val-soft: #1C2B38; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E141A; --surface: #151E27; --ink: #E4ECF3; --muted: #9AA9B7; --line: #2A3743; --rail: #4A6279;
+  --law: #62AEF2; --law-soft: #17324A; --dec: #E7B24F; --dec-soft: #392B12; --chk: #63C691; --chk-soft: #163326;
+  --hot: #F08A72; --hot-soft: #3A201B; --val: #9CC0DE; --val-soft: #1C2B38; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15.5px; line-height: 1.5; margin: 0;
+  padding-block: 26px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5.4vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 21px; line-height: 1.15; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+.eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--law); }
+header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.lede { color: var(--muted); font-size: 16.5px; max-width: 78ch; }
+
+/* controls and legend */
+.bar { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 22px; }
+.levels { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.levels .lab { font-size: 13.5px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font-family: var(--mono); font-size: 13px; padding: 6px 13px; border: 0; background: var(--surface); color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--law); color: var(--surface); }
+.seg button:focus-visible { outline: 2px solid var(--law); outline-offset: -2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 12.5px; line-height: 1.3; border-radius: 4px; padding: 3px 7px; border: 1px solid; }
+.chip b { font-family: var(--mono); font-weight: 500; font-size: 11.5px; letter-spacing: .02em; }
+.law { color: var(--law); border-color: var(--law); background: var(--law-soft); }
+.dec { color: var(--dec); border-color: var(--dec); background: var(--dec-soft); }
+.chk { color: var(--chk); border-color: var(--chk); background: var(--chk-soft); }
+.chip span { color: var(--ink); }
+
+/* the flow */
+.flow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); column-gap: 26px; }
+.main { grid-column: 1; }
+.side { grid-column: 2; align-self: center; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 15px;
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; row-gap: 8px; scroll-margin-top: 16px; }
+.num { grid-row: 1 / span 4; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--display); font-weight: 700; font-size: 19px; background: var(--val-soft); color: var(--val); border: 1px solid var(--line); }
+.card > *:not(.num) { grid-column: 2; min-width: 0; }
+.what { color: var(--ink); }
+.vals { font-size: 13.5px; color: var(--val); background: var(--val-soft); border-radius: 5px; padding: 6px 9px; }
+.vals strong { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: var(--ink); }
+.code { font-size: 12px; color: var(--muted); }
+.v { font-family: var(--mono); font-weight: 500; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+.inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.inputs .card { grid-template-columns: 1fr; }
+.inputs .card > * { grid-column: 1; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.out { border: 2px solid var(--chk); }
+.out .num { background: var(--chk-soft); color: var(--chk); border-color: var(--chk); }
+
+/* arrows: a rail with a head, in the main column */
+.arrow { grid-column: 1; height: 30px; position: relative; }
+.arrow::before { content: ""; position: absolute; left: 32px; top: 2px; bottom: 9px; width: 2px; background: var(--rail); }
+.arrow::after { content: ""; position: absolute; left: 27px; bottom: 1px; border: 6px solid transparent; border-top: 8px solid var(--rail); border-bottom: 0; }
+.arrow .lbl { position: absolute; left: 44px; top: 5px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.arrow.join::before { left: 50%; } .arrow.join::after { left: calc(50% - 5px); }
+
+/* questions (the branch points) */
+.ask { align-self: center; display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px dashed var(--rail); border-radius: 8px; padding: 12px 16px; }
+.diamond { flex: none; width: 26px; height: 26px; transform: rotate(45deg); border: 2px solid var(--dec); background: var(--dec-soft); margin-left: 4px; }
+.ask p { font-weight: 600; }
+.ask .sub { font-weight: 400; color: var(--muted); font-size: 13.5px; }
+.branch { position: relative; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; }
+.branch::before { content: attr(data-yes); position: absolute; left: -26px; top: 50%; width: 26px; transform: translateY(-50%);
+  text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.branch::after { content: ""; position: absolute; left: -26px; top: calc(50% + 9px); width: 20px; height: 2px; background: var(--rail); }
+.repair { background: var(--dec-soft); border: 1px solid var(--dec); }
+.refuse { background: var(--hot-soft); border: 1px solid var(--hot); }
+.branch h2 { font-size: 18px; }
+.back { font-family: var(--mono); font-size: 12px; }
+.back a { color: var(--law); }
+
+.groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.groups .g { display: flex; flex-direction: column; gap: 5px; }
+.groups .gt { font-size: 12px; color: var(--muted); font-family: var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+
+footer { margin-top: 26px; color: var(--muted); font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; max-width: 86ch; }
+footer a { color: var(--law); }
+
+@media (max-width: 820px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .side { grid-column: 1; margin-top: 10px; margin-left: 28px; }
+  .branch::before { content: attr(data-yes) " ↓"; position: static; transform: none; width: auto; text-align: left; }
+  .branch::after { display: none; }
+  .inputs { grid-template-columns: 1fr; }
+  .groups { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) { .v { transition: background-color .25s; } .v.flash { background: var(--dec-soft); } }
+p code, .code code, .what code, .vals code, footer code { overflow-wrap: anywhere; word-break: break-word; }
+.v.long { white-space: normal; }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">CFD_Automation · Stage 3 · the volume mesh · rule set 2 · 10 Nov 2026</span>
+    <h1>From one surface to its volume mesh</h1>
+    <p class="lede">What the volume mesher does with one Stage 2 surface, step by step: the rule behind each step (law), the decision that set it (D = decision in <code>OPEN_DECISIONS.md</code>), the checks, and the value at the level you pick. Every check and limit was written before any mesh was judged (V0) and none changed. <strong>This is rule set 2 (D107, D111): M about 10 M cells, one mesh for angles −5° to +10°. The first rule set (M 20.8 M, F 45 M) is on the Volume Mesh page.</strong></p>
+  </header>
+
+  <div class="bar">
+    <div class="levels">
+      <span class="lab">Values at level</span>
+      <div class="seg" role="group" aria-label="Mesh level">
+        <button type="button" data-lv="VC" aria-pressed="true">VC</button>
+        <button type="button" data-lv="C" aria-pressed="false">C</button>
+        <button type="button" data-lv="M" aria-pressed="false">M</button>
+        <button type="button" data-lv="F" aria-pressed="false">F</button>
+      </div>
+      <span class="lab">each level 1.3 × finer than the one before</span>
+    </div>
+    <div class="legend">
+      <span class="chip law"><b>Law</b></span> a mesh law
+      <span class="chip dec"><b>D</b></span> a decision
+      <span class="chip chk"><b>Check</b></span> a check
+      <span class="diamond" style="width:12px;height:12px;margin:0 2px 0 6px"></span> a question
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="main inputs">
+      <div class="card">
+        <span class="tag">Input · the surface (Stage 2, frozen)</span>
+        <h2>One Stage 2 surface</h2>
+        <p class="what">One wing at one Re and level: the ring at every station, the base, the tip cap. The band is on. Every wall node of the volume mesh is one of these nodes, never moved.</p>
+        <div class="chips"><span class="chip dec"><b>D81</b><span>band on for every run</span></span><span class="chip dec"><b>D82</b><span>surface rules frozen</span></span></div>
+        <p class="code"><code>build_surface(loft, re, level)</code></p>
+      </div>
+      <div class="card">
+        <span class="tag">Input · the rules</span>
+        <h2>The volume rules at this level</h2>
+        <p class="vals">At <strong data-k="lv">VC</strong>: y⁺ <span class="v" data-k="yp">1.00</span> · wall growth <span class="v" data-k="gw">1.250</span> · ≥ <span class="v" data-k="bl">17.8</span> cells across the boundary layer · far growth <span class="v" data-k="gfb">1.220</span> built (checked <span class="v" data-k="gfc">1.300</span>) · band cell <span class="v" data-k="band">1.27 % c</span> · <span class="v" data-k="fan">7.1</span> cells across the −5° to +10° fan · outboard growth <span class="v" data-k="og">1.300</span> · <span class="v" data-k="base">8</span> base cells · far field 80 c</p>
+        <div class="chips"><span class="chip law"><b>Law 23</b><span>r = 1.3 per level</span></span><span class="chip dec"><b>D85</b><span>far growth</span></span><span class="chip dec"><b>D86</b><span>boundary layer</span></span><span class="chip dec"><b>D87</b><span>wake band</span></span><span class="chip dec"><b>D107</b><span>rule set 2: M about 10 M</span></span><span class="chip dec"><b>D111</b><span>angles −5° to +10°</span></span></div>
+        <p class="code"><code>configs/volume.yaml</code> → <code>laws.rules(level)</code></p>
+      </div>
+    </div>
+    <div class="arrow join"></div>
+
+    <div class="main card" id="s1"><span class="num">1</span>
+      <h2>Stations, far field, wake</h2>
+      <p class="what">One planar station (y = const) per Stage 2 station. The far field: a half circle in front, lines above and below, the outflow 80 c behind the most aft trailing edge, every wall node ≥ 80 c inside. The wake centre line leaves each base along its normal and turns to +x over 0.5 local chord; the wake nodes have one count for all stations.</p>
+      <div class="chips"><span class="chip law"><b>Law 15</b><span>80 c</span></span><span class="chip dec"><b>D89</b><span>planar stations</span></span><span class="chip dec"><b>D107</b><span>behind the base: the wing's last chordwise cell</span></span><span class="chip dec"><b>D91</b><span>far field shared by every station</span></span></div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="main card" id="s2"><span class="num">2</span>
+      <h2>The C line and the line shapes</h2>
+      <p class="what">The C line: upper wake line, the ring, lower wake line. One front moved the same distance everywhere from it, smoothed over its distance from the wall (κ = 1: square to the wall), out to 2 local chords; then straight to the shared far-field nodes.</p>
+      <div class="chips"><span class="chip dec"><b>D84</b><span>the march (0 folds in 501 planes)</span></span><span class="chip law"><b>Law 20</b><span>fine zone 2 local c</span></span></div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="main card" id="s3"><span class="num">3</span>
+      <h2>One wall-normal distribution per station</h2>
+      <p class="what">First cell s0 (law 13), ≥ the boundary-layer cells across δ (turbulent flat plate at the TE), the wall growth to 2 local chords, the wake band as an envelope in height, then the far growth. The band is a fan of straight rays from the base (−5° to +10°, 0.05 c margin, 2 local chords long); the envelope is exact for it whatever the wake line does, and each cell takes the limit at its centre. One count for every station: each station's growth (never the band cell) is scaled down to fit.</p>
+      <div class="chips"><span class="chip law"><b>Law 13</b><span>y⁺ per level</span></span><span class="chip law"><b>Law 14</b><span>boundary-layer cells</span></span><span class="chip law"><b>Laws 17, 18</b><span>wake band</span></span><span class="chip dec"><b>D96, D97</b><span>count factor; band release</span></span><span class="chip dec"><b>D108</b><span>exact band envelope</span></span><span class="chip dec"><b>D109</b><span>limit at the cell centre</span></span></div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="main card" id="s4"><span class="num">4</span>
+      <h2>Line up the stations far out</h2>
+      <p class="what">The far layers and far wake nodes of every station first move toward the average of its neighbours within about 0.25 c along the semi-span, as far as its growth limit allows and alike for neighbours, then toward the mean of all stations, so neighbouring planes line up and the cells between them stay square. The near field (fine zone and band) is never moved. The base block fills the space between the two wake lines.</p>
+      <div class="chips"><span class="chip dec"><b>D84</b><span>outer blend</span></span><span class="chip dec"><b>D110</b><span>neighbours lined up</span></span><span class="chip dec"><b>D98</b><span>far zone built at 1.22 for the blend</span></span></div>
+    </div>
+    <div class="arrow"></div>
+    <div class="ask main"><span class="diamond"></span><div><p>Did any cell fold in a station plane?</p><p class="sub">If yes: every station again with more smoothing, κ = 1.5, 2, 3 (never needed so far)</p></div></div>
+    <div class="side branch repair" data-yes="yes"><h2>Next rung</h2><p>Rebuilt with more smoothing; the mesh is flagged "needs review" (R1).</p><p class="back">D92</p></div>
+    <div class="arrow"></div>
+
+    <div class="main card" id="s5"><span class="num">5</span>
+      <h2>Stack the planes; outboard; the cap</h2>
+      <p class="what">The planes stacked root to tip; past the tip the tip plane swept out to 80 c, the first gap = the wing's last gap, growth <span class="v" data-k="og">1.300</span> to 2 c past the tip, then the far growth. The tip cap swept outboard is the CAP block. 13 blocks, right-handed, k = +y; every face a boundary or matched node to node.</p>
+      <div class="chips"><span class="chip law"><b>Law 12</b><span>outboard growth</span></span><span class="chip dec"><b>D88</b><span>outboard and the tip vortex</span></span><span class="chip dec"><b>D73</b><span>one matched C-H mesh</span></span></div>
+    </div>
+    <div class="arrow"></div>
+
+    <div class="main card" id="s6"><span class="num">6</span>
+      <h2>Checks 1–14</h2>
+      <p class="what">Wall on the surface · no folded cell · scaled Jacobian ≥ 0.05 · in-plane wall angle ≤ 5° · first cell within 1 % · growth ≤ limit × 1.01 · ≥ the boundary-layer cells · interfaces node to node · symmetry plane · far field ≥ 80 c · wake · outboard · (13: the family, between levels) · cells and RAM.</p>
+      <div class="chips"><span class="chip chk"><b>Checks 1–14</b><span>written in V0</span></span><span class="chip dec"><b>D101</b><span>the cap's two nose corners exempt, as Stage 2</span></span></div>
+    </div>
+    <div class="arrow"></div>
+    <div class="ask main"><span class="diamond"></span><div><p>Did a refusing check fail?</p><p class="sub">If yes: only refusal.json (which check, its value, its limit). It stays in every count.</p></div></div>
+    <div class="side branch refuse" data-yes="yes"><h2>Refused</h2><p><code>refusal.json</code></p><p class="back"><span data-k="refused">V6: 1 of 722 refused (BWB corner2 6, cell quality 0.032)</span></p></div>
+    <div class="arrow"></div>
+
+    <div class="main card out" id="s7"><span class="num">7</span>
+      <h2>The files, and check 15</h2>
+      <p class="what"><code>blocks.npz</code>, <code>quality.json</code>, <code>manifest.json</code>; <code>volume.cgns</code> (ADF, read by ADflow) and <code>volume.su2</code> (SU2), both read back: the CGNS exactly, also by the CGNS library; the <code>.su2</code> with every face welded and no inside-out cell.</p>
+      <p class="vals">At <strong data-k="lv">VC</strong>, 20 reference wings at Re 3 × 10⁵: <span class="v" data-k="cells">2.08 M</span> cells median (largest <span class="v" data-k="cmax">2.58 M</span>) · ADflow <span class="v" data-k="ram">18–21 GiB</span> (S8's two laws) · <span class="v long" data-k="built">built on 20: 20 pass; all sets: 721 of 722</span></p>
+      <div class="chips"><span class="chip chk"><b>Check 15</b><span>export round trip</span></span><span class="chip dec"><b>D99</b><span>the solver files</span></span><span class="chip dec"><b>D93</b><span>names and files</span></span></div>
+      <p class="code"><code>write(vm, wing, out, formats=("npz", "cgns", "su2"))</code></p>
+    </div>
+  </div>
+
+  <footer>
+    <p>Sources: <code>CFD_Automation/Stage_3_volume_mesh/decisions/volume_rules.md</code>, <code>configs/volume.yaml</code>, <code>data/studies/</code> (repo karmix96/aeris, branch <code>stage3-volume-mesh</code>). The cells at M and F are counted, not built (except M on four wings and F on one). RAM: S8's laws for ADflow, ANK only and ANK then NK (two-point fits; V7 measures).</p>
+  </footer>
+</main>
+<script>
+(() => {
+  const V = {"VC": {"lv": "VC", "yp": "1.00", "gw": "1.250", "bl": "17.8", "gfc": "1.300", "gfb": "1.220", "band": "1.27 % c", "fan": "7.1", "og": "1.300", "base": "8", "cells": "2.08 M", "cmax": "2.58 M", "ram": "18–21 GiB", "built": "built on 20: 20 pass; all sets: 721 of 722", "refused": "V6: 1 of 722 refused (BWB corner2 6, cell quality 0.032)"}, "C": {"lv": "C", "yp": "0.77", "gw": "1.187", "bl": "23.1", "gfc": "1.224", "gfb": "1.165", "band": "0.975 % c", "fan": "9.23", "og": "1.224", "base": "10", "cells": "4.43 M", "cmax": "5.54 M", "ram": "35–43 GiB", "built": "built on 20: 20 pass", "refused": "V6: 1 of 722 refused (BWB corner2 6, cell quality 0.032)"}, "M": {"lv": "M", "yp": "0.59", "gw": "1.141", "bl": "30", "gfc": "1.168", "gfb": "1.125", "band": "0.75 % c", "fan": "12", "og": "1.168", "base": "14", "cells": "9.53 M", "cmax": "11.8 M", "ram": "72–92 GiB", "built": "built on 4: 4 pass", "refused": "V6: 1 of 722 refused (BWB corner2 6, cell quality 0.032)"}, "F": {"lv": "F", "yp": "0.46", "gw": "1.107", "bl": "39", "gfc": "1.127", "gfb": "1.095", "band": "0.577 % c", "fan": "15.6", "og": "1.127", "base": "18", "cells": "20.7 M", "cmax": "25.7 M", "ram": "152–197 GiB", "built": "built on 1: 1 pass", "refused": "V6: 1 of 722 refused (BWB corner2 6, cell quality 0.032)"}};
+  const buttons = document.querySelectorAll(".seg button");
+  function show(lv, flash) {
+    const vals = V[lv];
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const k = el.dataset.k;
+      if (vals[k] !== undefined && el.textContent !== vals[k]) {
+        el.textContent = vals[k];
+        if (flash && el.classList.contains("v")) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 450); }
+      }
+    });
+    buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lv === lv)));
+    try { localStorage.setItem("volflow-level", lv); } catch (e) {}
+  }
+  buttons.forEach(b => b.addEventListener("click", () => show(b.dataset.lv, true)));
+  let start = "VC";
+  try { const s = localStorage.getItem("volflow-level"); if (s && V[s]) start = s; } catch (e) {}
+  show(start, false);
+})();
+</script>

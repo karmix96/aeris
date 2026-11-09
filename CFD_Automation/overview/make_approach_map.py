@@ -409,19 +409,55 @@ def fig_topology() -> str:
     return svg(660, 216, "".join(b), "Volume mesh: the first overset plan against the matched C-H mesh", "wide")
 
 
+def _stage3_r2() -> dict:
+    """Rule set 2's cells per level (the Stage 3 family study), {} if not there."""
+    f = ROOT / "Stage_3_volume_mesh" / "data" / "studies" / "r2_v4.json"
+    return json.loads(f.read_text()).get("cells", {}) if f.exists() else {}
+
+
+def _stage3_texts() -> tuple[str, str]:
+    """(the screen in words, the budget in words) for rule set 2, from the Stage 3 study files."""
+    st = ROOT / "Stage_3_volume_mesh" / "data" / "studies"
+    v6 = json.loads((st / "r2_v6.json").read_text()) if (st / "r2_v6.json").exists() else {}
+    c = _stage3_r2()
+    if v6:
+        od = v6.get("outcomes_with_decision_101", v6.get("outcomes", {}))
+        screen = (f"every built set at VC (the hold-outs not yet): {od.get('passed', 0)} of {v6['meshes']} pass"
+                  + (" (refused: " + "; ".join(f"{r['type'].replace('bwb', 'BWB').replace('_', ' ')} {r['set']} wing {r['index']}, the most extreme corner wing" for r in v6.get("refused", [])) + ")" if v6.get("refused") else ""))
+    else:
+        screen = "the other sets: being screened"
+    if c:
+        budget = (f"Rule set 2, the whole mesh on the 20 reference wings: VC {c['VC']['median'] / 1e6:.1f} M, C {c['C']['median'] / 1e6:.1f} M, "
+                  f"<strong>M {c['M']['median'] / 1e6:.1f} M</strong> ({c['M']['min'] / 1e6:.1f}–{c['M']['max'] / 1e6:.1f}), F {c['F']['median'] / 1e6:.0f} M."
+                  + (f" On {v6['M_sample']['wings']} wings of every set: M {v6['M_sample']['cells']['min'] / 1e6:.1f}–{v6['M_sample']['cells']['max'] / 1e6:.1f} M (median {v6['M_sample']['cells']['median'] / 1e6:.1f} M)." if v6.get("M_sample") else ""))
+    else:
+        budget = "Rule set 2: being counted."
+    return screen, budget
+
+
+S3_SCREEN, S3_BUDGET = _stage3_texts()
+
+
 def fig_budget() -> str:
     x0, x1 = 230, 610
     X = lambda m: x0 + m / 18 * (x1 - x0)
-    b = []
-    b.append(f'<rect x="{X(9):.1f}" y="20" width="{X(11) - X(9):.1f}" height="236" class="target"/>')
-    b.append(T((X(9) + X(11)) / 2, 14, "asked: 9–11 M", "t xs good", "middle"))
+    r2 = _stage3_r2()
     rows = [("6 Nov estimate", "planned rules", 15.2, None, "bold"), ("", "+ lighter band", 10.9, None, "old"),
             ("7–8 Nov count", "built rules, wing blocks", round(CELLS["F"][0], 1), (round(CELLS["F"][2], 1), round(CELLS["F"][1], 1)), "now"),
-            ("", "+ C-H wake lines (rough)", 9.0, (9.0, 11.0), "wake")]
+            ("", "+ C-H wake lines (rough)", 9.0, (9.0, 11.0), "wake"),
+            ("9 Nov, Stage 3", "rule set 1, level F", 45.4, (41.3, 50.7), "s3")]
+    if r2:
+        f2, m2 = r2["F"], r2["M"]
+        rows += [("9 Nov, rule set 2", "level F", round(f2["median"] / 1e6, 1), (round(f2["min"] / 1e6, 1), round(f2["max"] / 1e6, 1)), "s3"),
+                 ("", "level M (target about 10 M)", round(m2["median"] / 1e6, 1), (round(m2["min"] / 1e6, 1), round(m2["max"] / 1e6, 1)), "now")]
+    ya = 36 + len(rows) * 54 + 28 + 10                      # the axis
+    b = []
+    b.append(f'<rect x="{X(9):.1f}" y="20" width="{X(11) - X(9):.1f}" height="{ya - 20}" class="target"/>')
+    b.append(T((X(9) + X(11)) / 2, 14, "asked: 9–11 M", "t xs good", "middle"))
     for i, (grp, lab, v, rng, cls) in enumerate(rows):
-        y = 36 + i * 54 + (14 if i >= 2 else 0)
+        y = 36 + i * 54 + (14 if i >= 2 else 0) + (14 if i >= 4 else 0)
         if grp:
-            b.append(T(x0 - 12, y + 4, grp, "t sm" + (" acc" if "Nov count" in grp and "6 Nov" not in grp else " mut"), "end"))
+            b.append(T(x0 - 12, y + 4, grp, "t sm" + (" acc" if ("Nov count" in grp and "6 Nov" not in grp) or "Stage 3" in grp or "rule set 2" in grp else " mut"), "end"))
         b.append(T(x0 - 12, y + 20, lab, "t xs", "end"))
         if cls == "wake":
             f_med = round(CELLS["F"][0], 1)
@@ -429,17 +465,24 @@ def fig_budget() -> str:
             b.append(f'<rect x="{X(f_med):.1f}" y="{y + 6}" width="{X(11.0) - X(f_med):.1f}" height="18" class="barwake"/>')
             b.append(T(X(11.0) + 6, y + 20, "≈ 9–11 M", "t sm"))
             continue
+        if cls == "s3":                      # off the 18 M scale: the bar runs to the end, with its number
+            b.append(f'<rect x="{X(0):.1f}" y="{y + 6}" width="{X(18) - X(0):.1f}" height="18" class="barnow"/>')
+            b.append(f'<path d="M{X(18) - 8:.1f},{y + 4} l6,11 l-6,11" class="whisk"/>')
+            b.append(T(X(18) + 6, y + 14, f"{v:g} M", "t sm"))
+            b.append(T(X(18) + 6, y + 28, f"{rng[0]:g}–{rng[1]:g}", "t xs mut"))
+            continue
         b.append(f'<rect x="{X(0):.1f}" y="{y + 6}" width="{X(v) - X(0):.1f}" height="18" class="{"barnow" if cls == "now" else "barold"}"/>')
         b.append(T(X(v) + 6, y + 20, f"{v:g} M", "t sm"))
         if rng:
             b.append(f'<line x1="{X(rng[0]):.1f}" y1="{y + 32}" x2="{X(rng[1]):.1f}" y2="{y + 32}" class="whisk"/>')
             b.append(T(X(rng[1]) + 6, y + 36, f"range {rng[0]:g}–{rng[1]:g} M", "t xs mut"))
     for m in (0, 3, 6, 9, 12, 15, 18):
-        b.append(f'<line x1="{X(m):.1f}" y1="256" x2="{X(m):.1f}" y2="261" class="axis"/>')
-        b.append(T(X(m), 276, f"{m} M", "t xs mut", "middle"))
-    b.append(f'<line x1="{X(0):.1f}" y1="256" x2="{X(18):.1f}" y2="256" class="axis"/>')
-    b.append(T(x1, 292, "cells at the fine level F, median over 20 reference wings × 4 Re", "t xs mut", "end"))
-    return svg(640, 300, "".join(b), "Cells at the fine level F: the 6 Nov estimate and the 7 Nov count against the 9 to 11 million asked", "wide")
+        b.append(f'<line x1="{X(m):.1f}" y1="{ya}" x2="{X(m):.1f}" y2="{ya + 5}" class="axis"/>')
+        b.append(T(X(m), ya + 20, f"{m} M", "t xs mut", "middle"))
+    b.append(f'<line x1="{X(0):.1f}" y1="{ya}" x2="{X(18):.1f}" y2="{ya}" class="axis"/>')
+    b.append(T(x0, ya + 36, "cells, median (the Stage 3 bars at F are cut at 18 M)", "t xs mut", "start"))
+    b.append(T(x0, ya + 52, "green: asked (9–11 M at F until 9 Nov; about 10 M at M since)", "t xs mut", "start"))
+    return svg(720, ya + 60, "".join(b), "Cells at the fine level F: the 6 Nov estimate, the 7 Nov count and the 9 Nov Stage 3 measurements (rule set 1 and rule set 2), and rule set 2's level M, against the 9 to 11 million asked", "wide")
 
 
 def fig_levels_cells() -> str:
@@ -645,8 +688,8 @@ def page() -> str:
             ("3", "step-3", "Similarity", "one shape, four Re levels"),
             ("4", "step-4", "Flow", "laminar runs, bubbles, transition"),
             ("5", "step-5", "Surface mesh", "levels VC to F, each rule where needed"),
-            ("6", "step-6", "Volume mesh", "one C-H mesh for ADflow and SU2"),
-            ("7", "step-7", "Cell budget", "F near 10 M cells")]
+            ("6", "step-6", "Volume mesh", "one C-H mesh for ADflow and SU2, built"),
+            ("7", "step-7", "Cell budget", "M about 10 M cells; F above")]
     strip = '<nav class="flow" aria-label="The steps">' + "".join(
         f'<a href="#{sid}"><span class="n">{n}</span><span class="h">{h}</span><span class="s">{s}</span></a>' for n, sid, h, s in flow) + "</nav>"
 
@@ -695,42 +738,45 @@ def page() -> str:
                      "3,128 of 3,128 builds pass: every set at every level, 0 nose repairs"]),
               "The surface mesher did not change, only its rule values. The coarse levels are now coarser (good enough for the SA mesh studies), and F holds the transition targets that SU2 with LM needs.")
 
-    s6 = step(6, "step-6", "Stage 3 plan", "Volume mesh: one matched C-H mesh for both solvers",
+    s6 = step(6, "step-6", "Stage 3", "Volume mesh: one matched C-H mesh for both solvers (built 9 Nov)",
               "SU2 has no overset, so the overset wake box and vortex tube cannot serve both solvers. One C-H mesh can: the C rows wrap the nose, the H lines carry the wake to the far field.",
               '<div class="figwrap">' + fig_topology() + "</div>"
               + cmp(["O-H body mesh to about 2 c, background box 0.03 c", "wake box 0.0075 c to 2 c, then to 10 c; vortex tube 15–20 cells across the core",
                      "overlap gate (≥ 5 cells); ADflow only"],
-                    ["one matched C-H multiblock mesh; ADflow and SU2 (as unstructured hexes)", "wake lines to the far field (80 c; ladder 40 / 80 / 160): a rough +30–60 % cells",
-                     "tip vortex resolved in the outboard blocks; no overlap; wall y⁺ ≤ 1 per Re level, growth 1.25 at VC = 1.107 at F"],
-                    "Now (decided 6 Nov, decision 73; Stage 3, not built yet)"),
-              "The surface mesh stays the wall of the volume mesh. The cost moves to Stage 3: an open-line march, more wake cells and a tip vortex without its own tube, in exchange for one mesh family and one error bar for both solvers. The overset plan is kept as a fallback (ADflow only) and for future work (owner, 9 Nov; not built).")
+                    ["one matched C-H mesh, 13 blocks, every wall node a Stage 2 node; CGNS (ADF) for ADflow and .su2 for SU2, both read back exactly",
+                     "wake lines to the far field (80 c), a wake fan for the angles −5° to +10° (decision 111); behind the base the wing's last chordwise cell; y⁺ 1 at VC, growth 1.25, ≥ 30 cells across the boundary layer at M",
+                     "tip vortex carried in the outboard blocks (fine across the wake, coarse along it); no overlap",
+                     f"15 checks written before any mesh: 80 of 80 reference meshes pass at VC; {S3_SCREEN}; the family scales by 1.3 (check 13); the cap's two nose-corner cells exempt as in Stage 2 (decision 101)"],
+                    "Now (decision 73; built 9 Nov, Stage 3)"),
+              "The surface mesh is the wall of the volume mesh, node for node. One mesh family for both solvers works and is checked. The first rule set cost too much (step 7); rule set 2 (decisions 107, 111) halves it and serves the angles −5° to +10° with one mesh. Not done: the first solves (no solver in the build session; they also measure the memory and where the wake goes) and the hold-outs. The overset plan stays a fallback (ADflow only).")
 
-    s7 = step(7, "step-7", "Stages 2 → 3", "The cell budget: the laws we adjusted to keep F near 10 M cells",
+    s7 = step(7, "step-7", "Stages 2 → 3", "The cell budget: the plan (F near 10 M cells) and now (M near 10 M)",
               "The first rules met every target at the coarsest level, so the finest level went far past them. The new rules anchor each target at its own level; the lighter bubble table and the wider station gap at M do the rest.",
               laws_table()
               + '<p class="note">Values per level follow the family rule: spacings and angles ÷ 1.3 per finer level, counts × 1.3, growth g^(1/1.3). "First at its finest (FF)" is the first rule carried to its fourth level, the place of F on the ladder.</p>'
               + '<div class="figwrap">' + fig_budget() + '</div><div class="figwrap">' + fig_levels_cells() + "</div>"
               + '<p class="note">The 7–8 Nov count can be redone: layers to 2 chords from the first cell (y⁺ = 1), growth 1.25 at VC; wing blocks only. The 6 Nov estimate (15.2 M and 10.9 M) did not record its wall-layer rule and used the first wings. Stage 3 sets the real wall-layer rule.</p>',
-              f"F is {CELLS['F'][0]:.1f} M cells (median; largest {CELLS['F'][1]:.1f} M, at 4 × 10⁶) on the wing blocks, about 9–11 M with the C-H wake lines, inside the target. VC runs on the desktop ({CELLS['VC'][0]:.2f} M median); with +36 GB the desktop also takes C and M (wing blocks only); F needs the HPC.")
+              f"Stage 2 counted F at {CELLS['F'][0]:.1f} M cells (median) on the wing blocks and guessed 9–11 M with the wake. Stage 3 built and counted the whole mesh: with the first rule set <strong>F is 45 M cells</strong> (median, 41–51 M, the 20 reference wings at Re 3 × 10⁵), 4–5 × the target. The wing-block count missed the wake blocks, the outboard blocks (over half the cells) and the layers (95 at VC, not 43). Mike, 9 Nov: cut drastically; M about 10 M, F may be above; angles −5° to +10°. {S3_BUDGET} Memory: the plan assumed 10 M cells in 48 GB; by S8's laws for ADflow 48 GB holds 4.6–5.9 M, so VC and C run on the desktop and M and F on the HPC until V7 measures it (decision 113).")
 
-    status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 9 Nov 2026</span><h2>Built, pending, next</h2>'
+    status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 10 Nov 2026</span><h2>Built, pending, next</h2>'
               '<div class="status"><div><span class="k ok">Built and checked</span><ul><li>Similarity, nose fix, 722 wings rebuilt</li>'
-              '<li>New surface rules; every set at every level: 3,128 of 3,128 builds pass, 0 nose repairs</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li><li>8 Nov: label tolerance (79): 2 labels; new input hashes, the same surfaces</li><li>8 Nov, your calls built: decision 77 confirmed; upper band 0–100 % c; a nose repair on the whole family (80)</li><li>9 Nov: the band stays on for every run (81; off would save 1.8–1.9 × the cells but fails the BWB tip cap); surface rules frozen (82)</li></ul></div>'
-              '<div><span class="k you">Your calls</span><ul><li>Close Stage 2</li>'
+              '<li>New surface rules; every set at every level: 3,128 of 3,128 builds pass, 0 nose repairs</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li><li>8 Nov: label tolerance (79): 2 labels; new input hashes, the same surfaces</li><li>8 Nov, your calls built: decision 77 confirmed; upper band 0–100 % c; a nose repair on the whole family (80)</li><li>9 Nov: the band stays on for every run (81; off would save 1.8–1.9 × the cells but fails the BWB tip cap); surface rules frozen (82)</li><li>9 Nov, Stage 3: the matched C-H volume mesh; 80 of 80 reference meshes pass at VC; the family scales by 1.3; CGNS and .su2 read back exactly</li><li>9 Nov, Stage 3 rule set 2: M about 10 M cells (107); angles −5° to +10° (111); three construction faults fixed (108–110)</li><li>10 Nov, Stage 3 rule set 2: every built set at VC screened (the hold-outs not yet): 721 of 722 pass; M 9.6 M cells (median of 94 counted wings)</li></ul></div>'
+              '<div><span class="k you">Your calls</span><ul><li>Close Stage 2</li><li>Stage 3: where the first solves run (103); the hold-outs (104: not yet)</li>'
               '<li>Right before the runs: the solver split (76)</li><li>Stage 0 leftovers</li></ul></div>'
-              '<div><span class="k next">Before Stage 3</span><ul><li>One more pyGeo build --all on your machine (new input hashes)</li>'
-              '<li>Start the C-H volume mesh on one wing; count its cells</li></ul></div></div></section>')
+              '<div><span class="k next">Next</span><ul><li>The first solves on the rule-set-2 mesh (runbook ready): ADflow SA, SU2 SA, SU2 SST + LM</li>'
+              '<li>In the same runs: the real memory (113) and where the wake goes at −5° and +10° (111)</li><li>Then the hold-outs, when you say</li></ul></div></div></section>')
 
-    head = ('<title>CFD Automation Approach Map</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
+    head = ('<!DOCTYPE html>\n<html lang="en">\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            '<title>CFD Automation Approach Map</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
             '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">\n'
             f"<style>{CSS}</style>\n")
-    intro = ('<header style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">CFD_Automation · Stages 0–3 · updated 9 Nov 2026</span>'
+    intro = ('<header style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">CFD_Automation · Stages 0–3 · updated 10 Nov 2026 (Stage 3: rule set 2)</span>'
              '<h1>From a wing shape to a mesh that serves four Re levels</h1>'
              '<p class="lede">The flow of thought after the 4–7 Nov decisions, in seven steps. Wings and airfoil are drawn by the generator itself '
              '(reference wing 0 of each type, at unit mean chord). Click a step to jump to it.</p></header>')
     foot = ('<footer>Sources: the Stage 0 decisions, the Stage 1 Wing Generator page and executive summary, the Stage 2 Surface Mesh page and '
-            'executive summary (repo karmix96/aeris, branch <code>stage2-surface-mesh</code>). Built by <code>CFD_Automation/overview/make_approach_map.py</code>.</footer>')
+            'executive summary, the Stage 3 Volume Mesh page (repo karmix96/aeris, branches <code>stage2-surface-mesh</code>, <code>stage3-volume-mesh</code>). Built by <code>CFD_Automation/overview/make_approach_map.py</code>.</footer>')
     return head + "<main>" + intro + strip + s1 + s2 + s3 + s4 + s5 + s6 + s7 + status + foot + "</main>\n"
 
 

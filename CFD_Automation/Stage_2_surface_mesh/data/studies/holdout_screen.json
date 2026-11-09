@@ -1,0 +1,283 @@
+{
+ "gates": {
+  "wings": 60,
+  "passed": 60,
+  "refused": []
+ },
+ "levels": {
+  "VC": {
+   "builds": 240,
+   "built": 240,
+   "passed": 240,
+   "crashed": 0,
+   "failed": [],
+   "nose_repairs": 0,
+   "cells": {
+    "median": 683289.0,
+    "max": 1083532,
+    "min": 237744
+   },
+   "nose_turning_max": 16.11357041248807,
+   "cap_quads_min": 0.066445111548394,
+   "by_type_cells_median": {
+    "bwb": 728333.5,
+    "flying_wing": 666435.0,
+    "cranked": 674856.0,
+    "tapered": 690705.0
+   },
+   "worst_caps": [
+    {
+     "wing": "flying wing holdout_full 1",
+     "re": 100000.0,
+     "value": 0.066445111548394
+    },
+    {
+     "wing": "cranked holdout_full 2",
+     "re": 100000.0,
+     "value": 0.06707038879422637
+    },
+    {
+     "wing": "tapered holdout_full 4",
+     "re": 100000.0,
+     "value": 0.07121853675272666
+    },
+    {
+     "wing": "BWB holdout_focus 1",
+     "re": 100000.0,
+     "value": 0.07428371517086411
+    }
+   ],
+   "largest": {
+    "wing": "cranked holdout_full 0",
+    "re": 4000000.0,
+    "cells": 1083532
+   },
+   "caps_below_study12_worst": 6
+  },
+  "C": {
+   "builds": 240,
+   "built": 240,
+   "passed": 240,
+   "crashed": 0,
+   "failed": [],
+   "nose_repairs": 0,
+   "cells": {
+    "median": 1446757.0,
+    "max": 2285956,
+    "min": 489118
+   },
+   "nose_turning_max": 12.767363948810594,
+   "cap_quads_min": 0.07276560489392787,
+   "by_type_cells_median": {
+    "bwb": 1565691.0,
+    "flying_wing": 1405295.0,
+    "cranked": 1438685.5,
+    "tapered": 1447431.5
+   },
+   "worst_caps": [
+    {
+     "wing": "flying wing holdout_full 1",
+     "re": 100000.0,
+     "value": 0.07276560489392787
+    },
+    {
+     "wing": "cranked holdout_full 2",
+     "re": 100000.0,
+     "value": 0.0727775343765307
+    },
+    {
+     "wing": "tapered holdout_full 4",
+     "re": 100000.0,
+     "value": 0.0768025563436277
+    },
+    {
+     "wing": "BWB holdout_focus 1",
+     "re": 100000.0,
+     "value": 0.079476746515538
+    }
+   ],
+   "largest": {
+    "wing": "cranked holdout_full 0",
+    "re": 4000000.0,
+    "cells": 2285956
+   },
+   "caps_below_study12_worst": 5
+  },
+  "M": {
+   "builds": 240,
+   "built": 240,
+   "passed": 240,
+   "crashed": 0,
+   "failed": [],
+   "nose_repairs": 0,
+   "cells": {
+    "median": 3073824.0,
+    "max": 4912776,
+    "min": 1030860
+   },
+   "nose_turning_max": 10.01215816288539,
+   "cap_quads_min": 0.050258477189912436,
+   "by_type_cells_median": {
+    "bwb": 3324636.5,
+    "flying_wing": 3007069.0,
+    "cranked": 3059717.0,
+    "tapered": 3105109.0
+   },
+   "worst_caps": [
+    {
+     "wing": "flying wing holdout_full 1",
+     "re": 100000.0,
+     "value": 0.050258477189912436
+    },
+    {
+     "wing": "cranked holdout_full 2",
+     "re": 100000.0,
+     "value": 0.05057257368477982
+    },
+    {
+     "wing": "tapered holdout_full 4",
+     "re": 100000.0,
+     "value": 0.053882221106183875
+    },
+    {
+     "wing": "BWB holdout_focus 1",
+     "re": 100000.0,
+     "value": 0.05668678573263403
+    }
+   ],
+   "largest": {
+    "wing": "cranked holdout_full 0",
+    "re": 4000000.0,
+    "cells": 4912776
+   },
+   "caps_below_study12_worst": 5
+  },
+  "F": {
+   "builds": 240,
+   "built": 240,
+   "passed": 240,
+   "crashed": 0,
+   "failed": [],
+   "nose_repairs": 0,
+   "cells": {
+    "median": 6680767.5,
+    "max": 10687044,
+    "min": 2247804
+   },
+   "nose_turning_max": 7.708797521921883,
+   "cap_quads_min": 0.0542973480123044,
+   "by_type_cells_median": {
+    "bwb": 7231468.5,
+    "flying_wing": 6555258.5,
+    "cranked": 6669877.5,
+    "tapered": 6724390.0
+   },
+   "worst_caps": [
+    {
+     "wing": "flying wing holdout_full 1",
+     "re": 100000.0,
+     "value": 0.0542973480123044
+    },
+    {
+     "wing": "cranked holdout_full 2",
+     "re": 100000.0,
+     "value": 0.054763315676113145
+    },
+    {
+     "wing": "tapered holdout_full 4",
+     "re": 100000.0,
+     "value": 0.05778658671085375
+    },
+    {
+     "wing": "BWB holdout_focus 1",
+     "re": 100000.0,
+     "value": 0.06009043842106593
+    }
+   ],
+   "largest": {
+    "wing": "cranked holdout_full 0",
+    "re": 4000000.0,
+    "cells": 10687044
+   },
+   "caps_below_study12_worst": 5
+  }
+ },
+ "against_study12": {
+  "VC": {
+   "cells_median": 596580.0,
+   "cells_max": 1020600.0,
+   "cap_quads_min": 0.07490188416655738,
+   "nose_turning_max": 16.11357041246909
+  },
+  "C": {
+   "cells_median": 1260525.5,
+   "cells_max": 2192400.0,
+   "cap_quads_min": 0.0803749376697056,
+   "nose_turning_max": 12.767363948842831
+  },
+  "M": {
+   "cells_median": 2696520.0,
+   "cells_max": 4691596.0,
+   "cap_quads_min": 0.0573103505960404,
+   "nose_turning_max": 10.017865374000191
+  },
+  "F": {
+   "cells_median": 5913900.0,
+   "cells_max": 10213490.0,
+   "cap_quads_min": 0.06072406152680868,
+   "nose_turning_max": 7.718143647579986
+  }
+ },
+ "against_reference": {
+  "VC": {
+   "cells_median": 680217.0,
+   "cells_max": 1020600.0
+  },
+  "C": {
+   "cells_median": 1455020.0,
+   "cells_max": 2192400.0
+  },
+  "M": {
+   "cells_median": 3076015.0,
+   "cells_max": 4691596.0
+  },
+  "F": {
+   "cells_median": 6728342.0,
+   "cells_max": 10213490.0
+  }
+ },
+ "family_ratios": {
+  "VC/C": {
+   "nose_root": {
+    "min": 1.2979500148450547,
+    "max": 1.3028800508591798
+   },
+   "te_root": {
+    "min": 1.299659535682243,
+    "max": 1.2998656194019063
+   }
+  },
+  "C/M": {
+   "nose_root": {
+    "min": 1.296718674477467,
+    "max": 1.301120916861211
+   },
+   "te_root": {
+    "min": 1.2998931548865889,
+    "max": 1.3000806513761922
+   }
+  },
+  "M/F": {
+   "nose_root": {
+    "min": 1.2958343804031112,
+    "max": 1.3024379911601287
+   },
+   "te_root": {
+    "min": 1.2995951667871875,
+    "max": 1.2998429047823084
+   }
+  }
+ },
+ "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+ "note": "decision 83 (owner, 9 Nov 2026): the hold-outs opened once, the surface rules frozen (82); every level, the four Re levels; cells = the wing-block estimate of Study 9"
+}

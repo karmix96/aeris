@@ -623,3 +623,28 @@ so the SA mesh study also speaks for the LM runs; the price is about 1.8–1.9 �
 Re ≥ 3 × 10⁵ (compute, not accuracy). The switch stays in the code, default on, not used; no cap change (the band-on
 caps pass, lowest 0.057 at M). **The surface rules are frozen (decision 82):** a question gets a measurement first; a
 rule changes only when a check fails or a solver result shows a problem.
+
+## 21. The hold-outs, opened once (9 Nov 2026; decision 83, Study 14)
+
+**What.** The 60 sealed hold-out wings (15 per type: `holdout_focus` 10, `holdout_full` 5) had never been built or
+meshed. With the surface rules frozen (decision 82) the owner opened them once: Stage 1 built and gated them (60 of
+60 pass), then `scripts/screen.py --family --open-holdouts` meshed each at VC, C, M, F and at the four Re levels
+(960 builds; the seal is lifted only inside that process, the wings are built by `wing_from_set` as every other set;
+`cfdauto/mesh` unchanged).
+
+**Result.** 960 of 960 pass, 0 crash, 0 nose repairs. Cells as on the 20 reference wings at the same Re levels (F
+median 6.68 M against 6.73 M); the largest F mesh 10.69 M (cranked holdout_full 0 at 4 × 10⁶; before 10.21 M). The
+nose step 1.296–1.303 per level, the trailing edge 1.300. Largest nose turning inside every limit (16.11 / 12.77 /
+10.01 / 7.71° against 17.1 / 13.2 / 10.2 / 7.89°).
+
+**Weak point.** The tip cap: 0.0503 at M (flying wing holdout_full 1, Re 10⁵) and 0.0506 (cranked holdout_full 2,
+Re 10⁵) against the limit 0.05, 0.5–1.2 % above it; 5 of 240 M meshes below the worst cap seen before (0.0573). At F
+0.0543 (0.0607 before). The closest caps are all at Re 10⁵, three of the four on full-space wings.
+
+**How sure.** 0 failures on 60 unseen wings: the surface-mesh failure rate is below 1 − 0.05^(1/60) = 4.9 % with 95 %
+confidence (per wing, all its levels and Re levels); 0 of 782 with every set (below 0.4 %), but 722 of those helped
+set the rules.
+
+**Decision.** None needed: no check failed, so no rule changes (decision 82). If a cap fails on a new wing or in
+Stage 3 (the cap is the wall of the first outboard block), the cap is the first thing to fix. The hold-outs stay
+closed for tuning the volume mesh and the solver; they run once more when those rules are final (Annex G, A3).

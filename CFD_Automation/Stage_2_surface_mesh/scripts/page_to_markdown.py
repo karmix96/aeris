@@ -16,7 +16,7 @@ Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs
 branch `stage2-surface-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
 line with its caption. The page says what was first (built and screened 2–3 Nov) and what the new approach changed
 (decided 4–6 Nov, built and screened 7 Nov): the section "What was first, and what changes", and a "What changes" note
-in every section it touches. Studies 1–7 are first-approach evidence; Studies 8–13 are new (Study 9: the new screen; Study 12: the family screen; Study 13: what the band costs). Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
+in every section it touches. Studies 1–7 are first-approach evidence; Studies 8–14 are new (Study 9: the new screen; Study 12: the family screen; Study 13: what the band costs; Study 14: the hold-outs, wings never seen). Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
 handover' (short), 'Stage_1 Handover to the surface mesh' (the input). If this copy and the repository ever differ,
 the repository wins.
 

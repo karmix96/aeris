@@ -658,7 +658,7 @@ def page() -> str:
                      "trailing edge max(0.5 / 1.0 mm, 0.2 % c)", "730 wings in the working sets"],
                     ["17 numbers (16 sampled + the semi-span, which follows), unit mean chord",
                      "nose: one cubic spline, leading edge at its apex; 95.6 % of 2,183 files pass (old 21.0 %)",
-                     "trailing edge 0.2 % c on every wing", "722 wings in the working sets + 60 hold-outs, kept closed"]),
+                     "trailing edge 0.2 % c on every wing", "722 wings in the working sets + 60 hold-outs (opened once for the surface mesh on 9 Nov: 960 of 960 pass)"]),
               "One generator makes all four types. The wing has no size any more, only a shape, and its nose now turns like the airfoil within 5 % per mesh cell.")
 
     s2 = step(2, "step-2", "Stage 1", "The focus subset is where real UAV wings are",

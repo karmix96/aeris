@@ -112,10 +112,22 @@ def numbers(rows: dict, gate_rows: list) -> dict:
             "by_type_cells_median": {t: st.median([r["cells_est"] for r in built if r["wing_type"] == t])
                                      for t in TYPES if any(r["wing_type"] == t for r in built)},
         }
+        caps = sorted(built, key=lambda r: r["checks"]["cap_quads"]["value"])
+        n["levels"][lev]["worst_caps"] = [{"wing": f"{TYPE_NAME[r['wing_type']]} {r['set']} {r['index']}",
+                                           "re": r["re_mean"], "value": r["checks"]["cap_quads"]["value"]}
+                                          for r in caps[:4]]
+        big = max(built, key=lambda r: r["cells_est"])
+        n["levels"][lev]["largest"] = {"wing": f"{TYPE_NAME[big['wing_type']]} {big['set']} {big['index']}",
+                                       "re": big["re_mean"], "cells": big["cells_est"]}
+        rs = ref["reference"][lev]
+        n.setdefault("against_reference", {})[lev] = {"cells_median": rs["cells_est"]["median"],
+                                                      "cells_max": rs["cells_est"]["max"]}
         fs = ref["full"][lev]
         n["against_study12"][lev] = {"cells_median": fs["cells_est"]["median"], "cells_max": fs["cells_est"]["max"],
                                      "cap_quads_min": (fs.get("cap_quads_J") or {}).get("min"),
                                      "nose_turning_max": (fs.get("nose_turning") or {}).get("max")}
+        n["levels"][lev]["caps_below_study12_worst"] = sum(
+            r["checks"]["cap_quads"]["value"] < n["against_study12"][lev]["cap_quads_min"] for r in built)
     # the family rule on the hold-outs: nose and trailing-edge cells per level step
     ratios = {}
     for a, b in zip(LEVELS[:-1], LEVELS[1:]):
@@ -136,12 +148,12 @@ def figure(n: dict, rows: dict) -> None:
     fig, ax = plt.subplots(1, 2, figsize=(12.4, 4.4), gridspec_kw={"width_ratios": [1.1, 1]})
     a = ax[0]
     xs = np.arange(len(LEVELS))
-    ref = n["against_study12"]
+    ref = n["against_reference"]
     med_h = [n["levels"][lev]["cells"]["median"] / 1e6 for lev in LEVELS]
     max_h = [n["levels"][lev]["cells"]["max"] / 1e6 for lev in LEVELS]
     med_r = [ref[lev]["cells_median"] / 1e6 for lev in LEVELS]
     max_r = [ref[lev]["cells_max"] / 1e6 for lev in LEVELS]
-    for sh, med, mx, col, lab in ((-0.19, med_r, max_r, MUTED, "every set seen before (Study 12)"),
+    for sh, med, mx, col, lab in ((-0.19, med_r, max_r, MUTED, "the 20 reference wings, same four Re (Study 12)"),
                                   (0.19, med_h, max_h, ACC, "the 60 hold-outs (never seen)")):
         a.bar(xs + sh, med, 0.36, color=col, alpha=0.85, label=f"{lab}: median (bar), largest (tick)")
         a.errorbar(xs + sh, med, yerr=[np.zeros(len(med)), np.array(mx) - np.array(med)], fmt="none", ecolor=INK,
@@ -154,7 +166,7 @@ def figure(n: dict, rows: dict) -> None:
     a.set_ylim(0, max(max_h + max_r) * 1.35)
     a.grid(axis="y", color=LINE, lw=0.5)
     a.legend(loc="upper left", frameon=False)
-    a.set_title("cells per level: the hold-outs against every set seen before")
+    a.set_title("cells per level: the hold-outs against the reference wings")
     a = ax[1]
     for lev in LEVELS:
         built = [r for r in rows[lev] if r.get("built")]

@@ -4,7 +4,7 @@ Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs
 branch `stage2-surface-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
 line with its caption. The page says what was first (built and screened 2–3 Nov) and what the new approach changed
 (decided 4–6 Nov, built and screened 7 Nov): the section "What was first, and what changes", and a "What changes" note
-in every section it touches. Studies 1–7 are first-approach evidence; Studies 8–13 are new (Study 9: the new screen; Study 12: the family screen; Study 13: what the band costs). Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
+in every section it touches. Studies 1–7 are first-approach evidence; Studies 8–14 are new (Study 9: the new screen; Study 12: the family screen; Study 13: what the band costs; Study 14: the hold-outs, wings never seen). Companion files: 'Stage_2 Executive summary', 'Stage_2 Status and
 handover' (short), 'Stage_1 Handover to the surface mesh' (the input). If this copy and the repository ever differ,
 the repository wins.
 
@@ -12,7 +12,7 @@ CFD_Automation · Stage 2 · surface mesh · cfdauto 0.7.0 · 2 Nov 2026 · upda
 
 # Surface Mesh
 
-What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the *first approach*). A new approach was decided on 4–6 Nov and **built on 7 Nov**: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed 1,724 of 1,724 builds ([Study 9](#study9)). The family screen (8 Nov) meshed every set at all four levels for the first time, one nose factor per wing and Re: 3,128 of 3,128 passed, 0 families needed a nose repair ([Study 12](#study12)). The section [What was first, and what changes](#change) says what changed; an amber *What changes* box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–13 are new. Step by step from a wing to its surface mesh, with the decision and the law at each step: the <a href="https://claude.ai/artifact/KAFYcfZy9K8pPWQMp1M8it" target="_blank" rel="noopener">flowchart</a>.
+What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the *first approach*). A new approach was decided on 4–6 Nov and **built on 7 Nov**: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed 1,724 of 1,724 builds ([Study 9](#study9)). The family screen (8 Nov) meshed every set at all four levels for the first time, one nose factor per wing and Re: 3,128 of 3,128 passed, 0 families needed a nose repair ([Study 12](#study12)). The section [What was first, and what changes](#change) says what changed; an amber *What changes* box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–14 are new. Step by step from a wing to its surface mesh, with the decision and the law at each step: the <a href="https://claude.ai/artifact/KAFYcfZy9K8pPWQMp1M8it" target="_blank" rel="noopener">flowchart</a>.
 
 ## At a glance
 
@@ -170,7 +170,7 @@ The AERIS Mesh Automation Primer (Annex G, the Grand Roadmap) gives the surface 
 
 Two things in the primer are not in this stage on purpose: the constants it names (n_side 75, n_span 49, 1,601 dense points) were S8's values for one wing; here every count follows from a rule, so it changes with the wing and the Re. And the primer's M1 asks for a bit-identical rebuild of g83; CFD_Automation has no AERIS wings, so the equivalent test is a bit-identical rebuild of the same input (it passes).
 
-**What changes (decided 6 Nov, built 7 Nov 2026).** The primer's overset plan (R-V.6 and M3: boxes, overset export, overlap gate) is replaced by the matched C-H mesh (Stage 3). R-S.4 (trailing edge 0.1 % c) and R-S.5 (nose 10°) are now accuracy targets met at M (built 7 Nov), so they hold on M and F and are looser on VC and C. R-S.7 (the family rule) now also moves the growth limits and the counts from their anchor level.
+**What changes (decided 6 Nov, built 7 Nov 2026).** The primer's overset plan (R-V.6 and M3: boxes, overset export, overlap gate) is replaced by the matched C-H mesh (Stage 3) and kept as a fallback (ADflow only) and for future work (owner, 9 Nov). R-S.4 (trailing edge 0.1 % c) and R-S.5 (nose 10°) are now accuracy targets met at M (built 7 Nov), so they hold on M and F and are looser on VC and C. R-S.7 (the family rule) now also moves the growth limits and the counts from their anchor level.
 
 ## The steps, one by one, with their visuals
 
@@ -356,6 +356,42 @@ A build writes a mesh only if every check passes; otherwise it writes `refusal.j
 
 **Conclusion.** Thirteen checks, each with a number and a limit, written before the results (Stage 0, D4). They are what makes the screen a result and not a hope: a wing that passes has met every rule, and a wing that fails says which.
 
+## The laws at a glance
+
+"Law n" is the row of the laws table in the Grand Roadmap (Annex G). The surface values are read from `laws.py` when this page is built. **Bold** marks the level where the target is set: hard minimums at VC, accuracy at M, transition at F (decision 71). The other levels follow ÷ 1.3 per level.
+
+### Surface (built in Stage 2): VC / C / M / F
+
+| Law  | What it sets                                                                      | VC / C / M / F                                                                                                              |
+|------|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| 1    | Nose: the largest turn per cell                                                   | 16.9 / 13 / **10** / 7.69° (each level checked against its own angle + 0.2°)                                                |
+| 2    | Nose size from station to station                                                 | changes ≤ 1.15 (every level; holds by construction)                                                                         |
+| 3    | Trailing-edge cell                                                                | 0.169 / 0.13 / **0.10** / 0.077 % c                                                                                         |
+| 4–5  | Cells between the nose and the tail                                               | growth **1.2** / 1.15 / 1.11 / 1.09 (checked ≤ **1.25** / 1.19 / 1.14 / 1.11); largest cell 3.38 / 2.6 / **2.0** / 1.54 % c |
+| band | Transition band, 0–100 % c on both sides, on for every run (decisions 56, 72, 81) | cells per bubble 9.1 / 11.8 / 15.4 / **20**; band cell at local Re ≥ 4 × 10⁵: 1.10 / 0.85 / 0.65 / 0.50 % c                 |
+| 6    | Cells across the blunt base                                                       | **8** / 10 / 14 / 18                                                                                                        |
+| 7    | Trailing-edge thickness                                                           | 0.2 % c on every wing (Stage 1, decision 70)                                                                                |
+| 8    | Gap between stations                                                              | 0.42 / 0.33 / **0.25** / 0.19 c; gaps per panel ≥ 8 / 10 / **12** / 16; gap growth ≤ **1.3** / 1.22 / 1.17 / 1.13           |
+| 9–10 | Stations near the tip                                                             | one station on every break; the last gap = 2 × the first wall cell (every level)                                            |
+| 11   | Tip cap                                                                           | built from the tip ring; quality (scaled Jacobian) ≥ 0.05, worst 0.057 at M (Study 12)                                      |
+| 13   | First wall cell                                                                   | y⁺ **1.00** / 0.77 / 0.59 / 0.46; at Re 3 × 10⁵: s0 = 7.2 / 5.5 / 4.3 / 3.3 × 10⁻⁵ c                                        |
+| 23   | Step between levels                                                               | every size ÷ 1.3 (measured over every set: nose 1.295–1.304, trailing edge 1.300; Study 12)                                 |
+
+### Volume (Stage 3, not built yet): starting values
+
+| Law    | What it sets                   | Starting value                                                                                     |
+|--------|--------------------------------|----------------------------------------------------------------------------------------------------|
+| 12     | Blocks past the tip            | grow from the tip gap; Stage 3 sets the growth                                                     |
+| 13–14  | Layers off the wall            | first cell from law 13; growth ≤ **1.25** at VC (1.107 at F); ≥ 30 cells across the boundary layer |
+| 15     | Far field                      | 80 c (to test: 40 / 80 / 160)                                                                      |
+| 17–18  | Wake                           | C-H wake lines from the trailing edge to 80 c; 0.0075 c near the trailing edge                     |
+| 19     | Tip vortex                     | no tube: fine cells along its path in the blocks past the tip                                      |
+| 20     | Fine zone around the wing      | about 2 c                                                                                          |
+| 16, 21 | Background box, overlap        | the overset plan: kept as a fallback (decision 73), not built                                      |
+| 22, 24 | Mesher settings, shock spacing | not needed now (no supersonic flow)                                                                |
+
+**Conclusion.** Every surface law in the first table is built, and every build is checked against it (13 checks). The volume laws are starting values for Stage 3: the C-H wake lines and the blocks past the tip replace the overset boxes, which stay as a fallback.
+
 ## The rules and their sources
 
 The first column: level C of the first approach (`configs/surface_first.yaml`). The New column: the values at VC / C / M / F of the rules built on 7 Nov (`configs/surface.yaml`), read from `laws.py` when this page is built. "Law n" is the row of the laws table in the Grand Roadmap. The second table gives the two Re-dependent sizes at the Re levels of the study (and 6 × 10⁴ and 5.5 × 10⁶, the extremes a station can see).
@@ -388,7 +424,7 @@ First approach: the family (C, M, F, FF) is checked in Study 2 below, and its ba
 
 ## The studies, with their conclusions
 
-Studies 1–7 were run while building the mesher with the first approach (2–3 Nov): they are **first-approach evidence**, on the geometry of before 7 Nov (real size, the old nose rule, the old 20 reference wings, 13 of which were replaced on 7 Nov). Study 4 has two corrections, the second on 7 Nov. Studies 8–13 are **new** (7–9 Nov): the band count for decision 74 (Study 8, with a plan file, before the build; also on the old reference wings), the new screen of the built rules (Study 9), the similarity check (Study 10), the refine map at the Re levels (Study 11), the family screen of every set at every level (Study 12) and what the band costs (Study 13). Each study says what was done, what each figure shows, and what we conclude. None of them is a flow result: no solver has run on these surfaces.
+Studies 1–7 were run while building the mesher with the first approach (2–3 Nov): they are **first-approach evidence**, on the geometry of before 7 Nov (real size, the old nose rule, the old 20 reference wings, 13 of which were replaced on 7 Nov). Study 4 has two corrections, the second on 7 Nov. Studies 8–14 are **new** (7–9 Nov): the band count for decision 74 (Study 8, with a plan file, before the build; also on the old reference wings), the new screen of the built rules (Study 9), the similarity check (Study 10), the refine map at the Re levels (Study 11), the family screen of every set at every level (Study 12), what the band costs (Study 13) and the hold-outs, wings the mesher has never seen (Study 14). Each study says what was done, what each figure shows, and what we conclude. None of them is a flow result: no solver has run on these surfaces.
 
 ### Study 1 · The robustness screen (first approach)
 
@@ -758,6 +794,31 @@ Studies 1–7 were run while building the mesher with the first approach (2–3 
 
 **Conclusion.** The option works and is cheap to choose: the band nearly doubles the cells at Re ≥ 3 × 10⁵ (1.79–1.91) and costs almost nothing at 10⁵. With the band off, 20 of 320 builds fail (the BWB tip cap at M), so the band-off option would need a cap fix first. Decided (owner, 9 Nov): the band stays on for every run, SA and LM alike (one mesh family for both solvers); the switch stays in the code, unused; no cap change; the surface rules are frozen: a question gets a measurement first, a rule changes only when a check fails or a solver result shows a problem (decision 82). Not shown: the full sets with the band off.
 
+### Study 14 · The hold-outs: wings the mesher has never seen (9 Nov 2026)
+
+**What was done.** The 60 hold-out wings (15 per type: 10 in the focus space, 5 in the full space) were sealed: never built, never meshed. With the surface rules frozen (decision 82), the owner opened them once (decision 83). Stage 1 built and checked them (60 of 60 pass its four gates), then every wing was meshed at every level and at the four Re levels: 960 builds. The wings are built by the same code as every other set; the seal was lifted only in the two screen processes (`scripts/screen.py --open-holdouts`; `scripts/holdout_study.py`).
+
+| Level | Passed     | Cells, hold-outs: median (largest) \[M\] | Cells, the 20 reference wings at the same four Re (Study 12) \[M\] | Largest nose turning | Worst tip cap, hold-outs (every set before, Study 12); limit 0.05 |
+|-------|------------|------------------------------------------|--------------------------------------------------------------------|----------------------|-------------------------------------------------------------------|
+| VC    | 240 of 240 | 0.68 (1.08)                              | 0.68 (1.02)                                                        | 16.11° (limit 17.1°) | 0.0664 (0.0749)                                                   |
+| C     | 240 of 240 | 1.45 (2.29)                              | 1.46 (2.19)                                                        | 12.77° (limit 13.2°) | 0.0728 (0.0804)                                                   |
+| M     | 240 of 240 | 3.07 (4.91)                              | 3.08 (4.69)                                                        | 10.01° (limit 10.2°) | 0.0503 (0.0573)                                                   |
+| F     | 240 of 240 | 6.68 (10.69)                             | 6.73 (10.21)                                                       | 7.71° (limit 7.89°)  | 0.0543 (0.0607)                                                   |
+
+**Result.**
+
+- **960 of 960 builds pass**, 0 crash, 0 needed a nose repair.
+- **Cells:** the same as the reference wings at the same Re levels (F median 6.68 M against 6.73 M). The largest mesh grows: 10.69 M at F (cranked holdout_full 0 at Re 4 × 10⁶; before 10.21 M), inside the 9–11 M asked, before the C-H wake lines.
+- **The family rule:** the nose cell refines by 1.296–1.303 per level step at the root, the trailing-edge cell by 1.2996–1.3001 (1.3 asked).
+- **How sure:** 0 failures on 60 unseen wings means the surface-mesh failure rate is below 4.9 % with 95 % confidence (per wing, all its levels and Re levels). With the 722 wings meshed before, 0 of 782 (below 0.4 %), but those 722 helped set the rules.
+- **Weak point, the tip cap:** worst 0.0503 on flying wing holdout_full 1 at Re 10⁵; 0.0506 on cranked holdout_full 2 at Re 10⁵ (limit 0.05). 5 of 240 meshes at M sit below the worst cap seen before (0.0573). The closest caps are all at Re 10⁵, mostly on full-space wings.
+
+*\[Figure: Left: cells per level on the wing blocks, the 60 hold-outs (blue) against the 20 reference wings at the same four Re levels (grey, Study 12): median (bar) and largest (tick). Right: the tip cap quality of every hold-out mesh, per level, against the limit 0.05.\]*
+
+**Conclusion.** The hold-outs cost the same as the reference wings (F median 6.68 against 6.73 M); the cap curves at M and F start just above the limit.
+
+**Conclusion.** The mesher meshes every wing it had never seen: 960 of 960 builds pass every check, with the rules frozen and no repair, at every level and Re level. The honest weak point is the tip cap: at M, on full-space wings at Re 10⁵, it came within 0.5 % of its limit (0.0503 against 0.05). No rule changes (decision 82); if a cap fails on a new wing or in Stage 3, the cap is the first thing to fix. This says nothing yet about the flow.
+
 ## What was done, step by step
 
 In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–23 are the new approach (6–9 Nov).
@@ -1015,7 +1076,7 @@ What Stage 3 gets from this stage, and what it must build. The first plan (overs
 - **Input per mesh:** `surface.npz` with `wing (n_ring, n_span, 3)` ring index first, root to tip; `cap (n_chord, n_base, 3)` with i × j outboard; `u` (x/c of every node, NaN on the base), `y`, `v` per station; `stations.csv` with the local Re and chord per station; `quality.json` with `s0_tip_m`, `re_tip`, `mean_chord_m`.
 - **The march (recipe R-V):** first cell s0 per station from the local Re and y⁺ = 1 (law 13; `laws.first_cell_c`); growth ≤ 1.25 in the boundary layer; ≥ 30 cells across the boundary layer; reach about 2 chords; cap first cell = tip s0. New (built 7 Nov): y⁺ ≤ 1 and growth 1.25 are hard minimums at VC, so F gets y⁺ about 0.46 and growth 1.107, just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1; decision 57); the last station gap at the tip is now 2 × s0, so the cap's first cell must be chosen against that gap. The cell estimate of Study 9 assumes this march (one layer count per block, 2 chords deep).
 - **The family:** every spacing ÷ 1.3 per level and the growth g^(1/1.3), as on the surface, so the volume levels are true scaled copies; base cells 8 / 10 / 14 / 18 (new names: VC, C, M, F).
-- **First plan (replaced):** overset boxes (R-V.6): background 0.03 c, wake box 0.0075 c to 2 c then to 10 c, tube 15–20 cells across the core from 2 c behind the tip, far field 80 c (T2 decides); overset export and the overlap gate (M3).
+- **First plan (replaced on 6 Nov; kept as a fallback and for future work, owner 9 Nov; not built):** overset boxes (R-V.6): background 0.03 c, wake box 0.0075 c to 2 c then to 10 c, tube 15–20 cells across the core from 2 c behind the tip, far field 80 c (T2 decides); overset export and the overlap gate (M3).
 - **New plan: one matched C-H mesh for ADflow and SU2.** The C block wraps the ring (the nose stays a spacing request inside it, no collar); wake lines from the trailing-edge corners and the base to the far field (80 c), fine near the trailing edge (the first plan's 0.0075 c wake spacing is the starting value); the stations go on past the tip into outboard H blocks, growing from the tip gap; the tip vortex is resolved there by clustering along its path (no tube); the cap is the wall of the first outboard block. Structured CGNS for ADflow; a converter to unstructured hexes (.su2) for SU2. Rough cost: +30–60 % cells on the wing blocks, to be counted on the first wing.
 - **Where the march will be tested first:** the tip squeeze (many gaps on the last panel, down to 2 × s0), the caps whose quads come closest to the limit (Study 9), the corner wings, and (new) the open-line march at the trailing edge.
 - **What the meshes are now:** the rebuilt sets at unit mean chord, one surface per wing, level and Re level, named `mesh_<level>_<hash8>_re<Re>` with the levels VC, C, M, F; the counts of every set at every level are in `data/studies/screen_family_VC.json` … `screen_family_F.json` and `screen_family_summary.json` (Study 12; the 7 Nov screen: `screen_VC.json`, `screen_F.json`, `screen_reference_new.json`). The band stays on (81); the rules are frozen (82).

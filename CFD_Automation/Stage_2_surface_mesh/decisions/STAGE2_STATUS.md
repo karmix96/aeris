@@ -16,8 +16,9 @@ the numpy twin of the loft; on Mike's machine (8 Nov) the 20 reference wings on 
 > repair belongs to the family (80). **The family screen** (Study 12, 8 Nov): every set at every level, 3,128 of
 > 3,128 builds pass, 0 nose repairs. **9 Nov:** the band's cost measured (Study 13: it nearly doubles the cells at
 > Re ≥ 3 × 10⁵); the band stays on for every run, SA and LM alike (81; a switch to turn it off exists, unused: with it
-> off the BWB tip cap fails at M); the surface rules are frozen (82). Decisions 64, 67–82 in
-> `CFD_Automation/OPEN_DECISIONS.md`.
+> off the BWB tip cap fails at M); the surface rules are frozen (82). **Study 14:** the 60 hold-outs, never seen, opened once
+> (83): 960 of 960 builds pass with the rules frozen; the tip cap came within 0.5 % of its limit at M (0.0503). The overset
+> plan is kept as a fallback (73, 9 Nov). Decisions 64, 67–83 in `CFD_Automation/OPEN_DECISIONS.md`.
 >
 > | What | First (built 2–3 Nov) | New approach | Status |
 > | --- | --- | --- | --- |
@@ -79,6 +80,26 @@ loft stations hit, tip gap, every ring in its station plane, wing quads (scaled 
 its own limits (turning 17.1 / 13.2 / 10.2 / 7.89°; growth along the ring 1.25 / 1.19 / 1.14 / 1.11 within 1 %;
 between station gaps 1.3 / 1.22 / 1.17 / 1.13). A refused mesh writes only `refusal.json`. Tests: 45 (`tests/mesh/`),
 including the family test and a test of every value per level (`test_laws.py`).
+
+## The hold-outs (9 Nov; Study 14; decision 83)
+
+The 60 sealed hold-out wings (15 per type: holdout_focus 10, holdout_full 5) opened once, with the surface rules frozen
+(82): Stage 1 gates 60 of 60; every level and the four Re levels, 960 builds (`scripts/screen.py --open-holdouts`,
+`scripts/holdout_study.py`; `data/studies/holdout_screen.json`, `docs/page/holdout_screen.png`).
+
+| Level | Passed | Cells, median (largest) [M] | Reference wings, same 4 Re | Largest nose turning | Worst tip cap (Study 12) |
+| --- | --- | --- | --- | --- | --- |
+| VC | 240 of 240 | 0.68 (1.08) | 0.68 (1.02) | 16.11° (limit 17.1°) | 0.0664 (0.0749) |
+| C | 240 of 240 | 1.45 (2.29) | 1.46 (2.19) | 12.77° (limit 13.2°) | 0.0728 (0.0804) |
+| M | 240 of 240 | 3.07 (4.91) | 3.08 (4.69) | 10.01° (limit 10.2°) | 0.0503 (0.0573) |
+| F | 240 of 240 | 6.68 (10.69) | 6.73 (10.21) | 7.71° (limit 7.89°) | 0.0543 (0.0607) |
+
+- 960 of 960 pass, 0 crash, 0 nose repairs; the nose step 1.296–1.303 per level, the trailing edge 1.300.
+- How sure: 0 failures on 60 unseen wings puts the surface-mesh failure rate below 4.9 % (95 % confidence); 0 of 782 with
+  every set (below 0.4 %), but 722 of them helped set the rules.
+- Weak point: the tip cap at M, 0.0503 (flying wing holdout_full 1) and 0.0506 (cranked holdout_full 2), both at Re 10⁵,
+  against 0.05; 5 of 240 M meshes below the worst cap seen before. The largest F mesh is now 10.69 M (cranked
+  holdout_full 0 at 4 × 10⁶; before 10.21 M). No rule changes (82).
 
 ## The band option (9 Nov; Study 13)
 
@@ -242,7 +263,8 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   wings, with the same meshes (VC and F). The full sets were not meshed on pyGeo.
 - **No solve yet.** Nothing here says the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the 0.05 limit** (lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, every set; Study 12);
-  similarity made some caps worse.
+  closer on the hold-outs: 0.0503 at M and 0.0543 at F, full-space wings at Re 10⁵ (Study 14). Similarity made some
+  caps worse.
 - **The stations are 17 % more than the plan file** (station growth 1.2 and 12 gaps per panel at M, as decided, against
   1.25 and 7), so about 17 % more cells than the plan's rules. Confirmed by the owner on 8 Nov (decision 77).
 - **The cell count is an estimate and hangs on the wall-layer rule** (this count: one layer count per block, 2 chords
@@ -301,6 +323,9 @@ python scripts/screen.py --family --types bwb cranked --tag bwb_cranked   # ever
 python scripts/screen_study.py --family   # data/studies/screen_family_*.json; docs/page/family_*.png (Study 12)
 python scripts/screen.py --family --sets reference --band off --types bwb cranked   # the band option off (Study 13)
 python scripts/band_option.py          # Study 13: data/studies/band_option.json, docs/page/band_option.png
+python scripts/holdout_study.py --gates   # Study 14: build and gate the 60 hold-outs (Stage 1, numpy loft)
+python scripts/screen.py --family --open-holdouts --sets holdout_focus holdout_full --types bwb cranked --re 1e5 3e5 1e6 4e6 --tag holdout_bwb_cranked
+python scripts/holdout_study.py        # Study 14: data/studies/holdout_screen.json, docs/page/holdout_screen.png
 python scripts/similarity_check.py; python scripts/built_figures.py
 python scripts/change_figures.py; python scripts/make_stage2_page.py; python scripts/page_to_markdown.py; python scripts/make_summary_page.py
 ```

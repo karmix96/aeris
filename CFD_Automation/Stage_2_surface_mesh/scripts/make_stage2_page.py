@@ -272,7 +272,7 @@ def nose_table(nose: dict) -> str:
 
 def holdout_section(hs: dict) -> str:
     """Study 14: the hold-outs, opened once with the surface rules frozen (owner, 9 Nov 2026; decision 83)."""
-    L, R = hs["levels"], hs["against_study12"]
+    L, R, RF = hs["levels"], hs["against_study12"], hs["against_reference"]
     g = hs["gates"]
     n_all = sum(L[lev]["builds"] for lev in LEVELS)
     n_ok = sum(L[lev]["passed"] for lev in LEVELS)
@@ -282,18 +282,24 @@ def holdout_section(hs: dict) -> str:
     rows = "".join(
         f"<tr><td>{lev}</td><td>{L[lev]['passed']} of {L[lev]['builds']}</td>"
         f"<td>{L[lev]['cells']['median'] / 1e6:.2f} ({L[lev]['cells']['max'] / 1e6:.2f})</td>"
-        f"<td>{R[lev]['cells_median'] / 1e6:.2f} ({R[lev]['cells_max'] / 1e6:.2f})</td>"
+        f"<td>{RF[lev]['cells_median'] / 1e6:.2f} ({RF[lev]['cells_max'] / 1e6:.2f})</td>"
         f"<td>{L[lev]['nose_turning_max']:.2f}° (limit {lim[lev]}°)</td>"
-        f"<td>{L[lev]['cap_quads_min']:.3f} ({R[lev]['cap_quads_min']:.3f})</td></tr>" for lev in LEVELS)
+        f"<td>{L[lev]['cap_quads_min']:.4f} ({R[lev]['cap_quads_min']:.4f})</td></tr>" for lev in LEVELS)
     head = ("<tr><th>Level</th><th>Passed</th><th>Cells, hold-outs: median (largest) [M]</th>"
-            "<th>Every set before (Study 12) [M]</th><th>Largest nose turning</th>"
-            "<th>Worst tip cap, hold-outs (Study 12); limit 0.05</th></tr>")
+            "<th>Cells, the 20 reference wings at the same four Re (Study 12) [M]</th><th>Largest nose turning</th>"
+            "<th>Worst tip cap, hold-outs (every set before, Study 12); limit 0.05</th></tr>")
     fails = [f for lev in LEVELS for f in L[lev]["failed"]]
     fr = hs.get("family_ratios", {})
     nose = [v["nose_root"] for v in fr.values() if "nose_root" in v]
-    nose_s = (f"{min(x['min'] for x in nose):.3f}–{max(x['max'] for x in nose):.3f}" if nose else "n/a")
-    cap_min = min(L[lev]["cap_quads_min"] for lev in LEVELS)
+    te = [v["te_root"] for v in fr.values() if "te_root" in v]
+    nose_s = f"{min(x['min'] for x in nose):.3f}–{max(x['max'] for x in nose):.3f}" if nose else "n/a"
+    te_s = f"{min(x['min'] for x in te):.4f}–{max(x['max'] for x in te):.4f}" if te else "n/a"
     cap_lev = min(LEVELS, key=lambda lev: L[lev]["cap_quads_min"])
+    wc = L[cap_lev]["worst_caps"]
+    re_t = {1e5: "10⁵", 3e5: "3 × 10⁵", 1e6: "10⁶", 4e6: "4 × 10⁶"}
+    worst = "; ".join(f"{w['value']:.4f} on {w['wing']} at Re {re_t.get(w['re'], w['re'])}" for w in wc[:2])
+    below = L[cap_lev]["caps_below_study12_worst"]
+    big = L["F"]["largest"]
     if fails:
         fail_txt = "; ".join(f"{f['wing']} at Re {f['re']:.0e}: {', '.join(f['failed'] or [f.get('error') or '?'])}"
                              for f in fails[:8])
@@ -302,16 +308,19 @@ def holdout_section(hs: dict) -> str:
         concl = (f"The mesher fails on {len(fails)} of {n_all} builds of wings it had never seen. That is the honest "
                  "generalisation number; the failed checks say where the rules do not yet cover the space.")
     else:
-        res = (f"<strong>{n_ok} of {n_all} builds pass</strong>, {n_crash} crash, {n_rep} needed a nose repair.")
-        concl = (f"The mesher meshes wings it had never seen: {n_ok} of {n_all} builds pass every check, with no repair, "
-                 f"at every level and Re level. The tip cap stays the closest check (worst {cap_min:.3f} at {cap_lev}, limit 0.05). "
-                 "This is the first test of the rules on unseen wings; it says nothing yet about the flow.")
+        res = f"<strong>{n_ok} of {n_all} builds pass</strong>, {n_crash} crash, {n_rep} needed a nose repair."
+        concl = (f"The mesher meshes every wing it had never seen: {n_ok} of {n_all} builds pass every check, with the "
+                 "rules frozen and no repair, at every level and Re level. The honest weak point is the tip cap: at "
+                 f"{cap_lev}, on full-space wings at Re 10⁵, it came within {100 * (wc[0]['value'] / 0.05 - 1):.1f} % of its "
+                 f"limit ({wc[0]['value']:.4f} against 0.05). No rule changes (decision 82); if a cap fails on a new wing "
+                 "or in Stage 3, the cap is the first thing to fix. This says nothing yet about the flow.")
     fig = figc("holdout_screen.png",
-               "Left: cells per level on the wing blocks, the 60 hold-outs (blue) against every set meshed before "
-               "(grey, Study 12): median (bar) and largest (tick). Right: the tip cap quality of every hold-out mesh, "
-               "per level, against the limit 0.05.",
-               "The hold-outs sit inside the range of the sets seen before, and every cap stays above the limit."
-               if not fails else "See the result above: the failed builds are counted, not hidden.")
+               "Left: cells per level on the wing blocks, the 60 hold-outs (blue) against the 20 reference wings at the "
+               "same four Re levels (grey, Study 12): median (bar) and largest (tick). Right: the tip cap quality of "
+               "every hold-out mesh, per level, against the limit 0.05.",
+               "The hold-outs cost the same as the reference wings (F median 6.68 against 6.73 M); the cap curves at M "
+               "and F start just above the limit." if not fails else
+               "See the result above: the failed builds are counted, not hidden.")
     return f"""
   <h3 id="study14">Study 14 · The hold-outs: wings the mesher has never seen (9 Nov 2026)</h3>
   <p><strong>What was done.</strong> The 60 hold-out wings (15 per type: 10 in the focus space, 5 in the full space) were sealed: never built, never meshed. With the surface rules frozen (decision 82), the owner opened them once (decision 83). Stage 1 built and checked them ({g['passed']} of {g['wings']} pass its four gates), then every wing was meshed at every level and at the four Re levels: {n_all} builds. The wings are built by the same code as every other set; the seal was lifted only in the two screen processes (<code>scripts/screen.py --open-holdouts</code>; <code>scripts/holdout_study.py</code>).</p>
@@ -319,12 +328,13 @@ def holdout_section(hs: dict) -> str:
   <p><strong>Result.</strong></p>
   <ul>
     <li>{res}</li>
-    <li><strong>The family rule:</strong> the nose cell refines by {nose_s} per level step at the root (1.3 asked).</li>
-    <li><strong>Closest check:</strong> the tip cap, worst {cap_min:.3f} at {cap_lev} (limit 0.05; every set before: {R[cap_lev]['cap_quads_min']:.3f}).</li>
+    <li><strong>Cells:</strong> the same as the reference wings at the same Re levels (F median {L['F']['cells']['median'] / 1e6:.2f} M against {RF['F']['cells_median'] / 1e6:.2f} M). The largest mesh grows: {big['cells'] / 1e6:.2f} M at F ({big['wing']} at Re {re_t.get(big['re'], big['re'])}; before {R['F']['cells_max'] / 1e6:.2f} M), inside the 9–11 M asked, before the C-H wake lines.</li>
+    <li><strong>The family rule:</strong> the nose cell refines by {nose_s} per level step at the root, the trailing-edge cell by {te_s} (1.3 asked).</li>
+    <li><strong>How sure:</strong> 0 failures on 60 unseen wings means the surface-mesh failure rate is below {100 * (1 - 0.05 ** (1 / 60)):.1f} % with 95 % confidence (per wing, all its levels and Re levels). With the 722 wings meshed before, 0 of 782 (below {100 * (1 - 0.05 ** (1 / 782)):.1f} %), but those 722 helped set the rules.</li>
+    <li><strong>Weak point, the tip cap:</strong> worst {worst} (limit 0.05). {below} of {L[cap_lev]['builds']} meshes at {cap_lev} sit below the worst cap seen before ({R[cap_lev]['cap_quads_min']:.4f}). The closest caps are all at Re 10⁵, mostly on full-space wings.</li>
   </ul>
   {fig}
   {cbox(concl)}"""
-
 
 def laws_glance() -> str:
     """The laws at a glance (owner, 9 Nov 2026): the surface laws as built, read from laws.py, and the volume laws

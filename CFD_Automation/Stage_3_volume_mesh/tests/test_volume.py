@@ -65,15 +65,15 @@ def test_wake_first_cell_option(surface_vc, tmp_path):
 
 def test_span_smooth_moves_only_the_far_parts():
     """Decision 110: the far parts of neighbouring stations move toward each other; the near part is never moved,
-    the lines keep their ends and the growth limit; an impossible case is left as it is."""
+    the lines keep their ends and the growth limit; a station whose own line breaks the limit is not moved."""
     from cfdauto.volume.volume import span_smooth
     n, N = 60, 9
     y = np.linspace(0.0, 0.4, N)
     D = np.stack([np.concatenate([[0.0], np.cumsum(1e-3 * (1.18 + 0.004 * k) ** np.arange(n))]) for k in range(N)], 1)
     D *= 80.0 / D[-1]
     start = np.full(N, 3.0)
-    out, f = span_smooth(D, y, start, 1.27)
-    assert f > 0.0
+    out, info = span_smooth(D, y, start, 1.27)
+    assert info["fraction_min"] > 0.0 and info["ramp"] > 0.0
     near = D < start[None, :]
     assert np.array_equal(out[near], D[near]) and np.allclose(out[-1], D[-1])
     h = np.diff(out, axis=0)
@@ -84,5 +84,22 @@ def test_span_smooth_moves_only_the_far_parts():
         assert np.maximum(r, 1.0 / r).max() <= 1.27
     far = (D > 30.0).all(axis=1)
     assert np.abs(np.diff(out[far], axis=1)).max() < 0.7 * np.abs(np.diff(D[far], axis=1)).max()
-    same, f0 = span_smooth(D, y, start, 1.0001)          # no ramp can keep this limit: nothing is moved
-    assert f0 == 0.0 and np.array_equal(same, D)
+    same, info0 = span_smooth(D, y, start, 1.0001)          # every line breaks this limit already: nothing is moved
+    assert info0["fraction_mean"] == 0.0 and np.array_equal(same, D)
+
+
+def test_span_smooth_fraction_changes_slowly_along_the_semi_span():
+    """Decision 110: a station that may move only a little holds its neighbours back, so neighbours move alike
+    (the fraction changes by at most 1 per 0.5 c along the semi-span)."""
+    from cfdauto.volume import volume as V
+    n, N = 60, 21
+    y = np.linspace(0.0, 1.0, N)
+    D = np.stack([np.concatenate([[0.0], np.cumsum(1e-3 * (1.18 + 0.004 * k) ** np.arange(n))]) for k in range(N)], 1)
+    D *= 80.0 / D[-1]
+    D[:, 10] = np.concatenate([[0.0], np.cumsum(1e-3 * 1.215 ** np.arange(n))]) * 1.0
+    D[:, 10] *= 80.0 / D[-1, 10]
+    out, info = V.span_smooth(D, y, np.full(N, 3.0), 1.22)
+    fr = np.array(info["fractions"])
+    assert fr[10] < 1.0                                       # the odd station may move only part of the way
+    assert np.all(np.abs(np.diff(fr)) <= np.diff(y) / V.SPAN_FRACTION_SLOPE_C + 1e-9)
+    assert np.all(fr <= fr[10] + np.abs(y - y[10]) / V.SPAN_FRACTION_SLOPE_C + 1e-9)

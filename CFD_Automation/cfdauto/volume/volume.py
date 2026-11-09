@@ -100,22 +100,46 @@ def smoothstep(t: Array) -> Array:
 
 
 SPAN_SMOOTH_C = 0.25                      # decision 110: kernel width (mean chords) along the semi-span
-SPAN_RAMPS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0)   # ramp lengths tried, in units of each station's start distance
+SPAN_RAMPS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0)   # ramp lengths tried, in units of each station's start distance
+SPAN_FRACTION_SLOPE_C = 0.5               # the moved fraction changes by at most 1 per 0.5 c along the semi-span
+
+
+def _largest_fraction(D: Array, w: Array, e: Array, first: int, g: float) -> float:
+    """The largest b in [0, 1] for which D + b w e keeps every increment > 0 and every growth ratio (larger / smaller)
+    <= g from index first - 1 on. Every condition is linear in b and holds at b = 0, so the allowed b form one
+    interval [0, b_max]: exact, no search. 0 if D itself breaks a condition."""
+    hD, hE = np.diff(D[first - 1:]), np.diff((w * e)[first - 1:])
+    if hD.size < 2 or np.any(hD <= 0.0):
+        return 0.0
+    r = hD[1:] / hD[:-1]
+    if np.maximum(r, 1.0 / r).max() > g * (1.0 + 1e-12):
+        return 0.0
+    b = 1.0
+    neg = hE < 0.0
+    if np.any(neg):
+        b = min(b, float(np.min(hD[neg] / -hE[neg])))
+    for a, c in ((hE[1:] - g * hE[:-1], g * hD[:-1] - hD[1:]), (hE[:-1] - g * hE[1:], g * hD[1:] - hD[:-1])):
+        pos = a > 0.0
+        if np.any(pos):
+            b = min(b, float(np.min(c[pos] / a[pos])))
+    return max(0.0, 0.999 * b)
 
 
 def span_smooth(D: Array, y: Array, start: Array, g_lim: float, origin: Array | None = None,
-                sigma: float = SPAN_SMOOTH_C) -> tuple[Array, float]:
+                sigma: float = SPAN_SMOOTH_C) -> tuple[Array, dict]:
     """The far part of every station's distribution, moved toward its neighbours' (decision 110).
     D (n+1, N): positions along the lines of N stations at y (N,), from origin (N,; 0 if None); start (N,): the
     distance from the origin at which each station's far part begins (past its fine zone and band; the near part is
-    never moved). Target: the Gaussian average over the stations within about sigma along the semi-span (mirrored at
-    the root), scaled to end where the line ends. Every station ramps to it with
-    smoothstep((D - origin - start) / (f start)), one f for all stations (so neighbours move alike): the shortest of
-    SPAN_RAMPS that keeps every growth ratio of every far part (larger / smaller, from the last near cell on)
-    <= g_lim; none (f = 0, nothing moved) if no ramp does. Why: the near part follows the local chord (fine zone and
-    band in local chords), so where the chord changes fast along the semi-span (a tapered tip, a BWB kink) the far
-    nodes of stations a hair apart were up to 20 x their gap apart and the cells between them sheared below the
-    quality limit (check 3, V6 rule set 2). Returns (D moved, f)."""
+    never moved). Target T: the Gaussian average over the stations within about sigma along the semi-span (mirrored
+    at the root), scaled to end where the line ends. Station k moves to D + f_k w (T - D), with the ramp
+    w = smoothstep((D - origin - start) / (r start)) and the fraction f_k: the largest that keeps every growth ratio of
+    its far part (larger / smaller, from the last near cell on) <= g_lim (exact), then lowered so it changes by at
+    most 1 per SPAN_FRACTION_SLOPE_C along the semi-span (neighbours move alike). One ramp length r for every station:
+    of SPAN_RAMPS, the one with the largest smallest fraction (then the largest mean f w over the far nodes).
+    Why: the near part follows the local chord (fine zone and band in local chords), so where the chord changes fast
+    along the semi-span (a tapered tip, a BWB centre body or kink) the far nodes of stations a hair apart were up to
+    20 x their gap apart and the cells between them sheared below the quality limit (check 3, V6 rule set 2).
+    Returns (D moved, {"ramp", "fraction_min", "fraction_mean", "fractions"})."""
     n1, N = D.shape
     o = np.zeros(N) if origin is None else np.asarray(origin, float)
     W = np.exp(-0.5 * ((y[:, None] - y[None, :]) / sigma) ** 2) + np.exp(-0.5 * ((y[:, None] + y[None, :]) / sigma) ** 2)
@@ -123,22 +147,19 @@ def span_smooth(D: Array, y: Array, start: Array, g_lim: float, origin: Array | 
     T = D @ W.T
     T = o[None, :] + (T - T[0][None, :]) * ((D[-1] - o) / (T[-1] - T[0]))[None, :]
     first = np.array([max(int(np.searchsorted(D[:, k] - o[k], start[k])), 1) for k in range(N)])
-    for f in SPAN_RAMPS:
-        w = smoothstep((D - o[None, :] - start[None, :]) / (f * start[None, :]))
-        C = (1.0 - w) * D + w * T
-        ok = True
-        for k in range(N):
-            h = np.diff(C[first[k] - 1:, k])
-            if not np.all(h > 0.0):
-                ok = False
-                break
-            r = h[1:] / h[:-1]
-            if r.size and np.maximum(r, 1.0 / r).max() > g_lim:
-                ok = False
-                break
-        if ok:
-            return C, f
-    return D, 0.0
+    far = np.arange(n1)[:, None] >= first[None, :]
+    best = None
+    for r in SPAN_RAMPS:
+        w = smoothstep((D - o[None, :] - start[None, :]) / (r * start[None, :]))
+        fk = np.array([_largest_fraction(D[:, k], w[:, k], T[:, k] - D[:, k], first[k], g_lim) for k in range(N)])
+        fk = np.min(fk[None, :] + np.abs(y[:, None] - y[None, :]) / SPAN_FRACTION_SLOPE_C, axis=1).clip(0.0, 1.0)
+        score = (round(float(fk.min()), 2), float((fk[None, :] * w)[far].mean()))
+        if best is None or score > best[0]:
+            best = (score, r, w, fk)
+    _, r, w, fk = best
+    C = D + fk[None, :] * w * (T - D)
+    return C, {"ramp": float(r), "fraction_min": float(fk.min()), "fraction_mean": float(fk.mean()),
+               "fractions": [round(float(v), 4) for v in fk]}
 
 
 def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:
@@ -151,7 +172,7 @@ def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:
     return np.array([s.s0 if how == "s0" else max(s.te_cell, s.s0) for s in sts])
 
 
-def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[Array, Array, float]:
+def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[Array, Array, dict]:
     """Arc lengths of the wake nodes (n_w, n_stations), one count for all stations, the minimal counts, and the ramp
     of the far-wake smoothing along the semi-span (decision 110; 0 = not moved).
     Far behind the band the nodes of every station move to the same x (the station mean), so the wake columns of

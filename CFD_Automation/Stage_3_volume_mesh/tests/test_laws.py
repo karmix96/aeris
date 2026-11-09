@@ -1,0 +1,42 @@
+import numpy as np
+import pytest
+
+from cfdauto.volume.laws import move, rules
+
+
+def test_family_rule_per_level():
+    want = {"VC": (1.25, 30.0, 0.0075 * 1.69, 1.15), "F": (1.25 ** (1 / 1.3 ** 3), 30 * 1.3 ** 3, 0.0075 / 1.3,
+                                                           1.15 ** (1 / 1.3 ** 3))}
+    for lev, (g, n, h, go) in want.items():
+        r = rules(lev)
+        assert r.wall_growth == pytest.approx(g, rel=1e-12)
+        assert r.bl_cells == pytest.approx(n, rel=1e-12)
+        assert r.band["spacing_c"] == pytest.approx(h, rel=1e-12)
+        assert r.outboard_growth == pytest.approx(go, rel=1e-12)
+
+
+def test_anchor_is_exact():
+    assert rules("M").band["spacing_c"] == 0.0075
+    assert rules("VC").wall_growth == 1.25
+    assert move(10.0, "size", 0, 1.3) == 10.0
+
+
+def test_first_cell_is_stage2_law13():
+    from cfdauto.mesh.laws import first_cell_c, rules as srules
+    for lev in ("VC", "M"):
+        r = rules(lev)
+        assert r.first_cell(3e5, 2.0) == pytest.approx(first_cell_c(3e5, srules(lev).yplus) * 2.0, rel=1e-14)
+
+
+def test_delta_turbulent_te():
+    r = rules("VC")
+    assert r.delta(1e6, 1.0) == pytest.approx(0.37 * 1e6 ** -0.2, rel=1e-14)
+
+
+def test_band_cell_keeps_the_fan_cells():
+    r = rules("M")
+    b = r.band
+    fan = np.tan(np.radians(b["alpha_hi_deg"])) - np.tan(np.radians(b["alpha_lo_deg"]))
+    d = 50.0
+    assert d * fan / r.band_cell(d) == pytest.approx(b["fan_cells"], rel=0.02)   # the TE cell adds 1.3 %
+    assert r.band_cell(0.0) == pytest.approx(0.0075)

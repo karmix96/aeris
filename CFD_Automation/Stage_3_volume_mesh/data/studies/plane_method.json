@@ -1,0 +1,261 @@
+{
+ "what": "V0: the station-plane grid method, the same inputs for three methods; 8 reference wings at VC, Re 3e5, every station plane; no volume mesh judged",
+ "summary": {
+  "march": {
+   "station_planes": 501,
+   "planes_with_a_fold": 0,
+   "min_sj": 0.6258616785301909,
+   "min_sj_median": 0.9274024856248623,
+   "wall_angle_max_deg": 0.050031685660777606,
+   "growth_over_limit_max": 0.9969458783257934,
+   "s0_error_max": 4.666008444731418e-06,
+   "seconds": 6.6
+  },
+  "algebraic": {
+   "station_planes": 501,
+   "planes_with_a_fold": 501,
+   "min_sj": -0.999999999999998,
+   "min_sj_median": -0.9999999999056796,
+   "wall_angle_max_deg": 4.3859375162103465e-05,
+   "growth_over_limit_max": 0.9979626141105553,
+   "s0_error_max": 6.399325513939402e-12,
+   "seconds": 5.8
+  },
+  "elliptic": {
+   "station_planes": 501,
+   "planes_with_a_fold": 501,
+   "min_sj": -1.0,
+   "min_sj_median": -0.9999999998776432,
+   "wall_angle_max_deg": 4.3859375162103465e-05,
+   "growth_over_limit_max": 15.44255096394567,
+   "s0_error_max": 6.399325513939402e-12,
+   "seconds": 231.1
+  }
+ },
+ "wings": [
+  {
+   "type": "bwb",
+   "index": 0,
+   "stations": 61,
+   "n_c": 375,
+   "nj": 94,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.9439520394138399,
+    "wall_angle_max": 0.02119741954904536,
+    "growth_over_limit": 0.996122358029465,
+    "s0_error": 9.098617699265787e-07
+   },
+   "algebraic": {
+    "folded_stations": 61,
+    "min_sj": -0.9999999999999728,
+    "wall_angle_max": 4.014552266073602e-05,
+    "growth_over_limit": 0.9960981854498794,
+    "s0_error": 1.6775469902086115e-12
+   },
+   "elliptic": {
+    "folded_stations": 61,
+    "min_sj": -0.9999999999999989,
+    "wall_angle_max": 4.014552266073602e-05,
+    "growth_over_limit": 13.64558025218835,
+    "s0_error": 1.6775469902086115e-12
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "stations": 64,
+   "n_c": 375,
+   "nj": 95,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.9274024856248623,
+    "wall_angle_max": 0.050031685660777606,
+    "growth_over_limit": 0.994723228497336,
+    "s0_error": 3.881191319998756e-06
+   },
+   "algebraic": {
+    "folded_stations": 64,
+    "min_sj": -0.9999999999999803,
+    "wall_angle_max": 4.038087610637674e-05,
+    "growth_over_limit": 0.9946985438123358,
+    "s0_error": 3.386957381223965e-12
+   },
+   "elliptic": {
+    "folded_stations": 64,
+    "min_sj": -0.9999999999999963,
+    "wall_angle_max": 4.038087610637674e-05,
+    "growth_over_limit": 15.44255096394567,
+    "s0_error": 3.386957381223965e-12
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "stations": 60,
+   "n_c": 353,
+   "nj": 91,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.9593388928778266,
+    "wall_angle_max": 0.0026273321672994504,
+    "growth_over_limit": 0.994818873197936,
+    "s0_error": 1.1356665008399602e-07
+   },
+   "algebraic": {
+    "folded_stations": 60,
+    "min_sj": -0.999999999999998,
+    "wall_angle_max": 3.563418418873679e-05,
+    "growth_over_limit": 0.9948095652589226,
+    "s0_error": 1.5545342790801442e-12
+   },
+   "elliptic": {
+    "folded_stations": 60,
+    "min_sj": -1.0,
+    "wall_angle_max": 3.563418418873679e-05,
+    "growth_over_limit": 11.408016172817272,
+    "s0_error": 1.5545342790801442e-12
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 3,
+   "stations": 66,
+   "n_c": 365,
+   "nj": 92,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.9643893482721645,
+    "wall_angle_max": 0.005013269650278239,
+    "growth_over_limit": 0.9969458783257934,
+    "s0_error": 1.925834631766321e-07
+   },
+   "algebraic": {
+    "folded_stations": 66,
+    "min_sj": -0.9999999999998919,
+    "wall_angle_max": 3.3482734016712655e-05,
+    "growth_over_limit": 0.9969292144873055,
+    "s0_error": 6.399325513939402e-12
+   },
+   "elliptic": {
+    "folded_stations": 66,
+    "min_sj": -0.9999999999999859,
+    "wall_angle_max": 3.3482734016712655e-05,
+    "growth_over_limit": 12.445929357874494,
+    "s0_error": 6.399325513939402e-12
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 0,
+   "stations": 62,
+   "n_c": 329,
+   "nj": 90,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.6305529157690142,
+    "wall_angle_max": 0.0005020443132844559,
+    "growth_over_limit": 0.996061070522224,
+    "s0_error": 3.4896566851738697e-06
+   },
+   "algebraic": {
+    "folded_stations": 62,
+    "min_sj": -0.9999999999999549,
+    "wall_angle_max": 4.319790925411167e-05,
+    "growth_over_limit": 0.9970379653155647,
+    "s0_error": 6.104006189389111e-13
+   },
+   "elliptic": {
+    "folded_stations": 62,
+    "min_sj": -0.9999999999999999,
+    "wall_angle_max": 4.319790925411167e-05,
+    "growth_over_limit": 12.150652122265603,
+    "s0_error": 6.104006189389111e-13
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 3,
+   "stations": 61,
+   "n_c": 333,
+   "nj": 90,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.6258616785301909,
+    "wall_angle_max": 0.0005385518620113621,
+    "growth_over_limit": 0.9960719901203505,
+    "s0_error": 4.666008444731418e-06
+   },
+   "algebraic": {
+    "folded_stations": 61,
+    "min_sj": -0.999999999999676,
+    "wall_angle_max": 4.3859375162103465e-05,
+    "growth_over_limit": 0.9979626141105553,
+    "s0_error": 8.034684029212258e-13
+   },
+   "elliptic": {
+    "folded_stations": 61,
+    "min_sj": -0.9999999999992605,
+    "wall_angle_max": 4.3859375162103465e-05,
+    "growth_over_limit": 13.475653203641821,
+    "s0_error": 8.034684029212258e-13
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 0,
+   "stations": 62,
+   "n_c": 333,
+   "nj": 90,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.6341721911199292,
+    "wall_angle_max": 0.0005444552765707806,
+    "growth_over_limit": 0.9960602715360404,
+    "s0_error": 3.765950511991356e-06
+   },
+   "algebraic": {
+    "folded_stations": 62,
+    "min_sj": -0.9999999999999896,
+    "wall_angle_max": 4.295253671431394e-05,
+    "growth_over_limit": 0.9961522978188998,
+    "s0_error": 7.598366380534571e-13
+   },
+   "elliptic": {
+    "folded_stations": 62,
+    "min_sj": -0.9999999999999991,
+    "wall_angle_max": 4.295253671431394e-05,
+    "growth_over_limit": 11.080717794166743,
+    "s0_error": 7.598366380534571e-13
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 3,
+   "stations": 65,
+   "n_c": 351,
+   "nj": 91,
+   "march": {
+    "folded_stations": 0,
+    "min_sj": 0.6280334049122377,
+    "wall_angle_max": 0.0005427449209221237,
+    "growth_over_limit": 0.9965382203498653,
+    "s0_error": 3.756622487749439e-06
+   },
+   "algebraic": {
+    "folded_stations": 65,
+    "min_sj": -0.9999999999998048,
+    "wall_angle_max": 4.1852328991325676e-05,
+    "growth_over_limit": 0.9965331689075336,
+    "s0_error": 1.574740338128322e-12
+   },
+   "elliptic": {
+    "folded_stations": 65,
+    "min_sj": -0.9999999999998048,
+    "wall_angle_max": 4.1852328991325676e-05,
+    "growth_over_limit": 11.868359502473627,
+    "s0_error": 1.574740338128322e-12
+   }
+  }
+ ]
+}

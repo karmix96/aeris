@@ -1,0 +1,3735 @@
+{
+ "what": "V0: wall-layer count at VC (the most over the stations, straight lines to 85 c, the station distribution with the wake band) for five variants of the 30-cell rule; counts only, no mesh judged",
+ "variants": {
+  "turb_TE_VC": {
+   "law": "turbulent",
+   "x_c": 1.0,
+   "at": "VC"
+  },
+  "turb_mid_VC": {
+   "law": "turbulent",
+   "x_c": 0.5,
+   "at": "VC"
+  },
+  "lam_mid_VC": {
+   "law": "laminar",
+   "x_c": 0.5,
+   "at": "VC"
+  },
+  "turb_TE_M": {
+   "law": "turbulent",
+   "x_c": 1.0,
+   "at": "M"
+  },
+  "lam_mid_M": {
+   "law": "laminar",
+   "x_c": 0.5,
+   "at": "M"
+  }
+ },
+ "summary": {
+  "turb_TE_VC@1e+05": {
+   "layers_median": 88.85040725938022,
+   "layers_max": 92.33257618705245,
+   "g_bl_min": 1.0217894540707313
+  },
+  "turb_TE_VC@3e+05": {
+   "layers_median": 89.29121671918637,
+   "layers_max": 93.25697301004371,
+   "g_bl_min": 1.0690724978906319
+  },
+  "turb_TE_VC@1e+06": {
+   "layers_median": 89.80308083278254,
+   "layers_max": 94.23454589937634,
+   "g_bl_min": 1.1159932812435467
+  },
+  "turb_TE_VC@4e+06": {
+   "layers_median": 90.7160634587323,
+   "layers_max": 97.1857168429265,
+   "g_bl_min": 1.1672817946191936
+  },
+  "turb_mid_VC@1e+05": {
+   "layers_median": 93.2815342827601,
+   "layers_max": 96.398913093742,
+   "g_bl_min": 1.000000001
+  },
+  "turb_mid_VC@3e+05": {
+   "layers_median": 92.85054500565528,
+   "layers_max": 97.13761460322871,
+   "g_bl_min": 1.0370012589047313
+  },
+  "turb_mid_VC@1e+06": {
+   "layers_median": 93.01491024506299,
+   "layers_max": 97.2495587069594,
+   "g_bl_min": 1.0867357067777357
+  },
+  "turb_mid_VC@4e+06": {
+   "layers_median": 93.3144328644527,
+   "layers_max": 98.14208047678996,
+   "g_bl_min": 1.1393425681945304
+  },
+  "lam_mid_VC@1e+05": {
+   "layers_median": 99.72084765286397,
+   "layers_max": 104.15747604328115,
+   "g_bl_min": 1.000000001
+  },
+  "lam_mid_VC@3e+05": {
+   "layers_median": 100.74165355854748,
+   "layers_max": 105.27323728833296,
+   "g_bl_min": 1.013413623644891
+  },
+  "lam_mid_VC@1e+06": {
+   "layers_median": 102.23243301298805,
+   "layers_max": 107.20125958419139,
+   "g_bl_min": 1.0453564408319636
+  },
+  "lam_mid_VC@4e+06": {
+   "layers_median": 104.23306508405244,
+   "layers_max": 109.23591440322447,
+   "g_bl_min": 1.0789777874968935
+  },
+  "turb_TE_M@1e+05": {
+   "layers_median": 75.24526382786397,
+   "layers_max": 81.71262494264872,
+   "g_bl_min": 1.0938626608001127
+  },
+  "turb_TE_M@3e+05": {
+   "layers_median": 79.75110771327874,
+   "layers_max": 86.2373740097187,
+   "g_bl_min": 1.1735059062013606
+  },
+  "turb_TE_M@1e+06": {
+   "layers_median": 84.75013816343755,
+   "layers_max": 91.23580583255881,
+   "g_bl_min": 1.25
+  },
+  "turb_TE_M@4e+06": {
+   "layers_median": 90.69667127780808,
+   "layers_max": 97.1857168429265,
+   "g_bl_min": 1.25
+  },
+  "lam_mid_M@1e+05": {
+   "layers_median": 82.77834806133981,
+   "layers_max": 87.34866961535037,
+   "g_bl_min": 1.029408991725051
+  },
+  "lam_mid_M@3e+05": {
+   "layers_median": 84.27508069847056,
+   "layers_max": 89.26577174629718,
+   "g_bl_min": 1.080378694288341
+  },
+  "lam_mid_M@1e+06": {
+   "layers_median": 86.23280211146523,
+   "layers_max": 91.2449778577983,
+   "g_bl_min": 1.1328413032639886
+  },
+  "lam_mid_M@4e+06": {
+   "layers_median": 90.69667127780808,
+   "layers_max": 97.1857168429265,
+   "g_bl_min": 1.1908841314028586
+  }
+ },
+ "rows": [
+  {
+   "type": "bwb",
+   "index": 0,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 91.66085192795794,
+    "station": 1,
+    "g_bl_min": 1.052927508080644,
+    "delta_over_s0_min": 69.87755980762597,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_mid_VC": {
+    "layers": 95.78021721468157,
+    "station": 2,
+    "g_bl_min": 1.0193124722067077,
+    "delta_over_s0_min": 40.13411900111345,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "lam_mid_VC": {
+    "layers": 103.45560583562192,
+    "station": 0,
+    "g_bl_min": 1.0022197723905177,
+    "delta_over_s0_min": 30.985909430484362,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_TE_M": {
+    "layers": 80.58491244787892,
+    "station": 1,
+    "g_bl_min": 1.1456727970851868,
+    "delta_over_s0_min": 69.87755980762597,
+    "bl_binds_stations": 44,
+    "stations": 56
+   },
+   "lam_mid_M": {
+    "layers": 86.63959908482595,
+    "station": 1,
+    "g_bl_min": 1.0626755839119628,
+    "delta_over_s0_min": 30.985909430484362,
+    "bl_binds_stations": 56,
+    "stations": 56
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 0,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 92.60094981380402,
+    "station": 1,
+    "g_bl_min": 1.0970510577209485,
+    "delta_over_s0_min": 155.58031438472528,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_mid_VC": {
+    "layers": 96.45112700074272,
+    "station": 0,
+    "g_bl_min": 1.0669030439461082,
+    "delta_over_s0_min": 89.35742560182774,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "lam_mid_VC": {
+    "layers": 104.58601306382006,
+    "station": 1,
+    "g_bl_min": 1.0325850023744083,
+    "delta_over_s0_min": 49.618631816309254,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_TE_M": {
+    "layers": 85.46727712292369,
+    "station": 0,
+    "g_bl_min": 1.2231476484481807,
+    "delta_over_s0_min": 155.58031438472528,
+    "bl_binds_stations": 35,
+    "stations": 61
+   },
+   "lam_mid_M": {
+    "layers": 88.53692159091607,
+    "station": 0,
+    "g_bl_min": 1.111532155151372,
+    "delta_over_s0_min": 49.618631816309254,
+    "bl_binds_stations": 61,
+    "stations": 61
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 0,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 93.51795424904648,
+    "station": 0,
+    "g_bl_min": 1.142394247079188,
+    "delta_over_s0_min": 374.03234420719104,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_mid_VC": {
+    "layers": 96.5376443223743,
+    "station": 0,
+    "g_bl_min": 1.1139770124083723,
+    "delta_over_s0_min": 214.82516925324254,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "lam_mid_VC": {
+    "layers": 106.47187340025938,
+    "station": 0,
+    "g_bl_min": 1.0628410185517614,
+    "delta_over_s0_min": 83.12576894207878,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_TE_M": {
+    "layers": 90.46563087610151,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 374.03234420719104,
+    "bl_binds_stations": 0,
+    "stations": 68
+   },
+   "lam_mid_M": {
+    "layers": 90.51442299873084,
+    "station": 0,
+    "g_bl_min": 1.1626891510453408,
+    "delta_over_s0_min": 83.12576894207878,
+    "bl_binds_stations": 68,
+    "stations": 68
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 0,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 95.65243069973381,
+    "station": 1,
+    "g_bl_min": 1.1930095042412865,
+    "delta_over_s0_min": 1026.9584368012565,
+    "bl_binds_stations": 65,
+    "stations": 75
+   },
+   "turb_mid_VC": {
+    "layers": 97.43268337091995,
+    "station": 0,
+    "g_bl_min": 1.165335078076282,
+    "delta_over_s0_min": 589.832733501965,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "lam_mid_VC": {
+    "layers": 108.50574325687806,
+    "station": 0,
+    "g_bl_min": 1.095315452117293,
+    "delta_over_s0_min": 150.5779520819489,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "turb_TE_M": {
+    "layers": 95.65243069973381,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 1026.9584368012565,
+    "bl_binds_stations": 0,
+    "stations": 75
+   },
+   "lam_mid_M": {
+    "layers": 95.65243069973381,
+    "station": 1,
+    "g_bl_min": 1.2200193662031964,
+    "delta_over_s0_min": 150.5779520819489,
+    "bl_binds_stations": 53,
+    "stations": 75
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 1,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 91.06152212103376,
+    "station": 2,
+    "g_bl_min": 1.0619745845749158,
+    "delta_over_s0_min": 81.86074224668889,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "turb_mid_VC": {
+    "layers": 95.78248729798999,
+    "station": 0,
+    "g_bl_min": 1.0292698553118216,
+    "delta_over_s0_min": 47.016649978803905,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "lam_mid_VC": {
+    "layers": 102.78647233762632,
+    "station": 0,
+    "g_bl_min": 1.0085017911056802,
+    "delta_over_s0_min": 34.009350182477554,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "turb_TE_M": {
+    "layers": 79.83251646662458,
+    "station": 0,
+    "g_bl_min": 1.1611924452887743,
+    "delta_over_s0_min": 81.86074224668889,
+    "bl_binds_stations": 40,
+    "stations": 53
+   },
+   "lam_mid_M": {
+    "layers": 85.95412825419342,
+    "station": 1,
+    "g_bl_min": 1.0725652895651145,
+    "delta_over_s0_min": 34.009350182477554,
+    "bl_binds_stations": 53,
+    "stations": 53
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 1,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 91.94579363098798,
+    "station": 1,
+    "g_bl_min": 1.1053984822762533,
+    "delta_over_s0_min": 182.26051467121937,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "turb_mid_VC": {
+    "layers": 95.80017434871885,
+    "station": 0,
+    "g_bl_min": 1.0756775223235373,
+    "delta_over_s0_min": 104.68117669187134,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "lam_mid_VC": {
+    "layers": 103.9036917512355,
+    "station": 1,
+    "g_bl_min": 1.0382355527916616,
+    "delta_over_s0_min": 54.46015482624824,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "turb_TE_M": {
+    "layers": 83.96433800361783,
+    "station": 1,
+    "g_bl_min": 1.2382788390250274,
+    "delta_over_s0_min": 182.26051467121937,
+    "bl_binds_stations": 27,
+    "stations": 58
+   },
+   "lam_mid_M": {
+    "layers": 87.84295007861441,
+    "station": 0,
+    "g_bl_min": 1.1209070222712716,
+    "delta_over_s0_min": 54.46015482624824,
+    "bl_binds_stations": 58,
+    "stations": 58
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 1,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 92.84811721846452,
+    "station": 0,
+    "g_bl_min": 1.1503963816392149,
+    "delta_over_s0_min": 438.17450702862374,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_mid_VC": {
+    "layers": 95.91877429360245,
+    "station": 1,
+    "g_bl_min": 1.1221612431539376,
+    "delta_over_s0_min": 251.66516771270838,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "lam_mid_VC": {
+    "layers": 105.78049746252985,
+    "station": 0,
+    "g_bl_min": 1.0680659677697142,
+    "delta_over_s0_min": 91.23674073472827,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_TE_M": {
+    "layers": 88.96305168239228,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 438.17450702862374,
+    "bl_binds_stations": 0,
+    "stations": 65
+   },
+   "lam_mid_M": {
+    "layers": 89.81841309677867,
+    "station": 0,
+    "g_bl_min": 1.1717525830558797,
+    "delta_over_s0_min": 91.23674073472827,
+    "bl_binds_stations": 65,
+    "stations": 65
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 1,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 94.90594626997549,
+    "station": 1,
+    "g_bl_min": 1.2008837353979709,
+    "delta_over_s0_min": 1203.069771246872,
+    "bl_binds_stations": 61,
+    "stations": 72
+   },
+   "turb_mid_VC": {
+    "layers": 96.1101633015451,
+    "station": 0,
+    "g_bl_min": 1.173254166901163,
+    "delta_over_s0_min": 690.9821335889706,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "lam_mid_VC": {
+    "layers": 107.81053762970146,
+    "station": 0,
+    "g_bl_min": 1.1002487388306375,
+    "delta_over_s0_min": 165.27055026750827,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "turb_TE_M": {
+    "layers": 94.90594626997549,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 1203.069771246872,
+    "bl_binds_stations": 0,
+    "stations": 72
+   },
+   "lam_mid_M": {
+    "layers": 94.90594626997549,
+    "station": 1,
+    "g_bl_min": 1.2289273690063958,
+    "delta_over_s0_min": 165.27055026750827,
+    "bl_binds_stations": 48,
+    "stations": 72
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 2,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 91.69091080632863,
+    "station": 2,
+    "g_bl_min": 1.0217894540707313,
+    "delta_over_s0_min": 41.724802795985006,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "turb_mid_VC": {
+    "layers": 96.398913093742,
+    "station": 0,
+    "g_bl_min": 1.000000001,
+    "delta_over_s0_min": 23.964606167161836,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "lam_mid_VC": {
+    "layers": 103.44338652372726,
+    "station": 0,
+    "g_bl_min": 1.000000001,
+    "delta_over_s0_min": 22.878777414213964,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "turb_TE_M": {
+    "layers": 80.58365831576832,
+    "station": 1,
+    "g_bl_min": 1.0938626608001127,
+    "delta_over_s0_min": 41.724802795985006,
+    "bl_binds_stations": 45,
+    "stations": 58
+   },
+   "lam_mid_M": {
+    "layers": 86.62571775895105,
+    "station": 1,
+    "g_bl_min": 1.029408991725051,
+    "delta_over_s0_min": 22.878777414213964,
+    "bl_binds_stations": 58,
+    "stations": 58
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 2,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 92.58037650179898,
+    "station": 1,
+    "g_bl_min": 1.0690724978906319,
+    "delta_over_s0_min": 92.89903589237197,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "turb_mid_VC": {
+    "layers": 96.43643668163855,
+    "station": 0,
+    "g_bl_min": 1.0370012589047313,
+    "delta_over_s0_min": 53.356484855189095,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "lam_mid_VC": {
+    "layers": 104.57090504688848,
+    "station": 1,
+    "g_bl_min": 1.013413623644891,
+    "delta_over_s0_min": 36.636447139625865,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "turb_TE_M": {
+    "layers": 85.4664825533265,
+    "station": 0,
+    "g_bl_min": 1.1735059062013606,
+    "delta_over_s0_min": 92.89903589237197,
+    "bl_binds_stations": 40,
+    "stations": 64
+   },
+   "lam_mid_M": {
+    "layers": 88.55493767568757,
+    "station": 1,
+    "g_bl_min": 1.080378694288341,
+    "delta_over_s0_min": 36.636447139625865,
+    "bl_binds_stations": 64,
+    "stations": 64
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 2,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 93.54155007796068,
+    "station": 1,
+    "g_bl_min": 1.1159932812435467,
+    "delta_over_s0_min": 223.339593487949,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "turb_mid_VC": {
+    "layers": 96.56280018473602,
+    "station": 1,
+    "g_bl_min": 1.0867357067777357,
+    "delta_over_s0_min": 128.27491182265678,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "lam_mid_VC": {
+    "layers": 106.46289474775983,
+    "station": 0,
+    "g_bl_min": 1.0453564408319636,
+    "delta_over_s0_min": 61.37679997025255,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "turb_TE_M": {
+    "layers": 90.46483551036387,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 223.339593487949,
+    "bl_binds_stations": 0,
+    "stations": 70
+   },
+   "lam_mid_M": {
+    "layers": 90.53219380545413,
+    "station": 1,
+    "g_bl_min": 1.1328413032639886,
+    "delta_over_s0_min": 61.37679997025255,
+    "bl_binds_stations": 70,
+    "stations": 70
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 2,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 96.41348007996828,
+    "station": 0,
+    "g_bl_min": 1.1672817946191936,
+    "delta_over_s0_min": 613.2102834324952,
+    "bl_binds_stations": 66,
+    "stations": 77
+   },
+   "turb_mid_VC": {
+    "layers": 97.42242415139147,
+    "station": 0,
+    "g_bl_min": 1.1393425681945304,
+    "delta_over_s0_min": 352.19682192308636,
+    "bl_binds_stations": 77,
+    "stations": 77
+   },
+   "lam_mid_VC": {
+    "layers": 108.523866148771,
+    "station": 1,
+    "g_bl_min": 1.0789777874968935,
+    "delta_over_s0_min": 111.18084033969997,
+    "bl_binds_stations": 77,
+    "stations": 77
+   },
+   "turb_TE_M": {
+    "layers": 96.41348007996828,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 613.2102834324952,
+    "bl_binds_stations": 0,
+    "stations": 77
+   },
+   "lam_mid_M": {
+    "layers": 96.41348007996828,
+    "station": 0,
+    "g_bl_min": 1.1908841314028586,
+    "delta_over_s0_min": 111.18084033969997,
+    "bl_binds_stations": 56,
+    "stations": 77
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 92.33010814227988,
+    "station": 1,
+    "g_bl_min": 1.0275894107231307,
+    "delta_over_s0_min": 45.76031402721798,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "turb_mid_VC": {
+    "layers": 96.37459441670188,
+    "station": 1,
+    "g_bl_min": 1.000000001,
+    "delta_over_s0_min": 26.28239872360652,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "lam_mid_VC": {
+    "layers": 103.457117370354,
+    "station": 2,
+    "g_bl_min": 1.000000001,
+    "delta_over_s0_min": 24.15560574859327,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "turb_TE_M": {
+    "layers": 81.34786306762415,
+    "station": 1,
+    "g_bl_min": 1.103315741005501,
+    "delta_over_s0_min": 45.76031402721798,
+    "bl_binds_stations": 46,
+    "stations": 59
+   },
+   "lam_mid_M": {
+    "layers": 87.34716868835069,
+    "station": 1,
+    "g_bl_min": 1.0354987153346098,
+    "delta_over_s0_min": 24.15560574859327,
+    "bl_binds_stations": 59,
+    "stations": 59
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 93.25697301004371,
+    "station": 0,
+    "g_bl_min": 1.0741868870524076,
+    "delta_over_s0_min": 101.883981957844,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "turb_mid_VC": {
+    "layers": 96.45294310243838,
+    "station": 2,
+    "g_bl_min": 1.042531952502473,
+    "delta_over_s0_min": 58.51698123776149,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "lam_mid_VC": {
+    "layers": 105.27323728833296,
+    "station": 0,
+    "g_bl_min": 1.0169421076440988,
+    "delta_over_s0_min": 38.68106923336598,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "turb_TE_M": {
+    "layers": 86.2373740097187,
+    "station": 0,
+    "g_bl_min": 1.1824509913742174,
+    "delta_over_s0_min": 101.883981957844,
+    "bl_binds_stations": 40,
+    "stations": 64
+   },
+   "lam_mid_M": {
+    "layers": 89.26577174629718,
+    "station": 0,
+    "g_bl_min": 1.086034673085464,
+    "delta_over_s0_min": 38.68106923336598,
+    "bl_binds_stations": 64,
+    "stations": 64
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 94.23454589937634,
+    "station": 0,
+    "g_bl_min": 1.1207654800964686,
+    "delta_over_s0_min": 244.9404011012651,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "turb_mid_VC": {
+    "layers": 97.2495587069594,
+    "station": 0,
+    "g_bl_min": 1.0916907665966082,
+    "delta_over_s0_min": 140.6813179086686,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "lam_mid_VC": {
+    "layers": 107.20125958419139,
+    "station": 0,
+    "g_bl_min": 1.0485446861871932,
+    "delta_over_s0_min": 64.80214197418596,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "turb_TE_M": {
+    "layers": 91.23580583255881,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 244.9404011012651,
+    "bl_binds_stations": 0,
+    "stations": 70
+   },
+   "lam_mid_M": {
+    "layers": 91.2449778577983,
+    "station": 0,
+    "g_bl_min": 1.138227086949836,
+    "delta_over_s0_min": 64.80214197418596,
+    "bl_binds_stations": 70,
+    "stations": 70
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 96.41219961796916,
+    "station": 1,
+    "g_bl_min": 1.1719004537086768,
+    "delta_over_s0_min": 672.5183405130553,
+    "bl_binds_stations": 65,
+    "stations": 77
+   },
+   "turb_mid_VC": {
+    "layers": 97.4339507165668,
+    "station": 2,
+    "g_bl_min": 1.1440238027960146,
+    "delta_over_s0_min": 386.26035572634123,
+    "bl_binds_stations": 77,
+    "stations": 77
+   },
+   "lam_mid_VC": {
+    "layers": 109.23591440322447,
+    "station": 0,
+    "g_bl_min": 1.0819360212585045,
+    "delta_over_s0_min": 117.38566696201922,
+    "bl_binds_stations": 77,
+    "stations": 77
+   },
+   "turb_TE_M": {
+    "layers": 96.41219961796916,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 672.5183405130553,
+    "bl_binds_stations": 0,
+    "stations": 77
+   },
+   "lam_mid_M": {
+    "layers": 96.41219961796916,
+    "station": 1,
+    "g_bl_min": 1.1961168588993558,
+    "delta_over_s0_min": 117.38566696201922,
+    "bl_binds_stations": 56,
+    "stations": 77
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 92.33257618705245,
+    "station": 1,
+    "g_bl_min": 1.0642252704861836,
+    "delta_over_s0_min": 85.19280139122745,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "turb_mid_VC": {
+    "layers": 96.37705028109579,
+    "station": 1,
+    "g_bl_min": 1.031728732815486,
+    "delta_over_s0_min": 48.93041540784605,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "lam_mid_VC": {
+    "layers": 104.15747604328115,
+    "station": 0,
+    "g_bl_min": 1.0100610400488939,
+    "delta_over_s0_min": 34.81695747082239,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "turb_TE_M": {
+    "layers": 81.71262494264872,
+    "station": 0,
+    "g_bl_min": 1.1650840619059453,
+    "delta_over_s0_min": 85.19280139122745,
+    "bl_binds_stations": 42,
+    "stations": 53
+   },
+   "lam_mid_M": {
+    "layers": 87.34866961535037,
+    "station": 1,
+    "g_bl_min": 1.075038014709185,
+    "delta_over_s0_min": 34.81695747082239,
+    "bl_binds_stations": 53,
+    "stations": 53
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 93.23805394711104,
+    "station": 0,
+    "g_bl_min": 1.1074885343931709,
+    "delta_over_s0_min": 189.6792455296377,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "turb_mid_VC": {
+    "layers": 97.13761460322871,
+    "station": 0,
+    "g_bl_min": 1.0778656324249887,
+    "delta_over_s0_min": 108.94211865848678,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "lam_mid_VC": {
+    "layers": 105.2594968182385,
+    "station": 0,
+    "g_bl_min": 1.0396448858657028,
+    "delta_over_s0_min": 55.75339970526177,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "turb_TE_M": {
+    "layers": 86.23621646482142,
+    "station": 0,
+    "g_bl_min": 1.2420892608820775,
+    "delta_over_s0_min": 189.6792455296377,
+    "bl_binds_stations": 28,
+    "stations": 59
+   },
+   "lam_mid_M": {
+    "layers": 89.2532828691464,
+    "station": 0,
+    "g_bl_min": 1.1232584814324804,
+    "delta_over_s0_min": 55.75339970526177,
+    "bl_binds_stations": 59,
+    "stations": 59
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 94.21802295402642,
+    "station": 0,
+    "g_bl_min": 1.1524078244338933,
+    "delta_over_s0_min": 456.0099594442466,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_mid_VC": {
+    "layers": 97.23190525323173,
+    "station": 0,
+    "g_bl_min": 1.1242139501415103,
+    "delta_over_s0_min": 261.9089451379354,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "lam_mid_VC": {
+    "layers": 107.18796581109916,
+    "station": 0,
+    "g_bl_min": 1.0693738658239298,
+    "delta_over_s0_min": 93.40330541140825,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_TE_M": {
+    "layers": 91.23464713083987,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 456.0099594442466,
+    "bl_binds_stations": 0,
+    "stations": 65
+   },
+   "lam_mid_M": {
+    "layers": 91.23464713083987,
+    "station": 0,
+    "g_bl_min": 1.1740313310211457,
+    "delta_over_s0_min": 93.40330541140825,
+    "bl_binds_stations": 64,
+    "stations": 65
+   }
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 97.1857168429265,
+    "station": 0,
+    "g_bl_min": 1.2028678749063795,
+    "delta_over_s0_min": 1252.0395157517626,
+    "bl_binds_stations": 63,
+    "stations": 72
+   },
+   "turb_mid_VC": {
+    "layers": 98.14208047678996,
+    "station": 0,
+    "g_bl_min": 1.1752473113717972,
+    "delta_over_s0_min": 719.107866067667,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "lam_mid_VC": {
+    "layers": 109.22336036482835,
+    "station": 0,
+    "g_bl_min": 1.1014870233388672,
+    "delta_over_s0_min": 169.19516806316298,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "turb_TE_M": {
+    "layers": 97.1857168429265,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 1252.0395157517626,
+    "bl_binds_stations": 0,
+    "stations": 72
+   },
+   "lam_mid_M": {
+    "layers": 97.1857168429265,
+    "station": 0,
+    "g_bl_min": 1.2311711165164858,
+    "delta_over_s0_min": 169.19516806316298,
+    "bl_binds_stations": 50,
+    "stations": 72
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.53144085899041,
+    "station": 5,
+    "g_bl_min": 1.0952244179329726,
+    "delta_over_s0_min": 150.32039866080225,
+    "bl_binds_stations": 54,
+    "stations": 54
+   },
+   "turb_mid_VC": {
+    "layers": 93.29390748712868,
+    "station": 1,
+    "g_bl_min": 1.0649749766949317,
+    "delta_over_s0_min": 86.33639733208102,
+    "bl_binds_stations": 54,
+    "stations": 54
+   },
+   "lam_mid_VC": {
+    "layers": 99.36488158154827,
+    "station": 2,
+    "g_bl_min": 1.0313439584434092,
+    "delta_over_s0_min": 48.62487249665317,
+    "bl_binds_stations": 54,
+    "stations": 54
+   },
+   "turb_TE_M": {
+    "layers": 75.24545361171745,
+    "station": 0,
+    "g_bl_min": 1.2198554564560533,
+    "delta_over_s0_min": 150.32039866080225,
+    "bl_binds_stations": 49,
+    "stations": 54
+   },
+   "lam_mid_M": {
+    "layers": 82.41530460061402,
+    "station": 3,
+    "g_bl_min": 1.109484622690248,
+    "delta_over_s0_min": 48.62487249665317,
+    "bl_binds_stations": 54,
+    "stations": 54
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 89.29279584099169,
+    "station": 1,
+    "g_bl_min": 1.1367500167577569,
+    "delta_over_s0_min": 334.683909204462,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "turb_mid_VC": {
+    "layers": 92.52674532860568,
+    "station": 5,
+    "g_bl_min": 1.1081858758189462,
+    "delta_over_s0_min": 192.22542797357127,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "lam_mid_VC": {
+    "layers": 100.3925239546869,
+    "station": 3,
+    "g_bl_min": 1.0591347145306031,
+    "delta_over_s0_min": 77.86441288545073,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "turb_TE_M": {
+    "layers": 79.36304497334402,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 334.683909204462,
+    "bl_binds_stations": 0,
+    "stations": 60
+   },
+   "lam_mid_M": {
+    "layers": 84.28304488345277,
+    "station": 1,
+    "g_bl_min": 1.156299389069153,
+    "delta_over_s0_min": 77.86441288545073,
+    "bl_binds_stations": 60,
+    "stations": 60
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.4596895450107,
+    "station": 4,
+    "g_bl_min": 1.180854644514285,
+    "delta_over_s0_min": 804.6172655148065,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "turb_mid_VC": {
+    "layers": 92.83767896363761,
+    "station": 0,
+    "g_bl_min": 1.1530796091415874,
+    "delta_over_s0_min": 462.13126464953524,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "lam_mid_VC": {
+    "layers": 102.23700922217249,
+    "station": 0,
+    "g_bl_min": 1.0876393416472265,
+    "delta_over_s0_min": 130.4457409927842,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "turb_TE_M": {
+    "layers": 84.36205172825642,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 804.6172655148065,
+    "bl_binds_stations": 0,
+    "stations": 66
+   },
+   "lam_mid_M": {
+    "layers": 86.23696921969298,
+    "station": 0,
+    "g_bl_min": 1.2062592196825934,
+    "delta_over_s0_min": 130.4457409927842,
+    "bl_binds_stations": 66,
+    "stations": 66
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 90.34301424708327,
+    "station": 2,
+    "g_bl_min": 1.231109518269055,
+    "delta_over_s0_min": 2209.189932405051,
+    "bl_binds_stations": 73,
+    "stations": 73
+   },
+   "turb_mid_VC": {
+    "layers": 93.30850327914806,
+    "station": 1,
+    "g_bl_min": 1.2035309574105573,
+    "delta_over_s0_min": 1268.8464206148462,
+    "bl_binds_stations": 73,
+    "stations": 73
+   },
+   "lam_mid_VC": {
+    "layers": 104.23729250596257,
+    "station": 0,
+    "g_bl_min": 1.11891087658026,
+    "delta_over_s0_min": 236.29558903921003,
+    "bl_binds_stations": 73,
+    "stations": 73
+   },
+   "turb_TE_M": {
+    "layers": 90.30726203135703,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2209.189932405051,
+    "bl_binds_stations": 0,
+    "stations": 73
+   },
+   "lam_mid_M": {
+    "layers": 90.30726203135703,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 236.29558903921003,
+    "bl_binds_stations": 0,
+    "stations": 73
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.5407571826948,
+    "station": 7,
+    "g_bl_min": 1.0969383029442916,
+    "delta_over_s0_min": 155.24996005002873,
+    "bl_binds_stations": 51,
+    "stations": 51
+   },
+   "turb_mid_VC": {
+    "layers": 92.67878528426617,
+    "station": 10,
+    "g_bl_min": 1.066784114327094,
+    "delta_over_s0_min": 89.1676868614117,
+    "bl_binds_stations": 51,
+    "stations": 51
+   },
+   "lam_mid_VC": {
+    "layers": 99.37757532970403,
+    "station": 2,
+    "g_bl_min": 1.0325084417517298,
+    "delta_over_s0_min": 49.55662902595348,
+    "bl_binds_stations": 51,
+    "stations": 51
+   },
+   "turb_TE_M": {
+    "layers": 74.47556719530985,
+    "station": 5,
+    "g_bl_min": 1.222944229054783,
+    "delta_over_s0_min": 155.24996005002873,
+    "bl_binds_stations": 45,
+    "stations": 51
+   },
+   "lam_mid_M": {
+    "layers": 82.4184314751091,
+    "station": 3,
+    "g_bl_min": 1.111405721167546,
+    "delta_over_s0_min": 49.55662902595348,
+    "bl_binds_stations": 51,
+    "stations": 51
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.6360592511784,
+    "station": 9,
+    "g_bl_min": 1.138390743139637,
+    "delta_over_s0_min": 345.65943142970946,
+    "bl_binds_stations": 57,
+    "stations": 57
+   },
+   "turb_mid_VC": {
+    "layers": 92.52323805531151,
+    "station": 6,
+    "g_bl_min": 1.1098709655740797,
+    "delta_over_s0_min": 198.52921013625885,
+    "bl_binds_stations": 57,
+    "stations": 57
+   },
+   "lam_mid_VC": {
+    "layers": 100.3886106013005,
+    "station": 2,
+    "g_bl_min": 1.0602138898145625,
+    "delta_over_s0_min": 79.3564615301263,
+    "bl_binds_stations": 57,
+    "stations": 57
+   },
+   "turb_TE_M": {
+    "layers": 79.3632841080432,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 345.65943142970946,
+    "bl_binds_stations": 0,
+    "stations": 57
+   },
+   "lam_mid_M": {
+    "layers": 83.57657706807632,
+    "station": 8,
+    "g_bl_min": 1.1581565049280322,
+    "delta_over_s0_min": 79.3564615301263,
+    "bl_binds_stations": 57,
+    "stations": 57
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.45537361231018,
+    "station": 4,
+    "g_bl_min": 1.1824636640011321,
+    "delta_over_s0_min": 831.0036391575281,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_mid_VC": {
+    "layers": 92.54554022305632,
+    "station": 7,
+    "g_bl_min": 1.1547043059983209,
+    "delta_over_s0_min": 477.2862566484011,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "lam_mid_VC": {
+    "layers": 101.52422321272147,
+    "station": 6,
+    "g_bl_min": 1.088659797908266,
+    "delta_over_s0_min": 132.94536031616258,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_TE_M": {
+    "layers": 84.36229097712997,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 831.0036391575281,
+    "bl_binds_stations": 0,
+    "stations": 63
+   },
+   "lam_mid_M": {
+    "layers": 85.51514966363575,
+    "station": 6,
+    "g_bl_min": 1.208081310142014,
+    "delta_over_s0_min": 132.94536031616258,
+    "bl_binds_stations": 63,
+    "stations": 63
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 90.34604639320547,
+    "station": 1,
+    "g_bl_min": 1.2327158898675765,
+    "delta_over_s0_min": 2281.637434469131,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "turb_mid_VC": {
+    "layers": 93.31970172716854,
+    "station": 0,
+    "g_bl_min": 1.2051354566218913,
+    "delta_over_s0_min": 1310.4565838371734,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "lam_mid_VC": {
+    "layers": 103.51625930952197,
+    "station": 6,
+    "g_bl_min": 1.1198909985646923,
+    "delta_over_s0_min": 240.8235177848803,
+    "bl_binds_stations": 70,
+    "stations": 70
+   },
+   "turb_TE_M": {
+    "layers": 89.5405822560286,
+    "station": 7,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2281.637434469131,
+    "bl_binds_stations": 0,
+    "stations": 70
+   },
+   "lam_mid_M": {
+    "layers": 89.5405822560286,
+    "station": 7,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 240.8235177848803,
+    "bl_binds_stations": 0,
+    "stations": 70
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 2,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 89.1565887040134,
+    "station": 1,
+    "g_bl_min": 1.091483455816165,
+    "delta_over_s0_min": 140.1369493152682,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "turb_mid_VC": {
+    "layers": 93.29817567917935,
+    "station": 3,
+    "g_bl_min": 1.061016787416394,
+    "delta_over_s0_min": 80.48754157637573,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "lam_mid_VC": {
+    "layers": 100.0641199760239,
+    "station": 0,
+    "g_bl_min": 1.02879734986892,
+    "delta_over_s0_min": 46.65924793104398,
+    "bl_binds_stations": 59,
+    "stations": 59
+   },
+   "turb_TE_M": {
+    "layers": 75.24507404401047,
+    "station": 2,
+    "g_bl_min": 1.213134659700658,
+    "delta_over_s0_min": 140.1369493152682,
+    "bl_binds_stations": 53,
+    "stations": 59
+   },
+   "lam_mid_M": {
+    "layers": 83.13548505026378,
+    "station": 1,
+    "g_bl_min": 1.1052962265596151,
+    "delta_over_s0_min": 46.65924793104398,
+    "bl_binds_stations": 59,
+    "stations": 59
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 2,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 89.29641835753111,
+    "station": 3,
+    "g_bl_min": 1.1331762964635255,
+    "delta_over_s0_min": 312.0107612716945,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_mid_VC": {
+    "layers": 93.16778790309887,
+    "station": 1,
+    "g_bl_min": 1.1045106249229606,
+    "delta_over_s0_min": 179.20312410708402,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "lam_mid_VC": {
+    "layers": 101.09078316240806,
+    "station": 0,
+    "g_bl_min": 1.0567790627913507,
+    "delta_over_s0_min": 74.71680149037894,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_TE_M": {
+    "layers": 80.1389313185143,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 312.0107612716945,
+    "bl_binds_stations": 0,
+    "stations": 65
+   },
+   "lam_mid_M": {
+    "layers": 84.26883804248743,
+    "station": 2,
+    "g_bl_min": 1.1522554450089924,
+    "delta_over_s0_min": 74.71680149037894,
+    "bl_binds_stations": 65,
+    "stations": 65
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 2,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 90.14264173277958,
+    "station": 1,
+    "g_bl_min": 1.1773546342687653,
+    "delta_over_s0_min": 750.1085013090823,
+    "bl_binds_stations": 71,
+    "stations": 71
+   },
+   "turb_mid_VC": {
+    "layers": 93.21178836330166,
+    "station": 2,
+    "g_bl_min": 1.149542842844325,
+    "delta_over_s0_min": 430.8242007615171,
+    "bl_binds_stations": 71,
+    "stations": 71
+   },
+   "lam_mid_VC": {
+    "layers": 102.2331690050268,
+    "station": 2,
+    "g_bl_min": 1.0854149905959898,
+    "delta_over_s0_min": 125.17256823552593,
+    "bl_binds_stations": 71,
+    "stations": 71
+   },
+   "turb_TE_M": {
+    "layers": 85.13798534974514,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 750.1085013090823,
+    "bl_binds_stations": 0,
+    "stations": 71
+   },
+   "lam_mid_M": {
+    "layers": 86.23347226810708,
+    "station": 2,
+    "g_bl_min": 1.2022952288863782,
+    "delta_over_s0_min": 125.17256823552593,
+    "bl_binds_stations": 71,
+    "stations": 71
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 2,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 91.08608052425913,
+    "station": 0,
+    "g_bl_min": 1.227618276266867,
+    "delta_over_s0_min": 2059.5284495209125,
+    "bl_binds_stations": 76,
+    "stations": 78
+   },
+   "turb_mid_VC": {
+    "layers": 93.31164649272547,
+    "station": 3,
+    "g_bl_min": 1.2000423552351878,
+    "delta_over_s0_min": 1182.8884710171333,
+    "bl_binds_stations": 78,
+    "stations": 78
+   },
+   "lam_mid_VC": {
+    "layers": 104.2337449477876,
+    "station": 2,
+    "g_bl_min": 1.116776757671035,
+    "delta_over_s0_min": 226.74351433520886,
+    "bl_binds_stations": 78,
+    "stations": 78
+   },
+   "turb_TE_M": {
+    "layers": 91.08608052425913,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2059.5284495209125,
+    "bl_binds_stations": 0,
+    "stations": 78
+   },
+   "lam_mid_M": {
+    "layers": 91.08608052425913,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 226.74351433520886,
+    "bl_binds_stations": 0,
+    "stations": 78
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 3,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 89.79009699159403,
+    "station": 2,
+    "g_bl_min": 1.0790924509948336,
+    "delta_over_s0_min": 111.41451724180634,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_mid_VC": {
+    "layers": 93.91425786472114,
+    "station": 3,
+    "g_bl_min": 1.0478074735333882,
+    "delta_over_s0_min": 63.99083633922587,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "lam_mid_VC": {
+    "layers": 100.71668630393721,
+    "station": 1,
+    "g_bl_min": 1.0203171890341647,
+    "delta_over_s0_min": 40.77022435912981,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_TE_M": {
+    "layers": 76.77620714318546,
+    "station": 2,
+    "g_bl_min": 1.191086595663758,
+    "delta_over_s0_min": 111.41451724180634,
+    "bl_binds_stations": 52,
+    "stations": 61
+   },
+   "lam_mid_M": {
+    "layers": 83.82542220833783,
+    "station": 2,
+    "g_bl_min": 1.0914780607296757,
+    "delta_over_s0_min": 40.77022435912981,
+    "bl_binds_stations": 61,
+    "stations": 61
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 3,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 90.59195120335174,
+    "station": 0,
+    "g_bl_min": 1.1214181391469378,
+    "delta_over_s0_min": 248.0611181504212,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "turb_mid_VC": {
+    "layers": 93.81917979065318,
+    "station": 2,
+    "g_bl_min": 1.0923672720998783,
+    "delta_over_s0_min": 142.47369917905698,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "lam_mid_VC": {
+    "layers": 101.78842119805041,
+    "station": 2,
+    "g_bl_min": 1.0489797778588181,
+    "delta_over_s0_min": 65.28653793694262,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "turb_TE_M": {
+    "layers": 81.65540246001433,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 248.0611181504212,
+    "bl_binds_stations": 0,
+    "stations": 66
+   },
+   "lam_mid_M": {
+    "layers": 85.69987377239238,
+    "station": 1,
+    "g_bl_min": 1.1389640761844444,
+    "delta_over_s0_min": 65.28653793694262,
+    "bl_binds_stations": 66,
+    "stations": 66
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 3,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 90.8121269794698,
+    "station": 2,
+    "g_bl_min": 1.16588696190984,
+    "delta_over_s0_min": 596.3664612415021,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "turb_mid_VC": {
+    "layers": 94.54995600565326,
+    "station": 0,
+    "g_bl_min": 1.1379273891694301,
+    "delta_over_s0_min": 342.52258650175827,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "lam_mid_VC": {
+    "layers": 103.65160441382433,
+    "station": 1,
+    "g_bl_min": 1.0780821854710887,
+    "delta_over_s0_min": 109.37410946084859,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "turb_TE_M": {
+    "layers": 86.65432994521352,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 596.3664612415021,
+    "bl_binds_stations": 0,
+    "stations": 72
+   },
+   "lam_mid_M": {
+    "layers": 87.66285586759585,
+    "station": 1,
+    "g_bl_min": 1.189303749884538,
+    "delta_over_s0_min": 109.37410946084859,
+    "bl_binds_stations": 72,
+    "stations": 72
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 3,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 92.59673471499737,
+    "station": 0,
+    "g_bl_min": 1.2162100694633893,
+    "delta_over_s0_min": 1637.4080431344034,
+    "bl_binds_stations": 73,
+    "stations": 79
+   },
+   "turb_mid_VC": {
+    "layers": 94.68069666017917,
+    "station": 1,
+    "g_bl_min": 1.1886281963718384,
+    "delta_over_s0_min": 940.4439628037017,
+    "bl_binds_stations": 79,
+    "stations": 79
+   },
+   "lam_mid_VC": {
+    "layers": 105.66155097413423,
+    "station": 1,
+    "g_bl_min": 1.1097647450312962,
+    "delta_over_s0_min": 198.12543839296282,
+    "bl_binds_stations": 79,
+    "stations": 79
+   },
+   "turb_TE_M": {
+    "layers": 92.59673471499737,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 1637.4080431344034,
+    "bl_binds_stations": 0,
+    "stations": 79
+   },
+   "lam_mid_M": {
+    "layers": 92.59673471499737,
+    "station": 0,
+    "g_bl_min": 1.2462488463366743,
+    "delta_over_s0_min": 198.12543839296282,
+    "bl_binds_stations": 47,
+    "stations": 79
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 4,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 89.15737786110753,
+    "station": 2,
+    "g_bl_min": 1.090122711459625,
+    "delta_over_s0_min": 136.61996494964268,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_mid_VC": {
+    "layers": 93.29124862532996,
+    "station": 4,
+    "g_bl_min": 1.0595737627036115,
+    "delta_over_s0_min": 78.46756449870355,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "lam_mid_VC": {
+    "layers": 100.06699187280981,
+    "station": 1,
+    "g_bl_min": 1.027869421419886,
+    "delta_over_s0_min": 45.96682478507199,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_TE_M": {
+    "layers": 76.0271092516845,
+    "station": 0,
+    "g_bl_min": 1.2106973019561695,
+    "delta_over_s0_min": 136.61996494964268,
+    "bl_binds_stations": 49,
+    "stations": 56
+   },
+   "lam_mid_M": {
+    "layers": 83.13594378162706,
+    "station": 2,
+    "g_bl_min": 1.1037744774846745,
+    "delta_over_s0_min": 45.96682478507199,
+    "bl_binds_stations": 56,
+    "stations": 56
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 4,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 89.81282872217811,
+    "station": 0,
+    "g_bl_min": 1.1318790187704684,
+    "delta_over_s0_min": 304.1802998932985,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_mid_VC": {
+    "layers": 93.16852412825469,
+    "station": 2,
+    "g_bl_min": 1.1031747808033034,
+    "delta_over_s0_min": 174.7057050549684,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "lam_mid_VC": {
+    "layers": 101.09336456654428,
+    "station": 1,
+    "g_bl_min": 1.0559222343319854,
+    "delta_over_s0_min": 73.6080043057053,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_TE_M": {
+    "layers": 80.13897701738274,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 304.1802998932985,
+    "bl_binds_stations": 0,
+    "stations": 61
+   },
+   "lam_mid_M": {
+    "layers": 85.01286666513082,
+    "station": 0,
+    "g_bl_min": 1.1507878889351622,
+    "delta_over_s0_min": 73.6080043057053,
+    "bl_binds_stations": 61,
+    "stations": 61
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 4,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 90.14321626778029,
+    "station": 2,
+    "g_bl_min": 1.1760857290817328,
+    "delta_over_s0_min": 731.283203023961,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "turb_mid_VC": {
+    "layers": 93.20973069219657,
+    "station": 3,
+    "g_bl_min": 1.1482596893361792,
+    "delta_over_s0_min": 420.0119061752935,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "lam_mid_VC": {
+    "layers": 102.2316970209493,
+    "station": 3,
+    "g_bl_min": 1.0846069995079994,
+    "delta_over_s0_min": 123.31500757327254,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "turb_TE_M": {
+    "layers": 85.13803107036075,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 731.283203023961,
+    "bl_binds_stations": 0,
+    "stations": 67
+   },
+   "lam_mid_M": {
+    "layers": 86.23213195482339,
+    "station": 3,
+    "g_bl_min": 1.200857957051577,
+    "delta_over_s0_min": 123.31500757327254,
+    "bl_binds_stations": 67,
+    "stations": 67
+   }
+  },
+  {
+   "type": "flying_wing",
+   "index": 4,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 91.0862866790377,
+    "station": 1,
+    "g_bl_min": 1.226353592484359,
+    "delta_over_s0_min": 2007.8409438850467,
+    "bl_binds_stations": 71,
+    "stations": 74
+   },
+   "turb_mid_VC": {
+    "layers": 94.01623558823914,
+    "station": 0,
+    "g_bl_min": 1.1987781323973967,
+    "delta_over_s0_min": 1153.2017946682238,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "lam_mid_VC": {
+    "layers": 104.23238522031728,
+    "station": 3,
+    "g_bl_min": 1.1160023399760295,
+    "delta_over_s0_min": 223.37864103599162,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_TE_M": {
+    "layers": 91.0862866790377,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2007.8409438850467,
+    "bl_binds_stations": 0,
+    "stations": 74
+   },
+   "lam_mid_M": {
+    "layers": 91.0862866790377,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 223.37864103599162,
+    "bl_binds_stations": 0,
+    "stations": 74
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 0,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.31415083087388,
+    "station": 0,
+    "g_bl_min": 1.0910537796353326,
+    "delta_over_s0_min": 139.0159275858342,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_mid_VC": {
+    "layers": 92.69283397570904,
+    "station": 9,
+    "g_bl_min": 1.060561321603253,
+    "delta_over_s0_min": 79.84368366811734,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "lam_mid_VC": {
+    "layers": 98.7041914608077,
+    "station": 9,
+    "g_bl_min": 1.0285044343757443,
+    "delta_over_s0_min": 46.43932649678361,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_TE_M": {
+    "layers": 73.78498779108679,
+    "station": 11,
+    "g_bl_min": 1.2123646042506664,
+    "delta_over_s0_min": 139.0159275858342,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "lam_mid_M": {
+    "layers": 81.7331557026843,
+    "station": 10,
+    "g_bl_min": 1.1048156066951964,
+    "delta_over_s0_min": 46.43932649678361,
+    "bl_binds_stations": 56,
+    "stations": 56
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 0,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.6464534844778,
+    "station": 8,
+    "g_bl_min": 1.1327665068240007,
+    "delta_over_s0_min": 309.5148396399489,
+    "bl_binds_stations": 62,
+    "stations": 62
+   },
+   "turb_mid_VC": {
+    "layers": 91.9004988190068,
+    "station": 13,
+    "g_bl_min": 1.1040887529254697,
+    "delta_over_s0_min": 177.76959357079016,
+    "bl_binds_stations": 62,
+    "stations": 62
+   },
+   "lam_mid_VC": {
+    "layers": 99.69721999739521,
+    "station": 9,
+    "g_bl_min": 1.0565085027968661,
+    "delta_over_s0_min": 74.36463494514453,
+    "bl_binds_stations": 62,
+    "stations": 62
+   },
+   "turb_TE_M": {
+    "layers": 78.60002178095341,
+    "station": 4,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 309.5148396399489,
+    "bl_binds_stations": 0,
+    "stations": 62
+   },
+   "lam_mid_M": {
+    "layers": 83.57662807366047,
+    "station": 2,
+    "g_bl_min": 1.1517918417081445,
+    "delta_over_s0_min": 74.36463494514453,
+    "bl_binds_stations": 62,
+    "stations": 62
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 0,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 88.79828360540233,
+    "station": 11,
+    "g_bl_min": 1.1769537126842131,
+    "delta_over_s0_min": 744.1080286749238,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_mid_VC": {
+    "layers": 92.54917471277922,
+    "station": 0,
+    "g_bl_min": 1.1491374733189805,
+    "delta_over_s0_min": 427.3778342394859,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "lam_mid_VC": {
+    "layers": 100.84170948002776,
+    "station": 12,
+    "g_bl_min": 1.085159789223975,
+    "delta_over_s0_min": 124.58258592854372,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_TE_M": {
+    "layers": 83.59897932493945,
+    "station": 4,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 744.1080286749238,
+    "bl_binds_stations": 0,
+    "stations": 68
+   },
+   "lam_mid_M": {
+    "layers": 84.80863704562456,
+    "station": 11,
+    "g_bl_min": 1.2018411186786366,
+    "delta_over_s0_min": 124.58258592854372,
+    "bl_binds_stations": 68,
+    "stations": 68
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 0,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.65975210663967,
+    "station": 8,
+    "g_bl_min": 1.2272186276439854,
+    "delta_over_s0_min": 2043.0533074860557,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "turb_mid_VC": {
+    "layers": 92.64590488876951,
+    "station": 8,
+    "g_bl_min": 1.199642881179471,
+    "delta_over_s0_min": 1173.425986740242,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "lam_mid_VC": {
+    "layers": 102.81366520558376,
+    "station": 11,
+    "g_bl_min": 1.1165321140614761,
+    "delta_over_s0_min": 225.67479246134727,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "turb_TE_M": {
+    "layers": 88.78580625782998,
+    "station": 11,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2043.0533074860557,
+    "bl_binds_stations": 0,
+    "stations": 75
+   },
+   "lam_mid_M": {
+    "layers": 88.78580625782998,
+    "station": 11,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 225.67479246134727,
+    "bl_binds_stations": 0,
+    "stations": 75
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 1,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.5264624413806,
+    "station": 10,
+    "g_bl_min": 1.0903844547087027,
+    "delta_over_s0_min": 137.2889669481121,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "turb_mid_VC": {
+    "layers": 92.69274948016181,
+    "station": 12,
+    "g_bl_min": 1.0598514710491793,
+    "delta_over_s0_min": 78.85180524626932,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "lam_mid_VC": {
+    "layers": 98.70413561447849,
+    "station": 12,
+    "g_bl_min": 1.0280479775032754,
+    "delta_over_s0_min": 46.099097958916474,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "turb_TE_M": {
+    "layers": 74.4756119273576,
+    "station": 5,
+    "g_bl_min": 1.2111658313905376,
+    "delta_over_s0_min": 137.2889669481121,
+    "bl_binds_stations": 47,
+    "stations": 55
+   },
+   "lam_mid_M": {
+    "layers": 81.72151750077295,
+    "station": 12,
+    "g_bl_min": 1.1040671153442811,
+    "delta_over_s0_min": 46.099097958916474,
+    "bl_binds_stations": 55,
+    "stations": 55
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 1,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.63056736742928,
+    "station": 11,
+    "g_bl_min": 1.1321284429898109,
+    "delta_over_s0_min": 305.66981300068824,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_mid_VC": {
+    "layers": 92.52274328523872,
+    "station": 10,
+    "g_bl_min": 1.1034316922794052,
+    "delta_over_s0_min": 175.56120568307094,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "lam_mid_VC": {
+    "layers": 99.69716949213013,
+    "station": 12,
+    "g_bl_min": 1.0560870454041853,
+    "delta_over_s0_min": 73.81981715976683,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_TE_M": {
+    "layers": 78.599981514673,
+    "station": 11,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 305.66981300068824,
+    "bl_binds_stations": 0,
+    "stations": 61
+   },
+   "lam_mid_M": {
+    "layers": 83.56135097070442,
+    "station": 10,
+    "g_bl_min": 1.1510700337094577,
+    "delta_over_s0_min": 73.81981715976683,
+    "bl_binds_stations": 61,
+    "stations": 61
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 1,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.46351993278552,
+    "station": 4,
+    "g_bl_min": 1.1763296302080417,
+    "delta_over_s0_min": 734.8641578606164,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "turb_mid_VC": {
+    "layers": 92.53454822678172,
+    "station": 10,
+    "g_bl_min": 1.1485063680400582,
+    "delta_over_s0_min": 422.0686246403858,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "lam_mid_VC": {
+    "layers": 101.52386883788031,
+    "station": 10,
+    "g_bl_min": 1.0847623715511177,
+    "delta_over_s0_min": 123.66985626057341,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "turb_TE_M": {
+    "layers": 83.59893903936327,
+    "station": 11,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 734.8641578606164,
+    "bl_binds_stations": 0,
+    "stations": 67
+   },
+   "lam_mid_M": {
+    "layers": 85.51487679816647,
+    "station": 10,
+    "g_bl_min": 1.201134226456979,
+    "delta_over_s0_min": 123.66985626057341,
+    "bl_binds_stations": 67,
+    "stations": 67
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 1,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.64672851967588,
+    "station": 11,
+    "g_bl_min": 1.226596638397705,
+    "delta_over_s0_min": 2017.6729593197074,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_mid_VC": {
+    "layers": 92.63220855116671,
+    "station": 11,
+    "g_bl_min": 1.199021110538864,
+    "delta_over_s0_min": 1158.8488046462737,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "lam_mid_VC": {
+    "layers": 103.51598257998161,
+    "station": 10,
+    "g_bl_min": 1.1161512227327686,
+    "delta_over_s0_min": 224.02143074263438,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_TE_M": {
+    "layers": 89.53990127424404,
+    "station": 10,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2017.6729593197074,
+    "bl_binds_stations": 0,
+    "stations": 74
+   },
+   "lam_mid_M": {
+    "layers": 89.53990127424404,
+    "station": 10,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 224.02143074263438,
+    "bl_binds_stations": 0,
+    "stations": 74
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 2,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.54325386120604,
+    "station": 3,
+    "g_bl_min": 1.094730176599171,
+    "delta_over_s0_min": 148.93035497068294,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_mid_VC": {
+    "layers": 92.69542056143297,
+    "station": 11,
+    "g_bl_min": 1.0644527758255184,
+    "delta_over_s0_min": 85.53802688197399,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "lam_mid_VC": {
+    "layers": 98.71109739452406,
+    "station": 12,
+    "g_bl_min": 1.0310078895022408,
+    "delta_over_s0_min": 48.35987013951274,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_TE_M": {
+    "layers": 74.1257483209397,
+    "station": 0,
+    "g_bl_min": 1.2189658598928865,
+    "delta_over_s0_min": 148.93035497068294,
+    "bl_binds_stations": 62,
+    "stations": 63
+   },
+   "lam_mid_M": {
+    "layers": 81.73269605801373,
+    "station": 13,
+    "g_bl_min": 1.1089308792057582,
+    "delta_over_s0_min": 48.35987013951274,
+    "bl_binds_stations": 63,
+    "stations": 63
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 2,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.64363212455112,
+    "station": 7,
+    "g_bl_min": 1.1362772719121208,
+    "delta_over_s0_min": 331.58901815628224,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_mid_VC": {
+    "layers": 92.52916954378578,
+    "station": 2,
+    "g_bl_min": 1.1077000892884368,
+    "delta_over_s0_min": 190.4478798456017,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "lam_mid_VC": {
+    "layers": 99.6987661816028,
+    "station": 11,
+    "g_bl_min": 1.0588234985683889,
+    "delta_over_s0_min": 77.44005695622091,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_TE_M": {
+    "layers": 78.59986550243737,
+    "station": 5,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 331.58901815628224,
+    "bl_binds_stations": 0,
+    "stations": 68
+   },
+   "lam_mid_M": {
+    "layers": 83.57525414731028,
+    "station": 4,
+    "g_bl_min": 1.1557643515859937,
+    "delta_over_s0_min": 77.44005695622091,
+    "bl_binds_stations": 68,
+    "stations": 68
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 2,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 88.80418252182292,
+    "station": 16,
+    "g_bl_min": 1.1803912817225433,
+    "delta_over_s0_min": 797.1768039217413,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_mid_VC": {
+    "layers": 92.54745856967556,
+    "station": 3,
+    "g_bl_min": 1.152611590913539,
+    "delta_over_s0_min": 457.8578416533492,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "lam_mid_VC": {
+    "layers": 101.52847341976236,
+    "station": 2,
+    "g_bl_min": 1.0873452253784945,
+    "delta_over_s0_min": 129.73482028354442,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_TE_M": {
+    "layers": 83.59882297153685,
+    "station": 5,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 797.1768039217413,
+    "bl_binds_stations": 0,
+    "stations": 74
+   },
+   "lam_mid_M": {
+    "layers": 85.51453725613847,
+    "station": 1,
+    "g_bl_min": 1.2057344691306597,
+    "delta_over_s0_min": 129.73482028354442,
+    "bl_binds_stations": 74,
+    "stations": 74
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 2,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.6663342949762,
+    "station": 9,
+    "g_bl_min": 1.230647077744176,
+    "delta_over_s0_min": 2188.761098040767,
+    "bl_binds_stations": 81,
+    "stations": 81
+   },
+   "turb_mid_VC": {
+    "layers": 92.64347330174566,
+    "station": 7,
+    "g_bl_min": 1.2030689799669008,
+    "delta_over_s0_min": 1257.1131364004666,
+    "bl_binds_stations": 81,
+    "stations": 81
+   },
+   "lam_mid_VC": {
+    "layers": 103.51563822904512,
+    "station": 1,
+    "g_bl_min": 1.1186285085146987,
+    "delta_over_s0_min": 235.00779361966255,
+    "bl_binds_stations": 81,
+    "stations": 81
+   },
+   "turb_TE_M": {
+    "layers": 89.5402819281249,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2188.761098040767,
+    "bl_binds_stations": 0,
+    "stations": 81
+   },
+   "lam_mid_M": {
+    "layers": 89.5402819281249,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 235.00779361966255,
+    "bl_binds_stations": 0,
+    "stations": 81
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 3,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.53960257200066,
+    "station": 7,
+    "g_bl_min": 1.0774375286520796,
+    "delta_over_s0_min": 108.09363730262007,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_mid_VC": {
+    "layers": 92.67040913662318,
+    "station": 10,
+    "g_bl_min": 1.0460308407873677,
+    "delta_over_s0_min": 62.0834916775829,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "lam_mid_VC": {
+    "layers": 98.71227088930245,
+    "station": 11,
+    "g_bl_min": 1.019179649339092,
+    "delta_over_s0_min": 40.05094040812526,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_TE_M": {
+    "layers": 74.47552788277375,
+    "station": 2,
+    "g_bl_min": 1.1881672933455096,
+    "delta_over_s0_min": 108.09363730262007,
+    "bl_binds_stations": 52,
+    "stations": 56
+   },
+   "lam_mid_M": {
+    "layers": 81.72843165563306,
+    "station": 11,
+    "g_bl_min": 1.089639802553477,
+    "delta_over_s0_min": 40.05094040812526,
+    "bl_binds_stations": 56,
+    "stations": 56
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 3,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.64501950890879,
+    "station": 10,
+    "g_bl_min": 1.1198575023601405,
+    "delta_over_s0_min": 240.66727746115123,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_mid_VC": {
+    "layers": 92.53330210821167,
+    "station": 7,
+    "g_bl_min": 1.0907491565716705,
+    "delta_over_s0_min": 138.2270528606197,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "lam_mid_VC": {
+    "layers": 99.68382403144113,
+    "station": 10,
+    "g_bl_min": 1.0479390097209043,
+    "delta_over_s0_min": 64.13472776928099,
+    "bl_binds_stations": 61,
+    "stations": 61
+   },
+   "turb_TE_M": {
+    "layers": 78.59927048979779,
+    "station": 9,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 240.66727746115123,
+    "bl_binds_stations": 0,
+    "stations": 61
+   },
+   "lam_mid_M": {
+    "layers": 83.57422047688156,
+    "station": 9,
+    "g_bl_min": 1.1372019479336104,
+    "delta_over_s0_min": 64.13472776928099,
+    "bl_binds_stations": 61,
+    "stations": 61
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 3,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.46085938491203,
+    "station": 1,
+    "g_bl_min": 1.1643707725480548,
+    "delta_over_s0_min": 578.5908475551623,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "turb_mid_VC": {
+    "layers": 92.54881631229014,
+    "station": 8,
+    "g_bl_min": 1.1363882961223108,
+    "delta_over_s0_min": 332.3131774014776,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "lam_mid_VC": {
+    "layers": 101.52832248267342,
+    "station": 6,
+    "g_bl_min": 1.0771074902610853,
+    "delta_over_s0_min": 107.4444894298765,
+    "bl_binds_stations": 67,
+    "stations": 67
+   },
+   "turb_TE_M": {
+    "layers": 83.598227673843,
+    "station": 9,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 578.5908475551623,
+    "bl_binds_stations": 0,
+    "stations": 67
+   },
+   "lam_mid_M": {
+    "layers": 85.51591351981433,
+    "station": 5,
+    "g_bl_min": 1.187585832699323,
+    "delta_over_s0_min": 107.4444894298765,
+    "bl_binds_stations": 67,
+    "stations": 67
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 3,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.65857692812341,
+    "station": 10,
+    "g_bl_min": 1.2147054911147324,
+    "delta_over_s0_min": 1588.602594281578,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_mid_VC": {
+    "layers": 92.64466906489484,
+    "station": 10,
+    "g_bl_min": 1.1871210550731401,
+    "delta_over_s0_min": 912.4125933976353,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "lam_mid_VC": {
+    "layers": 103.51946009242812,
+    "station": 6,
+    "g_bl_min": 1.1088354891153371,
+    "delta_over_s0_min": 194.6300333427847,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_TE_M": {
+    "layers": 89.5405271828127,
+    "station": 7,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 1588.602594281578,
+    "bl_binds_stations": 0,
+    "stations": 74
+   },
+   "lam_mid_M": {
+    "layers": 89.5405271828127,
+    "station": 7,
+    "g_bl_min": 1.2445494833215653,
+    "delta_over_s0_min": 194.6300333427847,
+    "bl_binds_stations": 45,
+    "stations": 74
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 4,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.54422581474704,
+    "station": 1,
+    "g_bl_min": 1.091930870408836,
+    "delta_over_s0_min": 141.3146578185895,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "turb_mid_VC": {
+    "layers": 92.6919505997971,
+    "station": 11,
+    "g_bl_min": 1.0614908698004735,
+    "delta_over_s0_min": 81.16395748659134,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "lam_mid_VC": {
+    "layers": 98.70360761062962,
+    "station": 11,
+    "g_bl_min": 1.0291022668239314,
+    "delta_over_s0_min": 46.88951129540858,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "turb_TE_M": {
+    "layers": 73.77665209127885,
+    "station": 12,
+    "g_bl_min": 1.213936918250665,
+    "delta_over_s0_min": 141.3146578185895,
+    "bl_binds_stations": 55,
+    "stations": 55
+   },
+   "lam_mid_M": {
+    "layers": 81.72106884664495,
+    "station": 11,
+    "g_bl_min": 1.1057967884772666,
+    "delta_over_s0_min": 46.88951129540858,
+    "bl_binds_stations": 55,
+    "stations": 55
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 4,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.6441885881248,
+    "station": 10,
+    "g_bl_min": 1.1336031536700908,
+    "delta_over_s0_min": 314.6328943242041,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "turb_mid_VC": {
+    "layers": 91.90885162410929,
+    "station": 14,
+    "g_bl_min": 1.1049499700930019,
+    "delta_over_s0_min": 180.7091440690846,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "lam_mid_VC": {
+    "layers": 99.69669199124297,
+    "station": 11,
+    "g_bl_min": 1.057060794582457,
+    "delta_over_s0_min": 75.08552886702167,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "turb_TE_M": {
+    "layers": 78.5999599566534,
+    "station": 9,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 314.6328943242041,
+    "bl_binds_stations": 0,
+    "stations": 60
+   },
+   "lam_mid_M": {
+    "layers": 83.5733554251369,
+    "station": 8,
+    "g_bl_min": 1.1527383814831478,
+    "delta_over_s0_min": 75.08552886702167,
+    "bl_binds_stations": 60,
+    "stations": 60
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 4,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 88.78782512502701,
+    "station": 12,
+    "g_bl_min": 1.1777723461418395,
+    "delta_over_s0_min": 756.4124002074227,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "turb_mid_VC": {
+    "layers": 92.55011870083659,
+    "station": 5,
+    "g_bl_min": 1.1499651363090366,
+    "delta_over_s0_min": 434.44483990881264,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "lam_mid_VC": {
+    "layers": 100.83969749918465,
+    "station": 13,
+    "g_bl_min": 1.0856807908754298,
+    "delta_over_s0_min": 125.79029479491383,
+    "bl_binds_stations": 66,
+    "stations": 66
+   },
+   "turb_TE_M": {
+    "layers": 83.59891747101317,
+    "station": 9,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 756.4124002074227,
+    "bl_binds_stations": 0,
+    "stations": 66
+   },
+   "lam_mid_M": {
+    "layers": 84.81713227170614,
+    "station": 13,
+    "g_bl_min": 1.202768348506638,
+    "delta_over_s0_min": 125.79029479491383,
+    "bl_binds_stations": 66,
+    "stations": 66
+   }
+  },
+  {
+   "type": "cranked",
+   "index": 4,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.65789593099369,
+    "station": 10,
+    "g_bl_min": 1.2280347212645906,
+    "delta_over_s0_min": 2076.8366910638065,
+    "bl_binds_stations": 73,
+    "stations": 73
+   },
+   "turb_mid_VC": {
+    "layers": 92.64395291921252,
+    "station": 10,
+    "g_bl_min": 1.2004585900999787,
+    "delta_over_s0_min": 1192.8294453112399,
+    "bl_binds_stations": 73,
+    "stations": 73
+   },
+   "lam_mid_VC": {
+    "layers": 102.82225339654144,
+    "station": 13,
+    "g_bl_min": 1.1170316069681805,
+    "delta_over_s0_min": 227.86249346097276,
+    "bl_binds_stations": 73,
+    "stations": 73
+   },
+   "turb_TE_M": {
+    "layers": 89.28040303978591,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2076.8366910638065,
+    "bl_binds_stations": 0,
+    "stations": 73
+   },
+   "lam_mid_M": {
+    "layers": 89.28040303978591,
+    "station": 0,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 227.86249346097276,
+    "bl_binds_stations": 0,
+    "stations": 73
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 0,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.53225386120168,
+    "station": 2,
+    "g_bl_min": 1.0988377873764348,
+    "delta_over_s0_min": 160.9172410516301,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_mid_VC": {
+    "layers": 92.69975548050787,
+    "station": 6,
+    "g_bl_min": 1.068786133472496,
+    "delta_over_s0_min": 92.42268504333443,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "lam_mid_VC": {
+    "layers": 98.70876660845394,
+    "station": 6,
+    "g_bl_min": 1.033797370527997,
+    "delta_over_s0_min": 50.61289931001678,
+    "bl_binds_stations": 56,
+    "stations": 56
+   },
+   "turb_TE_M": {
+    "layers": 74.4755968418116,
+    "station": 1,
+    "g_bl_min": 1.2263745416112548,
+    "delta_over_s0_min": 160.9172410516301,
+    "bl_binds_stations": 54,
+    "stations": 56
+   },
+   "lam_mid_M": {
+    "layers": 81.72545303444005,
+    "station": 6,
+    "g_bl_min": 1.113536396568483,
+    "delta_over_s0_min": 50.61289931001678,
+    "bl_binds_stations": 56,
+    "stations": 56
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 0,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.635548647252,
+    "station": 4,
+    "g_bl_min": 1.1402116213321156,
+    "delta_over_s0_min": 358.2774644915839,
+    "bl_binds_stations": 62,
+    "stations": 62
+   },
+   "turb_mid_VC": {
+    "layers": 92.5273986972238,
+    "station": 2,
+    "g_bl_min": 1.1117394710273896,
+    "delta_over_s0_min": 205.77636704699552,
+    "bl_binds_stations": 62,
+    "stations": 62
+   },
+   "lam_mid_VC": {
+    "layers": 99.70135795798595,
+    "station": 6,
+    "g_bl_min": 1.0614098444338995,
+    "delta_over_s0_min": 81.04789764695313,
+    "bl_binds_stations": 62,
+    "stations": 62
+   },
+   "turb_TE_M": {
+    "layers": 78.59929223948234,
+    "station": 3,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 358.2774644915839,
+    "bl_binds_stations": 0,
+    "stations": 62
+   },
+   "lam_mid_M": {
+    "layers": 83.57443438761591,
+    "station": 3,
+    "g_bl_min": 1.160217861466786,
+    "delta_over_s0_min": 81.04789764695313,
+    "bl_binds_stations": 62,
+    "stations": 62
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 0,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.45246305271071,
+    "station": 0,
+    "g_bl_min": 1.1842508847877224,
+    "delta_over_s0_min": 861.3387911597664,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_mid_VC": {
+    "layers": 92.5390033057585,
+    "station": 2,
+    "g_bl_min": 1.156508065453673,
+    "delta_over_s0_min": 494.70922625017914,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "lam_mid_VC": {
+    "layers": 101.52720416557166,
+    "station": 2,
+    "g_bl_min": 1.0897917150785548,
+    "delta_over_s0_min": 135.77901216589814,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_TE_M": {
+    "layers": 83.59824943394533,
+    "station": 3,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 861.3387911597664,
+    "bl_binds_stations": 0,
+    "stations": 68
+   },
+   "lam_mid_M": {
+    "layers": 85.51744481824471,
+    "station": 2,
+    "g_bl_min": 1.2101050146151249,
+    "delta_over_s0_min": 135.77901216589814,
+    "bl_binds_stations": 68,
+    "stations": 68
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 0,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.66348180820695,
+    "station": 5,
+    "g_bl_min": 1.2345011648170612,
+    "delta_over_s0_min": 2364.926863211932,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "turb_mid_VC": {
+    "layers": 92.63650448228317,
+    "station": 4,
+    "g_bl_min": 1.2069181771788278,
+    "delta_over_s0_min": 1358.293798729922,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "lam_mid_VC": {
+    "layers": 103.5185869482444,
+    "station": 2,
+    "g_bl_min": 1.1209789443817766,
+    "delta_over_s0_min": 245.9565288580617,
+    "bl_binds_stations": 75,
+    "stations": 75
+   },
+   "turb_TE_M": {
+    "layers": 89.54017694582366,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2364.926863211932,
+    "bl_binds_stations": 0,
+    "stations": 75
+   },
+   "lam_mid_M": {
+    "layers": 89.54017694582366,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 245.9565288580617,
+    "bl_binds_stations": 0,
+    "stations": 75
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 1,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.53148185298332,
+    "station": 3,
+    "g_bl_min": 1.0986637698748325,
+    "delta_over_s0_min": 160.38891274797766,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "turb_mid_VC": {
+    "layers": 92.6926031882651,
+    "station": 8,
+    "g_bl_min": 1.0686028531357634,
+    "delta_over_s0_min": 92.11924011668248,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "lam_mid_VC": {
+    "layers": 98.70403892490313,
+    "station": 8,
+    "g_bl_min": 1.0336793609665642,
+    "delta_over_s0_min": 50.51508384711453,
+    "bl_binds_stations": 53,
+    "stations": 53
+   },
+   "turb_TE_M": {
+    "layers": 74.47513120966103,
+    "station": 1,
+    "g_bl_min": 1.226059973320265,
+    "delta_over_s0_min": 160.38891274797766,
+    "bl_binds_stations": 50,
+    "stations": 53
+   },
+   "lam_mid_M": {
+    "layers": 82.42084739967488,
+    "station": 0,
+    "g_bl_min": 1.1133411336000707,
+    "delta_over_s0_min": 50.51508384711453,
+    "bl_binds_stations": 53,
+    "stations": 53
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 1,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.64980028332958,
+    "station": 7,
+    "g_bl_min": 1.1400446982558812,
+    "delta_over_s0_min": 357.1011571934056,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "turb_mid_VC": {
+    "layers": 92.52677827465067,
+    "station": 3,
+    "g_bl_min": 1.1115682512605047,
+    "delta_over_s0_min": 205.1007559178013,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "lam_mid_VC": {
+    "layers": 99.69708205006849,
+    "station": 8,
+    "g_bl_min": 1.0613002842814125,
+    "delta_over_s0_min": 80.89126292075355,
+    "bl_binds_stations": 58,
+    "stations": 58
+   },
+   "turb_TE_M": {
+    "layers": 78.5997401347306,
+    "station": 5,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 357.1011571934056,
+    "bl_binds_stations": 0,
+    "stations": 58
+   },
+   "lam_mid_M": {
+    "layers": 83.57143103951358,
+    "station": 4,
+    "g_bl_min": 1.1600288797562979,
+    "delta_over_s0_min": 80.89126292075355,
+    "bl_binds_stations": 58,
+    "stations": 58
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 1,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.45883304712318,
+    "station": 1,
+    "g_bl_min": 1.1840869809214836,
+    "delta_over_s0_min": 858.5108178523103,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "turb_mid_VC": {
+    "layers": 92.54883127285704,
+    "station": 4,
+    "g_bl_min": 1.1563426826816814,
+    "delta_over_s0_min": 493.08498210705403,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "lam_mid_VC": {
+    "layers": 101.52675954921244,
+    "station": 3,
+    "g_bl_min": 1.089687976351288,
+    "delta_over_s0_min": 135.51660303485696,
+    "bl_binds_stations": 64,
+    "stations": 64
+   },
+   "turb_TE_M": {
+    "layers": 83.59869754376092,
+    "station": 5,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 858.5108178523103,
+    "bl_binds_stations": 0,
+    "stations": 64
+   },
+   "lam_mid_M": {
+    "layers": 85.51710250762997,
+    "station": 3,
+    "g_bl_min": 1.2099194315440474,
+    "delta_over_s0_min": 135.51660303485696,
+    "bl_binds_stations": 64,
+    "stations": 64
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 1,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.66249457739951,
+    "station": 7,
+    "g_bl_min": 1.2343373962937083,
+    "delta_over_s0_min": 2357.1622645291714,
+    "bl_binds_stations": 71,
+    "stations": 71
+   },
+   "turb_mid_VC": {
+    "layers": 92.64878883797871,
+    "station": 7,
+    "g_bl_min": 1.2067546634829935,
+    "delta_over_s0_min": 1353.8342078628725,
+    "bl_binds_stations": 71,
+    "stations": 71
+   },
+   "lam_mid_VC": {
+    "layers": 103.5182397948083,
+    "station": 3,
+    "g_bl_min": 1.120879202175924,
+    "delta_over_s0_min": 245.48118853865574,
+    "bl_binds_stations": 71,
+    "stations": 71
+   },
+   "turb_TE_M": {
+    "layers": 89.5401401807087,
+    "station": 3,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2357.1622645291714,
+    "bl_binds_stations": 0,
+    "stations": 71
+   },
+   "lam_mid_M": {
+    "layers": 89.5401401807087,
+    "station": 3,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 245.48118853865574,
+    "bl_binds_stations": 0,
+    "stations": 71
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 2,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 89.17028915919663,
+    "station": 3,
+    "g_bl_min": 1.0917031125394205,
+    "delta_over_s0_min": 140.7138087194596,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_mid_VC": {
+    "layers": 93.30574387781058,
+    "station": 7,
+    "g_bl_min": 1.0612495603149017,
+    "delta_over_s0_min": 80.81886030070534,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "lam_mid_VC": {
+    "layers": 100.06682438920713,
+    "station": 0,
+    "g_bl_min": 1.0289470594710939,
+    "delta_over_s0_min": 46.77213355169371,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_TE_M": {
+    "layers": 75.24563909688996,
+    "station": 5,
+    "g_bl_min": 1.2135284733282785,
+    "delta_over_s0_min": 140.7138087194596,
+    "bl_binds_stations": 52,
+    "stations": 63
+   },
+   "lam_mid_M": {
+    "layers": 83.13565660701953,
+    "station": 2,
+    "g_bl_min": 1.1055419630374423,
+    "delta_over_s0_min": 46.77213355169371,
+    "bl_binds_stations": 63,
+    "stations": 63
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 2,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 89.28963759738104,
+    "station": 6,
+    "g_bl_min": 1.133385841509682,
+    "delta_over_s0_min": 313.29512162581915,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_mid_VC": {
+    "layers": 93.1931431453018,
+    "station": 4,
+    "g_bl_min": 1.10472631274837,
+    "delta_over_s0_min": 179.94079542008723,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "lam_mid_VC": {
+    "layers": 101.10146606551854,
+    "station": 1,
+    "g_bl_min": 1.056917377843275,
+    "delta_over_s0_min": 74.89756849548948,
+    "bl_binds_stations": 68,
+    "stations": 68
+   },
+   "turb_TE_M": {
+    "layers": 80.13894840808811,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 313.29512162581915,
+    "bl_binds_stations": 0,
+    "stations": 68
+   },
+   "lam_mid_M": {
+    "layers": 84.28132335445369,
+    "station": 6,
+    "g_bl_min": 1.1524925164108002,
+    "delta_over_s0_min": 74.89756849548948,
+    "bl_binds_stations": 68,
+    "stations": 68
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 2,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 90.14285660361011,
+    "station": 2,
+    "g_bl_min": 1.1775596781401159,
+    "delta_over_s0_min": 753.1962461562358,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_mid_VC": {
+    "layers": 93.20918103050711,
+    "station": 4,
+    "g_bl_min": 1.1497501423932437,
+    "delta_over_s0_min": 432.59764447480495,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "lam_mid_VC": {
+    "layers": 102.23888349027447,
+    "station": 5,
+    "g_bl_min": 1.0855454763353027,
+    "delta_over_s0_min": 125.47540601539048,
+    "bl_binds_stations": 74,
+    "stations": 74
+   },
+   "turb_TE_M": {
+    "layers": 85.13800244745147,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 753.1962461562358,
+    "bl_binds_stations": 0,
+    "stations": 74
+   },
+   "lam_mid_M": {
+    "layers": 86.23867608311673,
+    "station": 5,
+    "g_bl_min": 1.2025274720555883,
+    "delta_over_s0_min": 125.47540601539048,
+    "bl_binds_stations": 74,
+    "stations": 74
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 2,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 91.0869349080297,
+    "station": 1,
+    "g_bl_min": 1.227822690704848,
+    "delta_over_s0_min": 2068.0062875223166,
+    "bl_binds_stations": 78,
+    "stations": 82
+   },
+   "turb_mid_VC": {
+    "layers": 93.31721923617994,
+    "station": 7,
+    "g_bl_min": 1.2002466701197247,
+    "delta_over_s0_min": 1187.7577103002054,
+    "bl_binds_stations": 82,
+    "stations": 82
+   },
+   "lam_mid_VC": {
+    "layers": 104.23902404612274,
+    "station": 5,
+    "g_bl_min": 1.1169018616298585,
+    "delta_over_s0_min": 227.29208902252182,
+    "bl_binds_stations": 82,
+    "stations": 82
+   },
+   "turb_TE_M": {
+    "layers": 91.0869349080297,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2068.0062875223166,
+    "bl_binds_stations": 0,
+    "stations": 82
+   },
+   "lam_mid_M": {
+    "layers": 91.0869349080297,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 227.29208902252182,
+    "bl_binds_stations": 0,
+    "stations": 82
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 3,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 89.16123829538036,
+    "station": 2,
+    "g_bl_min": 1.089578665216171,
+    "delta_over_s0_min": 135.2406935304667,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "turb_mid_VC": {
+    "layers": 93.27181994019026,
+    "station": 3,
+    "g_bl_min": 1.0589963197957595,
+    "delta_over_s0_min": 77.67538109355263,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "lam_mid_VC": {
+    "layers": 100.0653629712632,
+    "station": 1,
+    "g_bl_min": 1.0274981833526708,
+    "delta_over_s0_min": 45.693274475091734,
+    "bl_binds_stations": 60,
+    "stations": 60
+   },
+   "turb_TE_M": {
+    "layers": 76.02668114519021,
+    "station": 0,
+    "g_bl_min": 1.2097239044161068,
+    "delta_over_s0_min": 135.2406935304667,
+    "bl_binds_stations": 54,
+    "stations": 60
+   },
+   "lam_mid_M": {
+    "layers": 83.13818791954532,
+    "station": 2,
+    "g_bl_min": 1.1031663314720725,
+    "delta_over_s0_min": 45.693274475091734,
+    "bl_binds_stations": 60,
+    "stations": 60
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 3,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 89.97151015900857,
+    "station": 0,
+    "g_bl_min": 1.1313607485894825,
+    "delta_over_s0_min": 301.1093929868747,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_mid_VC": {
+    "layers": 93.17212510442297,
+    "station": 2,
+    "g_bl_min": 1.1026408423249028,
+    "delta_over_s0_min": 172.94193219908936,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "lam_mid_VC": {
+    "layers": 101.09190039637082,
+    "station": 1,
+    "g_bl_min": 1.0555796710992897,
+    "delta_over_s0_min": 73.16996029268061,
+    "bl_binds_stations": 65,
+    "stations": 65
+   },
+   "turb_TE_M": {
+    "layers": 80.13920069389056,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 301.1093929868747,
+    "bl_binds_stations": 0,
+    "stations": 65
+   },
+   "lam_mid_M": {
+    "layers": 85.00873591461797,
+    "station": 0,
+    "g_bl_min": 1.1502016586399255,
+    "delta_over_s0_min": 73.16996029268061,
+    "bl_binds_stations": 65,
+    "stations": 65
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 3,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 90.14602621686151,
+    "station": 2,
+    "g_bl_min": 1.1755790393543675,
+    "delta_over_s0_min": 723.900401969765,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "turb_mid_VC": {
+    "layers": 93.19214152648836,
+    "station": 2,
+    "g_bl_min": 1.1477471698076873,
+    "delta_over_s0_min": 415.7716004621807,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "lam_mid_VC": {
+    "layers": 102.96454707786569,
+    "station": 0,
+    "g_bl_min": 1.0842841245737935,
+    "delta_over_s0_min": 122.58115530689099,
+    "bl_binds_stations": 72,
+    "stations": 72
+   },
+   "turb_TE_M": {
+    "layers": 85.13825485332175,
+    "station": 2,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 723.900401969765,
+    "bl_binds_stations": 0,
+    "stations": 72
+   },
+   "lam_mid_M": {
+    "layers": 86.97036045918811,
+    "station": 0,
+    "g_bl_min": 1.2002840155374523,
+    "delta_over_s0_min": 122.58115530689099,
+    "bl_binds_stations": 72,
+    "stations": 72
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 3,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 91.08616972509694,
+    "station": 1,
+    "g_bl_min": 1.2258487464848855,
+    "delta_over_s0_min": 1987.5704246445182,
+    "bl_binds_stations": 76,
+    "stations": 79
+   },
+   "turb_mid_VC": {
+    "layers": 94.01063427091822,
+    "station": 0,
+    "g_bl_min": 1.1982733953035352,
+    "delta_over_s0_min": 1141.559438614958,
+    "bl_binds_stations": 79,
+    "stations": 79
+   },
+   "lam_mid_VC": {
+    "layers": 104.96987934854313,
+    "station": 0,
+    "g_bl_min": 1.1156930012137467,
+    "delta_over_s0_min": 222.04930630852076,
+    "bl_binds_stations": 79,
+    "stations": 79
+   },
+   "turb_TE_M": {
+    "layers": 91.08616972509694,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 1987.5704246445182,
+    "bl_binds_stations": 0,
+    "stations": 79
+   },
+   "lam_mid_M": {
+    "layers": 91.08616972509694,
+    "station": 1,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 222.04930630852076,
+    "bl_binds_stations": 0,
+    "stations": 79
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 4,
+   "re": 100000.0,
+   "turb_TE_VC": {
+    "layers": 88.53493522528971,
+    "station": 3,
+    "g_bl_min": 1.0978815774850157,
+    "delta_over_s0_min": 158.03701967521343,
+    "bl_binds_stations": 57,
+    "stations": 57
+   },
+   "turb_mid_VC": {
+    "layers": 92.69308676545006,
+    "station": 6,
+    "g_bl_min": 1.0677787010090987,
+    "delta_over_s0_min": 90.76843226477584,
+    "bl_binds_stations": 57,
+    "stations": 57
+   },
+   "lam_mid_VC": {
+    "layers": 99.37588546132702,
+    "station": 0,
+    "g_bl_min": 1.0331487365891605,
+    "delta_over_s0_min": 50.078031310968626,
+    "bl_binds_stations": 57,
+    "stations": 57
+   },
+   "turb_TE_M": {
+    "layers": 74.47556285716236,
+    "station": 2,
+    "g_bl_min": 1.2246467820066573,
+    "delta_over_s0_min": 158.03701967521343,
+    "bl_binds_stations": 54,
+    "stations": 57
+   },
+   "lam_mid_M": {
+    "layers": 82.42121107241584,
+    "station": 1,
+    "g_bl_min": 1.1124636063454274,
+    "delta_over_s0_min": 50.078031310968626,
+    "bl_binds_stations": 57,
+    "stations": 57
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 4,
+   "re": 300000.0,
+   "turb_TE_VC": {
+    "layers": 88.64340507850906,
+    "station": 5,
+    "g_bl_min": 1.1392946600922547,
+    "delta_over_s0_min": 351.86473702264874,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_mid_VC": {
+    "layers": 92.52955320244169,
+    "station": 3,
+    "g_bl_min": 1.1107987345519392,
+    "delta_over_s0_min": 202.09322229969047,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "lam_mid_VC": {
+    "layers": 100.38731198554936,
+    "station": 0,
+    "g_bl_min": 1.060807808808356,
+    "delta_over_s0_min": 80.19139807011686,
+    "bl_binds_stations": 63,
+    "stations": 63
+   },
+   "turb_TE_M": {
+    "layers": 78.59962733524532,
+    "station": 4,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 351.86473702264874,
+    "bl_binds_stations": 0,
+    "stations": 63
+   },
+   "lam_mid_M": {
+    "layers": 83.57772818261456,
+    "station": 4,
+    "g_bl_min": 1.1591797583870986,
+    "delta_over_s0_min": 80.19139807011686,
+    "bl_binds_stations": 63,
+    "stations": 63
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 4,
+   "re": 1000000.0,
+   "turb_TE_VC": {
+    "layers": 89.44944677484915,
+    "station": 1,
+    "g_bl_min": 1.1833506734278383,
+    "delta_over_s0_min": 845.9218825524453,
+    "bl_binds_stations": 69,
+    "stations": 69
+   },
+   "turb_mid_VC": {
+    "layers": 92.54106515356231,
+    "station": 3,
+    "g_bl_min": 1.1555996375754347,
+    "delta_over_s0_min": 485.8545374719945,
+    "bl_binds_stations": 69,
+    "stations": 69
+   },
+   "lam_mid_VC": {
+    "layers": 101.52874844697494,
+    "station": 3,
+    "g_bl_min": 1.0892217801401034,
+    "delta_over_s0_min": 134.344124033822,
+    "bl_binds_stations": 69,
+    "stations": 69
+   },
+   "turb_TE_M": {
+    "layers": 83.59858469023253,
+    "station": 4,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 845.9218825524453,
+    "bl_binds_stations": 0,
+    "stations": 69
+   },
+   "lam_mid_M": {
+    "layers": 85.50908201516188,
+    "station": 2,
+    "g_bl_min": 1.2090857130652992,
+    "delta_over_s0_min": 134.344124033822,
+    "bl_binds_stations": 69,
+    "stations": 69
+   }
+  },
+  {
+   "type": "tapered",
+   "index": 4,
+   "re": 4000000.0,
+   "turb_TE_VC": {
+    "layers": 89.65725376574692,
+    "station": 5,
+    "g_bl_min": 1.2336018038389447,
+    "delta_over_s0_min": 2322.59757108282,
+    "bl_binds_stations": 76,
+    "stations": 76
+   },
+   "turb_mid_VC": {
+    "layers": 92.64327760594715,
+    "station": 5,
+    "g_bl_min": 1.2060201647174653,
+    "delta_over_s0_min": 1333.9820046114723,
+    "bl_binds_stations": 76,
+    "stations": 76
+   },
+   "lam_mid_VC": {
+    "layers": 103.51010563134243,
+    "station": 2,
+    "g_bl_min": 1.120431049135708,
+    "delta_over_s0_min": 243.35730458447605,
+    "bl_binds_stations": 76,
+    "stations": 76
+   },
+   "turb_TE_M": {
+    "layers": 89.54030468164729,
+    "station": 3,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 2322.59757108282,
+    "bl_binds_stations": 0,
+    "stations": 76
+   },
+   "lam_mid_M": {
+    "layers": 89.54030468164729,
+    "station": 3,
+    "g_bl_min": 1.25,
+    "delta_over_s0_min": 243.35730458447605,
+    "bl_binds_stations": 0,
+    "stations": 76
+   }
+  }
+ ],
+ "seconds": 499.9
+}

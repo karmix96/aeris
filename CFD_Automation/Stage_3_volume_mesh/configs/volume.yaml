@@ -1,0 +1,82 @@
+# Stage 3 — volume mesh rules (one matched C-H multiblock mesh, decision 73).
+# Read by cfdauto/volume/laws.py: one function per setting, each with its anchor level and its reason.
+# Anchors as in Stage 2 (decision 71): {value: x, at: LEVEL} is met at LEVEL and follows the family rule (law 23)
+# on the other levels, r = 1.3, level k, anchor a (VC = 0, C = 1, M = 2, F = 3):
+#   sizes x * r^(a - k);  counts x * r^(k - a);  growth x ** r^(a - k).
+# Distances (far field, fine zone, band length) are the same at every level. Plain numbers are the same at every
+# level. Every length is in mean chords (similarity: unit mean chord, decision 70) unless the key says "local".
+# "law n" = the row of the laws table (Grand Roadmap, Annex G, section 04). Our choices are numbered decisions in
+# CFD_Automation/OPEN_DECISIONS.md (84 onward) and explained in decisions/volume_rules.md.
+
+levels:
+  names: [VC, C, M, F]            # the Stage 2 levels; the surface of each level is the Stage 2 surface of that level
+  ratio: 1.3                      # law 23 (Celik et al. 2008), the same as the surface
+
+wall:                             # the wall-normal lines of the C blocks (and the base, and the cap)
+  # first cell: law 13 from Stage 2 (cfdauto.mesh.laws.first_cell_c at the level's y+: 1, 0.77, 0.59, 0.46), per
+  # station at its local Re. The same s0 off the base and off the tip cap (every wall is wall-resolved).
+  growth: {value: 1.25, at: VC, why: "hard minimum, decision 71; DPW"}
+                                  # largest growth inside the boundary layer and the fine zone: 1.25, 1.187, 1.141,
+                                  # 1.107 at VC, C, M, F
+  bl_cells: {value: 30, at: VC, why: "Annex G: at least 30 cells across the boundary layer at the baseline; decision 86"}
+                                  # cells between the wall and delta (see delta below); a count: x 1.3 per level
+  delta:                          # the boundary-layer thickness the 30 cells must cross (decision 86)
+    law: turbulent                # turbulent flat plate, delta = 0.37 x Re_x^(-1/5), from the station's local Re
+    x_c: 1.0                      # at x = 1 local chord (the trailing edge, where the layer is thickest)
+  fine_zone_local_c: 2.0          # law 20: the growth stays <= wall.growth out to 2 local chords from the wall
+                                  # (the depth Stage 2's cell estimate used, decision 71)
+
+far:
+  distance_c: 80.0                # law 15: every far-field node at least 80 mean chords from the wing (40/80/160 is Stage 4)
+  growth: {value: 1.30, at: VC, why: "Annex G: <= 1.3 anywhere outside the boundary layer; decision 85"}
+                                  # checked beyond the fine zone: 1.3, 1.224, 1.171, 1.127 at VC, C, M, F
+  growth_built: {value: 1.25, at: VC, why: "built at the wall growth, as Stage 2 builds 1.2 and checks 1.25; decision 85"}
+                                  # built beyond the fine zone: the far-field blend (decision 84) may raise it toward 1.3
+
+wake:                             # the wake lines and the wake band (laws 17, 18; decision 87)
+  turn_local_c: 0.5               # the wake centre line leaves the base along its normal and turns to +x over this
+  gap_growth: 0.0                 # the base block keeps the base height to the outflow (the wake lines are parallel);
+                                  # the cut keeps the wall spacing, so the cells match across it (decision 84)
+  band:                           # the wake band: fine cells where the wake goes at alpha -5 deg to post-stall
+    alpha_lo_deg: -5.0            # the band holds the freestream direction from -5 deg ...
+    alpha_hi_deg: 20.0            # ... to 20 deg (post-stall for these wings; the wake itself turns down by the
+                                  # downwash, so the freestream direction is the upper bound)
+    margin_c: 0.05                # plus 0.05 c above and below at the trailing edge (the wake's own thickness)
+    length_local_c: 2.0           # from the trailing edge to 2 local chords behind it (law 20, the fine zone)
+    spacing_c: {value: 0.0075, at: M, why: "Primer section 05, the wake box value: about 20 cells across a 0.15 c wake"}
+                                  # cross-wake cell next to the trailing edge: 1.27, 0.98, 0.75, 0.58 % c at VC, C, M, F
+    fan_cells: {value: 40, at: M, why: "decision 87: 40 cells across the 25 deg fan at every distance (0.63 deg each)"}
+                                  # farther back the cross cell grows so the fan keeps this many cells: 23.7, 30.8, 40, 52
+    max_aspect: 4.0               # streamwise cell <= 4 x the cross cell inside the band
+  # first cell behind the base = the station's s0 (the base is a wall); growth along the wake <= wall.growth inside
+  # the band length, <= far.growth beyond it, to the outflow 80 c behind the most aft trailing edge
+
+outboard:                         # the H blocks past the tip (law 12, decision 88)
+  growth: {value: 1.15, at: VC, why: "Annex G R-V.3 starting value; the brief"}
+                                  # station gaps past the tip: 1.15, 1.114, 1.086, 1.066 at VC, C, M, F
+  fine_zone_c: 2.0                # ... out to 2 mean chords past the tip; beyond it far.growth to 80 c
+  # first gap = the delivered last gap of the wing (the tip gap, 2 x s0 at the tip; Stage 2 law 10)
+
+plane:                            # how the grid in one station plane is built (decision 84, the V0 measurement)
+  method: march                   # march | algebraic | elliptic (scripts/plane_method_study.py)
+  normal_smoothing: [4, 8, 15, 25, 40, 60]   # passes of normal averaging per layer; the next rung if a cell folds
+  step_smoothing: 0.30            # each layer's step pulled 30 % toward the mean of its neighbours (direction only;
+                                  # the step length is the asked one, so s0 and the growth are exact)
+  blend_from_local_c: 1.0         # the pull onto the far-field node starts where the line is 1 local chord out
+  blend_power: 2.0                # weight ((j - j0) / (n - j0))^2 from there to the far field
+  outer_even_share: 0.85          # far-field nodes on the arc: 85 % even in angle, 15 % following the wall (S8)
+
+checks:                           # the Stage 3 checks (decisions/volume_rules.md, V0); written before any mesh is judged
+  wall_on_surface_c: 1.0e-12      # 1: every wall node = the Stage 2 node
+  min_scaled_jacobian: 0.05       # 3: smallest corner scaled Jacobian of every cell (Stage 2's surface limit)
+  wall_angle_deg: 5.0             # 4: in the station plane, the first line within 5 deg of the wall normal
+  s0_tol: 0.01                    # 5, 11: first cells within 1 %
+  growth_tol: 0.01                # 6, 11, 12: growth within 1 % of its limit
+  interface_tol_c: 1.0e-10        # 8: matched faces node to node
+  symmetry_tol_c: 1.0e-12         # 9: the root faces at y = 0
+  family_tol: 0.03                # 13: spacing ratios 1.3 within 3 %
+  ram_gib_base: 1.51              # 14: ADflow memory = 1.51 GiB + 9.46 GiB per million cells (ANK only, S8)
+  ram_gib_per_mcell: 9.46
+  hosts:                          # 14: where a mesh fits (cells), from the RAM law
+    desktop_16GB: 1.2e+6
+    desktop_52GB: 5.0e+6

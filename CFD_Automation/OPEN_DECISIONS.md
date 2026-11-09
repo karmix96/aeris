@@ -446,3 +446,56 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     Re levels (Stage 2 Study 14; `scripts/screen.py --open-holdouts`, the seal lifted in that process only). No rule
     changes from it. The Grand Roadmap's A3 (the hold-out once with every law frozen) still applies to the volume mesh
     and the solves.
+
+## Stage 3 (volume mesh) — choices I made (9 Nov 2026)
+
+Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/volume_rules.md`; values in
+`Stage_3_volume_mesh/configs/volume.yaml`; code in `cfdauto/volume/`.
+
+84. **The station-plane grid: a march (decided by the V0 measurement, 9 Nov 2026).** The line shapes come from one front
+    moved the same distance everywhere from the C line, smoothed along itself over its distance from the wall (κ = 1),
+    through the fine zone, then straight to far-field nodes shared by all stations; the nodes are then placed along each
+    line by one wall-normal distribution per station; the outer layers and the far wake nodes move to the station mean.
+    Measured on 501 station planes (8 reference wings at VC): the march 0 folded planes (smallest scaled Jacobian 0.63,
+    wall angle ≤ 0.05°); algebraic lines 501 of 501 folded, at the concave trailing-edge corners; the same + 300 Winslow
+    sweeps 501 of 501 folded and the growth 15 × its limit. Not close, so not asked. A 3-D march is not needed for
+    validity (planar stations; decision 89).
+85. **Growth beyond the fine zone: checked at 1.3 at VC (Annex G, "≤ 1.3 anywhere outside the boundary layer"), built at
+    the wall growth 1.25** (1.187 / 1.141 / 1.107 at C / M / F), as Stage 2 builds the ring at 1.2 and checks 1.25. The
+    far-field blend (84) may raise it toward 1.3 (it did by 3 % on V1 when built at 1.3).
+86. **Cells across the boundary layer: 30 at VC (× 1.3 per level), across the turbulent flat-plate layer at the trailing
+    edge, δ = 0.37 c Re_c^−1/5, from the station's local Re** (Annex G: "≥ 30 at the baseline"). Measured (counts only, the
+    20 reference wings × 4 Re): at Re 10⁵ the small tips have a layer thinner than 30 first cells at mid-chord, laminar or
+    turbulent, so those variants cannot be met at VC; at the trailing edge the turbulent layer always fits 30 cells; the
+    layers at VC are then 88.9–90.7 median, 97.2 largest (the wake band and the fine zone set most of them). Weak point:
+    the laminar layer at mid-chord gets fewer cells at VC (the family gives it more at F).
+87. **The wake band (laws 17, 18).** The freestream fan from −5° to 20° from the trailing edge, plus 0.05 c above and below,
+    2 local chords long. Its cross cell is 0.0075 c at M next to the trailing edge (Primer: about 20 cells across a
+    0.15 c wake) and grows with the distance so that the fan keeps 40 cells at M (23.7 at VC, 52 at F; 0.63° each at M).
+    It is applied to every line of a station as an envelope in height (a cell at height h is at most the band cell of the
+    farthest band point at that height), so the C lines above the aft wing get it too; streamwise ≤ 4 × the band cell.
+    The wake lines keep the wall spacing along the cut, are parallel (the base height apart), leave along the base normal
+    and turn to +x over 0.5 local chord. A constant 0.0075 c band cell over the whole band (the overset plan's wake box) would
+    need 1.50–1.93 × the layers (counted on BWB and tapered reference wing 0 at VC and M, Re 3 × 10⁵; not built).
+88. **Outboard (law 12) and the tip vortex (law 19).** First gap = the wing's last gap (2 s0 at the tip); growth 1.15 at VC
+    to 2 c past the tip, then the far growth (built 1.25, checked 1.3) to 80 c past the tip. The vortex path from the tip
+    trailing edge at −5° to 20° lies inside the wake band; along the semi-span it is held by the tip squeeze (Stage 2) and
+    the outboard stations. No other clustering.
+89. **Planar stations; the orthogonality check is in the station plane.** The rings are planar (4e−15 c), so the lines stay
+    in y = const: square to the wall in the plane, but at a swept nose the 3-D angle to the surface normal is the sweep
+    (the cell is sheared; its first cell along the normal is s0 · cos, so y⁺ falls). The 3-D angle is reported on every
+    mesh, not refused. A 3-D march would bend the station planes; near the tip they are 2 s0 apart and would cross.
+90. **The base is a wall: the first cell behind the base is s0** (y⁺ ≤ 1 on every wall). This carries the wake's
+    streamwise clustering (s0) through the wake blocks to the far field (about 20 wake nodes at VC), and puts a spacing
+    jump across the trailing-edge line: the wing's last chordwise cell (Stage 2: 0.169 % c at VC) next to s0 (about 20×
+    at Re 3 × 10⁵, 250× at 4 × 10⁶). Named and reported, not refused.
+91. **The far field.** A half circle in front, centred at the most aft trailing edge, lines above and below, the outflow
+    80 c behind the most aft trailing edge, and 80 c past the tip; the radius is 80 c + the wing's extent + 1 c, so every
+    wall node is at least 80 c inside. The far-field nodes are shared by every station (a pure extrusion along the
+    semi-span).
+92. **The smoothing ladder:** κ = 1, 1.5, 2, 3; above the first rung the mesh is "needs review" (R1).
+93. **Names and files.** `volume_<level>_<wing_hash8>_re<Re>`; `blocks.npz`, `quality.json`, `manifest.json`,
+    `volume.cgns`, `volume.su2`; a refused mesh writes only `refusal.json`.
+94. **Branch.** Stage 2 is not merged into main yet (`stage2-surface-mesh` is 105 commits ahead), so `stage3-volume-mesh`
+    starts from `stage2-surface-mesh`. Push access was not granted in this session: the branch is committed here and
+    handed over as a git bundle (or pushed once access is granted).

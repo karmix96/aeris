@@ -41,3 +41,31 @@ def test_band_height_adds_the_downward_wake(surface_vc):
     assert pl.band_height(level, rl) == pytest.approx(straight, rel=1e-12)
     assert pl.band_height(down, rl) > straight + 0.5 * st.wake.turn * np.radians(6.0) * 0.5
 
+
+
+def test_band_envelope_holds_the_straight_fan_around_a_bent_cut_line(surface_vc):
+    """Decision 108: the band is a fan of straight rays from the base mid-point; a cut line that leaves the base
+    pointing down (or up) is farther from one band edge, and the cells stay <= the band cell up to that edge."""
+    import copy
+    from cfdauto.volume.volume import stations_of
+    rl = rules("VC")
+    st = stations_of(surface_vc, rl)[0]
+    b = rl.band
+    L = float(b["length_local_c"]) * st.chord
+    t_hi, t_lo = np.tan(np.radians(b["alpha_hi_deg"])), np.tan(np.radians(-b["alpha_lo_deg"]))
+    k = (t_hi + t_lo) / b["fan_cells"]
+    for phi in (0.0, -np.radians(8.0), np.radians(8.0)):
+        w = copy.copy(st)
+        w.wake = pl.WakeLine(st.wake.M, phi, st.wake.turn, st.wake.t_te, st.wake.gap_growth)
+        x, cap = pl.band_envelope(w, rl)
+        assert np.all(np.diff(cap) >= -1e-12) and cap[0] == pytest.approx(b["spacing_c"])
+        s = np.linspace(0.02 * L, L, 60)
+        dz = w.wake.centre(s)[0][:, 1] - w.wake.M[1]
+        for edge in (b["margin_c"] + s * t_hi - dz, b["margin_c"] + s * t_lo + dz):   # upper lines, lower lines
+            inside = np.interp(np.clip(0.98 * edge, 0.0, x[-1]), x, cap)             # just inside the band at s
+            assert np.all(inside <= (b["spacing_c"] + k * s) * 1.005)
+    # a level cut line: the envelope is the linear law of the steeper edge
+    w = copy.copy(st)
+    w.wake = pl.WakeLine(st.wake.M, 0.0, st.wake.turn, st.wake.t_te, st.wake.gap_growth)
+    x, cap = pl.band_envelope(w, rl)
+    assert np.allclose(cap, b["spacing_c"] + k * np.maximum(x - b["margin_c"], 0.0) / max(t_hi, t_lo), rtol=1e-3)

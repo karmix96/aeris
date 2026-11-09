@@ -1,18 +1,19 @@
 # V7 runbook: the first solves on one Stage 3 mesh
 
-**State on 9 Nov 2026.** Not run. This session has no ADflow and no SU2, 2 cores and 7 GB of RAM. The mesh is now
-built with rule set 2 (decision 107) and needs about 27 GiB for ADflow: it fits the 52 GB desktop (16 GB + 36 GB), not
-the 16 GB one. Where it runs: Mike (decision 103).
+**State on 9 Nov 2026.** Not run. This session has no ADflow and no SU2, 2 cores and 7 GB of RAM. The mesh is built
+with rule set 2 as it stands (decisions 107–111: the wake fan −5° to +10°) and needs about 20–24 GiB for ADflow: more
+than the 16 GB desktop, well inside 48 GB. Where it runs: Mike (decision 103). **V7 also measures the memory**
+(decision 113) and **where the wake goes** at −5° and +10° (decision 111): sections 5 and 6.
 
 The case (fixed by the brief): **BWB reference wing 0, VC, Re 3 × 10⁵, α 4°, Mach 0.1, transition band on.**
 Three runs: **ADflow SA**, **SU2 SA**, **SU2 SST + LM** (SU2 8.6.0).
 
 | | |
 |---|---|
-| mesh | `volume_VC_e32d995a_re3e5`, rule set 2: 2,720,808 cells, 13 blocks, every check passed (V1, V5) |
-| files | `volume.cgns` (68.8 MB, ADflow), `volume.su2` (379.3 MB, SU2), from `scripts/v5_export.py` |
-| ADflow RAM | 1.51 + 9.46 GiB per M cells = **27.2 GiB** (ANK only); fits the 52 GB desktop, not 16 GB |
-| ADflow time | 35.7 min per M cells on 6 ranks ≈ **1.6 h** (S8 law; this mesh is not S8's, so a guide only) |
+| mesh | `volume_VC_e32d995a_re3e5`, rule set 2: 2,324,016 cells, 13 blocks, every check passed (V1, V5) |
+| files | `volume.cgns` (59.0 MB, ADflow), `volume.su2` (322.8 MB, SU2), from `scripts/v5_export.py` |
+| ADflow RAM | S8's laws (two-point fits at 0.57 and 1.11 M cells): ANK only, as run here, 2.69 + 7.23 GiB per M cells = **19.5 GiB**; ANK then NK 1.51 + 9.46 = 23.5 GiB (decision 112) |
+| ADflow time | 35.7 min per M cells on 6 ranks ≈ **1.4 h** (S8 law; this mesh is not S8's, so a guide only) |
 | units | lengths in mean chords; Re on the mean chord (1 mesh unit); span +y, lift +z |
 
 ## 0. Make the mesh and the case (any machine with the repo, no solver needed)
@@ -76,7 +77,49 @@ with its reason, and stays in the record.
 
 - It answers: ADflow reads the CGNS and converges on it; SU2 reads the `.su2` and converges on it, with SA and with
   SST + LM; the two codes' SA forces on one grid.
-- It does not answer: grid convergence (needs C and M, 10.5 M and 22.8 M cells on this wing; M needs about 217 GiB
-  for ADflow, so the HPC), the hold-outs (V8), or anything against experiment.
+- It does not answer: grid convergence (needs C and M, 4.9 M and 10.7 M cells on this wing; M needs about 80–103 GiB
+  for ADflow by S8's laws, so the HPC), the hold-outs (V8), or anything against experiment.
 - Send back: `runs/v7_a4/` without the volume solutions (`result.json`, `history.csv`, `forces_breakdown.dat`,
   `log.txt`, the surface files). Then V7 can be closed with the numbers.
+
+## 5. Measure the memory (decision 113)
+
+Why: the plan assumed 10 M cells in 48 GB; S8's laws say 71–90 GiB for the M level (9–11 M cells). The laws are
+two-point fits at 0.57 and 1.11 M cells, so this mesh (2.32 M) is the third point, and the first one for SU2.
+
+- **ADflow as run** (section 1): `result.json` has `"memory"`: the peak resident memory summed over the ranks, GiB per
+  million cells, and the two laws' predictions. Nothing more to do.
+- **ADflow with a leaner preconditioner** (one extra run; a memory test first, a result only if it also converges):
+
+```bash
+$P/mpirun -np 6 $P/python solve/run_adflow.py --case runs/v7_a4 --set-option ANKPCILUFill=0 \
+    --set-option outputDirectory=runs/v7_a4/adflow_fill0
+```
+
+  Compare `memory.gib_per_million_cells`, the iterations and the time of the two runs. 10 M cells in 45 GiB need about
+  4.2 GiB per million cells.
+- **SU2** (sections 2): wrap each rank so it reports its own peak, then add them up:
+
+```bash
+(cd su2_sa && mpirun -np 6 /usr/bin/time -v SU2_CFD ../su2_sa.cfg > log.txt 2> time.txt)
+grep "Maximum resident" su2_sa/time.txt | awk '{s += $6} END {printf "%.1f GiB\n", s / 1024 / 1024}'
+```
+
+- Send back the three numbers with the rank count. They decide whether M can run on 48 GB or stays on the HPC.
+
+## 6. Where the wake goes at −5° and +10° (decision 111)
+
+The mesh's wake fan holds the freestream directions −5° to +10° plus 0.05 c. Whether the real wake stays inside it is
+not measured. Two more ADflow points on the same mesh, keeping the volume solution:
+
+```bash
+python solve/case.py --mesh data/meshes/volume_VC_e32d995a_re3e5 --alpha -5 --mach 0.1 --re 3e5 --out runs/v7_am5
+python solve/case.py --mesh data/meshes/volume_VC_e32d995a_re3e5 --alpha 10 --mach 0.1 --re 3e5 --out runs/v7_a10
+$P/mpirun -np 6 $P/python solve/run_adflow.py --case runs/v7_am5 --set-option writeVolumeSolution=true
+$P/mpirun -np 6 $P/python solve/run_adflow.py --case runs/v7_a10 --set-option writeVolumeSolution=true
+```
+
+Send back the two volume files (or a y-slice at the mid semi-span with the total pressure). The script that reads
+the wake centre against the fan's edges is **not written yet**: it needs a real solution file to be tested on. If
+the wake leaves the fan, the fan's top is one number (`alpha_hi_deg`; +12° costs about 2 % more cells).
+

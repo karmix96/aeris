@@ -58,3 +58,29 @@ def test_implicit_smoothing_of_a_straight_line_is_identity():
     n = mr.line_normals(X)
     m = mr._smooth_implicit(n, X, 0.3)
     assert np.allclose(m, n, atol=1e-12)
+
+
+def test_capped_cells_of_two_levels_are_the_family_ratio_apart():
+    """Decision 109: each cell takes the band cap at its own centre, so where the cap rules, the cells of two levels
+    are 1.3 apart (taken at the cell's start they were 1.285 apart: check 13 failed on 11 of 20 reference wings)."""
+    one = lambda v: np.array([float(v)])
+    h = {}
+    for lev, k in (("VC", 1.0), ("C", 1.3)):
+        d = mr._walk(one(1e-4 / k), one(50.0), one(1.25 ** (1 / k)), one(0.03), one(1.25 ** (1 / k)), one(2.0),
+                     one(1.22 ** (1 / k)), one(0.0127 / k), one(0.105 / k), one(0.9), one(1.0), 200, one(0.07))[:, 0]
+        hh, mid = np.diff(d), 0.5 * (d[1:] + d[:-1])
+        h[lev] = np.interp([0.3, 0.5, 0.8], mid, hh)
+    assert np.allclose(h["VC"] / h["C"], 1.3, rtol=0.004)
+
+
+def test_table_cap_is_the_linear_cap():
+    """The cap as a table (the station distributions, decision 108) gives the same line as the same cap written
+    as a + b max(0, x - m)."""
+    one = lambda v: np.array([float(v)])
+    args = [one(v) for v in (1e-4, 50.0, 1.2, 0.03, 1.25, 2.0, 1.22)]
+    a, b, m, hcap = 0.0127, 0.105, 0.07, 0.9
+    lin = mr._walk(*args, one(a), one(b), one(hcap), one(1.0), 120, one(m))[:, 0]
+    x = np.linspace(0.0, hcap, 400)
+    tab = mr._walk(*args, one(0.0), one(0.0), one(0.0), one(1.0), 120, None, x[None, :],
+                   (a + b * np.maximum(x - m, 0.0))[None, :])[:, 0]
+    assert np.allclose(tab, lin, rtol=2e-3)

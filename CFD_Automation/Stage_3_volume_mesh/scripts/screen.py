@@ -110,6 +110,7 @@ def extra(vm) -> dict:
     out["cap_min_sj"] = vm.info["quality_by_block"]["CAP"]["min_sj"]
     out["cap_nose_corner_min_sj"] = vm.info.get("cap_nose_corner_min_sj")
     out["min_sj_but_cap_nose_corners"] = vm.info.get("min_sj_but_cap_nose_corners")
+    out["span_ramp"] = vm.info.get("span_ramp")                    # decision 110: the ramps used (0 = nothing moved)
     out["outboard_min_sj"] = min(v["min_sj"] for k, v in vm.info["quality_by_block"].items() if k.endswith("_out"))
     out["inboard_min_sj"] = min(v["min_sj"] for k, v in vm.info["quality_by_block"].items() if k.endswith("_in"))
     return out

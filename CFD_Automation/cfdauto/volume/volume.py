@@ -99,6 +99,48 @@ def smoothstep(t: Array) -> Array:
     return t * t * (3.0 - 2.0 * t)
 
 
+SPAN_SMOOTH_C = 0.25                      # decision 110: kernel width (mean chords) along the semi-span
+SPAN_RAMPS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0)   # ramp lengths tried, in units of each station's start distance
+
+
+def span_smooth(D: Array, y: Array, start: Array, g_lim: float, origin: Array | None = None,
+                sigma: float = SPAN_SMOOTH_C) -> tuple[Array, float]:
+    """The far part of every station's distribution, moved toward its neighbours' (decision 110).
+    D (n+1, N): positions along the lines of N stations at y (N,), from origin (N,; 0 if None); start (N,): the
+    distance from the origin at which each station's far part begins (past its fine zone and band; the near part is
+    never moved). Target: the Gaussian average over the stations within about sigma along the semi-span (mirrored at
+    the root), scaled to end where the line ends. Every station ramps to it with
+    smoothstep((D - origin - start) / (f start)), one f for all stations (so neighbours move alike): the shortest of
+    SPAN_RAMPS that keeps every growth ratio of every far part (larger / smaller, from the last near cell on)
+    <= g_lim; none (f = 0, nothing moved) if no ramp does. Why: the near part follows the local chord (fine zone and
+    band in local chords), so where the chord changes fast along the semi-span (a tapered tip, a BWB kink) the far
+    nodes of stations a hair apart were up to 20 x their gap apart and the cells between them sheared below the
+    quality limit (check 3, V6 rule set 2). Returns (D moved, f)."""
+    n1, N = D.shape
+    o = np.zeros(N) if origin is None else np.asarray(origin, float)
+    W = np.exp(-0.5 * ((y[:, None] - y[None, :]) / sigma) ** 2) + np.exp(-0.5 * ((y[:, None] + y[None, :]) / sigma) ** 2)
+    W /= W.sum(axis=1, keepdims=True)
+    T = D @ W.T
+    T = o[None, :] + (T - T[0][None, :]) * ((D[-1] - o) / (T[-1] - T[0]))[None, :]
+    first = np.array([max(int(np.searchsorted(D[:, k] - o[k], start[k])), 1) for k in range(N)])
+    for f in SPAN_RAMPS:
+        w = smoothstep((D - o[None, :] - start[None, :]) / (f * start[None, :]))
+        C = (1.0 - w) * D + w * T
+        ok = True
+        for k in range(N):
+            h = np.diff(C[first[k] - 1:, k])
+            if not np.all(h > 0.0):
+                ok = False
+                break
+            r = h[1:] / h[:-1]
+            if r.size and np.maximum(r, 1.0 / r).max() > g_lim:
+                ok = False
+                break
+        if ok:
+            return C, f
+    return D, 0.0
+
+
 def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:
     """The first cell behind the base, per station. wake.first_cell: s0 (rule set 1; decision 90: the base is a wall
     at y+ <= 1) or te_cell (rule set 2, decision 107: the wing's last chordwise cell, so no spacing jump across the
@@ -109,8 +151,9 @@ def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:
     return np.array([s.s0 if how == "s0" else max(s.te_cell, s.s0) for s in sts])
 
 
-def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[Array, Array]:
-    """Arc lengths of the wake nodes (n_w, n_stations), one count for all stations, and the minimal counts.
+def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[Array, Array, float]:
+    """Arc lengths of the wake nodes (n_w, n_stations), one count for all stations, the minimal counts, and the ramp
+    of the far-wake smoothing along the semi-span (decision 110; 0 = not moved).
     Far behind the band the nodes of every station move to the same x (the station mean), so the wake columns of
     neighbouring stations line up along the semi-span (decision 84): weight 0 up to the longest band, smoothstep to
     1 at the outflow."""
@@ -127,6 +170,13 @@ def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[
     n_cells = int(np.ceil(f.max() - 1e-9)) + 1                 # one spare cell: every station meets its limits
     dq, _ = mr.fill(s0, L, n_cells, **arr)
     x = np.stack([st.wake.centre(dq[:, k])[0][:, 0] for k, st in enumerate(sts)], 1)
+    # decision 110: the far wake of each station toward its neighbours' (in x), from 4 local chords behind its base
+    # (the band and the turn: the centre line runs along +x there)
+    te = np.array([st.wake.M[0] for st in sts])
+    a = np.array([(float(rl.band["length_local_c"]) + 4.0 * float(rl.wake["turn_local_c"])) * st.chord for st in sts])
+    xs, f_wake = span_smooth(x, np.array([st.y for st in sts]), a, 1.0 + 0.9 * (rl.far_growth - 1.0), origin=te)
+    dq = dq + (xs - x)
+    x = xs
     xm = x.mean(axis=1, keepdims=True)
     s_a = max(float(rl.band["length_local_c"]) * st.chord for st in sts) + max(float(rl.wake["turn_local_c"]) * st.chord
                                                                                for st in sts) * 4.0
@@ -135,7 +185,7 @@ def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[
     x_new = (1.0 - w) * x + w * xm
     dq = dq + (x_new - x)                                       # past the turn the centre line runs along +x
     dq[-1] = L
-    return dq, f
+    return dq, f, f_wake
 
 
 def blend_outer(Gs: list[Array], d: Array, sts, rl) -> list[Array]:
@@ -186,8 +236,11 @@ def plane_set(sts, dom, lay, dq, rl, kappa):
     f = mr.min_cells(**A)
     nj = int(np.ceil(f.max() - 1e-9)) + 1                      # one spare layer
     d, lam = mr.fill(A["s0"], A["L"], nj, A["g_bl"], A["delta"], A["g_fine"], A["fine"], A["g_far"],
-                     A["cap_a"], A["cap_b"], A["cap_h"], A["cap_m"])
-    return dict(paths=Ps, S=Ss, d=d, lam=lam, need=f, nj=nj, Q=Q, X=Xs, wake=wks, specs=specs)
+                     cap_x=A["cap_x"], cap_v=A["cap_v"])
+    # decision 110: the far part of each station's distribution toward its neighbours', past its fine zone and band
+    start = np.array([max(rl.fine_zone_local_c * st.chord, pl.band_height(st, rl)) for st in sts])
+    d, f_span = span_smooth(d, np.array([st.y for st in sts]), start, 1.0 + 0.9 * (rl.far_growth - 1.0))
+    return dict(paths=Ps, S=Ss, d=d, lam=lam, need=f, nj=nj, Q=Q, X=Xs, wake=wks, specs=specs, span_ramp=f_span)
 
 
 def station_grid(lay, P, S, d_ref) -> Array:
@@ -257,7 +310,7 @@ def build_volume(surface, level: str | None = None, re_mean: float | None = None
     n_side, n_base = surface.info["n_side"], surface.info["n_base"]
     sts = stations_of(surface, rl)
     dom = pl.domain([s.ring for s in sts], n_side, rl)
-    dq, wake_need = wake_nodes(sts, dom, rl)
+    dq, wake_need, wake_ramp = wake_nodes(sts, dom, rl)
     lay = pl.PlaneLayout(n_side, n_base, dq.shape[0])
     y = np.array([s.y for s in sts])
 
@@ -298,6 +351,7 @@ def build_volume(surface, level: str | None = None, re_mean: float | None = None
         "n_wake": lay.n_w, "n_layers": ps["nj"], "n_c": lay.n_c, "n_span": len(y), "n_out": len(y_out),
         "cap_shape": list(cap.shape[:2]), "cap_upper_face": cap_upper,
         "kappa": kappa_ladder[rung], "rung": rung, "plane_min_sj": worst, "j_blend": ps["j_blend"],
+        "span_ramp": {"plane": ps["span_ramp"], "wake": wake_ramp},
         "domain": {"x_b": dom.x_b, "z_m": dom.z_m, "R": dom.R, "x_out": dom.x_out, "y_far": float(y_out[-1])},
         "need": {"layers_max": float(ps["need"].max()), "layers_station": int(np.argmax(ps["need"])),
                  "wake_max": float(wake_need.max()), "outboard": out_need},
@@ -325,7 +379,7 @@ def count_volume(surface, level: str | None = None, re_mean: float | None = None
     n_side, n_base = surface.info["n_side"], surface.info["n_base"]
     sts = stations_of(surface, rl)
     dom = pl.domain([s.ring for s in sts], n_side, rl)
-    dq, wake_need = wake_nodes(sts, dom, rl)
+    dq, wake_need, wake_ramp = wake_nodes(sts, dom, rl)
     lay = pl.PlaneLayout(n_side, n_base, dq.shape[0])
     # the layer count from straight lines to the far field (the march adds a few per cent of length; +1 spare)
     specs = []

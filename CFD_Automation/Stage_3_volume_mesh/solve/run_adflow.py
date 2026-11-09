@@ -7,7 +7,8 @@
 Pieces copied from S8 (solve_s8.py, preflight_adflow.py), not imported: the freestream is read back from ADflow and
 checked before the solve (liftIndex 3: span +y, lift +z; S8 defect 14 turned alpha into sideslip); the residual is
 totalrfinal / totalr0 (S8 defect 16); a run with fewer than 10 iterations or forces out of range is not converged;
-the options that reached the solver are read back into result.json.
+the options that reached the solver are read back into result.json. The peak memory of every rank is summed into
+result.json ("memory": decision 113).
 """
 
 from __future__ import annotations
@@ -43,6 +44,23 @@ def verify_flow_directions(solver, alpha_deg: float, lift_index: int = 3) -> dic
     return rep
 
 
+def peak_memory(comm, cells: int | None) -> dict:
+    """Peak resident memory of the run, summed over the MPI ranks (ru_maxrss, kB on Linux), against S8's two laws
+    (decisions 112, 113: the laws are two-point fits at 0.57 and 1.11 M cells; this is the third point)."""
+    import resource
+    mine = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0 ** 2          # GiB
+    try:
+        every = comm.gather(mine, root=0) or [mine]
+    except Exception:
+        every = [mine]
+    out = {"ranks": len(every), "peak_rss_gib_sum": float(sum(every)), "peak_rss_gib_largest_rank": float(max(every))}
+    if cells:
+        m = cells / 1.0e6
+        out |= {"cells": int(cells), "gib_per_million_cells": out["peak_rss_gib_sum"] / m,
+                "law_ank_only_gib": 2.69 + 7.23 * m, "law_ank_then_nk_gib": 1.51 + 9.46 * m}
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--case", type=Path, required=True, help="the folder case.py wrote")
@@ -52,8 +70,6 @@ def main() -> int:
     a = ap.parse_args()
     case = json.loads((a.case / "case.json").read_text())
     opts = json.loads((a.case / "adflow_options.json").read_text())
-    out = Path(opts["outputDirectory"])
-    out.mkdir(parents=True, exist_ok=True)
     over = {}
     for item in a.set_option:
         k, _, v = item.partition("=")
@@ -64,6 +80,8 @@ def main() -> int:
     if a.preflight:
         opts |= {"nCycles": 0, "writeVolumeSolution": False, "writeSurfaceSolution": False, "printIterations": False}
     opts |= over
+    out = Path(opts["outputDirectory"])                        # after the overrides: a second run can have its own folder
+    out.mkdir(parents=True, exist_ok=True)
 
     from adflow import ADFLOW
     from baseclasses import AeroProblem
@@ -84,6 +102,7 @@ def main() -> int:
             rep["wall_surface_nodes"] = int(solver.getSurfaceCoordinates(groupName="wall").shape[0])
         except Exception as e:                                 # reported, not swallowed
             rep["wall_surface_nodes"] = f"unavailable: {e}"
+        rep["memory"] = peak_memory(solver.comm, case.get("cells"))
         (out / "preflight.json").write_text(json.dumps(rep, indent=1))
         print(json.dumps(rep, indent=1))
         return 0
@@ -107,7 +126,7 @@ def main() -> int:
     bad = {k: v for k, v in coef.items() if k in BOUNDS and not (math.isfinite(v) and BOUNDS[k][0] <= v <= BOUNDS[k][1])}
     eff = {}
     for k in ("equationType", "turbulenceModel", "eddyVisInfRatio", "liftIndex", "useANKSolver", "useNKSolver",
-              "L2Convergence", "nCycles", "MGCycle"):
+              "L2Convergence", "nCycles", "MGCycle", "ANKSubspaceSize", "ANKPCILUFill", "ANKASMOverlap"):
         try:
             eff[k] = solver.getOption(k)
         except Exception:
@@ -117,7 +136,8 @@ def main() -> int:
            (done is None or done >= MIN_ITERATIONS) and not failed,
            "relative_residual": residual, "residual_source": src, "iterations": done, "routine_failed": failed,
            "implausible": bad or None, "coefficients": coef, "directions": directions, "options_effective": eff,
-           "overrides": over, "seconds": round(time.time() - t0, 1)}
+           "overrides": over, "seconds": round(time.time() - t0, 1),
+           "memory": peak_memory(solver.comm, case.get("cells"))}
     try:
         hist = solver.getConvergenceHistory()
         res["history"] = {k: [float(x) for x in v] for k, v in hist.items()

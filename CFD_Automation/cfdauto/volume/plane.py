@@ -261,6 +261,18 @@ def c_line(st: Station, lay: PlaneLayout, s_q: Array) -> tuple[Array, dict]:
     return X, {"centre": c, "upper": upw, "lower": low}
 
 
+def cut_offsets(st: Station, rl: VolumeRules) -> tuple[float, float]:
+    """How far the wake cut line falls below and rises above the base mid-point within the band length (>= 0 each).
+    The band (law 18) is a fan of straight rays from the base mid-point; the cut line can leave the base pointing up
+    or down (it turns to +x over wake.turn_local_c), so the band edges are farther from the cut than the rays say."""
+    if st.wake is None:
+        return 0.0, 0.0
+    L_band = float(rl.band["length_local_c"]) * st.chord
+    c, _ = st.wake.centre(np.linspace(0.0, L_band, 65))
+    dz = c[:, 1] - st.wake.M[1]
+    return max(0.0, float(-dz.min())), max(0.0, float(dz.max()))
+
+
 def band_height(st: Station, rl: VolumeRules) -> float:
     """The top of the wake band above the wake line, where the envelope ends (laws 17, 18): margin + band length x
     tan(the steeper band edge), plus how far the wake centre line drops below a straight line within the band length
@@ -269,11 +281,38 @@ def band_height(st: Station, rl: VolumeRules) -> float:
     b = rl.band
     L_band = float(b["length_local_c"]) * st.chord
     t = max(np.tan(np.radians(b["alpha_hi_deg"])), np.tan(np.radians(-b["alpha_lo_deg"])))
-    drop = 0.0
-    if st.wake is not None:
-        c, _ = st.wake.centre(np.linspace(0.0, L_band, 33))
-        drop = max(0.0, float(-(c[:, 1] - st.wake.M[1]).min()))
+    drop, _ = cut_offsets(st, rl)
     return float(b["margin_c"]) + L_band * t + drop
+
+
+def band_envelope(st: Station, rl: VolumeRules, n: int = 129) -> tuple[Array, Array]:
+    """The cross-cell limit of a station's lines as a table of height x above the line's start (decision 108):
+    cap(x) = band cell at the nearest distance s behind the base at which the band reaches height x, over the upper
+    and the lower lines. The band (law 18) is the fan of straight rays from the base mid-point at alpha_lo .. alpha_hi
+    plus the margin; the cut line falls (or rises) dz(s) within the band length, so the band's upper edge is
+    margin + s tan(alpha_hi) - dz(s) above an upper line's start, the lower edge margin + s tan(-alpha_lo) + dz(s)
+    below a lower line's start. Every cell whose centre is inside the fan is then <= the band cell there (check 11),
+    whatever the cut line does (it leaves the base along its normal and turns to +x over wake.turn_local_c)."""
+    b = rl.band
+    L_band = float(b["length_local_c"]) * st.chord
+    t_hi, t_lo = np.tan(np.radians(b["alpha_hi_deg"])), np.tan(np.radians(-b["alpha_lo_deg"]))
+    k = (t_hi + t_lo) / b["fan_cells"]
+    s = np.linspace(0.0, L_band, 257)
+    dz = np.zeros_like(s)
+    if st.wake is not None:
+        c, _ = st.wake.centre(s)
+        dz = c[:, 1] - st.wake.M[1]
+    m = float(b["margin_c"])
+    reach = [np.maximum.accumulate(m + s * t_hi - dz), np.maximum.accumulate(m + s * t_lo + dz)]
+    H = max(r[-1] for r in reach)
+    x = np.linspace(0.0, H, n)
+    S = np.full(n, np.inf)
+    for r in reach:
+        r = r + 1e-12 * np.arange(r.size)                # strictly increasing for the inverse
+        si = np.interp(x, r, s, left=0.0, right=np.inf)  # the nearest s whose edge reaches x (none past the top)
+        S = np.minimum(S, si)
+    S[~np.isfinite(S)] = L_band
+    return x, float(b["spacing_c"]) + k * S
 
 
 def station_spec(st: Station, L: float, rl: VolumeRules) -> dict:
@@ -281,18 +320,12 @@ def station_spec(st: Station, L: float, rl: VolumeRules) -> dict:
     alike, takes it and shortens only its outer part to its own length (shrink), so neighbouring lines have the same
     layers near the wall and the cells stay square where the lines bunch (behind the trailing edge). It carries:
     first cell s0 (law 13), at least bl_cells across delta (law 14), the level's wall growth out to the fine zone
-    (law 20), the wake band as an envelope in height (law 18: cells <= the band cell of the farthest point of the
-    band at that height, so every line of the band holds the band), then far.growth (law 15).
+    (law 20), the wake band as an envelope in height (law 18 and decision 108: cells <= the band cell of the nearest
+    point of the straight fan at that height, so every line of the band holds the band), then far.growth (law 15).
     The wake lines keep the wall spacing along the cut (as classic C meshes do)."""
-    b = rl.band
-    L_band = float(b["length_local_c"]) * st.chord
-    t_hi = np.tan(np.radians(b["alpha_hi_deg"]))
-    t_lo = np.tan(np.radians(-b["alpha_lo_deg"]))
-    k = (np.tan(np.radians(b["alpha_hi_deg"])) - np.tan(np.radians(b["alpha_lo_deg"]))) / b["fan_cells"]
-    H = band_height(st, rl)
+    cap_x, cap_v = band_envelope(st, rl)
     return dict(s0=st.s0, L=float(L), g_bl=st.g_bl, delta=st.delta, g_fine=rl.wall_growth,
-                fine=rl.fine_zone_local_c * st.chord, g_far=rl.far_growth_built,
-                cap_a=float(b["spacing_c"]), cap_b=k / max(t_hi, t_lo), cap_m=float(b["margin_c"]), cap_h=H)
+                fine=rl.fine_zone_local_c * st.chord, g_far=rl.far_growth_built, cap_x=cap_x, cap_v=cap_v)
 
 
 def shrink(d_ref: Array, L: Array, power: float = 8.0) -> Array:

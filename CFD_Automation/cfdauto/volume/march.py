@@ -7,8 +7,9 @@ Distribution (laws 13, 14, 15, 18, 20). Along one grid line the cells grow from 
     inside a band (distance < cap_h)               cell <= cap_a + cap_b * distance (the wake band)
 Every line of a station plane, and every station, has the same count n (one structured index). The fewest cells
 that meet every limit are counted first; the lines that need fewer than n are filled by one factor lam in (0, 1]
-that scales every growth (1 + lam (g - 1)) and every cap (lam * cap), found by bisection so that the n-th node
-lands on the line's end. So a filled line meets every limit, and its first cell is exactly s0.
+that scales the growth (1 + lam (g - 1)), never the cap, found by bisection so that the n-th node lands on the
+line's end. So a filled line meets every limit, and its first cell is exactly s0. Each cell takes the band cap at its
+own centre (decision 109), so the capped cells of two levels are exactly 1.3 apart.
 
 March (the plane method chosen in V0, decision 84). The layers are built one after another from the wall line:
 each node steps along the smoothed normal of the layer just built, by its line's own step; from blend_from (one
@@ -36,27 +37,55 @@ def _ramp(x, x0, a, b):
     return a + (b - a) * w
 
 
-def _walk(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a, cap_b, cap_h, lam, n_max, cap_m=None):
+def _cap_function(cap_a, cap_b, cap_h, cap_m, cap_x, cap_v, g_fine):
+    """The cap (the wake band envelope) as a function of x for every line, and which lines have one.
+    Either linear, cap_a + cap_b * max(0, x - cap_m), or a table (cap_x, cap_v) (N, P) per line (the station
+    distributions: the exact envelope of the straight fan around a curved cut line, decision 108). Past its end
+    (cap_h, or the table's last x) the cap goes on rising, steeper by g_fine - 1, as the growth law itself does."""
+    if cap_x is not None:
+        P = cap_x.shape[1]
+        rows = np.arange(cap_x.shape[0])
+        end_x, end_v = cap_x[:, -1], cap_v[:, -1]
+        end_slope = (cap_v[:, -1] - cap_v[:, -2]) / (cap_x[:, -1] - cap_x[:, -2]) + (g_fine - 1.0)
+
+        def cap(x):
+            i = np.clip((cap_x <= x[:, None]).sum(axis=1), 1, P - 1)
+            x0, x1, v0, v1 = cap_x[rows, i - 1], cap_x[rows, i], cap_v[rows, i - 1], cap_v[rows, i]
+            v = v0 + np.clip((x - x0) / (x1 - x0), 0.0, 1.0) * (v1 - v0)
+            return np.where(x > end_x, end_v + end_slope * (x - end_x), v)
+
+        return cap, np.ones(cap_x.shape[0], bool)
+
+    def cap(x):
+        return cap_a + cap_b * np.maximum(x - cap_m, 0.0) + (g_fine - 1.0) * np.maximum(x - cap_h, 0.0)
+
+    return cap, cap_h > 0
+
+
+def _walk(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a, cap_b, cap_h, lam, n_max, cap_m=None, cap_x=None,
+          cap_v=None):
     """Greedy distances for many lines at once (arrays of shape (N,)). Returns d (n_max+1, N).
     Growth: g_bl up to delta, g_fine up to fine, g_far beyond, each change ramped (RAMP) past its boundary. Cap
-    (the wake band envelope): cap_a + cap_b * max(0, x - cap_m) up to cap_h; past cap_h it goes on rising as the
-    growth law itself does (slope g_fine - 1: a geometric line has dh/dx = g - 1), so the cells leave the band
-    smoothly, at the same place at every level, wherever the last band node falls (check 13); every limit is
-    continuous in x. lam (<= 1) scales the growth only: the cap is a rule (law 18) and stays the same on every line
-    and at every level."""
+    (the wake band envelope, _cap_function): the band cell up to the band's height, then rising as the growth law
+    itself does, so the cells leave the band smoothly, at the same place at every level, wherever the last band node
+    falls (check 13); every limit is continuous in x. Each cell takes the cap at its own centre (decision 109): taken
+    at the cell's start, a cell lagged the cap by a factor 1 / (1 + slope / 2), more on the coarser levels, so the
+    band cells of two levels were 1.285 apart instead of 1.3. lam (<= 1) scales the growth only: the cap is a rule
+    (law 18) and stays the same on every line and at every level."""
     cap_m = np.zeros_like(s0) if cap_m is None else cap_m
+    cap, has_cap = _cap_function(cap_a, cap_b, cap_h, cap_m, cap_x, cap_v, g_fine)
     N = s0.shape[0]
     d = np.zeros((n_max + 1, N))
     step = s0.copy()
     d[1] = step
-    has_cap = cap_h > 0
     for j in range(1, n_max):
         x = d[j]
         g = np.where(x <= fine, _ramp(x, delta, g_bl, g_fine), _ramp(x, fine, g_fine, g_far))
         g = 1.0 + lam * (g - 1.0)
-        nxt = step * g
-        cap = cap_a + cap_b * np.maximum(x - cap_m, 0.0) + (g_fine - 1.0) * np.maximum(x - cap_h, 0.0)
-        nxt = np.where(has_cap, np.minimum(nxt, cap), nxt)
+        grown = step * g
+        nxt = np.where(has_cap, np.minimum(grown, cap(x)), grown)
+        for _ in range(4):                          # the cap at the centre: a contraction (slope / 2 < 1)
+            nxt = np.where(has_cap, np.minimum(grown, cap(x + 0.5 * nxt)), grown)
         step = nxt
         d[j + 1] = x + step
     return d
@@ -74,8 +103,15 @@ def _fractional_count(d: Array, L: Array) -> Array:
     return np.where(m >= d.shape[0], np.inf, (mm - 1) + frac)
 
 
+def _table(cap_x, cap_v, n: int):
+    if cap_x is None:
+        return None, None
+    return (np.atleast_2d(np.asarray(cap_x, float)).reshape(n, -1).copy(),
+            np.atleast_2d(np.asarray(cap_v, float)).reshape(n, -1).copy())
+
+
 def min_cells(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, cap_h=None, cap_m=None,
-              n_max=4000) -> Array:
+              cap_x=None, cap_v=None, n_max=4000) -> Array:
     """The fewest cells (fractional) each line needs to reach L with every limit met."""
     s0, L = np.atleast_1d(np.asarray(s0, float)), np.atleast_1d(np.asarray(L, float))
     z = np.zeros_like(s0)
@@ -84,10 +120,11 @@ def min_cells(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, c
     cb = z if cap_b is None else np.broadcast_to(np.asarray(cap_b, float), s0.shape).copy()
     ch = z if cap_h is None else np.broadcast_to(np.asarray(cap_h, float), s0.shape).copy()
     cm = z if cap_m is None else np.broadcast_to(np.asarray(cap_m, float), s0.shape).copy()
+    tx, tv = _table(cap_x, cap_v, s0.shape[0])
     # count in chunks of n so long lines do not need a huge array
     n = 64
     while True:
-        d = _walk(s0, L, *args, ca, cb, ch, np.ones_like(s0), n, cm)
+        d = _walk(s0, L, *args, ca, cb, ch, np.ones_like(s0), n, cm, tx, tv)
         f = _fractional_count(d, L)
         if np.all(np.isfinite(f)) or n >= n_max:
             return f
@@ -95,7 +132,7 @@ def min_cells(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, c
 
 
 def fill(s0, L, n, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, cap_h=None, cap_m=None,
-         iters=60) -> tuple[Array, Array]:
+         cap_x=None, cap_v=None, iters=60) -> tuple[Array, Array]:
     """Distances d (n+1, N) from 0 to L in exactly n cells per line, first cell s0, every limit met.
     Returns (d, lam): lam = 1 where the line needed all n cells, < 1 where its growth was scaled down (the caps never
     are)."""
@@ -104,19 +141,20 @@ def fill(s0, L, n, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, cap
     b = lambda a: np.broadcast_to(np.asarray(a, float), s0.shape).copy()
     args = [b(a) for a in (g_bl, delta, g_fine, fine, g_far)]
     ca, cb, ch, cm = (z if a is None else b(a) for a in (cap_a, cap_b, cap_h, cap_m))
+    tx, tv = _table(cap_x, cap_v, s0.shape[0])
     lo, hi = np.zeros_like(s0), np.ones_like(s0)      # count(hi = 1) <= n is required; count(lam -> 0) = inf
-    f1 = _fractional_count(_walk(s0, L, *args, ca, cb, ch, hi, n + 2, cm), L)
+    f1 = _fractional_count(_walk(s0, L, *args, ca, cb, ch, hi, n + 2, cm, tx, tv), L)
     if np.any(f1 > n + 1e-9):
         raise ValueError(f"fill: {int(np.sum(f1 > n + 1e-9))} lines need more than n = {n} cells "
                          f"(most: {np.max(f1):.2f})")
     for _ in range(iters):
         mid = 0.5 * (lo + hi)
-        f = _fractional_count(_walk(s0, L, *args, ca, cb, ch, mid, n + 2, cm), L)
+        f = _fractional_count(_walk(s0, L, *args, ca, cb, ch, mid, n + 2, cm, tx, tv), L)
         ok = f <= n                                   # mid reaches L within n cells: lam may grow? no: smaller lam
         hi = np.where(ok, mid, hi)                    # = more cells; keep the smallest lam that still fits
         lo = np.where(ok, lo, mid)
     lam = hi
-    d = _walk(s0, L, *args, ca, cb, ch, lam, n + 2, cm)[: n + 1].copy()
+    d = _walk(s0, L, *args, ca, cb, ch, lam, n + 2, cm, tx, tv)[: n + 1].copy()
     # the n-th node lands on L to the bisection tolerance; place it exactly and spread the tiny rest over the outer
     # cells so the first cells stay exact
     err = L - d[n]

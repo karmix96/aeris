@@ -51,3 +51,17 @@ def test_read_su2_history(tmp_path):
     (tmp_path / "history.csv").write_text("\n".join(lines) + "\n")
     r = rr.judge(rr.read_su2(tmp_path))
     assert r["verdict"] == "accepted" and r["orders_dropped"] == pytest.approx(7.0)
+
+
+def test_peak_memory_sums_the_ranks():
+    """Decision 113: the run records its peak memory (every rank) against S8's two laws."""
+    import run_adflow              # the solve folder is on the path (top of this file); ADflow is imported in main only
+
+    class Comm:
+        def gather(self, x, root=0):
+            return [x, x, x]
+
+    m = run_adflow.peak_memory(Comm(), 2_000_000)
+    assert m["ranks"] == 3 and m["peak_rss_gib_sum"] == pytest.approx(3 * m["peak_rss_gib_largest_rank"])
+    assert m["gib_per_million_cells"] == pytest.approx(m["peak_rss_gib_sum"] / 2.0)
+    assert m["law_ank_only_gib"] == pytest.approx(2.69 + 7.23 * 2) and m["law_ank_then_nk_gib"] == pytest.approx(1.51 + 9.46 * 2)

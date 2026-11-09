@@ -562,3 +562,64 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     set 2 by default and prefix its files `r2_`. Written before the rule-set-2 screens (one probe build: BWB reference
     wing 0, VC, every check passed, 2,720,808 cells).
 
+108. **The wake band is sized from the straight fan, not from the cut line (9 Nov 2026, 21:30; completes 106).** The
+    first rule-set-2 full-space screen was stopped after 13 wings: check 11 refused 9 (6 BWB, 3 cranked; band cells
+    1.010–1.070 × the band cell, the same wings as in rule set 1: 1.017–1.074). Cause: decision 106 raised the
+    envelope's top, but its cells still began to grow at the margin above the *cut line*. The band (law 18) is a fan of
+    straight rays from the base mid-point; where the cut line falls behind the base (0.116 c at the root of BWB
+    full-space wing 0, 4.5 % of its local chord) the cells just under the fan's upper edge were sized for a point
+    farther back. Fix (construction, no limit changed): `plane.band_envelope` gives each station the exact envelope as
+    a table: at height x above a line's start, the band cell at the nearest distance behind the base at which the
+    band reaches x, for the upper and the lower lines, whatever the cut line does. On the refused wings the band part of
+    check 11 is now 0.998–0.999.
+109. **Each cell takes the band limit at its own centre (9 Nov 2026, 21:40).** Check 13 failed on 11 of the 20
+    reference wings in the first rule-set-2 family run: the cell 1 local chord off the root wall was 1.247–1.261 × the
+    next level's (limit 1.3 ± 3 %), and the band cell 1.285 × on every wing. Cause: the distribution took the limit
+    at the cell's start, so a cell lagged the limit by 1 / (1 + slope / 2), more on the coarser level (its slope is
+    larger). Fix (construction): the limit at the cell's centre (`march._walk`). Measured after: the band cell
+    1.300 ×, the cell at 1 local chord 1.275 × (BWB reference wing 1, the worst before) and 1.280 × (cranked 4).
+    Tried first and dropped: giving a station's spare layers to its far part only (the growth scale fell to 0.41 on
+    some stations and the outer blend then broke the growth limit: 1.39 against 1.3).
+110. **The far cells of very close stations are lined up along the semi-span (9 Nov 2026, 22:00).** With 108 and 109
+    in, check 3 refused 2 of 12 full-space wings probed: BWB wing 3 (0.044: at its kink the chord goes 0.74 → 0.58 →
+    0.42 c over stations 0.05 c apart, and their wake nodes sat 1.1 c apart in x 24 c behind the wing) and BWB wing 0
+    (0.049: a centre body whose chord goes 2.57 → 2.44 → 2.30 c over stations 0.023 c apart). Cause: the near field of
+    a station is sized in local chords (fine zone, band), so the far nodes of neighbouring stations sit at different
+    distances; where the station gap is tiny the cells between them shear. Fix (construction):
+    `volume.span_smooth` moves the far part of each station's wall-normal distribution, and of its wake nodes in x,
+    toward the average of the stations within about 0.25 c along the semi-span; the near part (to the end of the fine
+    zone and the band) is never moved; one ramp for every station, the shortest that keeps every growth ratio under
+    the limit; nothing is moved if no ramp does. Measured bound (experiment, not a mesh we keep): one distribution for
+    every station would give 0.070 in the C blocks of BWB wing 0, and 0.051 in its wake blocks (tip stations
+    0.00012 c apart). So steep centre bodies stay close to the 0.05 limit; the V6 screen counts them.
+111. **Angles of attack −5° to +10° for this mesh; the wake fan follows (Mike, 9 Nov 2026, 21:53 and 22:04: "I want to
+    run from −5 to 10 AoA. You adjust the wake fan accordingly. If you think a margin is needed, let it be so").** The
+    fan was −5° to +20° (decision 87), sized for post-stall, which decision 69 already gives to a separate study
+    (URANS or DDES on a few wings) with its own mesh. Now: `alpha_hi_deg` 10, 12 cells across the 15° fan at M (1.25°
+    per cell, as 20 across 25° before), the 0.05 c margin above and below, no extra angle (the downwash turns the wake
+    below the freestream direction; at −5° the 0.05 c covers about 1.4° at the fan's end; and the cells do not jump at
+    the fan's edge: at +10° the fan no longer costs a cell). Counted at M, Re 3 × 10⁵, wing 0 of each reference type
+    (`scripts/fan_options.py`, `data/studies/r2_fan_options.json`): top at 20° 10.5 M cells, 15° 9.8 M, 12° 9.3 M,
+    10° 9.0 M, no fan 9.0 M. One mesh still serves every steady angle (one mesh per wing, Re and level; the same mesh
+    error at every angle; one family check per wing). The angle range is an input of the mesher (two numbers in
+    `configs/volume.yaml`): a post-stall study sets its own. Not measured yet: where the wake goes in a solution; V7
+    checks it at −5° and +10°.
+112. **The RAM law of check 14 was mislabelled (found 9 Nov 2026, 22:14, on Mike's question "why do 5 million cells
+    need 90 GB?").** Check 14 reports 1.51 GiB + 9.46 GiB per million cells and the configs called it "ANK only". It is
+    S8's law for ANK then NK (ADR-0020). The runs here are ANK only (`solve/case.py`, as the S8 campaign), for which
+    S8 measured 2.69 + 7.23: about 20 % less at these sizes (M at 9.4 M cells: 71 GiB, not 90). Both are two-point
+    fits at 0.57 and 1.11 M cells; at M they are extrapolated 8 ×. Kept: check 14 goes on reporting the higher law
+    (the list Mike approved; it is information, not a pass limit); the labels are corrected and the documents show
+    both. Why it is so much per cell: the implicit solver keeps, per cell, the matrix to its 6 neighbours, a factored
+    copy of it and the Krylov vectors, about 1,000 numbers (the split is an estimate; the totals are S8's
+    measurements). V7 gives a third point (2.3 M cells) and the first SU2 number.
+113. **48 GB: keep the mesh, measure the memory in V7 (Mike, 9 Nov 2026, 22:20).** Mike: "all this time we planned
+    with 10 M cells fit inside a 48 GB RAM". The record says otherwise (Stage 2: "+36 GB about 5.0 M cells; F needs the
+    HPC"; 9 Nov: "+32 GB about 4.6 M cells per run; M stays on the HPC"), and when Mike set "M about 10 M" (107) the
+    package table showed the RAM at VC only: that was the gap. By S8's two laws 48 GB (about 45 usable) holds 4.6–5.9 M
+    cells: VC (about 2.1 M) and C (about 4.4 M) fit, M (about 9.4 M, 71–90 GiB) and F do not. Asked which must fit,
+    Mike chose: keep the mesh; VC and C on the desktop, M and F on the HPC; V7 measures the real memory (ADflow as
+    run, ADflow with a leaner preconditioner, SU2) before any new cut. Not chosen: cutting M to 5–6 M cells now (it
+    needs the surface band off and the tip cap not wall-resolved: decision 81 and the frozen surface).
+    `solve/run_adflow.py` now writes the peak memory of every rank into `result.json`.
+

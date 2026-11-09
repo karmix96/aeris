@@ -61,3 +61,28 @@ def test_wake_first_cell_option(surface_vc, tmp_path):
     import pytest
     with pytest.raises(ValueError):
         wake_first_cells(sts, rules("VC", q))
+
+
+def test_span_smooth_moves_only_the_far_parts():
+    """Decision 110: the far parts of neighbouring stations move toward each other; the near part is never moved,
+    the lines keep their ends and the growth limit; an impossible case is left as it is."""
+    from cfdauto.volume.volume import span_smooth
+    n, N = 60, 9
+    y = np.linspace(0.0, 0.4, N)
+    D = np.stack([np.concatenate([[0.0], np.cumsum(1e-3 * (1.18 + 0.004 * k) ** np.arange(n))]) for k in range(N)], 1)
+    D *= 80.0 / D[-1]
+    start = np.full(N, 3.0)
+    out, f = span_smooth(D, y, start, 1.27)
+    assert f > 0.0
+    near = D < start[None, :]
+    assert np.array_equal(out[near], D[near]) and np.allclose(out[-1], D[-1])
+    h = np.diff(out, axis=0)
+    assert np.all(h > 0.0)
+    for k in range(N):
+        j = int(np.searchsorted(D[:, k], start[k]))
+        r = h[j:, k] / h[j - 1:-1, k]
+        assert np.maximum(r, 1.0 / r).max() <= 1.27
+    far = (D > 30.0).all(axis=1)
+    assert np.abs(np.diff(out[far], axis=1)).max() < 0.7 * np.abs(np.diff(D[far], axis=1)).max()
+    same, f0 = span_smooth(D, y, start, 1.0001)          # no ramp can keep this limit: nothing is moved
+    assert f0 == 0.0 and np.array_equal(same, D)

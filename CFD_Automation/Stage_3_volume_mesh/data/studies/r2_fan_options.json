@@ -1,0 +1,387 @@
+{
+ "what": "the wake fan's cost, counted at M, Re 3e5, wing 0 of each reference type (rule set 2)",
+ "options": {
+  "base": {
+   "alpha_lo_deg": -5.0,
+   "alpha_hi_deg": 20.0,
+   "length_local_c": 2.0
+  },
+  "to15": {
+   "alpha_lo_deg": -5.0,
+   "alpha_hi_deg": 15.0,
+   "length_local_c": 2.0
+  },
+  "to12": {
+   "alpha_lo_deg": -5.0,
+   "alpha_hi_deg": 12.0,
+   "length_local_c": 2.0
+  },
+  "to10": {
+   "alpha_lo_deg": -5.0,
+   "alpha_hi_deg": 10.0,
+   "length_local_c": 2.0
+  },
+  "len1": {
+   "alpha_lo_deg": -5.0,
+   "alpha_hi_deg": 20.0,
+   "length_local_c": 1.0
+  },
+  "one_angle": {
+   "alpha_lo_deg": -2.5,
+   "alpha_hi_deg": 2.5,
+   "length_local_c": 2.0
+  },
+  "none": {
+   "alpha_lo_deg": -0.01,
+   "alpha_hi_deg": 0.01,
+   "length_local_c": 2.0
+  }
+ },
+ "rows": [
+  {
+   "type": "bwb",
+   "option": "base",
+   "cells": 12085514,
+   "n_layers": 119,
+   "n_wake": 87
+  },
+  {
+   "type": "bwb",
+   "option": "to15",
+   "cells": 11006876,
+   "n_layers": 108,
+   "n_wake": 87
+  },
+  {
+   "type": "bwb",
+   "option": "to12",
+   "cells": 10712702,
+   "n_layers": 105,
+   "n_wake": 87
+  },
+  {
+   "type": "bwb",
+   "option": "to10",
+   "cells": 10712702,
+   "n_layers": 105,
+   "n_wake": 87
+  },
+  {
+   "type": "bwb",
+   "option": "len1",
+   "cells": 11638058,
+   "n_layers": 114,
+   "n_wake": 88
+  },
+  {
+   "type": "bwb",
+   "option": "one_angle",
+   "cells": 10712702,
+   "n_layers": 105,
+   "n_wake": 87
+  },
+  {
+   "type": "bwb",
+   "option": "none",
+   "cells": 10712702,
+   "n_layers": 105,
+   "n_wake": 87
+  },
+  {
+   "type": "flying_wing",
+   "option": "base",
+   "cells": 10801100,
+   "n_layers": 117,
+   "n_wake": 78
+  },
+  {
+   "type": "flying_wing",
+   "option": "to15",
+   "cells": 9999308,
+   "n_layers": 108,
+   "n_wake": 78
+  },
+  {
+   "type": "flying_wing",
+   "option": "to12",
+   "cells": 9464780,
+   "n_layers": 102,
+   "n_wake": 78
+  },
+  {
+   "type": "flying_wing",
+   "option": "to10",
+   "cells": 9286604,
+   "n_layers": 100,
+   "n_wake": 78
+  },
+  {
+   "type": "flying_wing",
+   "option": "len1",
+   "cells": 10397072,
+   "n_layers": 112,
+   "n_wake": 79
+  },
+  {
+   "type": "flying_wing",
+   "option": "one_angle",
+   "cells": 9286604,
+   "n_layers": 100,
+   "n_wake": 78
+  },
+  {
+   "type": "flying_wing",
+   "option": "none",
+   "cells": 9286604,
+   "n_layers": 100,
+   "n_wake": 78
+  },
+  {
+   "type": "cranked",
+   "option": "base",
+   "cells": 10135734,
+   "n_layers": 116,
+   "n_wake": 79
+  },
+  {
+   "type": "cranked",
+   "option": "to15",
+   "cells": 9377466,
+   "n_layers": 107,
+   "n_wake": 79
+  },
+  {
+   "type": "cranked",
+   "option": "to12",
+   "cells": 9040458,
+   "n_layers": 103,
+   "n_wake": 79
+  },
+  {
+   "type": "cranked",
+   "option": "to10",
+   "cells": 8787702,
+   "n_layers": 100,
+   "n_wake": 79
+  },
+  {
+   "type": "cranked",
+   "option": "len1",
+   "cells": 9756246,
+   "n_layers": 111,
+   "n_wake": 80
+  },
+  {
+   "type": "cranked",
+   "option": "one_angle",
+   "cells": 8787702,
+   "n_layers": 100,
+   "n_wake": 79
+  },
+  {
+   "type": "cranked",
+   "option": "none",
+   "cells": 8787702,
+   "n_layers": 100,
+   "n_wake": 79
+  },
+  {
+   "type": "tapered",
+   "option": "base",
+   "cells": 10218702,
+   "n_layers": 116,
+   "n_wake": 78
+  },
+  {
+   "type": "tapered",
+   "option": "to15",
+   "cells": 9539022,
+   "n_layers": 108,
+   "n_wake": 78
+  },
+  {
+   "type": "tapered",
+   "option": "to12",
+   "cells": 9029262,
+   "n_layers": 102,
+   "n_wake": 78
+  },
+  {
+   "type": "tapered",
+   "option": "to10",
+   "cells": 8774382,
+   "n_layers": 99,
+   "n_wake": 78
+  },
+  {
+   "type": "tapered",
+   "option": "len1",
+   "cells": 9793902,
+   "n_layers": 111,
+   "n_wake": 78
+  },
+  {
+   "type": "tapered",
+   "option": "one_angle",
+   "cells": 8774382,
+   "n_layers": 99,
+   "n_wake": 78
+  },
+  {
+   "type": "tapered",
+   "option": "none",
+   "cells": 8774382,
+   "n_layers": 99,
+   "n_wake": 78
+  }
+ ],
+ "summary": {
+  "base": {
+   "cells_M_median": 10509901.0,
+   "vs_base": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "layers": [
+    119,
+    117,
+    116,
+    116
+   ],
+   "wake_nodes": [
+    87,
+    78,
+    79,
+    78
+   ]
+  },
+  "to15": {
+   "cells_M_median": 9769165.0,
+   "vs_base": [
+    -0.08925048616053899,
+    -0.07423243928859102,
+    -0.07481135554662344,
+    -0.06651333995256936
+   ],
+   "layers": [
+    108,
+    108,
+    107,
+    108
+   ],
+   "wake_nodes": [
+    87,
+    78,
+    79,
+    78
+   ]
+  },
+  "to12": {
+   "cells_M_median": 9252619.0,
+   "vs_base": [
+    -0.11359152784068594,
+    -0.12372073214765167,
+    -0.1080608469006783,
+    -0.1163983449169963
+   ],
+   "layers": [
+    105,
+    102,
+    103,
+    102
+   ],
+   "wake_nodes": [
+    87,
+    78,
+    79,
+    78
+   ]
+  },
+  "to10": {
+   "cells_M_median": 9037153.0,
+   "vs_base": [
+    -0.11359152784068594,
+    -0.1402168297673385,
+    -0.13299796541621944,
+    -0.14134084739920982
+   ],
+   "layers": [
+    105,
+    100,
+    100,
+    99
+   ],
+   "wake_nodes": [
+    87,
+    78,
+    79,
+    78
+   ]
+  },
+  "len1": {
+   "cells_M_median": 10095487.0,
+   "vs_base": [
+    -0.03702415966751604,
+    -0.03740619011026658,
+    -0.037440603709608,
+    -0.04157083747035584
+   ],
+   "layers": [
+    114,
+    112,
+    111,
+    111
+   ],
+   "wake_nodes": [
+    88,
+    79,
+    80,
+    78
+   ]
+  },
+  "one_angle": {
+   "cells_M_median": 9037153.0,
+   "vs_base": [
+    -0.11359152784068594,
+    -0.1402168297673385,
+    -0.13299796541621944,
+    -0.14134084739920982
+   ],
+   "layers": [
+    105,
+    100,
+    100,
+    99
+   ],
+   "wake_nodes": [
+    87,
+    78,
+    79,
+    78
+   ]
+  },
+  "none": {
+   "cells_M_median": 9037153.0,
+   "vs_base": [
+    -0.11359152784068594,
+    -0.1402168297673385,
+    -0.13299796541621944,
+    -0.14134084739920982
+   ],
+   "layers": [
+    105,
+    100,
+    100,
+    99
+   ],
+   "wake_nodes": [
+    87,
+    78,
+    79,
+    78
+   ]
+  }
+ }
+}

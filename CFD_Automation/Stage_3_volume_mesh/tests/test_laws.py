@@ -10,9 +10,10 @@ RULES1 = Path(__file__).resolve().parents[1] / "configs" / "volume_rules1.yaml"
 
 
 def test_family_rule_per_level():
-    """Rule set 2 (decision 107): 30 boundary-layer cells and 20 fan cells at M, outboard growth 1.3 at VC."""
-    want = {"VC": (1.25, 30 / 1.3 ** 2, 0.0075 * 1.69, 1.30, 20 / 1.69),
-            "F": (1.25 ** (1 / 1.3 ** 3), 30 * 1.3, 0.0075 / 1.3, 1.30 ** (1 / 1.3 ** 3), 20 * 1.3)}
+    """Rule set 2 (decisions 107, 111): 30 boundary-layer cells and 12 fan cells at M (the fan is -5 to +10 deg, 1.25 deg
+    per cell), outboard growth 1.3 at VC."""
+    want = {"VC": (1.25, 30 / 1.3 ** 2, 0.0075 * 1.69, 1.30, 12 / 1.69),
+            "F": (1.25 ** (1 / 1.3 ** 3), 30 * 1.3, 0.0075 / 1.3, 1.30 ** (1 / 1.3 ** 3), 12 * 1.3)}
     for lev, (g, n, h, go, fan) in want.items():
         r = rules(lev)
         assert r.wall_growth == pytest.approx(g, rel=1e-12)
@@ -21,6 +22,7 @@ def test_family_rule_per_level():
         assert r.outboard_growth == pytest.approx(go, rel=1e-12)
         assert r.band["fan_cells"] == pytest.approx(fan, rel=1e-12)
         assert r.band["max_aspect"] == 8.0 and r.raw["wake"]["first_cell"] == "te_cell"
+        assert (r.band["alpha_lo_deg"], r.band["alpha_hi_deg"]) == (-5.0, 10.0)
 
 
 def test_rule_set_1_is_kept():

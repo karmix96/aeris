@@ -46,8 +46,9 @@ def references(mesh: Path) -> dict:
 
 
 def adflow_options(case: dict, grid: Path, out: Path) -> dict:
-    """The options of one ADflow SA run. ANK only (the RAM law of the V0 list, 1.51 + 9.46 GiB per M cells, is for
-    ANK; NK would need more memory: S8 gci_M). Stopping: relative residual 1e-6 (S8: the forces move in the fifth
+    """The options of one ADflow SA run. ANK only, as the S8 campaign (NK froze at 1.1 M cells with its lean
+    settings). Memory, S8's two-point fits (ADR-0020): ANK only 2.69 + 7.23 GiB per M cells; ANK then NK 1.51 + 9.46
+    (the law check 14 reports, the higher of the two: decision 112). Stopping: relative residual 1e-6 (S8: the forces move in the fifth
     decimal after it); acceptance is read separately (settled forces, a healthy history)."""
     return {
         "gridFile": str(grid), "outputDirectory": str(out),

@@ -40,16 +40,18 @@ wake:                             # the wake lines and the wake band (laws 17, 1
   turn_local_c: 0.5               # the wake centre line leaves the base along its normal and turns to +x over this
   gap_growth: 0.0                 # the base block keeps the base height to the outflow (the wake lines are parallel);
                                   # the cut keeps the wall spacing, so the cells match across it (decision 84)
-  band:                           # the wake band: fine cells where the wake goes at alpha -5 deg to post-stall
+  band:                           # the wake band: fine cells where the wake goes at alpha -5 deg to +10 deg
     alpha_lo_deg: -5.0            # the band holds the freestream direction from -5 deg ...
-    alpha_hi_deg: 20.0            # ... to 20 deg (post-stall for these wings; the wake itself turns down by the
-                                  # downwash, so the freestream direction is the upper bound)
+    alpha_hi_deg: 10.0            # ... to 10 deg (decision 111, Mike, 9 Nov 2026; was 20, decision 87): this mesh serves
+                                  # the steady RANS angles (decision 69); post-stall is a separate study with its own
+                                  # mesh. The wake itself turns down by the downwash, so the freestream direction is
+                                  # the upper bound
     margin_c: 0.05                # plus 0.05 c above and below at the trailing edge (the wake's own thickness)
     length_local_c: 2.0           # from the trailing edge to 2 local chords behind it (law 20, the fine zone)
     spacing_c: {value: 0.0075, at: M, why: "Primer section 05, the wake box value: about 20 cells across a 0.15 c wake"}
                                   # cross-wake cell next to the trailing edge: 1.27, 0.98, 0.75, 0.58 % c at VC, C, M, F
-    fan_cells: {value: 20, at: M, why: "decision 107 (was 40, decision 87): 20 cells across the 25 deg fan at every distance (1.25 deg each)"}
-                                  # farther back the cross cell grows so the fan keeps this many cells: 11.8, 15.4, 20, 26
+    fan_cells: {value: 12, at: M, why: "decisions 107, 111: 12 cells across the 15 deg fan at every distance (1.25 deg each, as 20 across 25 deg before)"}
+                                  # farther back the cross cell grows so the fan keeps this many cells: 7.1, 9.2, 12, 15.6
     max_aspect: 8.0               # streamwise cell <= 8 x the cross cell inside the band (decision 107; was 4)
   first_cell: te_cell             # the first cell behind the base = the wing's last chordwise cell (decision 107; was
                                   # s0, decision 90): no spacing jump across the trailing-edge line, the base is not
@@ -83,7 +85,9 @@ checks:                           # the Stage 3 checks (decisions/volume_rules.m
   symmetry_tol_c: 1.0e-12         # 9: the root faces at y = 0
   far_tol_c: 1.0e-9               # 10: round-off on the 80 c (added in V2: the check compared floats exactly)
   family_tol: 0.03                # 13: spacing ratios 1.3 within 3 %
-  ram_gib_base: 1.51              # 14: ADflow memory = 1.51 GiB + 9.46 GiB per million cells (ANK only, S8)
+  ram_gib_base: 1.51              # 14: ADflow memory = 1.51 GiB + 9.46 GiB per million cells: S8's law for ANK then NK
+                                  # (ADR-0020; a two-point fit at 0.57 and 1.11 M cells). The runs here are ANK only,
+                                  # for which S8 measured 2.69 + 7.23: about 20 % less at these sizes (decision 112)
   ram_gib_per_mcell: 9.46
   hosts:                          # 14: where a mesh fits (cells), from the RAM law
     desktop_16GB: 1.2e+6

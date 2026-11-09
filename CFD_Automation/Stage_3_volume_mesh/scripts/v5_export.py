@@ -14,6 +14,8 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
 sys.path.insert(0, str(HERE.parent))
 
 from cfdauto.mesh.surface import _jsonable, build_surface, wing_from_set   # noqa: E402
@@ -23,7 +25,7 @@ from cfdauto.volume.volume import build_volume, mesh_name, write           # noq
 def main(wing_type: str = "bwb", index: int = 0, re: float = 3e5, level: str = "VC") -> dict:
     w = wing_from_set(wing_type, "reference", index)
     t0 = time.time()
-    vm = build_volume(build_surface(w.loft, re, level))
+    vm = build_volume(build_surface(w.loft, re, level), config=CONFIG)
     t1 = time.time()
     name = mesh_name(vm, w)
     out = write(vm, w, HERE / "data" / "meshes" / name, formats=("npz", "cgns", "su2"))
@@ -33,7 +35,7 @@ def main(wing_type: str = "bwb", index: int = 0, re: float = 3e5, level: str = "
            "cells": vm.cells, "nodes": vm.nodes, "seconds_build": round(t1 - t0, 1), "seconds_write": round(t2 - t1, 1),
            "check15": [c for c in q["checks"] if c["n"] == 15][0], "exports": q.get("exports", {}),
            "files": {p.name: p.stat().st_size for p in sorted(out.iterdir())}}
-    (HERE / "data" / "studies" / "v5_export.json").write_text(json.dumps(_jsonable(rec), indent=1))
+    (HERE / "data" / "studies" / f"{PREFIX}v5_export.json").write_text(json.dumps(_jsonable(rec), indent=1))
     print(json.dumps(_jsonable({k: rec[k] for k in ("mesh", "outcome", "cells", "check15", "files")}), indent=1))
     return rec
 

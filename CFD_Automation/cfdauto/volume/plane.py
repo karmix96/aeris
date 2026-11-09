@@ -261,6 +261,21 @@ def c_line(st: Station, lay: PlaneLayout, s_q: Array) -> tuple[Array, dict]:
     return X, {"centre": c, "upper": upw, "lower": low}
 
 
+def band_height(st: Station, rl: VolumeRules) -> float:
+    """The top of the wake band above the wake line, where the envelope ends (laws 17, 18): margin + band length x
+    tan(the steeper band edge), plus how far the wake centre line drops below a straight line within the band length
+    (decision 106: a wake that leaves the base pointing down puts the band's upper edge that much higher above the
+    wake line; V6 refused 20 full-space wings before this term)."""
+    b = rl.band
+    L_band = float(b["length_local_c"]) * st.chord
+    t = max(np.tan(np.radians(b["alpha_hi_deg"])), np.tan(np.radians(-b["alpha_lo_deg"])))
+    drop = 0.0
+    if st.wake is not None:
+        c, _ = st.wake.centre(np.linspace(0.0, L_band, 33))
+        drop = max(0.0, float(-(c[:, 1] - st.wake.M[1]).min()))
+    return float(b["margin_c"]) + L_band * t + drop
+
+
 def station_spec(st: Station, L: float, rl: VolumeRules) -> dict:
     """The one wall-normal distribution of a station (decision 84): every line of the station plane, wall and wake
     alike, takes it and shortens only its outer part to its own length (shrink), so neighbouring lines have the same
@@ -274,7 +289,7 @@ def station_spec(st: Station, L: float, rl: VolumeRules) -> dict:
     t_hi = np.tan(np.radians(b["alpha_hi_deg"]))
     t_lo = np.tan(np.radians(-b["alpha_lo_deg"]))
     k = (np.tan(np.radians(b["alpha_hi_deg"])) - np.tan(np.radians(b["alpha_lo_deg"]))) / b["fan_cells"]
-    H = float(b["margin_c"]) + L_band * max(t_hi, t_lo)
+    H = band_height(st, rl)
     return dict(s0=st.s0, L=float(L), g_bl=st.g_bl, delta=st.delta, g_fine=rl.wall_growth,
                 fine=rl.fine_zone_local_c * st.chord, g_far=rl.far_growth_built,
                 cap_a=float(b["spacing_c"]), cap_b=k / max(t_hi, t_lo), cap_m=float(b["margin_c"]), cap_h=H)

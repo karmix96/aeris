@@ -20,6 +20,8 @@ import traceback
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
 sys.path.insert(0, str(HERE.parent))
 
 from cfdauto.mesh.surface import _jsonable, build_family, wing_from_set      # noqa: E402
@@ -38,7 +40,7 @@ def main() -> None:
     p.add_argument("--tag", required=True)
     p.add_argument("--resume", action="store_true")
     a = p.parse_args()
-    out = HERE / "data" / "studies" / f"family_{a.tag}.jsonl"
+    out = HERE / "data" / "studies" / f"family_{PREFIX}{a.tag}.jsonl"
     done = set()
     if a.resume and out.exists():
         done = {(r["type"], r["index"]) for r in map(json.loads, out.read_text().splitlines())}
@@ -62,7 +64,7 @@ def main() -> None:
             for lev in LEVELS:
                 if lev in a.levels:
                     try:
-                        vm = build_volume(fam[lev])
+                        vm = build_volume(fam[lev], config=CONFIG)
                         meas[lev] = measures(vm)
                         row["levels"][lev] = {"built": True, "outcome": vm.outcome, "review": vm.review,
                                               "failed": [c.name for c in vm.failed()], "cells": vm.cells,
@@ -78,7 +80,7 @@ def main() -> None:
                         row["levels"][lev] = {"built": True, "outcome": "crashed", "error": repr(e),
                                               "trace": traceback.format_exc()[-2000:]}
                 else:
-                    row["levels"][lev] = {"built": False, "outcome": "counted"} | count_volume(fam[lev])
+                    row["levels"][lev] = {"built": False, "outcome": "counted"} | count_volume(fam[lev], config=CONFIG)
             if len(meas) >= 2:
                 c, table = check13(meas)
                 row["check13"] = {"passed": c.passed, "value": c.value, "limit": c.limit, "where": c.note,

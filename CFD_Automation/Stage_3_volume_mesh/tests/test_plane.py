@@ -21,3 +21,23 @@ def test_wake_line_leaves_the_corners():
     t = (c[1] - c[0]) / np.linalg.norm(c[1] - c[0])
     assert np.degrees(np.arccos(t @ np.array([np.cos(w.phi0), np.sin(w.phi0)]))) < 1e-3   # along the base normal
     assert abs(np.arctan2(*(c[2] - w.centre(np.array([9.99]))[0][0])[::-1])) < 1e-6         # +x far behind
+
+
+def test_band_height_adds_the_downward_wake(surface_vc):
+    """Decision 106: a wake that leaves the base pointing down raises the band's top above the wake line."""
+    import copy
+    import numpy as np
+    from cfdauto.volume import plane as pl
+    from cfdauto.volume.laws import rules
+    from cfdauto.volume.volume import stations_of
+    rl = rules("VC")
+    st = stations_of(surface_vc, rl)[0]
+    b = rl.band
+    straight = float(b["margin_c"]) + float(b["length_local_c"]) * st.chord * np.tan(np.radians(b["alpha_hi_deg"]))
+    level = copy.copy(st)
+    level.wake = pl.WakeLine(st.wake.M, 0.0, st.wake.turn, st.wake.t_te, st.wake.gap_growth)
+    down = copy.copy(st)
+    down.wake = pl.WakeLine(st.wake.M, -abs(np.radians(6.0)), st.wake.turn, st.wake.t_te, st.wake.gap_growth)
+    assert pl.band_height(level, rl) == pytest.approx(straight, rel=1e-12)
+    assert pl.band_height(down, rl) > straight + 0.5 * st.wake.turn * np.radians(6.0) * 0.5
+

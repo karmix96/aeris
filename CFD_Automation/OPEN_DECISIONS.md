@@ -550,4 +550,15 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     base normal points down (−6.9° to −2.0° on BWB full-space wing 13; the centre line 0.068 c low at 2 local chords),
     the band's upper edge lies above the envelope. Fix: add the centre line's downward offset at the band length to the
     envelope height. Not built yet: the rules change first.
+107. **Rule set 2 (Mike, 9 Nov 2026, 20:30: "make medium around 10 million; the fine family can be over this
+    limit").** Package P2 of decision 105 is the lightest that meets it without touching Stage 2 (counted M median about
+    11 M on the 20 reference wings at Re 3 × 10⁵, against 20.7 M): outboard growth 1.3 at VC (was 1.15; law 12);
+    ≥ 30 cells across the boundary layer at M (was VC; 17.8 / 23.1 / 30 / 39); the first cell behind the base = the
+    wing's last chordwise cell (was s0; changes decision 90: no spacing jump across the trailing-edge line, the base no
+    longer at y⁺ 1); the wake band 20 cells across its fan at M (was 40; decision 87) and streamwise cells up to 8 × the
+    band cell (was 4); plus the fix of decision 106. Unchanged: the surface and its band, the levels and the ratio,
+    y⁺ 1 on the wing, the far field, the C-H topology. The check limits read the rules; check 5's base part follows the
+    new first cell. Rule set 1 kept in `configs/volume_rules1.yaml` (the V0–V6 record); the study scripts build rule
+    set 2 by default and prefix its files `r2_`. Written before the rule-set-2 screens (one probe build: BWB reference
+    wing 0, VC, every check passed, 2,720,808 cells).
 

@@ -472,3 +472,72 @@ SA + LM matched. The brief fixes SST + LM, so this is a flag, not a change.
 
 **Conclusion.** Not done: the first solves need Mike's machine (ask item 3). What is shown: the files are exact (V5),
 and the case is written down to the last number.
+
+## 14. The cost, and the packages that cut it (decisions 102, 105)
+
+**Where the cells are** (BWB reference wing 0, VC, 4,930,448 cells). Every station plane holds 377 × 95 ≈ 36,000
+cells (377 C-line nodes: 231 on the ring, 146 on the two wake lines; 95 layers), and there are 136 planes: 61 along the
+wing and 75 past the tip. The blocks past the tip hold 2.69 M cells (54 %), the wake blocks 1.94 M (39 %; the two
+overlap). Three rules drive it:
+
+- the 75 outboard planes grow from the tip gap (2 s0, about 10⁻⁴ c: the cap is a resolved wall) at 1.15 to 2 c past
+  the tip; at 1.3 from the same gap the count is still about 49, because the growth limit sets it;
+- the wake lines start from s0 at the base (decision 90): starting from the wing's last chordwise cell instead saves
+  17 of the 74 nodes per line (counted, P1);
+- the wake band is applied to every line of a plane (decision 84, one distribution per station), not only behind the
+  wing: about a third of the 95 layers; half its cells across the fan saves 15 layers (counted, P2: 88 → 73).
+
+**One change at a time** (decision 102; `scripts/cost_options.py` → `data/studies/cost_options.json`):
+
+| One change (counted, 20 reference wings, Re 3 × 10⁵, median) | VC | F |
+| --- | --- | --- |
+| the decided rules | 4.55 M (1.00) | 45.35 M (1.00) |
+| outboard growth 1.25 (not 1.15) | 3.88 M (0.85) | 38.26 M (0.84) |
+| outboard growth 1.30 | 3.67 M (0.81) | 36.38 M (0.80) |
+| 30 cells across the boundary layer at M (not VC) | 4.12 M (0.90) | 40.65 M (0.89) |
+| both of these | 3.50 M (0.77) | 34.27 M (0.76) |
+| the surface band off (Stage 2 option, decision 81) | 3.28 M (0.73) | 32.30 M (0.72) |
+| band off + outboard 1.25 + 30 cells at M | 2.52 M (0.56) | 24.45 M (0.55) |
+
+**Packages** (decision 105; each builds on the one it names; `scripts/cell_packages.py` →
+`data/studies/cell_packages.json`; counted with `count_volume`, which was within 1 % of the built meshes in V4; Re
+3 × 10⁵, the 20 reference wings, median cells):
+
+(The counts were still running at this commit; the table follows in the next commit.)
+
+**Conclusion.** (Follows with the table.)
+
+## 15. Rule set 2 (decision 107): the rules and limits, written before the rebuild
+
+Mike, 9 Nov 2026, 20:30: "make medium around 10 million; the fine family can be over this limit". Package P2 of
+decision 105 meets it with the volume rules alone (counted M median about 11 M on the 20 reference wings at Re
+3 × 10⁵, against 20.7 M with rule set 1), so it became rule set 2 (`configs/volume.yaml`; rule set 1 kept in
+`configs/volume_rules1.yaml`). The study scripts build rule set 2 by default and prefix its files `r2_`
+(`STAGE3_RULESET=1` rebuilds the record).
+
+| Rule (the check that reads it) | Rule set 1: VC / C / M / F | Rule set 2: VC / C / M / F |
+| --- | --- | --- |
+| cells across the boundary layer (check 7) | 30 / 39 / 50.7 / 65.9 | 17.8 / 23.1 / 30 / 39 |
+| outboard growth to 2 c past the tip (check 12) | 1.15 / 1.114 / 1.086 / 1.066 | 1.3 / 1.224 / 1.168 / 1.127 |
+| cells across the wake fan (check 11) | 23.7 / 30.8 / 40 / 52 | 11.8 / 15.4 / 20 / 26 |
+| streamwise cell in the band, × the band cell (check 11) | 4 / 4 / 4 / 4 | 8 / 8 / 8 / 8 |
+| first cell behind the base (check 5) | s0, every level | the wing's last chordwise cell, every level |
+
+Plus the fix of decision 106: the wake band's envelope height adds the wake centre line's downward offset within the
+band length (`plane.band_height`), and the outer blend starts above it.
+
+Unchanged: the surface (frozen, the transition band on), the levels VC, C, M, F and the ratio 1.3, y⁺ 1 at VC on the
+wing, the wall growth 1.25 at VC, the fine zone, the far field at 80 c and its growth (built 1.22, checked 1.3), the
+band's angles (−5° to 20°), margin, length and its cell at the trailing edge (0.0075 c at M), the C-H topology, and
+every check limit that does not read one of the rules above. The checks read their limits from the rules, so the
+changed limits are the ones in the table; check 5's base part now compares with the asked first cell behind the base.
+
+What the changes cost (named before the results): the base is not wall-resolved (its first cell is the trailing-edge
+chordwise cell, 0.169 % of the local chord at VC, instead of y⁺ 1), in exchange for no spacing jump across the
+trailing-edge line; the wake band holds half the cells across its fan (1.25° per cell at M instead of 0.63°), and its
+streamwise cells may be 8 × its cross cells; VC has 17.8 cells across the boundary layer (30 at M); the outboard
+stations grow at the far limit 1.3 from the tip gap, so the tip vortex gets coarser spanwise cells (at 0.05 c past the
+tip about 0.015 c instead of 0.008 c at VC).
+
+Written at 20:40, before the rule-set-2 screens. One probe build was made first, to test the code: BWB reference wing 0
+at VC, Re 3 × 10⁵: every check passed, 2,720,808 cells (rule set 1: 4,930,448).

@@ -100,9 +100,9 @@ def smoothstep(t: Array) -> Array:
 
 
 def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:
-    """The first cell behind the base, per station. wake.first_cell: s0 (default; decision 90: the base is a wall at
-    y+ <= 1) or te_cell (the wing's last chordwise cell: no spacing jump across the trailing-edge line, the base not
-    wall-resolved; an option counted for decision 105, which check 5 refuses until decision 90 changes)."""
+    """The first cell behind the base, per station. wake.first_cell: s0 (rule set 1; decision 90: the base is a wall
+    at y+ <= 1) or te_cell (rule set 2, decision 107: the wing's last chordwise cell, so no spacing jump across the
+    trailing-edge line; the base is not wall-resolved). Check 5 compares the base's first cell with it."""
     how = str(rl.raw["wake"].get("first_cell", "s0"))
     if how not in ("s0", "te_cell"):
         raise ValueError(f"wake.first_cell must be s0 or te_cell, not {how!r}")
@@ -145,9 +145,7 @@ def blend_outer(Gs: list[Array], d: Array, sts, rl) -> list[Array]:
     nj = d.shape[0] - 1
     starts = []
     for k, st in enumerate(sts):
-        b = rl.band
-        H = float(b["margin_c"]) + float(b["length_local_c"]) * st.chord * np.tan(np.radians(b["alpha_hi_deg"]))
-        reach = max(rl.fine_zone_local_c * st.chord, H)
+        reach = max(rl.fine_zone_local_c * st.chord, pl.band_height(st, rl))
         starts.append(int(np.searchsorted(d[:, k], reach)))
     j0 = min(max(starts), nj - 2)
     mean = np.mean(Gs, axis=0)

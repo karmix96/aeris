@@ -18,6 +18,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(HERE.parent))
 import style as S                                          # noqa: E402
 from cfdauto.volume.family import JUDGED                  # noqa: E402
@@ -31,7 +33,7 @@ NAMES = {"s0": "s0 per station", "wall_growth": "wall growth (ln g)", "band_cell
 def load(tags) -> list[dict]:
     out = []
     for t in tags:
-        p = STUDIES / f"family_{t}.jsonl"
+        p = STUDIES / f"family_{PREFIX}{t}.jsonl"
         if p.exists():
             out += [json.loads(l) | {"tag": t} for l in p.read_text().splitlines()]
     return out
@@ -53,7 +55,7 @@ def main() -> None:
             if v.get("built"):
                 seen[(r["type"], r["index"], lev)] = v["outcome"]
     after = {}                                               # decision 101 (Mike): the same meshes rebuilt with it
-    cs = STUDIES / "v4_cap_split.json"
+    cs = STUDIES / f"{PREFIX}v4_cap_split.json"
     if cs.exists():
         for key, v in json.loads(cs.read_text()).get("after_decision_101", {}).get("results", {}).items():
             t, i, lev = key.split()
@@ -100,7 +102,7 @@ def main() -> None:
         outcomes.setdefault(lev, {}).setdefault(o, []).append(f"{t} {i}")
     s["outcomes_built"] = {lev: {o: len(w) for o, w in d.items()} for lev, d in outcomes.items()}
     s["outcomes_built_wings"] = {lev: d for lev, d in outcomes.items() if lev in ("M", "F")}
-    (STUDIES / "v4.json").write_text(json.dumps(s, indent=1))
+    (STUDIES / f"{PREFIX}v4.json").write_text(json.dumps(s, indent=1))
 
     fig, ax = S.plt.subplots(1, 2, figsize=(13.2, 4.6), gridspec_kw={"width_ratios": [1.35, 1]})
     a = ax[0]
@@ -143,7 +145,7 @@ def main() -> None:
     a.set_title("(b) Cells per level, 20 reference wings, Re 3e5")
     a.legend(loc="upper left", frameon=False)
     a.grid(axis="y", color=S.LINE, lw=0.5)
-    S.save(fig, HERE / "docs" / "page" / "v4_family.png")
+    S.save(fig, HERE / "docs" / "page" / f"{PREFIX}v4_family.png")
     print(json.dumps({k: s[k] for k in ("wings", "check13", "outcomes_built", "cells")}, indent=1))
 
 

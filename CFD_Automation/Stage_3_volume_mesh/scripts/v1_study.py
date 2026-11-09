@@ -16,6 +16,8 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
 sys.path.insert(0, str(HERE.parent))
 
 from cfdauto.mesh.surface import _jsonable, build_surface, wing_from_set     # noqa: E402
@@ -111,7 +113,7 @@ def figure(vm, path: Path) -> None:
 def main() -> None:
     w = wing_from_set("bwb", "reference", 0)
     sm = build_surface(w.loft, 3e5, "VC")
-    vm = build_volume(sm)
+    vm = build_volume(sm, config=CONFIG)
     est = stage2_estimate(sm)
     br = breakdown(vm)
     out = {"what": "V1: BWB reference wing 0, VC, Re 3e5, the C-H volume mesh on the Stage 2 surface",
@@ -123,8 +125,8 @@ def main() -> None:
            "quality_by_block": vm.info["quality_by_block"], "bl_cells_min": vm.info["bl_cells_min"],
            "band_cell_ratio_max": vm.info["band_cell_ratio_max"], "seconds": vm.info["seconds_total"],
            "domain": vm.info["domain"], "kappa": vm.info["kappa"], "rung": vm.info["rung"]}
-    (HERE / "data" / "studies" / "v1.json").write_text(json.dumps(_jsonable(out), indent=1))
-    figure(vm, HERE / "docs" / "page" / "v1_slices.png")
+    (HERE / "data" / "studies" / f"{PREFIX}v1.json").write_text(json.dumps(_jsonable(out), indent=1))
+    figure(vm, HERE / "docs" / "page" / f"{PREFIX}v1_slices.png")
     print(json.dumps(_jsonable({k: out[k] for k in ("outcome", "cells", "stage2_estimate", "ratio_to_stage2_estimate",
                                                     "counts", "ram_gib_adflow")}), indent=1))
 

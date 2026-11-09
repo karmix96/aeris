@@ -39,24 +39,24 @@ def test_refusal_writes_only_refusal(volume_vc, bwb, tmp_path):
 
 
 def test_wake_first_cell_option(surface_vc, tmp_path):
-    """Decision 105's counted option: the first cell behind the base = the wing's last chordwise cell (default s0)."""
+    """The first cell behind the base: s0 in rule set 1 (decision 90), the wing's last chordwise cell in rule set 2
+    (decision 107), which needs fewer wake nodes; an unknown option is refused."""
     import numpy as np
     import yaml
     from pathlib import Path
     from cfdauto.volume.laws import CONFIG, rules
     from cfdauto.volume.volume import count_volume, stations_of, wake_first_cells
-    raw = yaml.safe_load(Path(CONFIG).read_text())
-    raw["wake"]["first_cell"] = "te_cell"
-    p = tmp_path / "te.yaml"
-    p.write_text(yaml.safe_dump(raw))
-    rl0, rl1 = rules("VC"), rules("VC", p)
-    sts = stations_of(surface_vc, rl0)
-    a, b = wake_first_cells(sts, rl0), wake_first_cells(sts, rl1)
+    rules1 = Path(CONFIG).with_name("volume_rules1.yaml")
+    rl1, rl2 = rules("VC", rules1), rules("VC")
+    sts = stations_of(surface_vc, rl2)
+    a, b = wake_first_cells(sts, rl1), wake_first_cells(sts, rl2)
     assert np.allclose(a, [s.s0 for s in sts])
-    assert np.all(b >= a) and np.all(np.array([s.te_cell for s in sts]) < 0.01 * np.array([s.chord for s in sts]))
-    assert count_volume(surface_vc, "VC", 3e5, p)["n_wake"] < count_volume(surface_vc)["n_wake"]
+    assert np.allclose(b, [max(s.te_cell, s.s0) for s in sts]) and np.all(b > a)
+    assert np.all(np.array([s.te_cell for s in sts]) < 0.01 * np.array([s.chord for s in sts]))
+    assert count_volume(surface_vc)["n_wake"] < count_volume(surface_vc, "VC", 3e5, rules1)["n_wake"]
+    raw = yaml.safe_load(Path(CONFIG).read_text())
     raw["wake"]["first_cell"] = "nonsense"
-    q = tmp_path / "bad.yaml"                          # a new file: the rules loader caches by path
+    q = tmp_path / "bad.yaml"
     q.write_text(yaml.safe_dump(raw))
     import pytest
     with pytest.raises(ValueError):

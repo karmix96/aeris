@@ -19,6 +19,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import style as S                                          # noqa: E402
 
 STUDIES = HERE / "data" / "studies"
@@ -26,7 +28,7 @@ PAGE = HERE / "docs" / "page"
 
 
 def load(tags=("ref_VC_a", "ref_VC_b")) -> list[dict]:
-    return [json.loads(l) for t in tags for l in (STUDIES / f"screen_{t}.jsonl").read_text().splitlines()]
+    return [json.loads(l) for t in tags for l in (STUDIES / f"screen_{PREFIX}{t}.jsonl").read_text().splitlines()]
 
 
 def dist(v) -> dict:
@@ -109,7 +111,7 @@ def figures(rows: list[dict]) -> None:
     ax[1, 1].set_ylim(0, 1.05)
     S.strip(ax[1, 2], rows, lambda r: r["te_jump_ratio_max"], log=True, ylabel="last chordwise cell / s0",
             title="(f) Spacing jump across the trailing edge")
-    S.save(fig, PAGE / "v2_wall.png")
+    S.save(fig, PAGE / f"{PREFIX}v2_wall.png")
 
     fig, ax = S.plt.subplots(1, 3, figsize=(13.2, 3.9))
     S.strip(ax[0], rows, lambda r: r["cap_min_sj"], limit=0.05, limit_text="limit ≥ 0.05", ylabel="smallest scaled Jacobian",
@@ -136,13 +138,13 @@ def figures(rows: list[dict]) -> None:
     a.grid(axis="y", color=S.LINE, lw=0.5)
     S.strip(ax[2], rows, lambda r: r["parts"]["outboard"] / r["cells"] * 100, ylabel="% of the cells",
             title="(c) Share of the cells in the outboard blocks")
-    S.save(fig, PAGE / "v3_tip.png")
+    S.save(fig, PAGE / f"{PREFIX}v3_tip.png")
 
 
 def main() -> None:
     rows = load()
     s = summary(rows)
-    (STUDIES / "v23.json").write_text(json.dumps(s, indent=1))
+    (STUDIES / f"{PREFIX}v23.json").write_text(json.dumps(s, indent=1))
     figures(rows)
     print(json.dumps({k: s[k] for k in ("meshes", "outcomes", "rungs")}, indent=1))
 

@@ -1,18 +1,33 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from cfdauto.volume.laws import move, rules
 
 
+RULES1 = Path(__file__).resolve().parents[1] / "configs" / "volume_rules1.yaml"
+
+
 def test_family_rule_per_level():
-    want = {"VC": (1.25, 30.0, 0.0075 * 1.69, 1.15), "F": (1.25 ** (1 / 1.3 ** 3), 30 * 1.3 ** 3, 0.0075 / 1.3,
-                                                           1.15 ** (1 / 1.3 ** 3))}
-    for lev, (g, n, h, go) in want.items():
+    """Rule set 2 (decision 107): 30 boundary-layer cells and 20 fan cells at M, outboard growth 1.3 at VC."""
+    want = {"VC": (1.25, 30 / 1.3 ** 2, 0.0075 * 1.69, 1.30, 20 / 1.69),
+            "F": (1.25 ** (1 / 1.3 ** 3), 30 * 1.3, 0.0075 / 1.3, 1.30 ** (1 / 1.3 ** 3), 20 * 1.3)}
+    for lev, (g, n, h, go, fan) in want.items():
         r = rules(lev)
         assert r.wall_growth == pytest.approx(g, rel=1e-12)
         assert r.bl_cells == pytest.approx(n, rel=1e-12)
         assert r.band["spacing_c"] == pytest.approx(h, rel=1e-12)
         assert r.outboard_growth == pytest.approx(go, rel=1e-12)
+        assert r.band["fan_cells"] == pytest.approx(fan, rel=1e-12)
+        assert r.band["max_aspect"] == 8.0 and r.raw["wake"]["first_cell"] == "te_cell"
+
+
+def test_rule_set_1_is_kept():
+    """Rule set 1 (V0-V6) stays buildable from its own file."""
+    r = rules("VC", RULES1)
+    assert r.bl_cells == 30.0 and r.outboard_growth == 1.15 and r.band["max_aspect"] == 4.0
+    assert r.band["fan_cells"] == pytest.approx(40 / 1.69, rel=1e-12) and r.raw["wake"].get("first_cell", "s0") == "s0"
 
 
 def test_anchor_is_exact():

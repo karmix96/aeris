@@ -26,6 +26,8 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
 sys.path.insert(0, str(HERE.parent))
 
 from cfdauto.geometry.build import load_set                                 # noqa: E402
@@ -169,7 +171,7 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=42)
     a = p.parse_args()
     only = None if a.only is None else {(o.split(":")[0], int(o.split(":")[1])) for o in a.only}
-    out = HERE / "data" / "studies" / f"screen_{a.tag}.jsonl"
+    out = HERE / "data" / "studies" / f"screen_{PREFIX}{a.tag}.jsonl"
     done = set()
     if a.resume and out.exists():
         for line in out.read_text().splitlines():
@@ -208,11 +210,11 @@ def main() -> None:
             for lev in todo:
                 try:
                     if a.count:
-                        c = count_volume(fam[lev])
+                        c = count_volume(fam[lev], config=CONFIG)
                         r = {"type": t, "set": s, "index": i, "hash8": w.input_hash[:8], "level": lev, "re": re,
                              "outcome": "counted"} | c
                     else:
-                        vm = build_volume(fam[lev])
+                        vm = build_volume(fam[lev], config=CONFIG)
                         r = row_of(vm, w, lev, re, ts)
                         del vm
                 except Exception as e:

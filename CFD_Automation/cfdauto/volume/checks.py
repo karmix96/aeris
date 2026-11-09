@@ -166,16 +166,20 @@ def run_checks(vm) -> tuple[list[Check], list[str]]:
                      "trailing-edge corners", f"station {worst_k}; corners up to {max(corners):.2f} deg; 3-D angle "
                      f"median {vm.info['wall_angle_3d_deg']['median']:.2f}, max {vm.info['wall_angle_3d_deg']['max']:.1f} deg"))
 
-    # 5. first cell s0 per station (wing lines, the base lines)
+    # 5. first cell per station: s0 on the wing lines (law 13); on the base lines the asked first cell behind the base
+    # (wake.first_cell: s0 in rule set 1, the wing's last chordwise cell in rule set 2, decision 107)
+    from .volume import wake_first_cells
+    fb = wake_first_cells(sts, rl)
     e5, e5b = 0.0, 0.0
     for k, st in enumerate(sts):
         h = np.linalg.norm(W[:, 1, k] - W[:, 0, k], axis=-1)
         e5 = max(e5, float(np.abs(h / st.s0 - 1.0).max()))
         hb = np.linalg.norm(B["B_in"][:, 1, k] - B["B_in"][:, 0, k], axis=-1)
-        e5b = max(e5b, float(np.abs(hb / st.s0 - 1.0).max()))
+        e5b = max(e5b, float(np.abs(hb / fb[k] - 1.0).max()))
+    base_rule = "s0" if str(rl.raw["wake"].get("first_cell", "s0")) == "s0" else "the wing's last chordwise cell"
     out.append(Check(5, "first_cell", max(e5, e5b) <= ch["s0_tol"], max(e5, e5b),
-                     f"<= {ch['s0_tol']:.0%} off the station's s0 (law 13) on every wing and base line",
-                     f"wing {e5:.2e}, base {e5b:.2e}"))
+                     f"<= {ch['s0_tol']:.0%} off the asked first cell: s0 (law 13) on every wing line, {base_rule} on "
+                     f"every base line", f"wing {e5:.2e}, base {e5b:.2e}"))
 
     # 6. growth along every wall-normal line (the level's limit inside the fine zone, the far limit beyond)
     tol = 1.0 + ch["growth_tol"]

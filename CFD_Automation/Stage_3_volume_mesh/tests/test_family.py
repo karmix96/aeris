@@ -31,7 +31,8 @@ def test_measures_on_the_vc_mesh(volume_vc):
     m = measures(volume_vc)
     st = volume_vc._plane["sts"]
     assert np.allclose(m["s0"], [s.s0 for s in st], rtol=0.01)
-    assert m["first_wake_cell"] == pytest.approx(st[0].s0, rel=0.01)
+    from cfdauto.volume.volume import wake_first_cells
+    assert m["first_wake_cell"] == pytest.approx(wake_first_cells(st, volume_vc._plane["rules"])[0], rel=0.01)
     assert m["band_cell"] <= m["band_cell_rule"] * 1.01
     assert m["counts"]["cells"] == volume_vc.cells
     assert ratios(m, m)["s0"] == pytest.approx(1.0)

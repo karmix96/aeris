@@ -19,6 +19,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ruleset import CONFIG, PREFIX  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import style as S                                          # noqa: E402
 
 STUDIES = HERE / "data" / "studies"
@@ -28,7 +30,7 @@ SETS = ("reference", "training_focus", "training_full", "corner1", "corner2")
 def rows_of(tags) -> list[dict]:
     out = []
     for t in tags:
-        p = STUDIES / f"screen_{t}.jsonl"
+        p = STUDIES / f"screen_{PREFIX}{t}.jsonl"
         if p.exists():
             out += [json.loads(l) for l in p.read_text().splitlines()]
     return out
@@ -94,7 +96,7 @@ def main() -> None:
     pairs = [(vc[(r["type"], r["set"], r["index"])], r["cells"]) for r in fs
              if r.get("outcome") == "counted" and (r["type"], r["set"], r["index"]) in vc]
     for t in ("ref_a", "ref_b"):                              # the reference wings: F counted in the family study (V4)
-        p = STUDIES / f"family_{t}.jsonl"
+        p = STUDIES / f"family_{PREFIX}{t}.jsonl"
         if p.exists():
             for r in map(json.loads, p.read_text().splitlines()):
                 pairs.append((r["levels"]["VC"]["cells"], r["levels"]["F"]["cells"]))
@@ -107,7 +109,7 @@ def main() -> None:
         allvc = np.array(list(vc.values()), float)
         s["F_estimated_all"] = {"wings": int(allvc.size), "cells": dist(allvc * np.median(ratio)),
                                 "note": "VC cells x the median F/VC of the counted sample"}
-    (STUDIES / "v6.json").write_text(json.dumps(s, indent=1))
+    (STUDIES / f"{PREFIX}v6.json").write_text(json.dumps(s, indent=1))
 
     fig, ax = S.plt.subplots(1, 3, figsize=(13.2, 4.0))
     by = lambda f: [(r["type"], f(r)) for r in ok]
@@ -132,7 +134,7 @@ def main() -> None:
         a.set_ylabel(yl)
         a.set_title(ti)
         a.grid(axis="y", color=S.LINE, lw=0.5)
-    S.save(fig, HERE / "docs" / "page" / "v6_screen.png")
+    S.save(fig, HERE / "docs" / "page" / f"{PREFIX}v6_screen.png")
     print(json.dumps({k: s[k] for k in ("meshes", "outcomes", "failed_checks")}, indent=1))
 
 

@@ -1,4 +1,6 @@
-# Stage 3 — volume mesh rules (one matched C-H multiblock mesh, decision 73).
+# Stage 3 — volume mesh rules (one matched C-H multiblock mesh, decision 73). RULE SET 2 (decision 107, 9 Nov 2026):
+# Mike's target, M about 10 M cells (F may be above), met by package P2 of decision 105 (volume rules only; the
+# surface, its band and the levels unchanged). Rule set 1 (V0-V6) is kept in configs/volume_rules1.yaml.
 # Read by cfdauto/volume/laws.py: one function per setting, each with its anchor level and its reason.
 # Anchors as in Stage 2 (decision 71): {value: x, at: LEVEL} is met at LEVEL and follows the family rule (law 23)
 # on the other levels, r = 1.3, level k, anchor a (VC = 0, C = 1, M = 2, F = 3):
@@ -18,8 +20,9 @@ wall:                             # the wall-normal lines of the C blocks (and t
   growth: {value: 1.25, at: VC, why: "hard minimum, decision 71; DPW"}
                                   # largest growth inside the boundary layer and the fine zone: 1.25, 1.187, 1.141,
                                   # 1.107 at VC, C, M, F
-  bl_cells: {value: 30, at: VC, why: "Annex G: at least 30 cells across the boundary layer at the baseline; decision 86"}
-                                  # cells between the wall and delta (see delta below); a count: x 1.3 per level
+  bl_cells: {value: 30, at: M, why: "Annex G: at least 30 cells across the boundary layer at the baseline, M (decision 107; was VC, decision 86)"}
+                                  # cells between the wall and delta (see delta below); a count: x 1.3 per level:
+                                  # 17.8, 23.1, 30, 39 at VC, C, M, F
   delta:                          # the boundary-layer thickness the 30 cells must cross (decision 86)
     law: turbulent                # turbulent flat plate, delta = 0.37 x Re_x^(-1/5), from the station's local Re
     x_c: 1.0                      # at x = 1 local chord (the trailing edge, where the layer is thickest)
@@ -45,15 +48,18 @@ wake:                             # the wake lines and the wake band (laws 17, 1
     length_local_c: 2.0           # from the trailing edge to 2 local chords behind it (law 20, the fine zone)
     spacing_c: {value: 0.0075, at: M, why: "Primer section 05, the wake box value: about 20 cells across a 0.15 c wake"}
                                   # cross-wake cell next to the trailing edge: 1.27, 0.98, 0.75, 0.58 % c at VC, C, M, F
-    fan_cells: {value: 40, at: M, why: "decision 87: 40 cells across the 25 deg fan at every distance (0.63 deg each)"}
-                                  # farther back the cross cell grows so the fan keeps this many cells: 23.7, 30.8, 40, 52
-    max_aspect: 4.0               # streamwise cell <= 4 x the cross cell inside the band
-  # first cell behind the base = the station's s0 (the base is a wall); growth along the wake <= wall.growth inside
-  # the band length, <= far.growth beyond it, to the outflow 80 c behind the most aft trailing edge
+    fan_cells: {value: 20, at: M, why: "decision 107 (was 40, decision 87): 20 cells across the 25 deg fan at every distance (1.25 deg each)"}
+                                  # farther back the cross cell grows so the fan keeps this many cells: 11.8, 15.4, 20, 26
+    max_aspect: 8.0               # streamwise cell <= 8 x the cross cell inside the band (decision 107; was 4)
+  first_cell: te_cell             # the first cell behind the base = the wing's last chordwise cell (decision 107; was
+                                  # s0, decision 90): no spacing jump across the trailing-edge line, the base is not
+                                  # wall-resolved (its y+ is not 1); check 5 compares the base's first cell with it
+  # growth along the wake <= wall.growth inside the band length, <= far.growth beyond it, to the outflow 80 c behind the
+  # most aft trailing edge
 
 outboard:                         # the H blocks past the tip (law 12, decision 88)
-  growth: {value: 1.15, at: VC, why: "Annex G R-V.3 starting value; the brief"}
-                                  # station gaps past the tip: 1.15, 1.114, 1.086, 1.066 at VC, C, M, F
+  growth: {value: 1.30, at: VC, why: "decision 107 (was 1.15, the Annex G R-V.3 starting value): the far limit, Annex G <= 1.3"}
+                                  # station gaps past the tip: 1.3, 1.224, 1.168, 1.127 at VC, C, M, F
   fine_zone_c: 2.0                # ... out to 2 mean chords past the tip; beyond it far.growth to 80 c
   # first gap = the delivered last gap of the wing (the tip gap, 2 x s0 at the tip; Stage 2 law 10)
 

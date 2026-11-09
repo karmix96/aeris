@@ -46,7 +46,7 @@ def dist(v) -> dict:
 
 def main() -> None:
     ref = [r for r in rows_of(("ref_VC_a", "ref_VC_b")) if r["re"] == 3e5]
-    rows = ref + rows_of(("s_a", "s_b"))
+    rows = ref + rows_of(sorted({q.stem[len(f"screen_{PREFIX}"):] for q in STUDIES.glob(f"screen_{PREFIX}s_*.jsonl")}))
     fs = rows_of(("F_sample",)) + [r for r in rows_of(("F_ref",))]
     s = {"meshes": len(rows), "outcomes": dict(Counter(r["outcome"] for r in rows)),
          "stopped": "9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)"}

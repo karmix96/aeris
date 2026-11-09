@@ -503,9 +503,19 @@ overlap). Three rules drive it:
 `data/studies/cell_packages.json`; counted with `count_volume`, which was within 1 % of the built meshes in V4; Re
 3 × 10⁵, the 20 reference wings, median cells):
 
-(The counts were still running at this commit; the table follows in the next commit.)
+| Package | Reopens | VC | C | M | F | F largest | F / today | VC: ADflow RAM; fit 16 GB |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **P0** the decided rules | — | 4.55 M | 9.77 M | 20.79 M | 45.35 M | 50.7 M | 1.00 | 45 GiB; 0 of 20 |
+| **P1** lighter volume rules | law 12 (outboard growth), law 14 anchor (30 cells at M), decision 90 (base y⁺) | 3.03 M | 6.44 M | 13.70 M | 29.71 M | 34.2 M | 0.66 | 30 GiB; 0 of 20 |
+| **P2** P1 + a coarser wake band | + decision 87 (the wake band) | 2.45 M | 5.23 M | 11.09 M | 24.18 M | 27.9 M | 0.53 | 25 GiB; 0 of 20 |
+| **P3** P2 + the tip cap not wall-resolved (tip gap 10 s0) | + the frozen surface: Stage 2 law 9/10 (tip gap), cap y⁺ ≈ 10 at VC | 2.13 M | 4.51 M | 9.56 M | 20.74 M | 24.0 M | 0.45 | 22 GiB; 0 of 20 |
+| **P4** P2 + the surface band off | + decision 81 (the surface band on for every run) | 1.68 M | 3.53 M | 7.51 M | 16.28 M | 19.2 M | 0.36 | 17 GiB; 0 of 20 |
+| **P5** P2 + tip gap 10 s0 + the surface band off | + both Stage 2 changes | 1.45 M | 3.06 M | 6.43 M | 13.99 M | 16.5 M | 0.31 | 15 GiB; 0 of 20 |
+| **P6** P5 + far field 40 c + 30 boundary-layer cells at F | + law 15 (far field) and the 30-cell anchor at F | 1.31 M | 2.76 M | 5.79 M | 12.54 M | 14.8 M | 0.28 | 14 GiB; 1 of 20 |
 
-**Conclusion.** (Follows with the table.)
+Counts behind it (median at VC): P0 92 layers, 71 wake nodes, 354 C-line nodes, 62 + 74 stations; P1 83 layers, 56 wake nodes, 324 C-line nodes, 62 + 48 stations; P2 71 layers, 48 wake nodes, 306 C-line nodes, 62 + 48 stations; P3 71 layers, 48 wake nodes, 306 C-line nodes, 53 + 42 stations; P4 71 layers, 48 wake nodes, 210 C-line nodes, 62 + 48 stations; P5 71 layers, 48 wake nodes, 210 C-line nodes, 53 + 42 stations; P6 68 layers, 45 wake nodes, 203 C-line nodes, 53 + 40 stations.
+
+**Conclusion.** With four levels no package brings F to 9–11 M: the volume rules alone (P2) give F 24.2 M (median), the two Stage 2 changes on top 14.0 M (P5), everything counted 12.5 M (P6). What is left is the plane (about 210–310 C-line nodes × 70 layers) times the stations (53–62 along the wing, 40–48 past the tip); the surface band and the tip squeeze are Stage 2's. Mike's target (9 Nov, 20:30) is M about 10 M with F above it: P2 meets it with the volume rules alone (M 11.1 M median, 10.0–13.0 M; F 24.2 M; VC 2.45 M, 25 GiB for ADflow, every VC mesh fits the 52 GB desktop), so P2 became rule set 2 (decision 107). If M must come lower, the next step is the tip gap (P3: M 9.6 M), which changes the frozen surface. No package lets a VC mesh fit the 16 GB desktop but one (P6, 1 of 20).
 
 ## 15. Rule set 2 (decision 107): the rules and limits, written before the rebuild
 
@@ -541,3 +551,22 @@ tip about 0.015 c instead of 0.008 c at VC).
 
 Written at 20:40, before the rule-set-2 screens. One probe build was made first, to test the code: BWB reference wing 0
 at VC, Re 3 × 10⁵: every check passed, 2,720,808 cells (rule set 1: 4,930,448).
+
+### 15.1 V1 and V5 with rule set 2 (BWB reference wing 0, VC, Re 3 × 10⁵)
+
+`scripts/v1_study.py`, `scripts/v5_export.py` (rule set 2 by default) → `data/studies/r2_v1.json`,
+`docs/page/r2_v1_slices.png`, `data/studies/r2_v5_export.json`; the V7 case `data/studies/r2_v7_case.json`.
+
+| | Rule set 1 | Rule set 2 |
+| --- | --- | --- |
+| Outcome | every check passed | every check passed |
+| Cells | 4,930,448 | 2,720,808 (0.55 ×) |
+| Inboard · outboard · wake blocks | 2,178,240 · 2,686,496 · 1,936,836 | 1,487,880 · 1,190,304 · 864,864 |
+| Layers · wake nodes · C-line nodes · stations | 95 · 74 · 377 · 61 + 75 | 73 · 53 · 335 · 61 + 49 |
+| Cells across the boundary layer (limit) | 30.48 (30) | 19.60 (17.75) |
+| First cell behind the base | s0 | the wing's last chordwise cell (check 5: within 0.02 %) |
+| ADflow RAM | 48.2 GiB | 27.2 GiB: fits the 52 GB desktop |
+| CGNS · .su2 | 123.5 MB · 693.6 MB | 68.8 MB · 379.3 MB; check 15 passed (own reader, the CGNS library, the .su2 read back) |
+
+**Conclusion.** Rule set 2 builds the V7 mesh with every check passed, at 0.55 × the cells; it now fits the 52 GB
+desktop for ADflow (27.2 GiB), so V7 can run there.

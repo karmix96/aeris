@@ -1,24 +1,25 @@
 # V7 runbook: the first solves on one Stage 3 mesh
 
-**State on 9 Nov 2026.** Not run. This session has no ADflow and no SU2, 2 cores and 7 GB of RAM; the mesh needs
-about 48 GiB for ADflow. Mike runs these on the 52 GB desktop (16 GB + 36 GB) or the HPC.
+**State on 9 Nov 2026.** Not run. This session has no ADflow and no SU2, 2 cores and 7 GB of RAM. The mesh is now
+built with rule set 2 (decision 107) and needs about 27 GiB for ADflow: it fits the 52 GB desktop (16 GB + 36 GB), not
+the 16 GB one. Where it runs: Mike (decision 103).
 
 The case (fixed by the brief): **BWB reference wing 0, VC, Re 3 × 10⁵, α 4°, Mach 0.1, transition band on.**
 Three runs: **ADflow SA**, **SU2 SA**, **SU2 SST + LM** (SU2 8.6.0).
 
 | | |
 |---|---|
-| mesh | `volume_VC_e32d995a_re3e5`: 4,930,448 cells, 13 blocks, every check passed (V1, V5) |
-| files | `volume.cgns` (123.5 MB, ADflow), `volume.su2` (693.6 MB, SU2), from `scripts/v5_export.py` |
-| ADflow RAM | 1.51 + 9.46 GiB per M cells = **48.2 GiB** (ANK only); does not fit 16 GB |
-| ADflow time | 35.7 min per M cells on 6 ranks ≈ **2.9 h** (S8 law; this mesh is not S8's, so a guide only) |
+| mesh | `volume_VC_e32d995a_re3e5`, rule set 2: 2,720,808 cells, 13 blocks, every check passed (V1, V5) |
+| files | `volume.cgns` (68.8 MB, ADflow), `volume.su2` (379.3 MB, SU2), from `scripts/v5_export.py` |
+| ADflow RAM | 1.51 + 9.46 GiB per M cells = **27.2 GiB** (ANK only); fits the 52 GB desktop, not 16 GB |
+| ADflow time | 35.7 min per M cells on 6 ranks ≈ **1.6 h** (S8 law; this mesh is not S8's, so a guide only) |
 | units | lengths in mean chords; Re on the mean chord (1 mesh unit); span +y, lift +z |
 
 ## 0. Make the mesh and the case (any machine with the repo, no solver needed)
 
 ```bash
 cd CFD_Automation/Stage_3_volume_mesh
-python scripts/v5_export.py                       # data/meshes/volume_VC_e32d995a_re3e5/ (about 1 min, 0.9 GB)
+python scripts/v5_export.py                       # data/meshes/volume_VC_e32d995a_re3e5/ (about 1 min, 0.5 GB)
 python solve/case.py --mesh data/meshes/volume_VC_e32d995a_re3e5 --alpha 4 --mach 0.1 --re 3e5 --out runs/v7_a4
 ```
 

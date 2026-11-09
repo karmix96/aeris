@@ -1,0 +1,495 @@
+{
+ "wings": 20,
+ "re": 300000.0,
+ "packages": {
+  "P0": {
+   "label": "the decided rules",
+   "band": true,
+   "volume": {},
+   "surface": {},
+   "levels": {
+    "VC": {
+     "median": 4552809.0,
+     "min": 4134112.0,
+     "max": 5118272.0,
+     "vs_P0_median": 1.0,
+     "ram_gib_median": 44.57957314,
+     "fit_16GB": 0,
+     "fit_52GB": 18,
+     "n_layers": 92.5,
+     "n_wake": 71.0,
+     "n_c": 354.0,
+     "n_span": 61.5,
+     "n_out": 74.0
+    },
+    "C": {
+     "median": 9769105.0,
+     "min": 8889862.0,
+     "max": 10972158.0,
+     "vs_P0_median": 1.0,
+     "ram_gib_median": 93.92573330000002,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 120.0,
+     "n_wake": 91.5,
+     "n_c": 456.0,
+     "n_span": 78.0,
+     "n_out": 96.0
+    },
+    "M": {
+     "median": 20786117.0,
+     "min": 18990594.0,
+     "max": 23483068.0,
+     "vs_P0_median": 1.0,
+     "ram_gib_median": 198.14666682,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 154.5,
+     "n_wake": 118.0,
+     "n_c": 587.0,
+     "n_span": 99.0,
+     "n_out": 123.0
+    },
+    "F": {
+     "median": 45354870.0,
+     "min": 41267572.0,
+     "max": 50712048.0,
+     "vs_P0_median": 1.0,
+     "ram_gib_median": 430.56707020000005,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 200.5,
+     "n_wake": 151.5,
+     "n_c": 759.0,
+     "n_span": 128.5,
+     "n_out": 159.0
+    }
+   }
+  },
+  "P1": {
+   "label": "lighter volume rules",
+   "band": true,
+   "volume": {
+    "outboard.growth.value": 1.3,
+    "wall.bl_cells.at": "M",
+    "wake.first_cell": "te_cell"
+   },
+   "surface": {},
+   "levels": {
+    "VC": {
+     "median": 3031202.0,
+     "min": 2690672.0,
+     "max": 3491616.0,
+     "vs_P0_median": 0.6634618345175851,
+     "ram_gib_median": 30.185170920000004,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 83.0,
+     "n_wake": 56.0,
+     "n_c": 324.0,
+     "n_span": 61.5,
+     "n_out": 48.5
+    },
+    "C": {
+     "median": 6440815.0,
+     "min": 5738350.0,
+     "max": 7461740.0,
+     "vs_P0_median": 0.6597803637789443,
+     "ram_gib_median": 62.4401099,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 107.0,
+     "n_wake": 72.0,
+     "n_c": 417.0,
+     "n_span": 78.0,
+     "n_out": 62.0
+    },
+    "M": {
+     "median": 13695776.0,
+     "min": 12270222.0,
+     "max": 15799112.0,
+     "vs_P0_median": 0.6587687742089607,
+     "ram_gib_median": 131.07204096,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 138.5,
+     "n_wake": 92.0,
+     "n_c": 537.0,
+     "n_span": 99.0,
+     "n_out": 80.0
+    },
+    "F": {
+     "median": 29711718.0,
+     "min": 26614332.0,
+     "max": 34161402.0,
+     "vs_P0_median": 0.6560014009762483,
+     "ram_gib_median": 282.58285228,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 178.5,
+     "n_wake": 119.0,
+     "n_c": 693.0,
+     "n_span": 128.5,
+     "n_out": 103.0
+    }
+   }
+  },
+  "P2": {
+   "label": "P1 + a coarser wake band",
+   "band": true,
+   "volume": {
+    "outboard.growth.value": 1.3,
+    "wall.bl_cells.at": "M",
+    "wake.first_cell": "te_cell",
+    "wake.band.fan_cells.value": 20,
+    "wake.band.max_aspect": 8.0
+   },
+   "surface": {},
+   "levels": {
+    "VC": {
+     "median": 2450289.0,
+     "min": 2200208.0,
+     "max": 2846484.0,
+     "vs_P0_median": 0.5424390632157858,
+     "ram_gib_median": 24.689733940000004,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 71.0,
+     "n_wake": 48.0,
+     "n_c": 306.0,
+     "n_span": 61.5,
+     "n_out": 48.5
+    },
+    "C": {
+     "median": 5231659.0,
+     "min": 4689648.0,
+     "max": 6077786.0,
+     "vs_P0_median": 0.5378714363065218,
+     "ram_gib_median": 51.001494140000005,
+     "fit_16GB": 0,
+     "fit_52GB": 8,
+     "n_layers": 91.5,
+     "n_wake": 62.0,
+     "n_c": 396.0,
+     "n_span": 78.0,
+     "n_out": 62.0
+    },
+    "M": {
+     "median": 11091231.0,
+     "min": 9960234.0,
+     "max": 12961004.0,
+     "vs_P0_median": 0.5339384597172379,
+     "ram_gib_median": 106.43304526000001,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 118.0,
+     "n_wake": 79.0,
+     "n_c": 510.0,
+     "n_span": 99.0,
+     "n_out": 80.0
+    },
+    "F": {
+     "median": 24178146.0,
+     "min": 21687756.0,
+     "max": 27873742.0,
+     "vs_P0_median": 0.5313240785945299,
+     "ram_gib_median": 230.23526116000002,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 152.5,
+     "n_wake": 102.0,
+     "n_c": 660.0,
+     "n_span": 128.5,
+     "n_out": 103.0
+    }
+   }
+  },
+  "P3": {
+   "label": "P2 + the tip cap not wall-resolved (tip gap 10 s0)",
+   "band": true,
+   "volume": {
+    "outboard.growth.value": 1.3,
+    "wall.bl_cells.at": "M",
+    "wake.first_cell": "te_cell",
+    "wake.band.fan_cells.value": 20,
+    "wake.band.max_aspect": 8.0
+   },
+   "surface": {
+    "span.tip_gap_in_s0": 10.0
+   },
+   "levels": {
+    "VC": {
+     "median": 2134264.0,
+     "min": 1883456.0,
+     "max": 2462256.0,
+     "vs_P0_median": 0.46748028780407624,
+     "ram_gib_median": 21.700137440000002,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 71.0,
+     "n_wake": 48.0,
+     "n_c": 306.0,
+     "n_span": 53.0,
+     "n_out": 42.0
+    },
+    "C": {
+     "median": 4506250.0,
+     "min": 4025490.0,
+     "max": 5228706.0,
+     "vs_P0_median": 0.46216043226902903,
+     "ram_gib_median": 44.13912500000001,
+     "fit_16GB": 0,
+     "fit_52GB": 16,
+     "n_layers": 91.5,
+     "n_wake": 62.0,
+     "n_c": 396.0,
+     "n_span": 67.0,
+     "n_out": 54.0
+    },
+    "M": {
+     "median": 9563959.0,
+     "min": 8448022.0,
+     "max": 11110536.0,
+     "vs_P0_median": 0.4571257203063973,
+     "ram_gib_median": 91.98505214000002,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 118.0,
+     "n_wake": 79.0,
+     "n_c": 510.0,
+     "n_span": 84.0,
+     "n_out": 69.0
+    },
+    "F": {
+     "median": 20739408.0,
+     "min": 18372104.0,
+     "max": 23961544.0,
+     "vs_P0_median": 0.45388755744344067,
+     "ram_gib_median": 197.70479968,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 152.5,
+     "n_wake": 102.0,
+     "n_c": 660.0,
+     "n_span": 109.0,
+     "n_out": 89.0
+    }
+   }
+  },
+  "P4": {
+   "label": "P2 + the surface band off",
+   "band": false,
+   "volume": {
+    "outboard.growth.value": 1.3,
+    "wall.bl_cells.at": "M",
+    "wake.first_cell": "te_cell",
+    "wake.band.fan_cells.value": 20,
+    "wake.band.max_aspect": 8.0
+   },
+   "surface": {},
+   "levels": {
+    "VC": {
+     "median": 1675546.0,
+     "min": 1518728.0,
+     "max": 1983804.0,
+     "vs_P0_median": 0.3764873030046831,
+     "ram_gib_median": 17.360665160000003,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 71.0,
+     "n_wake": 48.0,
+     "n_c": 210.0,
+     "n_span": 61.5,
+     "n_out": 48.5
+    },
+    "C": {
+     "median": 3534576.0,
+     "min": 3214766.0,
+     "max": 4207514.0,
+     "vs_P0_median": 0.36975342758682883,
+     "ram_gib_median": 34.94708896,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 91.5,
+     "n_wake": 62.0,
+     "n_c": 270.0,
+     "n_span": 78.0,
+     "n_out": 62.0
+    },
+    "M": {
+     "median": 7511210.0,
+     "min": 6835114.0,
+     "max": 8954540.0,
+     "vs_P0_median": 0.3648165297042094,
+     "ram_gib_median": 72.5660466,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 118.0,
+     "n_wake": 79.0,
+     "n_c": 345.0,
+     "n_span": 99.0,
+     "n_out": 80.0
+    },
+    "F": {
+     "median": 16283702.0,
+     "min": 14755356.0,
+     "max": 19174682.0,
+     "vs_P0_median": 0.3640931518156516,
+     "ram_gib_median": 155.55382092000002,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 152.5,
+     "n_wake": 102.0,
+     "n_c": 444.0,
+     "n_span": 128.5,
+     "n_out": 103.0
+    }
+   }
+  },
+  "P5": {
+   "label": "P2 + tip gap 10 s0 + the surface band off",
+   "band": false,
+   "volume": {
+    "outboard.growth.value": 1.3,
+    "wall.bl_cells.at": "M",
+    "wake.first_cell": "te_cell",
+    "wake.band.fan_cells.value": 20,
+    "wake.band.max_aspect": 8.0
+   },
+   "surface": {
+    "span.tip_gap_in_s0": 10.0
+   },
+   "levels": {
+    "VC": {
+     "median": 1446967.0,
+     "min": 1299986.0,
+     "max": 1715952.0,
+     "vs_P0_median": 0.3230319422448311,
+     "ram_gib_median": 15.198307820000002,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 71.0,
+     "n_wake": 48.0,
+     "n_c": 210.0,
+     "n_span": 53.0,
+     "n_out": 42.0
+    },
+    "C": {
+     "median": 3057822.0,
+     "min": 2759350.0,
+     "max": 3619554.0,
+     "vs_P0_median": 0.3174704505164275,
+     "ram_gib_median": 30.436996120000003,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 91.5,
+     "n_wake": 62.0,
+     "n_c": 270.0,
+     "n_span": 67.0,
+     "n_out": 54.0
+    },
+    "M": {
+     "median": 6431082.0,
+     "min": 5796990.0,
+     "max": 7675896.0,
+     "vs_P0_median": 0.3125583586665818,
+     "ram_gib_median": 62.348035720000006,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 118.0,
+     "n_wake": 79.0,
+     "n_c": 345.0,
+     "n_span": 84.0,
+     "n_out": 69.0
+    },
+    "F": {
+     "median": 13994432.0,
+     "min": 12498504.0,
+     "max": 16483094.0,
+     "vs_P0_median": 0.3117956805774692,
+     "ram_gib_median": 133.89732672,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 152.5,
+     "n_wake": 102.0,
+     "n_c": 444.0,
+     "n_span": 109.0,
+     "n_out": 89.0
+    }
+   }
+  },
+  "P6": {
+   "label": "P5 + far field 40 c + 30 boundary-layer cells at F",
+   "band": false,
+   "volume": {
+    "outboard.growth.value": 1.3,
+    "wall.bl_cells.at": "F",
+    "wake.first_cell": "te_cell",
+    "wake.band.fan_cells.value": 20,
+    "wake.band.max_aspect": 8.0,
+    "far.distance_c": 40.0
+   },
+   "surface": {
+    "span.tip_gap_in_s0": 10.0
+   },
+   "levels": {
+    "VC": {
+     "median": 1311152.0,
+     "min": 1181088.0,
+     "max": 1554396.0,
+     "vs_P0_median": 0.29166786222759533,
+     "ram_gib_median": 13.913497920000001,
+     "fit_16GB": 1,
+     "fit_52GB": 20,
+     "n_layers": 68.0,
+     "n_wake": 45.0,
+     "n_c": 203.0,
+     "n_span": 53.0,
+     "n_out": 40.0
+    },
+    "C": {
+     "median": 2756876.0,
+     "min": 2490124.0,
+     "max": 3265970.0,
+     "vs_P0_median": 0.28533146108195795,
+     "ram_gib_median": 27.590046960000002,
+     "fit_16GB": 0,
+     "fit_52GB": 20,
+     "n_layers": 87.0,
+     "n_wake": 57.0,
+     "n_c": 260.0,
+     "n_span": 67.0,
+     "n_out": 51.0
+    },
+    "M": {
+     "median": 5790808.0,
+     "min": 5202106.0,
+     "max": 6897872.0,
+     "vs_P0_median": 0.27988573534258765,
+     "ram_gib_median": 56.29104368000001,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 112.5,
+     "n_wake": 73.5,
+     "n_c": 333.0,
+     "n_span": 84.0,
+     "n_out": 65.0
+    },
+    "F": {
+     "median": 12541829.0,
+     "min": 11036700.0,
+     "max": 14832664.0,
+     "vs_P0_median": 0.27962693823201634,
+     "ram_gib_median": 120.15570234,
+     "fit_16GB": 0,
+     "fit_52GB": 0,
+     "n_layers": 145.0,
+     "n_wake": 95.0,
+     "n_c": 429.0,
+     "n_span": 109.0,
+     "n_out": 84.0
+    }
+   }
+  }
+ }
+}

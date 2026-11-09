@@ -321,7 +321,6 @@ def count_volume(surface, level: str | None = None, re_mean: float | None = None
     # the layer count from straight lines to the far field (the march adds a few per cent of length; +1 spare)
     specs = []
     for st in sts:
-        Lmax = float(np.hypot(dom.R + abs(st.ring[:, 1].mean() - dom.z_m), dom.x_b - st.ring[:, 0].min() + dom.R))
         specs.append(pl.station_spec(st, dom.R * 1.05, rl))
     A = {key: np.array([s[key] for s in specs]) for key in specs[0]}
     nj = int(np.ceil(mr.min_cells(**A).max() - 1e-9)) + 1
@@ -351,9 +350,39 @@ def volume_code_hash() -> str:
     return h.hexdigest()
 
 
+def export(vm: VolumeMesh, out: Path, formats=("cgns", "su2")) -> dict:
+    """Write the solver files and check 15 on them: the CGNS file read back by this package's reader and, where a CGNS
+    library exists, by the library (what ADflow sees); the .su2 file read back (counts, welds, no inside-out cell,
+    boundary quads facing out). Appends check 15 to vm.checks."""
+    from .checks import Check
+    bcs, itf = tp.boundary_conditions(), tp.interfaces(vm.info["cap_upper_face"])
+    res, ok, worst, t0 = {}, True, 0.0, time.time()
+    if "cgns" in formats:
+        from . import cgns
+        p = cgns.write_cgns(vm, Path(out) / "volume.cgns")
+        own, lib = cgns.roundtrip(vm, p), cgns.libcgns_check(vm.blocks, bcs, itf, p)
+        res["cgns"] = {"file": p.name, "bytes": p.stat().st_size, "own_reader": own, "libcgns": lib}
+        ok &= own["passed"] and (lib is None or lib["passed"])
+        worst = max(worst, own["coords_max_error"], 0.0 if lib is None else lib["coords_max_error"])
+    if "su2" in formats:
+        from . import su2
+        p = Path(out) / "volume.su2"
+        su2.write_su2(vm, p)
+        r = su2.check_su2(vm.blocks, bcs, itf, p)
+        res["su2"] = {"file": p.name} | r
+        ok &= r["passed"]
+    res["seconds"] = round(time.time() - t0, 1)
+    note = "; ".join(f"{k}: {', '.join(v.get('problems', [])) or 'ok'}" for k, v in res.items() if isinstance(v, dict)
+                     and "problems" in v)
+    vm.checks = [c for c in vm.checks if c.n != 15] + [Check(
+        15, "export_round_trip", bool(ok), worst, "CGNS read back exactly (own reader and libcgns); .su2: counts equal, "
+        "every face welded, no inside-out cell, boundary quads face out", note)]
+    return res
+
+
 def write(vm: VolumeMesh, wing, out: Path, formats=("npz",)) -> Path:
-    """The mesh folder: blocks.npz, quality.json, manifest.json (and the exports asked); a refused mesh writes only
-    refusal.json (which check, its value, its limit)."""
+    """The mesh folder: blocks.npz, quality.json, manifest.json and the solver files asked for (cgns, su2: check 15 is
+    run on them); a refused mesh writes only refusal.json (which check, its value, its limit)."""
     import shutil
     from ..mesh.surface import _jsonable, mesh_code_hash
     out = Path(out)
@@ -362,27 +391,30 @@ def write(vm: VolumeMesh, wing, out: Path, formats=("npz",)) -> Path:
     out.mkdir(parents=True)
     cfg = Path(vm.info["rules"]["config"])
     head = {"name": mesh_name(vm, wing), "wing_type": wing.wing_type, "set": wing.set_name, "index": wing.index,
-            "wing_input_hash": wing.input_hash, "level": vm.level, "re_mean": vm.re_mean, "outcome": vm.outcome,
+            "wing_input_hash": wing.input_hash, "level": vm.level, "re_mean": vm.re_mean,
             "rules_config": cfg.name, "rules_hash": hashlib.sha256(cfg.read_bytes()).hexdigest(),
             "volume_code_hash": volume_code_hash(), "surface_code_hash": mesh_code_hash(),
             "cells": vm.cells, "nodes": vm.nodes, "ram_gib_adflow": vm.info["ram_gib_adflow"]}
+    exports = {}
+    if vm.passed:
+        solver = tuple(f for f in formats if f in ("cgns", "su2"))
+        if solver:
+            exports = export(vm, out, solver)
+    head["outcome"] = vm.outcome
     checks = [c.as_dict() for c in vm.checks]
     if not vm.passed:
+        for f in ("volume.cgns", "volume.su2"):
+            (out / f).unlink(missing_ok=True)
         (out / "refusal.json").write_text(json.dumps(_jsonable(head | {
-            "failed": [c.as_dict() for c in vm.failed()], "checks": checks}), indent=1))
+            "failed": [c.as_dict() for c in vm.failed()], "checks": checks, "exports": exports}), indent=1))
         return out
     np.savez(out / "blocks.npz", **vm.blocks)
     (out / "quality.json").write_text(json.dumps(_jsonable({"checks": checks, "review": vm.review,
-                                                            "info": vm.info}), indent=1))
+                                                            "info": vm.info, "exports": exports}), indent=1))
     shapes = {n: list(b.shape[:3]) for n, b in vm.blocks.items()}
     (out / "manifest.json").write_text(json.dumps(_jsonable(head | {
         "mesh_node_hash": vm.node_hash(), "blocks": shapes,
         "boundary_conditions": tp.boundary_conditions(),
-        "interfaces": tp.interfaces(vm.info["cap_upper_face"])}), indent=1))
-    if "cgns" in formats:
-        from .cgns import write_cgns
-        write_cgns(vm, out / "volume.cgns")
-    if "su2" in formats:
-        from .su2 import write_su2
-        write_su2(vm, out / "volume.su2")
+        "interfaces": tp.interfaces(vm.info["cap_upper_face"]),
+        "files": sorted(p.name for p in out.iterdir()) + ["manifest.json"]}), indent=1))
     return out

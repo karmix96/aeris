@@ -513,3 +513,8 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     chord from the root's wall had VC/C 1.232–1.259 on 4 of 9 families. Now 1.265–1.289 on the same wings.
 98. **The far zone is built at 1.22 at VC (V2, 9 Nov 2026)** (decision 85): built at 1.25, the blend to the station mean
     raised one root's growth to 1.0100 × the limit. Cost: one layer on that wing.
+99. **The solver files (V5, 9 Nov 2026).** CGNS in ADF (A02011), written by our own writer (`cfdauto/volume/cgns.py`):
+    Mike's CGNS 4.5.2 reads ADF only (no HDF5; S8), and building libcgns here was not allowed. Checked by our reader and
+    by the CGNS library itself (VTK's copy, `libvtkcgns.so`): exact on the V7 mesh. The `.su2`: hexahedra, nodes welded
+    by the topology, markers `wall`, `symmetry`, `farfield`, quads facing out. Check 15 runs on every export.
+

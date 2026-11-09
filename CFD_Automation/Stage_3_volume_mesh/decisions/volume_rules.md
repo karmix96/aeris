@@ -299,3 +299,37 @@ outboard blocks are good (≥ 0.77) but hold 51–56 % of the cells: in a matche
 whole plane. The tip-vortex path is fine across the wake (0.004–0.017 c at 4°) and coarse along it (0.08–0.24 c, the
 band allows 4 × the cross cell); at 20° and 2 c it sits at the band's edge (0.08 c). Enough to carry the vortex, not to
 resolve its core. Whether that matters is a solver question (V7, then the mesh study of Stage 4).
+
+## 10. V5: the solver files and check 15
+
+`cfdauto/volume/cgns.py` and `cfdauto/volume/su2.py`; `write(vm, wing, out, formats=("npz", "cgns", "su2"))` writes
+them and runs check 15 (`export()`); `scripts/v5_export.py` → `data/studies/v5_export.json` for the V7 mesh.
+
+- **CGNS for ADflow, in pure Python.** Mike's CGNS 4.5.2 (the one ADflow links) was built without HDF5 and reads only
+  ADF (S8, `cgns_read.py`), and building libcgns here was not allowed. So the file is written in ADF (version A02011,
+  every header in ASCII hex), following the CGNS source (`ADF_internals.c`). The tree: one base, 13 structured zones,
+  coordinates in double precision (i fastest), one `BC_t` per boundary face (BCWallViscous, BCFarfield,
+  BCSymmetryPlane, each with its `FamilyName`), one `GridConnectivity1to1_t` per matched face on both sides (the
+  transform from the face orientation, not from a nearest-node search), three `Family_t` with their `FamilyBC`.
+- **Read back two ways.** By this package's reader, and by the CGNS library itself: the copy VTK ships
+  (`libvtkcgns.so`, pip `vtk` 9.7.2; the same CGNS code, ADF included, 64-bit sizes), through `cg_open`, `cg_zone_read`,
+  `cg_coord_read`, `cg_boco_info`, `cg_1to1_read`, `cg_family_read`, which are the calls ADflow makes.
+- **.su2 for SU2.** The blocks as hexahedra (VTK 12), the nodes of every matched face welded by the topology (and then
+  checked against the distances), boundary quads (VTK 9) in three markers: `wall`, `symmetry`, `farfield`, ordered to
+  face out of the domain.
+
+| BWB reference wing 0, VC, Re 3 × 10⁵ (4,930,448 cells) | Result |
+| --- | --- |
+| `volume.cgns` | 123.5 MB; own reader: every coordinate exact, 13 zones, 44 1-to-1 records, every transform maps its range onto its donor node for node, every BC with its type, family and range |
+| ... by the CGNS library (VTK's copy) | the same: exact, no problem; version 3.4 |
+| `volume.su2` | 693.6 MB; 5,013,600 points (from 5,099,248 block nodes), 4,930,448 hexahedra; markers wall 15,168, symmetry 36,304, farfield 114,108 quads |
+| ... read back | every point the block node, exactly; no two points closer than 1e−12 c; smallest corner Jacobian 2.9e−13 (> 0: no inside-out cell); 0 boundary quads facing in, 0 bounding no cell |
+| Time | build 15 s; all files and check 15: 56 s |
+
+Tests (`tests/test_cgns.py`, `tests/test_su2.py`): a two-block box matched with a transposed, reversed index order
+(the transform, the donor range, the ADF layout, a wrong transform caught, the library read), and the VC mesh.
+
+**Conclusion.** ADflow and SU2 get the mesh that was checked, node for node, in the formats they read. The CGNS file is
+written without libcgns and still read exactly by libcgns. Not shown yet: that ADflow and SU2 accept it and converge
+(V7). Weak point: the library check here is VTK's copy of CGNS, not Mike's 4.5.2 build; `cgns.libcgns_check` runs with
+Mike's library too (`CGNS_LIB=...`).

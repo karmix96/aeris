@@ -1,0 +1,400 @@
+<title>Surface Mesh Flowchart</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column read top to bottom, the order the mesher runs; branches (repair, refusal) sit to the right of their question. */
+:root {
+  --bg: #F3F6F9; --surface: #FFFFFF; --ink: #142230; --muted: #5A6878; --line: #D6DEE6; --rail: #9FB3C6;
+  --law: #0C5EA8; --law-soft: #DCE9F6; --dec: #9A6200; --dec-soft: #F6E8CF; --chk: #2E7D4F; --chk-soft: #DDF0E4;
+  --hot: #B03A20; --hot-soft: #F6DED8; --val: #3E5A74; --val-soft: #E8EEF4;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E141A; --surface: #151E27; --ink: #E4ECF3; --muted: #9AA9B7; --line: #2A3743; --rail: #4A6279;
+  --law: #62AEF2; --law-soft: #17324A; --dec: #E7B24F; --dec-soft: #392B12; --chk: #63C691; --chk-soft: #163326;
+  --hot: #F08A72; --hot-soft: #3A201B; --val: #9CC0DE; --val-soft: #1C2B38; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E141A; --surface: #151E27; --ink: #E4ECF3; --muted: #9AA9B7; --line: #2A3743; --rail: #4A6279;
+  --law: #62AEF2; --law-soft: #17324A; --dec: #E7B24F; --dec-soft: #392B12; --chk: #63C691; --chk-soft: #163326;
+  --hot: #F08A72; --hot-soft: #3A201B; --val: #9CC0DE; --val-soft: #1C2B38; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15.5px; line-height: 1.5; margin: 0;
+  padding-block: 26px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5.4vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 21px; line-height: 1.15; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+.eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--law); }
+header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.lede { color: var(--muted); font-size: 16.5px; max-width: 78ch; }
+
+/* controls and legend */
+.bar { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 22px; }
+.levels { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.levels .lab { font-size: 13.5px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font-family: var(--mono); font-size: 13px; padding: 6px 13px; border: 0; background: var(--surface); color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--law); color: var(--surface); }
+.seg button:focus-visible { outline: 2px solid var(--law); outline-offset: -2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 12.5px; line-height: 1.3; border-radius: 4px; padding: 3px 7px; border: 1px solid; }
+.chip b { font-family: var(--mono); font-weight: 500; font-size: 11.5px; letter-spacing: .02em; }
+.law { color: var(--law); border-color: var(--law); background: var(--law-soft); }
+.dec { color: var(--dec); border-color: var(--dec); background: var(--dec-soft); }
+.chk { color: var(--chk); border-color: var(--chk); background: var(--chk-soft); }
+.chip span { color: var(--ink); }
+
+/* the flow */
+.flow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); column-gap: 26px; }
+.main { grid-column: 1; }
+.side { grid-column: 2; align-self: center; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 15px;
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; row-gap: 8px; scroll-margin-top: 16px; }
+.num { grid-row: 1 / span 4; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--display); font-weight: 700; font-size: 19px; background: var(--val-soft); color: var(--val); border: 1px solid var(--line); }
+.card > *:not(.num) { grid-column: 2; min-width: 0; }
+.what { color: var(--ink); }
+.vals { font-size: 13.5px; color: var(--val); background: var(--val-soft); border-radius: 5px; padding: 6px 9px; }
+.vals strong { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: var(--ink); }
+.code { font-size: 12px; color: var(--muted); }
+.v { font-family: var(--mono); font-weight: 500; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+.inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.inputs .card { grid-template-columns: 1fr; }
+.inputs .card > * { grid-column: 1; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.out { border: 2px solid var(--chk); }
+.out .num { background: var(--chk-soft); color: var(--chk); border-color: var(--chk); }
+
+/* arrows: a rail with a head, in the main column */
+.arrow { grid-column: 1; height: 30px; position: relative; }
+.arrow::before { content: ""; position: absolute; left: 32px; top: 2px; bottom: 9px; width: 2px; background: var(--rail); }
+.arrow::after { content: ""; position: absolute; left: 27px; bottom: 1px; border: 6px solid transparent; border-top: 8px solid var(--rail); border-bottom: 0; }
+.arrow .lbl { position: absolute; left: 44px; top: 5px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.arrow.join::before { left: 50%; } .arrow.join::after { left: calc(50% - 5px); }
+
+/* questions (the branch points) */
+.ask { align-self: center; display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px dashed var(--rail); border-radius: 8px; padding: 12px 16px; }
+.diamond { flex: none; width: 26px; height: 26px; transform: rotate(45deg); border: 2px solid var(--dec); background: var(--dec-soft); margin-left: 4px; }
+.ask p { font-weight: 600; }
+.ask .sub { font-weight: 400; color: var(--muted); font-size: 13.5px; }
+.branch { position: relative; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; }
+.branch::before { content: attr(data-yes); position: absolute; left: -26px; top: 50%; width: 26px; transform: translateY(-50%);
+  text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.branch::after { content: ""; position: absolute; left: -26px; top: calc(50% + 9px); width: 20px; height: 2px; background: var(--rail); }
+.repair { background: var(--dec-soft); border: 1px solid var(--dec); }
+.refuse { background: var(--hot-soft); border: 1px solid var(--hot); }
+.branch h2 { font-size: 18px; }
+.back { font-family: var(--mono); font-size: 12px; }
+.back a { color: var(--law); }
+
+.groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.groups .g { display: flex; flex-direction: column; gap: 5px; }
+.groups .gt { font-size: 12px; color: var(--muted); font-family: var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+
+footer { margin-top: 26px; color: var(--muted); font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; max-width: 86ch; }
+footer a { color: var(--law); }
+
+@media (max-width: 820px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .side { grid-column: 1; margin-top: 10px; margin-left: 28px; }
+  .branch::before { content: attr(data-yes) " ↓"; position: static; transform: none; width: auto; text-align: left; }
+  .branch::after { display: none; }
+  .inputs { grid-template-columns: 1fr; }
+  .groups { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) { .v { transition: background-color .25s; } .v.flash { background: var(--dec-soft); } }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">CFD_Automation · Stage 2 · the surface mesh · 9 Nov 2026</span>
+    <h1>From one wing to its surface mesh</h1>
+    <p class="lede">What the mesher does with one wing, step by step: the rule behind each step (law), the decision that set it (D = owner decision, <code>OPEN_DECISIONS.md</code>), and the value at the level you pick. The rules are frozen (D82): they change only when a check fails or a solver result shows a problem.</p>
+  </header>
+
+  <div class="bar">
+    <div class="levels">
+      <span class="lab">Values at level</span>
+      <div class="seg" role="group" aria-label="Mesh level">
+        <button type="button" id="lv-VC" data-lv="VC" aria-pressed="false">VC</button>
+        <button type="button" id="lv-C" data-lv="C" aria-pressed="false">C</button>
+        <button type="button" id="lv-M" data-lv="M" aria-pressed="true">M</button>
+        <button type="button" id="lv-F" data-lv="F" aria-pressed="false">F</button>
+      </div>
+      <span class="lab">each level 1.3 × finer than the one before</span>
+    </div>
+    <div class="legend">
+      <span class="chip law"><b>Law</b></span> a mesh law
+      <span class="chip dec"><b>D</b></span> an owner decision
+      <span class="chip chk"><b>Check</b></span> a check
+      <span class="diamond" style="width:12px;height:12px;margin:0 2px 0 6px"></span> a question
+    </div>
+  </div>
+
+  <div class="flow">
+    <!-- inputs -->
+    <div class="main inputs">
+      <div class="card">
+        <span class="tag">Input 1 · the wing (Stage 1)</span>
+        <h2>One wing</h2>
+        <p class="what">A parameter vector (BWB, flying wing, cranked or tapered) becomes the <strong>loft</strong>: a smooth surface that gives any point from its chord fraction x/c and its station. Built at unit mean chord (similarity), with the true nose shape.</p>
+        <div class="chips">
+          <span class="chip dec"><b>D64</b><span>nose re-measured, fixed</span></span>
+          <span class="chip dec"><b>D79</b><span>label tolerance</span></span>
+        </div>
+        <p class="code">Loft: pyGeo; its numpy twin gives the same meshes on the reference wings · <code>wing_from_set</code></p>
+      </div>
+      <div class="card">
+        <span class="tag">Input 2 · the flow and the level</span>
+        <h2>Re and the level</h2>
+        <p class="what">Re on the mean chord: <span class="v">1 × 10⁵</span> <span class="v">3 × 10⁵</span> <span class="v">1 × 10⁶</span> <span class="v">4 × 10⁶</span>. Level VC, C, M or F. One surface per wing and Re; all four levels are built together, so they share one nose factor.</p>
+        <div class="chips">
+          <span class="chip dec"><b>D78</b><span>the Re levels</span></span>
+          <span class="chip dec"><b>D59</b><span>one surface per wing and Re</span></span>
+          <span class="chip law"><b>Law 23</b><span>ratio 1.3 between levels</span></span>
+        </div>
+        <p class="code"><code>build_family(loft, re)</code></p>
+      </div>
+    </div>
+    <div class="arrow join"></div>
+
+    <!-- 1 rules -->
+    <div class="main card" id="s1">
+      <span class="num">1</span>
+      <h2>Read the rules at this level</h2>
+      <p class="what">Every rule is met at its anchor level and moves by 1.3 per level: accuracy targets at M, the transition target at F, the hard minimums at VC. The band is on for every run.</p>
+      <p class="vals">At <strong data-k="lv">M</strong>: nose angle <span class="v" data-k="ang">10°</span> · trailing-edge cell <span class="v" data-k="te">0.10 % c</span> · largest cell <span class="v" data-k="maxc">2.0 % c</span> · <span class="v" data-k="cpb">15.4</span> cells per bubble · station gap <span class="v" data-k="gap">0.25</span> × local chord · y⁺ <span class="v" data-k="yp">0.59</span> · growth <span class="v" data-k="gr">1.114</span> (check <span class="v" data-k="grl">1.141</span>) · <span class="v" data-k="base">14</span> base cells</p>
+      <div class="chips">
+        <span class="chip dec"><b>D71</b><span>anchors, 1.3 per level</span></span>
+        <span class="chip law"><b>Law 23</b><span>r = 1.3 in every direction</span></span>
+        <span class="chip dec"><b>D81</b><span>band on for every run</span></span>
+        <span class="chip dec"><b>D82</b><span>rules frozen</span></span>
+      </div>
+      <p class="code"><code>configs/surface.yaml</code> → <code>laws.rules(level)</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 2 span table -->
+    <div class="main card" id="s2">
+      <span class="num">2</span>
+      <h2>Sample the wing along the semi-span</h2>
+      <p class="what">4,001 points from root to tip: chord, position, the mean chord. Each station flies at its own Re: <strong>local Re = Re × local chord ÷ mean chord</strong>.</p>
+      <div class="chips">
+        <span class="chip dec"><b>D78</b><span>Re on the mean chord; local Re per strip</span></span>
+      </div>
+      <p class="code"><code>SpanTable.of(loft)</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 3 stations -->
+    <div class="main card" id="s3">
+      <span class="num">3</span>
+      <h2>Place the stations</h2>
+      <p class="what">The first wall cell at the tip comes from y⁺ (turbulent flat plate, Cf = 0.026 Re<sup>−1/7</sup>). The last gap at the tip is 2 × that cell. Elsewhere the gap follows the local chord, with a minimum count per panel and a growth limit. A station sits exactly on every loft station, so no kink is cut.</p>
+      <p class="vals">At <strong data-k="lv">M</strong>: y⁺ <span class="v" data-k="yp">0.59</span> · tip gap 2 × s0 · gap <span class="v" data-k="gap">0.25</span> × local chord · at least <span class="v" data-k="pan">12</span> gaps per panel · growth <span class="v" data-k="gr">1.114</span> (check <span class="v" data-k="sgl">1.168</span>)</p>
+      <div class="chips">
+        <span class="chip law"><b>Law 13</b><span>first wall cell from y⁺</span></span>
+        <span class="chip law"><b>Laws 9/10</b><span>last tip gap = 2 × s0</span></span>
+        <span class="chip law"><b>Law 8</b><span>station gap / local chord</span></span>
+        <span class="chip dec"><b>D72</b><span>tip gap 2 × s0</span></span>
+        <span class="chip dec"><b>D77</b><span>growth 1.2 at VC; ≥ 12 per panel at M</span></span>
+      </div>
+      <p class="code"><code>stations.place_stations</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 4 sections -->
+    <div class="main card" id="s4">
+      <span class="num">4</span>
+      <h2>Take the section at every station</h2>
+      <p class="what">From the loft, each side of the section: <strong>x/c from the leading edge (0) to the trailing edge (1)</strong>, as arc length, 6,001 points per side. Every chord fraction below, the band included, is measured this way.</p>
+      <p class="code"><code>Section.at(loft, v)</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 5 nose -->
+    <div class="main card" id="s5">
+      <span class="num">5</span>
+      <h2>Solve the nose cell</h2>
+      <p class="what">Bisection on the nose spacing until no ring cell turns the surface by more than the level's angle. It is solved at every level for its own angle; the strictest answer wins. Never coarser than the band cell. Between stations the nose cell may change by at most 1.15 ×.</p>
+      <p class="vals">Angles: VC 16.9° · C 13° · M 10° · F 7.69° · this level <span class="v" data-k="ang">10°</span></p>
+      <div class="chips">
+        <span class="chip law"><b>Law 1</b><span>largest turning per ring cell</span></span>
+        <span class="chip law"><b>Law 2</b><span>nose cell × ≤ 1.15 between stations</span></span>
+        <span class="chip dec"><b>D77</b><span>solved at every level, strictest wins</span></span>
+      </div>
+      <p class="code"><code>ring.solve_nose</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 6 size field -->
+    <div class="main card" id="s6">
+      <span class="num">6</span>
+      <h2>Set the cell size along the chord</h2>
+      <p class="what">One target size from the nose to the trailing edge: the nose cell (step 5); the trailing-edge cell; over the <strong>band, 0–100 % c on both sides</strong>, the band cell = bubble length ÷ cells per bubble (bubble 0.40 c at local Re 6 × 10⁴, down to 0.10 c from 4 × 10⁵); never above the largest cell; away from the nose no cell turns the surface more than the angle; cells grow by at most the growth. Upper and lower share one size field: the stricter of the two at the same arc fraction.</p>
+      <p class="vals">At <strong data-k="lv">M</strong>: trailing edge <span class="v" data-k="te">0.10 % c</span> · band cell <span class="v" data-k="band">0.65 % c</span> from local Re 4 × 10⁵ · largest <span class="v" data-k="maxc">2.0 % c</span> · growth <span class="v" data-k="gr">1.114</span> (check <span class="v" data-k="grl">1.141</span>)</p>
+      <div class="chips">
+        <span class="chip law"><b>Law 3</b><span>trailing-edge cell / local chord</span></span>
+        <span class="chip law"><b>Law 1</b><span>turning, along the whole ring</span></span>
+        <span class="chip dec"><b>D56</b><span>band cell = bubble ÷ cells</span></span>
+        <span class="chip dec"><b>D72</b><span>bubble floor 0.10 c</span></span>
+        <span class="chip dec"><b>D74</b><span>lower band 0–100 % c</span></span>
+        <span class="chip dec"><b>D58 → 8 Nov</b><span>upper band 0–100 % c</span></span>
+        <span class="chip dec"><b>D60</b><span>one node list for both sides</span></span>
+        <span class="chip dec"><b>D77</b><span>growth limits by the family rule</span></span>
+      </div>
+      <p class="code"><code>ring.fields</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 7 one node list -->
+    <div class="main card" id="s7">
+      <span class="num">7</span>
+      <h2>Make one node list for the whole wing</h2>
+      <p class="what">At every place along the ring the strictest station wins, so every station gets the same number of ring nodes: a structured mesh. Across the blunt trailing edge, a fixed number of base cells.</p>
+      <p class="vals">At <strong data-k="lv">M</strong>: <span class="v" data-k="base">14</span> base cells · ring nodes <span class="v" data-k="ring">198–398</span> over every set (Study 12)</p>
+      <div class="chips">
+        <span class="chip law"><b>Law 6</b><span>cells across the blunt base</span></span>
+        <span class="chip dec"><b>D60</b><span>one node list</span></span>
+      </div>
+      <p class="code"><code>ring.union_distribution</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 8 rings -->
+    <div class="main card" id="s8">
+      <span class="num">8</span>
+      <h2>Build the rings</h2>
+      <p class="what">Every node is asked from the loft at its (x/c, station): nothing is interpolated. Each ring lies in its own station plane.</p>
+      <p class="code"><code>ring.build_ring_at</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- question A: nose -->
+    <div class="main ask">
+      <span class="diamond" aria-hidden="true"></span>
+      <div>
+        <p>Does any ring turn past its check limit?</p>
+        <p class="sub">Limit = the angle + 0.2°: <span class="v" data-k="lim">10.2°</span> at this level. No: go on.</p>
+      </div>
+    </div>
+    <div class="side branch repair" data-yes="yes">
+      <h2>Nose repair, for the whole family</h2>
+      <p>Nose cell × 0.9 at every station, on all four levels of this wing and Re, so the 1.3 step stays exact. Every mesh is labelled.</p>
+      <div class="chips"><span class="chip dec"><b>D80</b><span>a repair belongs to the family</span></span></div>
+      <p class="back">↺ back to <a href="#s6">step 6</a> · Study 12: 0 of 782 families needed it</p>
+    </div>
+    <div class="arrow"><span class="lbl">no</span></div>
+
+    <!-- 9 cap -->
+    <div class="main card" id="s9">
+      <span class="num">9</span>
+      <h2>Close the tip</h2>
+      <p class="what">One H patch whose edge is the tip ring, node for node: a short nose arc, the upper and lower sides, the base. Filled by interpolation, then 400 smoothing sweeps.</p>
+      <p class="code"><code>cap.tip_cap</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- 10 checks -->
+    <div class="main card" id="s10">
+      <span class="num">10</span>
+      <h2>Run the 13 checks</h2>
+      <p class="what">Each one against this level's own value, with its limit and margin written down. The cap quads count as one check in two parts, so a mesh carries 14 entries.</p>
+      <div class="groups">
+        <div class="g"><span class="gt">Nose</span><div class="chips">
+          <span class="chip chk"><b>nose_turning</b><span>≤ <span data-k="lim">10.2°</span> · law 1</span></span>
+          <span class="chip chk"><b>geometry_kinks</b></span>
+          <span class="chip chk"><b>nose_envelope</b><span>≤ 1.15 · law 2</span></span></div></div>
+        <div class="g"><span class="gt">Ring</span><div class="chips">
+          <span class="chip chk"><b>chord_growth</b><span>≤ <span data-k="grl">1.141</span></span></span>
+          <span class="chip chk"><b>band_spacing</b></span>
+          <span class="chip chk"><b>te_spacing</b><span>law 3</span></span>
+          <span class="chip chk"><b>ring_count</b></span></div></div>
+        <div class="g"><span class="gt">Span</span><div class="chips">
+          <span class="chip chk"><b>span_growth</b><span>≤ <span data-k="sgl">1.168</span></span></span>
+          <span class="chip chk"><b>loft_stations_hit</b></span>
+          <span class="chip chk"><b>tip_gap</b><span>laws 9/10</span></span>
+          <span class="chip chk"><b>planar_stations</b></span></div></div>
+        <div class="g"><span class="gt">Cell shape</span><div class="chips">
+          <span class="chip chk"><b>wing_quads</b><span>≥ 0.05</span></span>
+          <span class="chip chk"><b>cap_quads</b><span>≥ 0.05</span></span>
+          <span class="chip chk"><b>cap_nose_corners</b><span>&gt; 0</span></span></div></div>
+      </div>
+      <p class="code"><code>surface.run_checks</code></p>
+    </div>
+    <div class="arrow"></div>
+
+    <!-- question B: checks -->
+    <div class="main ask">
+      <span class="diamond" aria-hidden="true"></span>
+      <div>
+        <p>Do all 13 checks pass?</p>
+        <p class="sub">Yes: write the mesh.</p>
+      </div>
+    </div>
+    <div class="side branch refuse" data-yes="no">
+      <h2>Refused</h2>
+      <p>No mesh is written. <code>refusal.json</code> says which check failed, its value, its limit and its rule. A failure stays in every count.</p>
+      <p class="back">Closest today: the cap quads, lowest <span class="v" data-k="cap">0.057</span> at this level</p>
+    </div>
+    <div class="arrow"><span class="lbl">yes</span></div>
+
+    <!-- output -->
+    <div class="main card out" id="out">
+      <span class="num">✓</span>
+      <h2>The surface mesh</h2>
+      <p class="what"><code>mesh_&lt;level&gt;_&lt;wing hash&gt;_re&lt;Re&gt;/</code>: the wing grid (ring × stations) and the tip cap; <code>manifest.json</code> (every rule value with its reason, the input and code hashes, the nose label); <code>quality.json</code> (every check: value, limit, margin). Four levels per wing and Re, 1.3 apart.</p>
+      <p class="vals">At <strong data-k="lv">M</strong>, every set (Study 12): ring <span class="v" data-k="ring">198–398</span> nodes × <span class="v" data-k="st">82–136</span> stations · cells on the wing blocks, median <span class="v" data-k="cells">2.70 M</span> (largest <span class="v" data-k="cmax">4.69 M</span>) · built in <span class="v" data-k="time">7.2 s</span> (median) · 3,128 of 3,128 meshes passed over all levels</p>
+      <div class="chips">
+        <span class="chip dec"><b>D73</b><span>next: one matched C-H volume mesh (Stage 3)</span></span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Code: <code>CFD_Automation/cfdauto/mesh/</code> (laws, stations, ring, cap, surface); rules: <code>Stage_2_surface_mesh/configs/surface.yaml</code>; decisions: <code>CFD_Automation/OPEN_DECISIONS.md</code>; the record: <code>Stage_2_surface_mesh/decisions/surface_rules.md</code>. Numbers from the family screen (Study 12, 8 Nov 2026), numpy loft; the cells are the wing-block estimate (no wake lines, no outer field past 2 chords).</p>
+    <p>Not in this chart: the volume mesh, the wake lines and the solver (Stage 3 and after).</p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const V = {
+    VC: { lv: "VC", ang: "16.9°", lim: "17.1°", te: "0.169 % c", maxc: "3.38 % c", cpb: "9.1", band: "1.10 % c", gap: "0.42", pan: "8",
+          yp: "1.00", gr: "1.200", grl: "1.250", sgl: "1.300", base: "8", ring: "120–240", st: "51–84", cells: "0.60 M", cmax: "1.02 M", time: "4.5 s", cap: "0.075" },
+    C:  { lv: "C", ang: "13°", lim: "13.2°", te: "0.130 % c", maxc: "2.6 % c", cpb: "11.8", band: "0.85 % c", gap: "0.33", pan: "10",
+          yp: "0.77", gr: "1.151", grl: "1.187", sgl: "1.224", base: "10", ring: "154–308", st: "65–108", cells: "1.26 M", cmax: "2.19 M", time: "5.7 s", cap: "0.080" },
+    M:  { lv: "M", ang: "10°", lim: "10.2°", te: "0.10 % c", maxc: "2.0 % c", cpb: "15.4", band: "0.65 % c", gap: "0.25", pan: "12",
+          yp: "0.59", gr: "1.114", grl: "1.141", sgl: "1.168", base: "14", ring: "198–398", st: "82–136", cells: "2.70 M", cmax: "4.69 M", time: "7.2 s", cap: "0.057" },
+    F:  { lv: "F", ang: "7.69°", lim: "7.89°", te: "0.077 % c", maxc: "1.54 % c", cpb: "20", band: "0.50 % c", gap: "0.19", pan: "16",
+          yp: "0.46", gr: "1.087", grl: "1.107", sgl: "1.127", base: "18", ring: "254–514", st: "106–177", cells: "5.91 M", cmax: "10.21 M", time: "9.3 s", cap: "0.061" }
+  };
+  const buttons = document.querySelectorAll(".seg button");
+  function show(lv, flash) {
+    const vals = V[lv];
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const k = el.dataset.k;
+      if (vals[k] !== undefined && el.textContent !== vals[k]) {
+        el.textContent = vals[k];
+        if (flash && el.classList.contains("v")) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 450); }
+      }
+    });
+    buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lv === lv)));
+    try { localStorage.setItem("meshflow-level", lv); } catch (e) {}
+  }
+  buttons.forEach(b => b.addEventListener("click", () => show(b.dataset.lv, true)));
+  let start = "M";
+  try { const s = localStorage.getItem("meshflow-level"); if (s && V[s]) start = s; } catch (e) {}
+  show(start, false);
+})();
+</script>

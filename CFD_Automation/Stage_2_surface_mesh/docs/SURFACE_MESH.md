@@ -736,7 +736,7 @@ Studies 1–7 were run while building the mesher with the first approach (2–3 
 
 ### Study 13 · The transition band as an option (9 Nov 2026)
 
-**What was done.** The owner made the band an option (decision 81), chosen right before the runs together with the solver (76): **on** for runs with a transition model (SU2 SST + LM), **off** for fully turbulent runs (ADflow SA). Off: no band windows, the largest-cell rule only; every other rule the same. Built: `chord.transition_band` in `configs/surface.yaml` (default true) and `--band on|off` on `python -m cfdauto.mesh` and `scripts/screen.py`; the mesh name ends in `_noband`; the band-on meshes are unchanged (the same nodes). Then the 20 reference wings × 4 Re × VC, C, M, F with the band off, one nose factor per family, against Study 12. Code: `scripts/band_option.py`; data: `data/studies/band_option.json`.
+**What was done.** The owner asked whether the band is worth its cost, so it became a switch (decision 81) and was measured: **on** for runs with a transition model (SU2 SST + LM), **off** for fully turbulent runs (ADflow SA). Off: no band windows, the largest-cell rule only; every other rule the same. Built: `chord.transition_band` in `configs/surface.yaml` (default true) and `--band on|off` on `python -m cfdauto.mesh` and `scripts/screen.py`; the mesh name ends in `_noband`; the band-on meshes are unchanged (the same nodes). Then the 20 reference wings × 4 Re × VC, C, M, F with the band off, one nose factor per family, against Study 12. Code: `scripts/band_option.py`; data: `data/studies/band_option.json`.
 
 | Level | on ÷ off, Re 10⁵ | on ÷ off, Re 3 × 10⁵ | on ÷ off, Re 10⁶ | on ÷ off, Re 4 × 10⁶ | Largest on / off \[M\] | Passed, band off |
 |-------|------------------|----------------------|------------------|----------------------|------------------------|------------------|
@@ -756,11 +756,11 @@ Studies 1–7 were run while building the mesher with the first approach (2–3 
 
 **Conclusion.** The band nearly doubles the cells from Re 3 × 10⁵ up and costs almost nothing at 10⁵ (1.08–1.09), where the band cell is about the largest cell.
 
-**Conclusion.** The option works and is cheap to choose: the band nearly doubles the cells at Re ≥ 3 × 10⁵ (1.79–1.91) and costs almost nothing at 10⁵. With the band off, 20 of 320 builds fail (the BWB tip cap at M), so the cap must be fixed before any run with the band off. Not shown: the full sets with the band off.
+**Conclusion.** The option works and is cheap to choose: the band nearly doubles the cells at Re ≥ 3 × 10⁵ (1.79–1.91) and costs almost nothing at 10⁵. With the band off, 20 of 320 builds fail (the BWB tip cap at M), so the band-off option would need a cap fix first. Decided (owner, 9 Nov): the band stays on for every run, SA and LM alike (one mesh family for both solvers); the switch stays in the code, unused; no cap change; the surface rules are frozen: a question gets a measurement first, a rule changes only when a check fails or a solver result shows a problem (decision 82). Not shown: the full sets with the band off.
 
 ## What was done, step by step
 
-In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–22 are the new approach (6–8 Nov).
+In the order it happened. Steps 1–14 are the first approach (2–3 Nov): three passes of the screen were needed; the first two are development evidence, the last is the result. Steps 15–23 are the new approach (6–9 Nov).
 
 **1 · inputs**
 
@@ -894,6 +894,12 @@ The 20 reference wings on the pyGeo loft give the same meshes as on the numpy lo
 
 Decision 77 confirmed (the growth limits by the family rule; the station growth 1.2); the upper band written 0–100 % c; the nose repair belongs to the family (80): one nose factor for all four levels of a wing at one Re, triggered only past a level's check limit, and every mesh labelled. Then every set at every level for the first time: 3,128 of 3,128 builds passed, 0 families needed a repair (Study 12).
 
+**23 · 9 Nov**
+
+### What the band costs; the band stays on; the rules frozen
+
+A switch to build without the band, measured on the 20 reference wings at every level: the band nearly doubles the cells at Re ≥ 3 × 10⁵ and costs almost nothing at 10⁵; with it off the BWB tip cap fails at M (Study 13). The owner kept the band on for every run, SA and LM alike, the switch unused, no cap change, and froze the surface rules: a question gets a measurement first, a rule changes only when a check fails or a solver result shows a problem (decisions 81, 82).
+
 ## Assumptions
 
 | \#  | Assumption                                                                                                                                                                                        | Why                                                                                                                                                                                                                                                                                                                                                               | What it leaves out / risk                                                                                                                                  |
@@ -964,7 +970,7 @@ No solve has been run. Whether the surface gives a good C-H volume mesh and a co
 
 - **Numpy loft here; pyGeo checked on the reference wings only.** Every mesh on this page was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
-- **The cap quads come close to the limit.** Lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, against the refusal limit 0.05 (every set at every level, Study 12). Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). **With the band off they cross it:** all 20 BWB reference builds at M, 0.0495 (Study 13); more smoothing does not help. The march will say whether this matters.
+- **The cap quads come close to the limit.** Lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, against the refusal limit 0.05 (every set at every level, Study 12). Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). **With the band off they cross it:** all 20 BWB reference builds at M, 0.0495 (Study 13); more smoothing does not help. The band stays on (owner, 9 Nov), so the runs are not affected. The march will say whether this matters.
 - **The stations are 17 % more than the plan.** The decided station growth (1.2) and gaps per panel (12 at M) give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.
 - **The cell count is an estimate, and it hangs on the wall-layer rule.** Two counts exist: the first estimate (6 Nov: F 10.9 M; its wall-layer rule not recorded; the first-approach reference wings) and this one (Study 12: F 6.73 M median on the reference wings; one layer count per block, 2 chords deep, growth 1.25 at VC by the family rule, s0 from y⁺ per station). The pages use this one because it can be redone. Both leave out the C-H wake lines (+30–60 %, rough) and the outboard blocks. Stage 3 sets the real wall-layer rule.
 - **The coarse levels get a finer nose than they ask.** The nose is solved at every level and the strictest wins (owner, 7 Nov), so VC, C and M take the nose of a finer level where it is stricter (VC 14.6–16.1° against 16.9°), and a build pays up to four solves per station. This keeps the family rule exact; the first build (VC and F only) needed a repair at M on the flying wings, and that is gone (Study 9).
@@ -988,8 +994,8 @@ No solve has been run. Whether the surface gives a good C-H volume mesh and a co
 8.  ~~Mike: confirm or change the two builder choices left, and the upper band~~ — done 8 Nov: both builder choices confirmed (the growth limits by the family rule; the station growth 1.2 with at least 12 gaps per panel at M); the upper band written 0–100 % c; the nose repair belongs to the family (Study 12).
 9.  **pyGeo run (Mike's machine): done on 8 Nov.** pyGeo tests 24 of 24, Stage 1 tests 204 (1 skipped), `build --all` 722 of 722 (manifests pushed), Stage 2 tests 41; the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) (record: `data/studies/screen_VC_pygeo_oldlevels.json`; the new-level runs as printouts). Stage 1 then fixed its label rules (decision 79, 8 Nov): every wing's input hash changed, its surface did not (the same surface hash on all 722), so every mesh and screen here stands; re-meshed spot check: 5 builds, the same node hashes.
 10. **pyGeo `build --all` once more (Mike's machine):** new input hashes after the label fix; the surfaces are the same.
-11. **Fix the BWB tip cap for the band off** (Study 13): all 20 BWB reference builds at M fail it with the band off.
-12. **Close Stage 2:** the final page, summary and handover; notify. Right before the runs: the band option (81) and the solver (76), together.
+11. ~~Fix the BWB tip cap for the band off~~ <span class="flag ok">not needed: the band stays on for every run (owner, 9 Nov)</span>
+12. **Close Stage 2:** the final page, summary and handover; notify. The surface rules are frozen (82). Right before the runs: the solver split (76).
 13. **Stage 3:** the matched C-H volume mesh on one wing first (open-line march, wake lines to the far field, outboard blocks and the tip vortex, far field 80 c; CGNS for ADflow, a converter to .su2 for SU2), count its cells, then the first solves.
 14. **Ladders after the first solves:** chordwise (T6: cells per bubble, the band), spanwise (station gap, 12 per panel, tip gap), the nose angle (12 / 10 / 8 / 6°).
 15. **Decide 65 and 66** (the per-wing band, the AVL + NeuralFoil upgrade) after the first 3-D transition runs (SU2 LM on the BWB centre body first), with the flow dataset per Re level at unit mean chord.

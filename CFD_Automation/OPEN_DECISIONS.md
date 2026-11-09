@@ -357,9 +357,8 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     method (the plan agreed on 6 Nov) found it real, and it was fixed (64).
 76. **Solver split** (proposal, pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST +
     LM on about 20 % of the wings. Needs an ADflow against SU2 SA code-to-code check and the SU2 cost per solve.
-    **Decided right before the runs, together with the band option (81; owner, 9 Nov 2026):** the meshes for
-    transition runs carry the band, those for fully turbulent runs may go without it (1.8–1.9 × fewer cells at
-    Re ≥ 3 × 10⁵).
+    **The band stays on for both solvers (81; owner, 9 Nov 2026):** the fully turbulent runs use the same meshes as
+    the transition runs (about 1.8–1.9 × the cells they would need at Re ≥ 3 × 10⁵).
 77. **Builder choices in the built rules (7 Nov).** All are stricter than decided; numbered as in
     `Stage_2_surface_mesh/decisions/surface_rules.md`, section 13. (1) The growth limits follow the family rule:
     along the ring 1.25 at VC (decided) gives 1.107 at F; between station gaps 1.3 at VC (not in 71–72) gives 1.127
@@ -431,3 +430,10 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     **Weak point: with the band off, every BWB reference wing fails at M** (20 of 320 builds; the tip cap, scaled
     Jacobian 0.0495 against the limit 0.05; 0.057–0.078 with the band on). More cap smoothing does not help (the worst cell
     sits on the cap's edge near the trailing edge). To fix before any run with the band off.
+    **Then decided (owner, 9 Nov 2026): the band stays on for every run, SA and LM alike.** One mesh family for both
+    solvers, so the SA mesh study also speaks for the LM runs; the price is about 1.8–1.9 × the cells for the SA runs
+    at Re ≥ 3 × 10⁵ (compute, not accuracy). The switch stays in the code, default on, not used; no cap change (the
+    band-on caps pass, lowest 0.057).
+82. **The surface rules are frozen (owner, 9 Nov 2026).** A question gets a measurement first; a rule changes only
+    when a check fails or a solver result shows a problem. (Why: on 9 Nov a question led to a new option and talk of a
+    cap change without a real need; changes to screened rules risk what is built.)

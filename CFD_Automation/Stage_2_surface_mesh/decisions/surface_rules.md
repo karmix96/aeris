@@ -617,3 +617,9 @@ ratio kept (45 tests).
 **Conclusion.** The option works and is cheap to choose: the band nearly doubles the cells at Re ≥ 3 × 10⁵ and
 costs almost nothing at 10⁵. With the band off the BWB tip cap fails at M, so the cap must be fixed before any run
 with the band off. Not shown: the full sets with the band off.
+
+**Then decided (owner, 9 Nov).** The band stays on for every run, SA and LM alike: one mesh family for both solvers,
+so the SA mesh study also speaks for the LM runs; the price is about 1.8–1.9 × the cells for the SA runs at
+Re ≥ 3 × 10⁵ (compute, not accuracy). The switch stays in the code, default on, not used; no cap change (the band-on
+caps pass, lowest 0.057 at M). **The surface rules are frozen (decision 82):** a question gets a measurement first; a
+rule changes only when a check fails or a solver result shows a problem.

@@ -37,10 +37,10 @@ chord:                            # around the section (one closed ring per stat
                                   # check: neighbouring cells along the ring: 1.25 at VC, 1.19 at C, 1.14 at M, 1.11 at F
   max_spacing_c: {value: 0.02, at: M, why: "accuracy target, decision 71; our starting value"}
                                   # largest cell outside the band: 2 % c at M (3.38 % c at VC)
-  transition_band: true           # the band option (owner, 9 Nov 2026): true = the band cells below, for runs with a
-                                  # transition model (SU2 SST + LM); false = no band, the largest cell above only, for
-                                  # fully turbulent runs (ADflow SA). Chosen right before the runs, with the solver
-                                  # (decision 76); also on the command line: --band on|off (the mesh name gets _noband).
+  transition_band: true           # the band switch (9 Nov 2026): kept true for every run, SA and LM alike (owner,
+                                  # decision 81: one mesh family for both solvers). false = no band, the largest cell
+                                  # above only: not used (with it off the BWB tip cap fails at M, Study 13). Also on the
+                                  # command line: --band on|off (the mesh name gets _noband). Rules frozen (decision 82).
                                   # Cost at F, 20 reference wings (Study 13): on / off = 1.08x the cells at Re 1e5,
                                   # 1.83x at 3e5, 1.91x at 1e6 and at 4e6
   band_upper: [0.0, 1.00]       # transition band, upper surface, x/c, from the leading edge (owner, 8 Nov 2026; was

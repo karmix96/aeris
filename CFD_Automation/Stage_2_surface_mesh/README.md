@@ -11,8 +11,9 @@
 > both builder choices (decision 77), wrote the upper band 0–100 % c and made a nose repair belong to the family
 > (decision 80); the family screen (section 19): every set at every level, 3,128 of 3,128 builds pass, 0 nose
 > repairs (`scripts/screen.py --family`). The pyGeo run is done (8 Nov): the same meshes as the numpy loft on the 20
-> reference wings. On 9 Nov the transition band became an option (decision 81, `--band on|off`; section 20): chosen
-> right before the runs with the solver; with it off the BWB tip cap fails at M, to fix first. Still to come: one
+> reference wings. On 9 Nov the band was measured as a switch (decision 81, `--band on|off`; section 20): it nearly
+> doubles the cells at Re ≥ 3 × 10⁵, but it stays on for every run (owner), the switch unused (with it off the BWB tip
+> cap fails at M); the surface rules are frozen (decision 82). Still to come: one
 > pyGeo `build --all` after the label fix, the owner's word to close, then the
 > matched C-H volume mesh (Stage 3).
 

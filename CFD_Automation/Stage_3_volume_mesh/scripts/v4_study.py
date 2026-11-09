@@ -52,6 +52,14 @@ def main() -> None:
         for lev, v in r["levels"].items():
             if v.get("built"):
                 seen[(r["type"], r["index"], lev)] = v["outcome"]
+    after = {}                                               # decision 101 (Mike): the same meshes rebuilt with it
+    cs = STUDIES / "v4_cap_split.json"
+    if cs.exists():
+        for key, v in json.loads(cs.read_text()).get("after_decision_101", {}).get("results", {}).items():
+            t, i, lev = key.split()
+            after[(t, int(i), lev)] = v["outcome"]
+    s["before_decision_101"] = {f"{t} {i} {lev}": o for (t, i, lev), o in seen.items() if (t, i, lev) in after}
+    seen.update({k: v for k, v in after.items() if k in seen})
     outcomes = {}
     for (t, i, lev), o in seen.items():
         outcomes.setdefault(lev, {}).setdefault(o, []).append(f"{t} {i}")
@@ -77,9 +85,21 @@ def main() -> None:
         for lev, v in r["levels"].items():
             if v.get("built") and lev in ("M", "F"):
                 bvc[(r["type"], r["index"], lev)] = {"wing": f"{r['type']} {r['index']}", "level": lev, "cells": v["cells"],
-                                                     "outcome": v["outcome"], "failed": v.get("failed"),
+                                                     "outcome": after.get((r["type"], r["index"], lev), v["outcome"]),
+                                                     "failed": [] if (r["type"], r["index"], lev) in after else v.get("failed"),
                                                      "seconds": v.get("seconds"), "max_rss_gib": r.get("max_rss_gib")}
+    if cs.exists():
+        for key, v in json.loads(cs.read_text()).get("after_decision_101", {}).get("results", {}).items():
+            t, i, lev = key.split()
+            bvc.setdefault((t, int(i), lev), {"wing": f"{t} {i}", "level": lev, "cells": v["cells"], "outcome": v["outcome"],
+                                              "failed": v["failed"], "seconds": None, "max_rss_gib": None})
+            seen.setdefault((t, int(i), lev), v["outcome"])
     s["built_vs_counted"] = list(bvc.values())
+    outcomes = {}
+    for (t, i, lev), o in seen.items():
+        outcomes.setdefault(lev, {}).setdefault(o, []).append(f"{t} {i}")
+    s["outcomes_built"] = {lev: {o: len(w) for o, w in d.items()} for lev, d in outcomes.items()}
+    s["outcomes_built_wings"] = {lev: d for lev, d in outcomes.items() if lev in ("M", "F")}
     (STUDIES / "v4.json").write_text(json.dumps(s, indent=1))
 
     fig, ax = S.plt.subplots(1, 2, figsize=(13.2, 4.6), gridspec_kw={"width_ratios": [1.35, 1]})

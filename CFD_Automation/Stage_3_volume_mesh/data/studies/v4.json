@@ -56,6 +56,11 @@
    "bwb 2: cell_1c_wall VC/C = 1.2696"
   ]
  },
+ "before_decision_101": {
+  "bwb 0 M": "refused",
+  "flying_wing 0 M": "refused",
+  "bwb 0 F": "refused"
+ },
  "outcomes_built": {
   "VC": {
    "passed": 20
@@ -64,27 +69,25 @@
    "passed": 20
   },
   "M": {
-   "refused": 2,
-   "passed": 2
+   "passed": 4
   },
   "F": {
-   "refused": 1
+   "passed": 2
   }
  },
  "outcomes_built_wings": {
   "M": {
-   "refused": [
-    "bwb 0",
-    "flying_wing 0"
-   ],
    "passed": [
+    "bwb 0",
+    "flying_wing 0",
     "cranked 0",
     "tapered 0"
    ]
   },
   "F": {
-   "refused": [
-    "bwb 0"
+   "passed": [
+    "bwb 0",
+    "flying_wing 0"
    ]
   }
  },
@@ -379,10 +382,8 @@
    "wing": "bwb 0",
    "level": "M",
    "cells": 22691330,
-   "outcome": "refused",
-   "failed": [
-    "cell_quality"
-   ],
+   "outcome": "passed",
+   "failed": [],
    "seconds": 46.16,
    "max_rss_gib": 2.168304443359375
   },
@@ -390,10 +391,8 @@
    "wing": "flying_wing 0",
    "level": "M",
    "cells": 20432678,
-   "outcome": "refused",
-   "failed": [
-    "cell_quality"
-   ],
+   "outcome": "passed",
+   "failed": [],
    "seconds": 70.08,
    "max_rss_gib": 1.1035842895507812
   },
@@ -419,12 +418,19 @@
    "wing": "bwb 0",
    "level": "F",
    "cells": 49093520,
-   "outcome": "refused",
-   "failed": [
-    "cell_quality"
-   ],
+   "outcome": "passed",
+   "failed": [],
    "seconds": 110.3,
    "max_rss_gib": 2.168304443359375
+  },
+  {
+   "wing": "flying_wing 0",
+   "level": "F",
+   "cells": 44369568,
+   "outcome": "passed",
+   "failed": [],
+   "seconds": null,
+   "max_rss_gib": null
   }
  ]
 }

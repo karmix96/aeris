@@ -537,3 +537,17 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
 103. **Where the solves run: needs further thinking (Mike, 9 Nov 2026).** V7 stays written, not run. The V7 mesh (4.93 M
     cells, about 48.2 GiB for ADflow) is at the edge of the 52 GB desktop (about 5.0 M cells, Stage 2's figure).
 104. **The hold-outs for the volume mesh: not yet (Mike, 9 Nov 2026).** V8 waits; they stay sealed for the volume mesh.
+105. **The cells must drop drastically (Mike, 9 Nov 2026, 20:01).** F at about 45 M cells (VC about 4.5 M, 38–67 GiB
+    for ADflow) is not usable. The rules will change, so: the V6 screen stopped at 427 of 702 wings (kept as the
+    record); V7 (the first solves) and V8 (the hold-outs) wait for the new rules; packages of changes counted on the 20
+    reference wings for Mike to choose (`data/studies/cell_packages.json`, `volume_rules.md` section 14). Until then the
+    rules of V0–V5 stand, unchanged, as the baseline. Option built for the count (default off): `wake.first_cell:
+    te_cell` (the first cell behind the base = the wing's last chordwise cell; check 5 refuses it while decision 90
+    stands).
+106. **The wake-band envelope misses wakes that leave downward (V6 finding, 9 Nov 2026; to fix in the redesign).** Check
+    11 refused 18 of 24 full-space BWB and 2 of 3 full-space cranked wings screened (band cells up to 1.078 × the band
+    cell; the growth part ≤ 0.99). The envelope height assumes a wake line straight from the trailing edge; where the
+    base normal points down (−6.9° to −2.0° on BWB full-space wing 13; the centre line 0.068 c low at 2 local chords),
+    the band's upper edge lies above the envelope. Fix: add the centre line's downward offset at the band length to the
+    envelope height. Not built yet: the rules change first.
+

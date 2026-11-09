@@ -89,6 +89,7 @@ def stations_of(surface, rl: VolumeRules) -> list[pl.Station]:
         g_bl = float(mr.bl_growth(np.array([s0]), np.array([delta]), rl.bl_cells, rl.wall_growth)[0])
         st = pl.Station(k, float(r["y_m"]), ring, float(r["chord_m"]), float(r["re_local"]), s0, delta, g_bl)
         st.wake = pl.wake_of(ring, n_side, st.chord, rl)
+        st.te_cell = float(min(np.linalg.norm(ring[1] - ring[0]), np.linalg.norm(ring[2 * n_side - 3] - ring[2 * n_side - 2])))
         out.append(st)
     return out
 
@@ -96,6 +97,16 @@ def stations_of(surface, rl: VolumeRules) -> list[pl.Station]:
 def smoothstep(t: Array) -> Array:
     t = np.clip(t, 0.0, 1.0)
     return t * t * (3.0 - 2.0 * t)
+
+
+def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:
+    """The first cell behind the base, per station. wake.first_cell: s0 (default; decision 90: the base is a wall at
+    y+ <= 1) or te_cell (the wing's last chordwise cell: no spacing jump across the trailing-edge line, the base not
+    wall-resolved; an option counted for decision 105, which check 5 refuses until decision 90 changes)."""
+    how = str(rl.raw["wake"].get("first_cell", "s0"))
+    if how not in ("s0", "te_cell"):
+        raise ValueError(f"wake.first_cell must be s0 or te_cell, not {how!r}")
+    return np.array([s.s0 if how == "s0" else max(s.te_cell, s.s0) for s in sts])
 
 
 def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[Array, Array]:
@@ -110,7 +121,7 @@ def wake_nodes(sts: list[pl.Station], dom: pl.Domain, rl: VolumeRules) -> tuple[
         A.append(args)
         L.append(length)
     arr = {k: np.array([a[k] for a in A]) for k in A[0]}
-    s0 = np.array([s.s0 for s in sts])
+    s0 = wake_first_cells(sts, rl)
     L = np.array(L)
     f = mr.min_cells(s0, L, **arr)
     n_cells = int(np.ceil(f.max() - 1e-9)) + 1                 # one spare cell: every station meets its limits

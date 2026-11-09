@@ -125,6 +125,7 @@ class Station:
     g_bl: float          # growth inside delta that gives the level's bl_cells
     wake: WakeLine = None
     s_end: float = 0.0   # arc length of the wake centre line to the outflow
+    te_cell: float = 0.0  # the wing's last chordwise cell (the smaller of the two trailing-edge corners) [c]
 
 
 @dataclass

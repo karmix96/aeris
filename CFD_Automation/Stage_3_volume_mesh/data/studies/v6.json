@@ -1,0 +1,573 @@
+{
+ "meshes": 447,
+ "outcomes": {
+  "passed": 426,
+  "refused": 21
+ },
+ "stopped": "9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)",
+ "passes_with_decision_101": [
+  "bwb training_full 19"
+ ],
+ "outcomes_with_decision_101": {
+  "passed": 427,
+  "refused": 20
+ },
+ "screened_of": {
+  "reference": {
+   "bwb": [
+    5,
+    5
+   ],
+   "flying_wing": [
+    5,
+    5
+   ],
+   "cranked": [
+    5,
+    5
+   ],
+   "tapered": [
+    5,
+    5
+   ]
+  },
+  "training_focus": {
+   "bwb": [
+    100,
+    100
+   ],
+   "flying_wing": [
+    100,
+    100
+   ],
+   "cranked": [
+    100,
+    100
+   ],
+   "tapered": [
+    100,
+    100
+   ]
+  },
+  "training_full": {
+   "bwb": [
+    24,
+    40
+   ],
+   "flying_wing": [
+    0,
+    40
+   ],
+   "cranked": [
+    3,
+    40
+   ],
+   "tapered": [
+    0,
+    40
+   ]
+  },
+  "corner1": {
+   "bwb": [
+    0,
+    32
+   ],
+   "flying_wing": [
+    0,
+    24
+   ],
+   "cranked": [
+    0,
+    32
+   ],
+   "tapered": [
+    0,
+    24
+   ]
+  },
+  "corner2": {
+   "bwb": [
+    0,
+    8
+   ],
+   "flying_wing": [
+    0,
+    7
+   ],
+   "cranked": [
+    0,
+    8
+   ],
+   "tapered": [
+    0,
+    7
+   ]
+  }
+ },
+ "by_set": {
+  "reference": {
+   "bwb": {
+    "passed": 5
+   },
+   "flying_wing": {
+    "passed": 5
+   },
+   "cranked": {
+    "passed": 5
+   },
+   "tapered": {
+    "passed": 5
+   }
+  },
+  "training_focus": {
+   "bwb": {
+    "passed": 100
+   },
+   "flying_wing": {
+    "passed": 100
+   },
+   "cranked": {
+    "passed": 100
+   },
+   "tapered": {
+    "passed": 100
+   }
+  },
+  "training_full": {
+   "bwb": {
+    "refused": 19,
+    "passed": 5
+   },
+   "flying_wing": {},
+   "cranked": {
+    "refused": 2,
+    "passed": 1
+   },
+   "tapered": {}
+  },
+  "corner1": {
+   "bwb": {},
+   "flying_wing": {},
+   "cranked": {},
+   "tapered": {}
+  },
+  "corner2": {
+   "bwb": {},
+   "flying_wing": {},
+   "cranked": {},
+   "tapered": {}
+  }
+ },
+ "failed_checks": {
+  "wake": 20,
+  "cell_quality": 1
+ },
+ "refused": [
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 0,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.071502653110699
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 1,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.042320809257179
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 2,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.074141595425984
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 3,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0248077714452
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 4,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0215947777854437
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 5,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0288042043836165
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 6,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0269766503562539
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 7,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0438132977206689
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 9,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0368646069640195
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 10,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0722049555658937
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 11,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0139573843762821
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 13,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0778297235705239
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 15,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0103659166151537
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 16,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0543223700643203
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 18,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0578898019504315
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 19,
+   "failed": [
+    "cell_quality"
+   ],
+   "values": {
+    "cell_quality": 0.03968976665951429
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 20,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0209800661465798
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 21,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0118277046093902
+   }
+  },
+  {
+   "type": "bwb",
+   "set": "training_full",
+   "index": 22,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.047950697917178
+   }
+  },
+  {
+   "type": "cranked",
+   "set": "training_full",
+   "index": 0,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.019614605195253
+   }
+  },
+  {
+   "type": "cranked",
+   "set": "training_full",
+   "index": 2,
+   "failed": [
+    "wake"
+   ],
+   "values": {
+    "wake": 1.0165662945811795
+   }
+  }
+ ],
+ "crashed": [],
+ "review": {},
+ "cells": {
+  "n": 447,
+  "min": 3883924.0,
+  "median": 4474064.0,
+  "p95": 5118272.0,
+  "max": 5485856.0
+ },
+ "cells_by_type": {
+  "bwb": {
+   "n": 129,
+   "min": 4795598.0,
+   "median": 5007632.0,
+   "p95": 5183242.399999999,
+   "max": 5485856.0
+  },
+  "flying_wing": {
+   "n": 105,
+   "min": 4102120.0,
+   "median": 4541344.0,
+   "p95": 4817900.8,
+   "max": 4889208.0
+  },
+  "cranked": {
+   "n": 108,
+   "min": 3992120.0,
+   "median": 4226848.0,
+   "p95": 4502120.8,
+   "max": 4769488.0
+  },
+  "tapered": {
+   "n": 105,
+   "min": 3883924.0,
+   "median": 4290784.0,
+   "p95": 4647698.0,
+   "max": 4748168.0
+  }
+ },
+ "ram_gib": {
+  "n": 447,
+  "min": 38.251921040000006,
+  "median": 43.83464544,
+  "p95": 49.92885312,
+  "max": 53.406197760000005
+ },
+ "fits_16GB": 0,
+ "fits_52GB": 374,
+ "cell_quality": {
+  "n": 447,
+  "min": 0.03968976665951429,
+  "median": 0.06218247462805168,
+  "p95": 0.09709221822941902,
+  "max": 0.09710081726954757
+ },
+ "growth_over_limit": {
+  "n": 447,
+  "min": 0.9902061039269974,
+  "median": 0.9930225005320047,
+  "p95": 0.9951892893998208,
+  "max": 0.9956196012462207
+ },
+ "bl_cells_min": {
+  "n": 447,
+  "min": 30.454456193679803,
+  "median": 30.756899409775997,
+  "p95": 30.94378274508247,
+  "max": 31.099802705696394
+ },
+ "wall_angle_in_plane_deg": {
+  "n": 447,
+  "min": 0.00031683975983854,
+  "median": 0.002091027966284726,
+  "p95": 0.04340983825704173,
+  "max": 0.06497402526664721
+ },
+ "wall_angle_3d_max_deg": {
+  "n": 447,
+  "min": 2.0303819848621623,
+  "median": 14.895401616055747,
+  "p95": 39.755066168890835,
+  "max": 59.59021642055631
+ },
+ "cap_min_sj": {
+  "n": 447,
+  "min": 0.03968976665951429,
+  "median": 0.06218247462805168,
+  "p95": 0.09709221822941902,
+  "max": 0.09710081726954757
+ },
+ "inboard_min_sj": {
+  "n": 447,
+  "min": 0.05325653144504574,
+  "median": 0.6108733102563512,
+  "p95": 0.8641393865237623,
+  "max": 0.9480666003113063
+ },
+ "outboard_min_sj": {
+  "n": 447,
+  "min": 0.7098341155386787,
+  "median": 0.9279206235480622,
+  "p95": 0.9683438065353634,
+  "max": 0.9704070542603962
+ },
+ "base_te_cells_min_sj": {
+  "n": 447,
+  "min": 0.21187217648617937,
+  "median": 0.9623776444859847,
+  "p95": 0.9855070936667492,
+  "max": 0.9951107042739403
+ },
+ "wake_over_limit": {
+  "n": 447,
+  "min": 0.9891601010148262,
+  "median": 0.9929023267280084,
+  "p95": 1.000729194178901,
+  "max": 1.0778297235705239
+ },
+ "rung": {
+  "n": 447,
+  "min": 0.0,
+  "median": 0.0,
+  "p95": 0.0,
+  "max": 0.0
+ },
+ "outboard_share": {
+  "n": 447,
+  "min": 0.5077887571237742,
+  "median": 0.5370433097911596,
+  "p95": 0.5540603574117757,
+  "max": 0.5667680371911011
+ },
+ "seconds": {
+  "n": 447,
+  "min": 8.28,
+  "median": 12.83,
+  "p95": 17.721,
+  "max": 19.17
+ },
+ "F_sample": {
+  "wings": 63,
+  "note": "a seeded 10 % of each set and type, plus the 20 reference wings (V4)",
+  "cells": {
+   "n": 63,
+   "min": 39089920.0,
+   "median": 44277120.0,
+   "p95": 50692789.8,
+   "max": 51050412.0
+  },
+  "F_over_VC": {
+   "n": 63,
+   "min": 9.785401780905532,
+   "median": 9.933793430184002,
+   "p95": 10.003465310899639,
+   "max": 10.069950528526178
+  },
+  "ram_gib": {
+   "n": 63,
+   "min": 371.3006432,
+   "median": 420.37155520000005,
+   "p95": 481.06379150800007,
+   "max": 484.44689752000005
+  }
+ },
+ "F_estimated_all": {
+  "wings": 447,
+  "cells": {
+   "n": 447,
+   "min": 38582098.71453397,
+   "median": 44444427.56942276,
+   "p95": 50843856.76749473,
+   "max": 54495360.291735485
+  },
+  "note": "VC cells x the median F/VC of the counted sample"
+ }
+}

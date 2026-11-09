@@ -393,6 +393,61 @@ written without libcgns and still read exactly by libcgns. Not shown yet: that A
 (V7). Weak point: the library check here is VTK's copy of CGNS, not Mike's 4.5.2 build; `cgns.libcgns_check` runs with
 Mike's library too (`CGNS_LIB=...`).
 
+## 12. V6: the built sets at VC, stopped at 427 of 702 wings (decision 105)
+
+Started on the 702 built wings outside the reference set (VC, Re 3 × 10⁵; tags `s_a`, `s_b`), with F counted on a
+seeded 10 % sample (tag `F_sample`). Stopped on 9 Nov at 20:09 by decision 105 (the cells must drop, so the rules will
+change), after 427 wings: all 400 of the focus set, 24 of 40 full-space BWB, 3 of 40 full-space cranked, none of the
+corner sets. `scripts/v6_study.py` → `data/studies/v6.json`, `docs/page/v6_screen.png`, with the 20 reference wings at
+Re 3 × 10⁵ from V2: 447 meshes.
+
+![V6: the screened meshes at VC](../docs/page/v6_screen.png)
+
+*What it shows.* Every screened mesh at VC, Re 3 × 10⁵, by wing type (the bar is the median): (a) cells; (b) the worst
+cell of the mesh; (c) the largest growth over its limit.
+
+| Set | BWB | flying wing | cranked | tapered |
+| --- | --- | --- | --- | --- |
+| reference | 5 pass (5 of 5) | 5 pass (5 of 5) | 5 pass (5 of 5) | 5 pass (5 of 5) |
+| training_focus | 100 pass (100 of 100) | 100 pass (100 of 100) | 100 pass (100 of 100) | 100 pass (100 of 100) |
+| training_full | 5 pass, 19 refused (24 of 40) | not screened (0 of 40) | 1 pass, 2 refused (3 of 40) | not screened (0 of 40) |
+| corner1 | not screened (0 of 32) | not screened (0 of 24) | not screened (0 of 32) | not screened (0 of 24) |
+| corner2 | not screened (0 of 8) | not screened (0 of 7) | not screened (0 of 8) | not screened (0 of 7) |
+
+| What | Measured (447 meshes) |
+| --- | --- |
+| Outcomes | 426 passed, 21 refused as screened (check 3 then judged every cell); with decision 101: 427 passed, 20 refused, all by check 11 |
+| Cells | 3.88–5.49 (median 4.47) M |
+| ADflow RAM | 38–53 (median 44) GiB; fit 16 GB: 0; fit 52 GB: 374 |
+| Growth / its limit | 0.9902–0.9956 (median 0.9930) |
+| Wake / its limit (check 11) | 0.9892–1.0778 (median 0.9929) |
+| Cells across the boundary layer | 30.45–31.10 (median 30.76) |
+| In-plane wall angle; 3-D angle, largest | ≤ 0.065°; 2–60 (median 15)° |
+| Smallest scaled Jacobian: cap · inboard · outboard · base and TE corners | 0.040–0.097 (median 0.062) · ≥ 0.053 · ≥ 0.71 · ≥ 0.21 |
+| Share of the cells outboard | 51–57 (median 54) % |
+| Smoothing rung · build time | 0 on all · 8–19 (median 13) s |
+| F counted (63 wings: the sample with VC built, and the 20 reference wings) | 39.1–51.1 M (median 44.3 M); F / VC 9.79–10.07 |
+
+**Findings.**
+
+1. The focus set, where most runs go, passes completely: 400 of 400.
+2. **Weak point: the wake band on the full-space wings.** Check 11 refuses 18 of the 24 full-space BWB wings and 2 of
+   the 3 full-space cranked wings screened. The cells inside the wake band are up to 7.8 % larger than the band cell
+   (the growth part of check 11 stays ≤ 0.99). Cause, measured on BWB full-space wing 13 (the worst, 1.078): its wake
+   leaves the base pointing down (base normal −6.9° to −2.0°), so 2 local chords behind the trailing edge the wake
+   centre line is up to 0.068 c below a straight line. The band's upper edge (20° from the trailing edge) is then
+   farther above the wake line than the envelope height assumes (margin + band length × tan 20°), and above that height
+   the cells grow freely. The reference and focus BWB wings leave level or upward (base normal −0.0° to +6.3°) and pass.
+   Fix, for the redesign: add the centre line's downward offset at the band length to the envelope height (decision 106).
+3. One full-space BWB (wing 19) was refused by check 3 at VC: 0.0397 on the cap's two nose-corner columns, every other
+   cell ≥ 0.34. It passes with decision 101, which came while the screen ran.
+4. Thin margins, all on full-space BWB wings: inboard cells down to 0.053 (wing 0; limit 0.05), base and trailing-edge
+   corner cells down to 0.21 (wing 0), the 3-D wall angle up to 60° (wing 13).
+
+**Conclusion.** On the focus set the volume mesher is robust: 400 of 400 pass. The full space found one construction
+weakness (the band envelope with downward wakes), with its cause and its fix. The cost does not depend on the set: VC
+3.9–5.5 M cells at Re 3 × 10⁵, F about 44 M. Stopped there: the screen will be run again, in full, on the new rules.
+
 ## 13. V7: the first solves: scripts and a runbook (not run here)
 
 The case of the brief: BWB reference wing 0, VC, Re 3 × 10⁵, α 4°, Mach 0.1, the band on; ADflow SA, SU2 SA, SU2 SST + LM

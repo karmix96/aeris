@@ -59,7 +59,7 @@ In one station plane, six blocks; every block is right-handed with k along +y (r
 | Boundary-layer thickness δ | turbulent flat plate at the trailing edge, from the local Re | | | | | decision 86 (measured, section 6.2) |
 | Fine zone | 2 local chords | same | | | | law 20; the depth Stage 2's estimate used |
 | Growth beyond the fine zone, checked | 1.30 at VC | 1.30 | 1.224 | 1.168 | 1.127 | Annex G: ≤ 1.3 anywhere outside the boundary layer; decision 85 |
-| ... built | 1.25 at VC | 1.25 | 1.187 | 1.141 | 1.107 | built at the wall growth, as Stage 2 builds 1.2 and checks 1.25; the far-field blend may raise it |
+| ... built | 1.22 at VC | 1.22 | 1.165 | 1.125 | 1.095 | built below the limit, as Stage 2 builds the ring at 1.2 and checks 1.25: the far-field blend raises it (section 7, changes 5 and 10) |
 | Far field | 80 mean chords | same | | | | law 15; 40 / 80 / 160 is Stage 4 (T2) |
 | Wake band: angles | −5° to 20°, margin 0.05 c | same | | | | the brief: −5° to post-stall; decision 87 |
 | Wake band: length | 2 local chords behind the trailing edge | same | | | | law 20 (the fine zone) |
@@ -69,7 +69,7 @@ In one station plane, six blocks; every block is right-handed with k along +y (r
 | Wake: first cell behind the base | s0 of the station | | | | | the base is a wall (decision 90) |
 | Outboard: first gap | the wing's last gap (2 s0 at the tip) | | | | | law 10 / 12 |
 | Outboard growth, to 2 c past the tip | 1.15 at VC | 1.15 | 1.114 | 1.086 | 1.066 | the brief's starting value (law 12) |
-| ... beyond, to 80 c past the tip | the far growth | | | | | decision 88 |
+| ... beyond, to 80 c past the tip | the far growth: 1.3 at VC (the checked value; a 1-D spacing, no blend) | 1.3 | 1.224 | 1.168 | 1.127 | decision 88 (section 7, change 9) |
 | Base cells | Stage 2: 8 / 10 / 14 / 18 | | | | | Stage 2 decision 61 (frozen) |
 
 How a station plane is built (decision 84, section 6.1):
@@ -83,6 +83,9 @@ How a station plane is built (decision 84, section 6.1):
 3. The nodes: one wall-normal distribution per station (s0, the boundary-layer zone, the fine zone, the wake band as an
    envelope in height, the far growth), the same count for every station; each line keeps it near the wall and shortens
    only its outer part to its own length. The wake lines keep the wall spacing along the cut (as classic C meshes do).
+   To give every station the same count, its growth (never the band cell) is scaled down by one factor; past the band
+   the envelope keeps rising at the growth law's own rate (g − 1), so the cells leave the band smoothly (section 7,
+   changes 7 and 8).
 4. The outer layers of every station move toward the station mean (smoothstep from the first layer past every
    station's fine zone and band, to the far field), and the far wake nodes toward the station-mean x: neighbouring
    stations then line up far out, and the cells between them stay square.
@@ -179,7 +182,7 @@ wings × 4 Re levels.
   Re; 30 cells at VC, × 1.3 per level** (decision 86). Weak point: the laminar layer at mid-chord gets fewer cells at
   VC; the family gives it more at F (growth 1.107, y⁺ 0.46).
 
-## 7. What changed while V1 was being built (the construction, never a limit)
+## 7. What changed while V1–V4 were built (the construction, never a limit)
 
 The checks and limits above were written in `configs/volume.yaml` before the first mesh was built, and have not
 changed. Building V1 (BWB reference wing 0, VC, Re 3 × 10⁵), the construction changed five times after checks failed:
@@ -198,4 +201,74 @@ changed. Building V1 (BWB reference wing 0, VC, Re 3 × 10⁵), the construction
 5. That move raised the growth 3 % above 1.3 on the root's wake lines. Now the far zone is built at the wall growth
    (1.25 at VC) and checked at 1.3, as Stage 2 builds the ring at 1.2 and checks 1.25.
 
-After these, BWB reference wing 0 at VC passes every check (V1).
+After these, BWB reference wing 0 at VC passes every check (V1). Five more changes came in V2 and V4; again no limit
+changed, and every V2–V7 number in this file is from the code after all of them:
+
+6. **Check 10 compared floats exactly (V2).** The outboard far field is placed exactly 80 c past the tip, so the
+   distance is 80 c to round-off. On the first screen 6 of the 80 reference meshes read 79.99999999999999 c and were
+   refused (flying wing 2 at Re 10⁶ and 4 × 10⁶; tapered 4 at all four Re). The check now allows 1e−9 c of round-off;
+   the limit stays 80 c. Rebuilt, all 6 pass. The first screen is kept in `data/studies/old/`.
+7. **The count factor scaled the band cell too (V4).** One factor per station (λ ≤ 1) fits every station to the same
+   layer count. It scaled the growth and the band cap together, so where a station had spare layers its band cells were
+   smaller than the rule, by a different amount at each level: on BWB reference wing 0 the band cell at 0.5 local chord
+   behind the root fell to 91 % of the rule at VC and 95 % at C, so VC/C = 1.24 (check 13 asks 1.3 ± 3 %). Now λ scales
+   the growth only; the band cell is the rule at every station and level (VC/C = 1.292). Tried first and dropped: λ
+   only past 2 local chords. Checks 3 and 6 refused it on the same wing (scaled Jacobian 0.014, growth 1.05 × the
+   limit): neighbouring stations then differed too much in their outer layers.
+8. **The cells left the band abruptly (V4).** Past the band height the cap rose by 10 × the distance, so the cells
+   jumped from the band cell to free growth at whichever node came first past it. That node falls in a different place
+   at each level, so the cell 1 local chord from the root's wall was off: VC/C 1.232–1.259 on 4 of the first 9
+   families (limit 1.3 ± 3 %). Now the cap keeps rising past the band at the growth law's own rate (a geometric line
+   has dh/dx = g − 1), so the cells leave the band smoothly: 1.265–1.289 on the same wings.
+9. **Decision 88's text said the outboard far growth is built at 1.25 (V2).** The code builds the station gaps past the
+   outboard fine zone at the checked value 1.3: they are a 1-D spacing with no blend, so no margin is needed, and check 12
+   holds them at ≤ 1.3 × 1.01. The text is corrected; no mesh changed.
+10. **The far-field blend pushed one root over the growth limit (V2, second screen).** After change 8, BWB reference wing 4
+    at Re 4 × 10⁶ was refused by check 6: growth 1.313 against 1.3 × 1.01 (1.0100 × the limit), on a root wake line at
+    layer 85, where the outer layers start moving to the station mean (the move adds its own stretch where the root's
+    line differs most from the mean). Now the far zone is built at 1.22 at VC (1.165, 1.125, 1.095 at C, M, F), not at
+    the wall growth 1.25: the worst growth on that mesh falls to 0.993 × the limit, in the boundary layer. Cost: one
+    more layer on that wing (99 → 100). The first two screens are kept in `data/studies/old/`.
+
+With all ten changes, V1 (BWB reference wing 0, VC, Re 3 × 10⁵) was rebuilt: 4,930,448 cells (it had 4,853,800):
+95 layers, 74 wake nodes, 377 C-line nodes, 61 + 75 stations; every check passes; ADflow RAM 48.2 GiB (7.59 × Stage 2's
+estimate). `data/studies/v1.json` and `docs/page/v1_slices.png` are the rebuilt ones.
+
+## 8. V2: wall layers, fine zone and far field (the 20 reference wings × 4 Re, VC)
+
+`scripts/screen.py --sets reference --re 1e5 3e5 1e6 4e6` (two halves, tags `ref_VC_a`, `ref_VC_b`), then
+`scripts/v23_study.py` → `data/studies/v23.json`, `docs/page/v2_wall.png`. 80 meshes, built with every change of section 7.
+
+![V2: the wall layers on the 80 reference meshes](../docs/page/v2_wall.png)
+
+*What it shows.* One dot per mesh, by wing type; light to dark from Re 10⁵ to 4 × 10⁶. (a) cells; (b) cells across the
+boundary layer at the worst station; (c) the largest in-plane angle between the first line and the wall normal; (d) the
+95th percentile of the 3-D angle to the surface normal (reported, not judged); (e) the worst cell next to the base and
+the trailing-edge corners; (f) the wing's last chordwise cell over the first cell behind the base.
+
+| What | Measured (80 meshes) | Limit |
+| --- | --- | --- |
+| Outcome | 80 passed, 0 refused, 0 review (smoothing rung 0 on all) | |
+| Cells | 2.71–6.87 M (median 5.02 M); Re 10⁵ 2.7–3.7 M, 3 × 10⁵ 4.1–5.1 M, 10⁶ 4.9–5.9 M, 4 × 10⁶ 5.7–6.9 M | |
+| ADflow RAM | 27–67 GiB; fit 16 GB: 0 of 80; fit 52 GB: 40 of 80 | information |
+| Layers · wake nodes · stations · outboard stations | 91–100 · 66–86 · 51–82 · 67–92 | |
+| Cells across the boundary layer (worst station) | 30.39–32.69 | ≥ 30 |
+| First cell against s0 | ≤ 0.028 % | ≤ 1 % |
+| Growth / its limit | 0.9915–0.9960 | ≤ 1.01 |
+| Wall angle in the plane (nose; off the base) | ≤ 0.18° (0.18°; 0.0095°) | ≤ 5° |
+| The two trailing-edge corners | 2.7–8.8° | not judged |
+| 3-D angle to the surface normal: median, 95th percentile, largest | 1.1–5.2°, 4–37°, 6–40° | reported (decision 89) |
+| Cells next to the base; at the TE corners (smallest scaled Jacobian) | 0.57–1.00; 0.57–0.99 | ≥ 0.05 |
+| Spacing jump across the trailing-edge line | Re 10⁵ 10–17; 3 × 10⁵ 26–48; 10⁶ 81–148; 4 × 10⁶ 293–537 | reported (decision 90) |
+| Far field | 80.0 c | ≥ 80 c |
+| Wake: growth and band cells / limit | ≤ 1.0009 | ≤ 1.01 |
+| Smallest scaled Jacobian of the mesh | 0.062–0.097 (always the cap) | ≥ 0.05 |
+
+**Conclusion.** All 80 pass. The wall rules hold on every wing at every Re: at least 30.39 cells across the boundary
+layer, first cells within 0.03 %, growth at most 0.996 × its limit, square to the wall in the plane (≤ 0.18°), the
+far field at 80 c. The base and the trailing-edge corners have good cells (≥ 0.57). The weak points are four: (1) cost,
+no mesh fits the 16 GB desktop and only 40 of 80 fit 52 GB; (2) the planar stations shear the first cells at swept
+noses, up to 40° off the surface normal in 3-D (y⁺ only falls); (3) the spacing jump across the trailing-edge line
+reaches 537 at Re 4 × 10⁶, because the base is a wall at y⁺ 1 next to the wing's last chordwise cell; (4) the
+tightest checks are the growth (0.996 × its limit at the most) and the band cells (1.0009 × the band cell at the most;
+both limits allow 1.01).

@@ -226,7 +226,10 @@ def run_checks(vm) -> tuple[list[Check], list[str]]:
             if t == tp.FAR:
                 far.append(tp.face(B[b], f).reshape(-1, 3))
     dmin = float(tree.query(np.concatenate(far))[0].min())
-    out.append(Check(10, "far_field", dmin >= rl.far_distance, dmin, f">= {rl.far_distance:g} c from every wall node"))
+    # the outboard boundary is placed exactly far.distance_c past the tip, so the distance is 80 c to round-off (it read
+    # 79.99999999999999 on 6 of the 80 reference builds, V2): the comparison allows the round-off, not a shorter far field
+    out.append(Check(10, "far_field", dmin >= rl.far_distance - ch["far_tol_c"], dmin,
+                     f">= {rl.far_distance:g} c from every wall node (round-off {ch['far_tol_c']:g} c)"))
 
     # 11. wake: the base's first cell (in 5), the streamwise growth, the band cells
     dq = P["dq"]

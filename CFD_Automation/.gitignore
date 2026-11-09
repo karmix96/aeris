@@ -5,3 +5,7 @@ Stage_2_surface_mesh/data/meshes/
 !Stage_2_surface_mesh/docs/*.png
 Stage_2_surface_mesh/docs/SURFACE_MESH.body.html
 !Stage_2_surface_mesh/docs/page/*.png
+Stage_3_volume_mesh/data/meshes/
+!Stage_3_volume_mesh/docs/page/*.png
+!Stage_3_volume_mesh/docs/*.png
+Stage_3_volume_mesh/docs/VOLUME_MESH.body.html

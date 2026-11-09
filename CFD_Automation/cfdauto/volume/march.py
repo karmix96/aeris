@@ -39,8 +39,11 @@ def _ramp(x, x0, a, b):
 def _walk(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a, cap_b, cap_h, lam, n_max, cap_m=None):
     """Greedy distances for many lines at once (arrays of shape (N,)). Returns d (n_max+1, N).
     Growth: g_bl up to delta, g_fine up to fine, g_far beyond, each change ramped (RAMP) past its boundary. Cap
-    (the wake band envelope): cap_a + cap_b * max(0, x - cap_m) up to cap_h, fading out above it (it grows by 10 x
-    the distance past cap_h), so every limit is continuous in x."""
+    (the wake band envelope): cap_a + cap_b * max(0, x - cap_m) up to cap_h; past cap_h it goes on rising as the
+    growth law itself does (slope g_fine - 1: a geometric line has dh/dx = g - 1), so the cells leave the band
+    smoothly, at the same place at every level, wherever the last band node falls (check 13); every limit is
+    continuous in x. lam (<= 1) scales the growth only: the cap is a rule (law 18) and stays the same on every line
+    and at every level."""
     cap_m = np.zeros_like(s0) if cap_m is None else cap_m
     N = s0.shape[0]
     d = np.zeros((n_max + 1, N))
@@ -52,7 +55,7 @@ def _walk(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a, cap_b, cap_h, lam, n_m
         g = np.where(x <= fine, _ramp(x, delta, g_bl, g_fine), _ramp(x, fine, g_fine, g_far))
         g = 1.0 + lam * (g - 1.0)
         nxt = step * g
-        cap = lam * (cap_a + cap_b * np.maximum(x - cap_m, 0.0)) + 10.0 * np.maximum(x - cap_h, 0.0)
+        cap = cap_a + cap_b * np.maximum(x - cap_m, 0.0) + (g_fine - 1.0) * np.maximum(x - cap_h, 0.0)
         nxt = np.where(has_cap, np.minimum(nxt, cap), nxt)
         step = nxt
         d[j + 1] = x + step
@@ -94,7 +97,8 @@ def min_cells(s0, L, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, c
 def fill(s0, L, n, g_bl, delta, g_fine, fine, g_far, cap_a=None, cap_b=None, cap_h=None, cap_m=None,
          iters=60) -> tuple[Array, Array]:
     """Distances d (n+1, N) from 0 to L in exactly n cells per line, first cell s0, every limit met.
-    Returns (d, lam): lam = 1 where the line needed all n cells, < 1 where its growth and caps were scaled down."""
+    Returns (d, lam): lam = 1 where the line needed all n cells, < 1 where its growth was scaled down (the caps never
+    are)."""
     s0, L = np.atleast_1d(np.asarray(s0, float)), np.atleast_1d(np.asarray(L, float))
     z = np.zeros_like(s0)
     b = lambda a: np.broadcast_to(np.asarray(a, float), s0.shape).copy()

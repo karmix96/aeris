@@ -461,8 +461,9 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     sweeps 501 of 501 folded and the growth 15 × its limit. Not close, so not asked. A 3-D march is not needed for
     validity (planar stations; decision 89).
 85. **Growth beyond the fine zone: checked at 1.3 at VC (Annex G, "≤ 1.3 anywhere outside the boundary layer"), built at
-    the wall growth 1.25** (1.187 / 1.141 / 1.107 at C / M / F), as Stage 2 builds the ring at 1.2 and checks 1.25. The
-    far-field blend (84) may raise it toward 1.3 (it did by 3 % on V1 when built at 1.3).
+    1.22** (1.165 / 1.125 / 1.095 at C / M / F), as Stage 2 builds the ring at 1.2 and checks 1.25. The far-field blend
+    (84) raises it: by 3 % on V1 when built at 1.3; to 1.313 (1.0100 × the limit, refused) on BWB reference wing 4 at
+    Re 4 × 10⁶ when built at the wall growth 1.25 (decision 98).
 86. **Cells across the boundary layer: 30 at VC (× 1.3 per level), across the turbulent flat-plate layer at the trailing
     edge, δ = 0.37 c Re_c^−1/5, from the station's local Re** (Annex G: "≥ 30 at the baseline"). Measured (counts only, the
     20 reference wings × 4 Re): at Re 10⁵ the small tips have a layer thinner than 30 first cells at mid-chord, laminar or
@@ -478,7 +479,8 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     and turn to +x over 0.5 local chord. A constant 0.0075 c band cell over the whole band (the overset plan's wake box) would
     need 1.50–1.93 × the layers (counted on BWB and tapered reference wing 0 at VC and M, Re 3 × 10⁵; not built).
 88. **Outboard (law 12) and the tip vortex (law 19).** First gap = the wing's last gap (2 s0 at the tip); growth 1.15 at VC
-    to 2 c past the tip, then the far growth (built 1.25, checked 1.3) to 80 c past the tip. The vortex path from the tip
+    to 2 c past the tip, then the far growth 1.3 (the checked value: the station gaps are a 1-D spacing with no blend, so
+    no margin is needed; this text said "built 1.25" until V2, the code always built 1.3) to 80 c past the tip. The vortex path from the tip
     trailing edge at −5° to 20° lies inside the wake band; along the semi-span it is held by the tip squeeze (Stage 2) and
     the outboard stations. No other clustering.
 89. **Planar stations; the orthogonality check is in the station plane.** The rings are planar (4e−15 c), so the lines stay
@@ -499,3 +501,15 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
 94. **Branch.** Stage 2 is not merged into main yet (`stage2-surface-mesh` is 105 commits ahead), so `stage3-volume-mesh`
     starts from `stage2-surface-mesh`. Push access was not granted in this session: the branch is committed here and
     handed over as a git bundle (or pushed once access is granted).
+95. **Check 10 allows round-off (V2, 9 Nov 2026).** The outboard far field sits exactly 80 c past the tip, so the distance
+    is 80 c to round-off; 6 of 80 meshes read 79.99999999999999 c and were refused on the first screen. The comparison
+    now allows 1e−9 c (`checks.far_tol_c`); the limit stays 80 c.
+96. **The count factor scales the growth only, never the band cell (V4, 9 Nov 2026).** One factor per station fits every
+    station to the same layer count; it scaled the band cap too, so the band cell VC/C was 1.24 on BWB reference wing 0
+    (check 13: 1.3 ± 3 %). Now the band cell is the rule at every station and level (1.292). Tried and dropped: the
+    factor only past 2 local chords (checks 3 and 6 refused it: scaled Jacobian 0.014, growth 1.05 × the limit).
+97. **Past the band the cap rises at the growth law's rate, g − 1 (V4, 9 Nov 2026).** It rose by 10 × the distance, so
+    the cells left the band at whichever node came first past it, a different place at each level: the cell 1 local
+    chord from the root's wall had VC/C 1.232–1.259 on 4 of 9 families. Now 1.265–1.289 on the same wings.
+98. **The far zone is built at 1.22 at VC (V2, 9 Nov 2026)** (decision 85): built at 1.25, the blend to the station mean
+    raised one root's growth to 1.0100 × the limit. Cost: one layer on that wing.

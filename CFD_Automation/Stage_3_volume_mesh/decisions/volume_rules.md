@@ -300,7 +300,57 @@ whole plane. The tip-vortex path is fine across the wake (0.004–0.017 c at 4°
 band allows 4 × the cross cell); at 20° and 2 c it sits at the band's edge (0.08 c). Enough to carry the vortex, not to
 resolve its core. Whether that matters is a solver question (V7, then the mesh study of Stage 4).
 
-## 10. V5: the solver files and check 15
+## 10. V4: the family VC, C, M, F (the 20 reference wings, Re 3 × 10⁵)
+
+`scripts/family_study.py` (per wing: the Stage 2 family, the volume built at the levels that fit here, counted at the
+rest; check 13 on the built ones), `scripts/v4_study.py` → `data/studies/v4.json`, `docs/page/v4_family.png`.
+VC and C built on all 20; M built on one wing per type; F built on BWB reference wing 0; every level counted.
+
+![V4: check 13 and the cells per level](../docs/page/v4_family.png)
+
+*What it shows.* (a) Check 13: every judged spacing, coarse over fine, between neighbouring levels: one dot per wing
+for VC/C, diamonds for C/M and M/F on BWB reference wing 0; the green band is 1.3 ± 3 %. (b) Cells per level on the 20
+reference wings (VC and C built, M and F counted), against the 16 GB and 52 GB desktops and the 9–11 M asked for at F.
+
+| Judged spacing (check 13) | VC / C, 20 wings | C / M, M / F (BWB 0) |
+| --- | --- | --- |
+| s0 per station (worst station) | 1.3000–1.3001 | 1.3000; 1.3000 |
+| wall growth (ln g) | 1.3 | 1.3; 1.3 |
+| band cell (at the band edge, 0.5 local c behind the root) | 1.2923 | 1.2941; 1.2954 |
+| first outboard gap | 1.276–1.314 | 1.309; 1.286 |
+| first wake cell | 1.3000 | 1.3000; 1.3000 |
+| cell 1 local c from the root's wall | 1.270–1.296 | 1.290; 1.283 |
+| cell 1 local c behind the root's TE | 1.289 | 1.291; 1.293 |
+| counts (named exceptions): layers · wake nodes · outboard stations · stations · C-line nodes · base | 1.28–1.29 · 1.27–1.30 · 1.28–1.30 · 1.25–1.29 · 1.28–1.30 · 1.22 | |
+| cells | × 2.11–2.16 | |
+
+| Level | Cells: median (range), 20 wings | ADflow RAM, median | Built here |
+| --- | --- | --- | --- |
+| VC | 4.55 M (4.13–5.12) | 45 GiB | 20 of 20 passed |
+| C | 9.73 M (8.85–10.97) | 94 GiB | 20 of 20 passed |
+| M | 20.79 M (18.99–23.48), counted | 198 GiB | cranked 0, tapered 0 passed; BWB 0, flying wing 0 refused (check 3) |
+| F | 45.35 M (41.27–50.71), counted | 431 GiB | BWB 0 refused (check 3) |
+
+The counter (`count_volume`) against the built meshes: within 0.6 % at M (cranked 0 exact, tapered 0 −0.6 %). Building
+is cheap: M 46–81 s and 1.1 GiB, F 110 s and 2.2 GiB peak. The solver is the cost.
+
+**The refusals at M and F (check 3).** On the BWB and the flying wing, the worst cells are the CAP block's two columns
+over the cap's two nose-corner quads: 0.0447 at M and 0.0367 at F on BWB 0 (0.0458 and 0.0380 on flying wing 0),
+against 0.05. Stage 2 exempts exactly these two quads from its 0.05 limit ("three corners on the smooth ring: the corner
+angle is 180° minus the ring's turning"; reported on their own, folded = refused), and the angle shrinks with the
+turning, so it falls level by level (0.062 at VC, 0.053 at C). The volume cannot do better: the cells sit on the frozen
+quads, and the outboard planes repeat the tip ring. Every other cell of these meshes is ≥ 0.077 (BWB 0: 0.0775 at M,
+0.0795 at F; flying wing 0: 0.0855, 0.0871), and every other check passes (`data/studies/v4_cap_split.json`). The
+cranked and tapered caps pass (their corner angles are larger).
+
+**Conclusion.** The family is a true 1.3-scaled copy: check 13 passes on 20 of 20 families at VC/C (worst 2.3 %:
+BWB 2, the cell 1 local chord from the wall, 1.270) and on BWB 0 from VC to F. Two honest negatives: (1) under check 3
+as written, the BWB and flying-wing meshes are refused at M and F, by the two cap columns that Stage 2 exempts; the fix
+is a decision for Mike (carry Stage 2's exemption into check 3, or change the frozen cap); (2) the cost: F is 45 M
+cells (median; 51 M largest), about 4–5 × the 9–11 M asked, and M is about 21 M. Only VC and C were built on every
+reference wing here; M on four, F on one (time on 2 cores, not memory).
+
+## 11. V5: the solver files and check 15
 
 `cfdauto/volume/cgns.py` and `cfdauto/volume/su2.py`; `write(vm, wing, out, formats=("npz", "cgns", "su2"))` writes
 them and runs check 15 (`export()`); `scripts/v5_export.py` → `data/studies/v5_export.json` for the V7 mesh.
@@ -322,7 +372,7 @@ them and runs check 15 (`export()`); `scripts/v5_export.py` → `data/studies/v5
 | --- | --- |
 | `volume.cgns` | 123.5 MB; own reader: every coordinate exact, 13 zones, 44 1-to-1 records, every transform maps its range onto its donor node for node, every BC with its type, family and range |
 | ... by the CGNS library (VTK's copy) | the same: exact, no problem; version 3.4 |
-| `volume.su2` | 693.6 MB; 5,013,600 points (from 5,099,248 block nodes), 4,930,448 hexahedra; markers wall 15,168, symmetry 36,304, farfield 114,108 quads |
+| `volume.su2` | 693.6 MB; 5,013,600 points (from 5,140,512 block nodes), 4,930,448 hexahedra; markers wall 15,168, symmetry 36,304, farfield 114,108 quads |
 | ... read back | every point the block node, exactly; no two points closer than 1e−12 c; smallest corner Jacobian 2.9e−13 (> 0: no inside-out cell); 0 boundary quads facing in, 0 bounding no cell |
 | Time | build 15 s; all files and check 15: 56 s |
 
@@ -333,3 +383,28 @@ Tests (`tests/test_cgns.py`, `tests/test_su2.py`): a two-block box matched with 
 written without libcgns and still read exactly by libcgns. Not shown yet: that ADflow and SU2 accept it and converge
 (V7). Weak point: the library check here is VTK's copy of CGNS, not Mike's 4.5.2 build; `cgns.libcgns_check` runs with
 Mike's library too (`CGNS_LIB=...`).
+
+## 13. V7: the first solves: scripts and a runbook (not run here)
+
+The case of the brief: BWB reference wing 0, VC, Re 3 × 10⁵, α 4°, Mach 0.1, the band on; ADflow SA, SU2 SA, SU2 SST + LM
+(8.6.0). This session has no ADflow and no SU2 (2 cores, 7 GB); the mesh needs about 48 GiB for ADflow. So V7 is
+written, not run:
+
+- `solve/case.py`: the case from a mesh folder: `case.json` (conditions; reference area = the half wing's planform
+  area, 3.000 c² on this wing; reference chord 1 = the mean chord; moment point = the quarter point of the mean
+  aerodynamic chord, x = 0.814 c), `adflow_options.json`, `su2_sa.cfg`, `su2_sst_lm.cfg`. Its record:
+  `data/studies/v7_case.json`.
+- `solve/run_adflow.py`: one ADflow SA point, with pieces copied from S8 (not imported): the freestream read back from
+  ADflow and checked before the solve (liftIndex 3: span +y, lift +z; S8 defect 14), the residual as
+  totalrfinal / totalr0 (S8 defect 16), fewer than 10 iterations or forces out of range is not converged, the options
+  read back into `result.json`; `--preflight` reads the grid without iterating. ANK only (the RAM law is for ANK).
+- `solve/read_results.py`: the acceptance rule, written before any run: converged (ADflow: relative residual ≤ 1e−6;
+  SU2: 6 orders of density residual, or 1e−12) and settled (last 20 % of the record, at least 200 iterations: CD within
+  0.5 counts, CL within 0.1 %).
+- `solve/RUNBOOK.md`: the commands for Mike's machine.
+
+Known risk (S8, `SU2_REPORT_2026-09-18.md`): on E387, SST + LM gave no laminar bubble and drag 37 counts high, where
+SA + LM matched. The brief fixes SST + LM, so this is a flag, not a change.
+
+**Conclusion.** Not done: the first solves need Mike's machine (ask item 3). What is shown: the files are exact (V5),
+and the case is written down to the last number.

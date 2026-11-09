@@ -1,0 +1,42 @@
+{
+ "what": "V4: BWB and flying-wing reference wing 0 at M and F, Re 3e5, built; check 3 split: the cap's two nose-corner columns (exempt in Stage 2) and every other cell",
+ "script": "the family build with cfdauto/volume/checks.py reporting cap_nose_corner_min_sj and min_sj_but_cap_nose_corners",
+ "results": {
+  "bwb 0 M": {
+   "outcome": "refused",
+   "failed": [
+    "cell_quality"
+   ],
+   "cells": 22691330,
+   "cap_nose_corner_min_sj": 0.04473097177060493,
+   "min_sj_but_cap_nose_corners": 0.07747817953915459
+  },
+  "bwb 0 F": {
+   "outcome": "refused",
+   "failed": [
+    "cell_quality"
+   ],
+   "cells": 49093520,
+   "cap_nose_corner_min_sj": 0.03669061956571567,
+   "min_sj_but_cap_nose_corners": 0.07948515965739418
+  },
+  "flying_wing 0 M": {
+   "outcome": "refused",
+   "failed": [
+    "cell_quality"
+   ],
+   "cells": 20432678,
+   "cap_nose_corner_min_sj": 0.045842200558853505,
+   "min_sj_but_cap_nose_corners": 0.08546644081895166
+  },
+  "flying_wing 0 F": {
+   "outcome": "refused",
+   "failed": [
+    "cell_quality"
+   ],
+   "cells": 44369568,
+   "cap_nose_corner_min_sj": 0.03804735585380619,
+   "min_sj_but_cap_nose_corners": 0.08711004921442801
+  }
+ }
+}

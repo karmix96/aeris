@@ -517,4 +517,16 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     Mike's CGNS 4.5.2 reads ADF only (no HDF5; S8), and building libcgns here was not allowed. Checked by our reader and
     by the CGNS library itself (VTK's copy, `libvtkcgns.so`): exact on the V7 mesh. The `.su2`: hexahedra, nodes welded
     by the topology, markers `wall`, `symmetry`, `farfield`, quads facing out. Check 15 runs on every export.
+100. **V7 is written, not run (9 Nov 2026).** No ADflow or SU2 here (2 cores, 7 GB; the V7 mesh needs about 48 GiB for
+    ADflow). `solve/`: the case (reference area = the half planform area, reference chord = the mean chord, moment
+    point = the quarter point of the mean aerodynamic chord), the ADflow run with S8's safeguards (liftIndex 3 read
+    back, totalrfinal / totalr0), the SU2 configs (SU2's own Langtry-Menter tutorial numerics, as S8), the acceptance
+    rule (converged and settled), the runbook. Where it runs: Mike (ask item 3).
+101. **The cap's two nose-corner columns refuse BWB and flying-wing meshes at M and F (V4, 9 Nov 2026). To decide (Mike).**
+    Check 3 (every cell ≥ 0.05, written in V0) refuses BWB 0 at M (0.0447) and F (0.0367), flying wing 0 at M (0.0458) and
+    F (0.0380): the CAP block's two columns over the cap's two nose-corner quads, which Stage 2 exempts from the same
+    limit (three corners on the smooth ring; the angle is 180° minus the ring's turning, so it falls with the level).
+    Every other cell ≥ 0.077; every other check passes. Measured and reported on every mesh
+    (`cap_nose_corner_min_sj`, `min_sj_but_cap_nose_corners`); check 3 unchanged until Mike decides: carry Stage 2's
+    exemption into check 3 (report the two columns on their own, refuse only if folded), or change the frozen cap.
 

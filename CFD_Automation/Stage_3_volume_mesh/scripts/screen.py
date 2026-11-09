@@ -106,6 +106,8 @@ def extra(vm) -> dict:
     out["vortex_h_max_c"] = float(max(max(p["h_streamwise_c"], p["h_cross_c"]) for p in pts))
     out["vortex_span_gap_max_c"] = float(gaps_near.max())        # the station gaps within 30 of the tip, both sides
     out["cap_min_sj"] = vm.info["quality_by_block"]["CAP"]["min_sj"]
+    out["cap_nose_corner_min_sj"] = vm.info.get("cap_nose_corner_min_sj")
+    out["min_sj_but_cap_nose_corners"] = vm.info.get("min_sj_but_cap_nose_corners")
     out["outboard_min_sj"] = min(v["min_sj"] for k, v in vm.info["quality_by_block"].items() if k.endswith("_out"))
     out["inboard_min_sj"] = min(v["min_sj"] for k, v in vm.info["quality_by_block"].items() if k.endswith("_in"))
     return out

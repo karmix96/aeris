@@ -271,7 +271,7 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   2 chords; the last station gap at the tip is 2 × s0, so the cap's first cell is chosen against it.
 - The family: every spacing ÷ 1.3 per level and the growth g^(1/1.3), as on the surface, so the volume levels
   are true scaled copies too; the base cells follow 8 / 10 / 14 / 18.
-- First plan (replaced): boxes (R-V.6): background 0.03 c, wake box 0.0075 c to 2 c then to 10 c, tube 15–20
+- First plan (replaced on 6 Nov; kept as a fallback and for future work, owner 9 Nov; not built): boxes (R-V.6): background 0.03 c, wake box 0.0075 c to 2 c then to 10 c, tube 15–20
   cells across the core from 2 c behind the tip, far field 80 c; overset export and the overlap gate (M3).
 - New plan (73): one matched C-H multiblock mesh for ADflow and SU2. The C block wraps the ring (the nose stays a
   spacing request inside it, no collar: S6's 5-point collar was the pressure-peak defect); wake lines from the

@@ -183,7 +183,8 @@
 54. **Model plan deferred (Mike, 2 Nov 2026).** The turbulence-model choice (52 a) and the SA inflow value (52 b)
     are made in a later stage. Until then the mesh is built transition-ready (y+ <= 1 per station, transition
     band upper 10-85 % c, lower 60-100 % c), so both options stay open. Mike also owes: the pyGeo tests and set
-    rebuild on his machine (done 8 Nov, see 44); push the raw XFOIL data (33 MB) or accept the 40-minute rebuild.
+    rebuild on his machine (done 8 Nov, see 44); push the raw XFOIL data (33 MB) or accept the 40-minute rebuild. **Done 9 Nov:** the 2,752 sweeps are in git as
+    `Stage_1_geometry/data/section_cache.tar.gz` (1.4 MB); unpacked, `tables --assemble` rebuilds the 46 tables exactly.
 55. **Checks of the flow results (Mike, 2 Nov 2026).** None is needed before the mesh stage: the mesh rules come from
     ranges (0-10 deg, all section sets), which the checks would not move. Needed before the paper quotes flow numbers:
     the 3-D transition-model check on 2-3 reference wings (BWB centre body first), the first runs of the mesh stage.
@@ -336,6 +337,9 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     tip-vortex tube. SU2 8.6.0 has no overset and refuses structured CGNS (structured meshes converted to
     unstructured hexes run). The ring and the cap of Stage 2 stay; Stage 3: open-line march, wake lines to the
     far field (rough +30–60 % cells on the wing blocks), tip vortex in the outboard blocks, no overlap gate.
+    **Owner, 9 Nov 2026: the overset plan is kept** as a fallback (ADflow only, if a C-H mesh cannot pass its
+    checks on a wing; SU2 has no overset) and for future work (several bodies, moving parts). Not built; its
+    values stay in the Primer and Annex G as the fallback's starting values.
 74. **Lower band at negative angles — decided 7 Nov 2026 (owner): option A, from the leading edge (0–100 % c); built
     in `configs/surface.yaml`.** It costs no cells (both sides of a ring share one node list). The record: option A,
     the lower band from the leading edge (band length
@@ -437,3 +441,8 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
 82. **The surface rules are frozen (owner, 9 Nov 2026).** A question gets a measurement first; a rule changes only
     when a check fails or a solver result shows a problem. (Why: on 9 Nov a question led to a new option and talk of a
     cap change without a real need; changes to screened rules risk what is built.)
+83. **The hold-outs opened once for the surface mesh (owner, 9 Nov 2026).** The 60 sealed hold-out wings (15 per type:
+    holdout_focus 10, holdout_full 5) are built and meshed with the frozen surface rules (82), every level and the four
+    Re levels (Stage 2 Study 14; `scripts/screen.py --open-holdouts`, the seal lifted in that process only). No rule
+    changes from it. The Grand Roadmap's A3 (the hold-out once with every law frozen) still applies to the volume mesh
+    and the solves.

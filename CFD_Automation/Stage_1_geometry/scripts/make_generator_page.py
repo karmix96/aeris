@@ -176,7 +176,7 @@ DECISIONS = [
     ]),
     ("Sets", [
         ("Seven sets per type, two spaces", "Focus: training 100 (a Latin hypercube of 200 rows, the first 100 kept; seeds 1001–1004), reference 5 (by rule), hold-out 10 (20 rows, the first 10 kept; seeds 2001–2004). Full: training 40 (seeds 1101–1104), hold-out 5 (seeds 2101–2104), corner 1 (each free variable at each full bound: 32 or 24 wings; 34 or 26 before 7 Nov, when the root chord had its two corners) and corner 2 (every pair at all four low/high combinations: 8 or 7). Files: <code>training_focus</code>, <code>reference</code>, <code>holdout_focus</code>, <code>training_full</code>, <code>holdout_full</code>, <code>corner1</code>, <code>corner2</code>.",
-         "Dense where real wings are, sparse over everything we support; the corners test the edges of what we claim. The hold-outs are the honest tests. Decided 30 Oct 2026. On 7 Nov training_full, holdout_full and corner 2 kept their shapes.", "req", "chg"),
+         "Dense where real wings are, sparse over everything we support; the corners test the edges of what we claim. The hold-outs are the honest tests (opened once on 9 Nov 2026 for the surface mesh, with the surface rules frozen: decision 83, Stage 2 Study 14). Decided 30 Oct 2026. On 7 Nov training_full, holdout_full and corner 2 kept their shapes.", "req", "chg"),
         ("Failures stay in the list", "A refused wing keeps its row with the gate and the reason. Corners are never nudged inside.",
          "A failure marks the edge of the space.", "req", ""),
         ("Hold-out is never built here", "Only the vectors are saved.", "It is opened once, after the workflow is frozen.", "req", ""),
@@ -205,7 +205,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Flow maps", "Level-flight band", "First approach only: a grid point counted as level flight when its wing loading was within × / ÷ 2 of the fit to 37 real wings of the same full span (35 of them are). At unit mean chord a wing has no full span in metres and no wing loading. Drop the flag, or keep it only with a real size given per case?", "decide"),
     ("Flow maps", "Flow dataset in similarity form", "The Stage 1 flow dataset was made at real size and real speed (first approach, 30 Oct–2 Nov) and is not rebuilt. In similarity form each shape would run at the four Re levels on the mean chord, not at speeds and altitudes. Redo it at the Re levels, or let the 3-D CFD data replace it?", "decide"),
     ("Flow maps", "Checks of the flow results", "Mike, 2 Nov 2026: no check is needed before the mesh stage; the mesh rules come from ranges, which the checks would not move. Since then the ranges have moved (angles −5° to post-stall, Mach toward 0.5: see Flow conditions). Needed before the paper quotes flow numbers: SU2 SST + LM runs (proposal, pending: on about 20 % of the wings first, BWB centre body first), the first runs of the mesh stage; so far only a smoke test on one ring mesh has run (see Transition and solver split). Only if the paper states SA's error as a number: 2-D SA against tripped XFOIL at Re 10⁵, 3 × 10⁵ and 1.5 × 10⁶ (about 1 day). Optional: retry the failed XFOIL points, a hinge-line case, a vortex-lattice spanwise loading, a source for the crossflow threshold, E387 against wind-tunnel data.", "act"),
-    ("Flow maps", "Raw XFOIL data", "Push the raw XFOIL data to GitHub (2,408 sweeps, 14.2 MB, 1.5 MB as tar.gz), or accept the 40-minute rebuild of the section tables. Still open. The section tables were rebuilt on the fixed nose on 7 Nov.", "act"),
+    ("Flow maps", "Raw XFOIL data", "Done (9 Nov 2026): the raw XFOIL sweeps are in git as <code>data/section_cache.tar.gz</code> (2,752 sweeps, 1.4 MB). Unpacked, <code>tables --assemble</code> rebuilds the 46 section tables exactly (checked 9 Nov), so no 40-minute XFOIL rebuild is needed. The section tables were rebuilt on the fixed nose on 7 Nov.", "done"),
     ("Study plan (Stage 0)", "Grid share 65 %", "Of the 3-count drag budget, 65 % goes to the mesh. Keep?", "decide"),
     ("Study plan (Stage 0)", "Iterative error", "≤ 10 % of the budget is loose; Eça &amp; Hoekstra ask 0.1–1 %. Tighten to 1 %?", "decide"),
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
@@ -347,7 +347,7 @@ def sets_table(rows: list[dict]) -> str:
         w = r["wings"]
         n = len(w)
         if r["set"].startswith("holdout"):
-            res, labels = "vectors only, not built", "—"
+            res, labels = "vectors only in Stage 1; opened once for the surface mesh on 9 Nov (decision 83; Stage 2 Study 14)", "—"
         else:
             ok = sum(1 for x in w if x.get("passed"))
             bad = Counter(x.get("gate") for x in w if x.get("passed") is False)
@@ -1307,19 +1307,19 @@ REFINE = [
      "spanwise 15 %", "Roadmap R-S.1, R-V.3, R-V.5 (laws 9–12)",
      "Built: the last station gap = the tip first wall cell s0 (y⁺ = 1 at the tip Re). Tying the cap's first cell to it is a volume item (Stage 3). With C-H (decided 6 Nov, decision 73) the outboard blocks must also resolve the tip vortex"),
     ("Near wake, trailing edge to 2 chords", "Wake sheet (velocity deficit), base flow, start of roll-up",
-     "First plan (overset, dropped 6 Nov): wake box with cells of 0.0075 c (about 20 across the wake), tall and tilted to hold the wake from −5° to post-stall; starts inside the near-body mesh. Now (decision 73, 6 Nov): one matched C-H mesh for both solvers (SU2 has no overset), with the wake band sized for the whole angle range; its wake lines add about +45 % (30–60 %) cells on the wing blocks (rough, not measured)",
+     "First plan (overset; replaced by C-H on 6 Nov, kept as a fallback): wake box with cells of 0.0075 c (about 20 across the wake), tall and tilted to hold the wake from −5° to post-stall; starts inside the near-body mesh. Now (decision 73, 6 Nov): one matched C-H mesh for both solvers (SU2 has no overset), with the wake band sized for the whole angle range; its wake lines add about +45 % (30–60 %) cells on the wing blocks (rough, not measured)",
      "wake 15 %", "Roadmap R-V.6 (laws 17, 18); Chan et al. 2002", "Stage 3, not built (S8 had no designed wake: O-mesh)"),
     ("Far wake, 2 to 10 chords", "Downwash, induced drag, wake convection",
-     "First plan (overset, dropped 6 Nov): wake-box cells grow from 0.0075 c to the background size. With C-H (decision 73) the wake lines grow to the far field; Stage 3 sets the rule",
+     "First plan (overset; replaced by C-H on 6 Nov, kept as a fallback): wake-box cells grow from 0.0075 c to the background size. With C-H (decision 73) the wake lines grow to the far field; Stage 3 sets the rule",
      "wake 15 %", "Roadmap R-V.6", "Stage 3, not built"),
     ("Tip vortex core", "Roll-up and path of the tip vortex",
-     "First plan (overset, dropped 6 Nov): a tube with 15–20 near-cubic cells across the core, starting about 2 chords behind the tip (the vortex forms within about 1 chord, inside the near-body mesh). With C-H (decision 73) there is no tube: the outboard blocks must resolve the core",
+     "First plan (overset; replaced by C-H on 6 Nov, kept as a fallback): a tube with 15–20 near-cubic cells across the core, starting about 2 chords behind the tip (the vortex forms within about 1 chord, inside the near-body mesh). With C-H (decision 73) there is no tube: the outboard blocks must resolve the core",
      "wake 15 %", "Roadmap R-V.6 (law 19); primer section 05", "Stage 3, not built"),
     ("Overlap between meshes", "Nothing leaks: the wake and the boundary layer pass between grids cleanly",
-     "First plan (overset, dropped 6 Nov): ≥ 5 cells from each mesh, cell-size ratio ≤ 1.5, no overlap inside the boundary layer or at the tip, 0 orphan cells. With C-H (decision 73) there is no overlap",
+     "First plan (overset; replaced by C-H on 6 Nov, kept as a fallback): ≥ 5 cells from each mesh, cell-size ratio ≤ 1.5, no overlap inside the boundary layer or at the tip, 0 orphan cells. With C-H (decision 73) there is no overlap",
      "—", "Roadmap R-V.7 (law 21); Chan et al. 2002; Kenway et al. 2017", "Stage 3 (step M3), not built"),
     ("Background and far field", "Domain error",
-     "First plan (overset, dropped 6 Nov): background 0.03 c around the wing, coarsening outward. With C-H (decision 73) the blocks grow outward to the far field from 80 chords (ladder 40 / 80 / 160; unchanged)",
+     "First plan (overset; replaced by C-H on 6 Nov, kept as a fallback): background 0.03 c around the wing, coarsening outward. With C-H (decision 73) the blocks grow outward to the far field from 80 chords (ladder 40 / 80 / 160; unchanged)",
      "domain 10 % (of the total)", "Roadmap R-V.6 (laws 15, 16); DPW about 100 chords",
      "Stage 3, not built. S8 for reference: 40 chords; 40 → 60 moved drag 0.6–0.7 counts"),
     ("Every zone together", "Grid convergence (the error bar)",
@@ -1370,7 +1370,7 @@ def fig_refine_side() -> str:
     o.append(f'<line class="leader" x1="{te + 6}" y1="{YC + 10}" x2="{te + 40}" y2="{YC + 80}"/><text class="lab" x="{te + 20}" y="{YC + 98}">edge 0.1 % c · 8 cells across the base</text>')
     o.append(f'<line class="leader" x1="{X0 + 0.5 * C}" y1="{YC - 30}" x2="{X0 + 0.45 * C}" y2="{YC - 70}"/><text class="lab" x="{X0 + 0.1 * C:.0f}" y="{YC - 76}">wall layers: y⁺ ≤ 1, growth ≤ 1.25 at VC (1.107 at F, decision 71), ≥ 30 cells</text>')
     o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">transition band (built): fine cells 0–100 % c on both sides, on for every run (decision 81)</text>')
-    o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed); wake box and background box: the first overset plan, dropped 6 Nov (decision 73: one C-H mesh)</text>')
+    o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed); wake box and background box: the first overset plan, replaced 6 Nov, kept as a fallback (decision 73: one C-H mesh)</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -1414,7 +1414,7 @@ def fig_refine_top() -> str:
     o.append('<text class="lab" x="726" y="134">last gap = tip first cell (built)</text>')
     o.append('<text class="lab muted" x="96" y="60">stations nearly even from the root</text>')
     o.append('<line class="dash" x1="90" y1="40" x2="90" y2="450"/>')
-    o.append('<text class="lab muted" x="96" y="464">wake box and tube: the first overset plan, dropped 6 Nov (decision 73: one C-H mesh)</text>')
+    o.append('<text class="lab muted" x="96" y="464">wake box and tube: the first overset plan, replaced 6 Nov, kept as a fallback (decision 73: one C-H mesh)</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -1857,7 +1857,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>In</h3><div class="big">17 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: the aspect ratio (the semi-span follows: AR / 2), panel shares, chord ratios, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, cranked, tapered, flying wing. No size: every wing at unit mean chord (the root chord left the vector on 7 Nov: 18 → 17).</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, focus and full space, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified (ONERA M6, RIBES, NASA CRM and four BlendedNet designs). Tests: __TESTS__.</p></div>
-    <div class="box verdict"><h3>Verdict</h3><div class="big">Stage 1 closed; Stage 2 under way</div><p>Fixes 1–3 done: panel dihedrals and code hash here; a mesh station on every break, made by the Stage 2 surface mesher (790 of 790 builds pass its 13 checks, on the first-approach wings). Done on 7 Nov: similarity (decision 70) and the nose fix (decision 64); every hash changed and the sets were rebuilt. Done on 8 Nov on your machine: the pyGeo tests (24 of 24) and <code>build --all</code> with pyGeo (722 of 722). Fixed on 8 Nov: the label rules at a threshold (decision 79; every input hash changed, no surface). Still owed in Stage 1: one more pyGeo <code>build --all</code> and the push of the raw XFOIL data. Stage 2 has screened the 7 Nov wings: on 8 Nov every built set at every level, 3,128 of 3,128 builds pass with no nose repair (Study 12; the 20 reference wings at the four Re levels, the rest at 3 × 10⁵). Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
+    <div class="box verdict"><h3>Verdict</h3><div class="big">Stage 1 closed; Stage 2 under way</div><p>Fixes 1–3 done: panel dihedrals and code hash here; a mesh station on every break, made by the Stage 2 surface mesher (790 of 790 builds pass its 13 checks, on the first-approach wings). Done on 7 Nov: similarity (decision 70) and the nose fix (decision 64); every hash changed and the sets were rebuilt. Done on 8 Nov on your machine: the pyGeo tests (24 of 24) and <code>build --all</code> with pyGeo (722 of 722). Fixed on 8 Nov: the label rules at a threshold (decision 79; every input hash changed, no surface). Still owed in Stage 1: one more pyGeo <code>build --all</code> (the raw XFOIL data is in git since 9 Nov). Stage 2 has screened the 7 Nov wings: on 8 Nov every built set at every level, 3,128 of 3,128 builds pass with no nose repair (Study 12; the 20 reference wings at the four Re levels, the rest at 3 × 10⁵). Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
   </div>
   <div class="weak amber"><strong>What changed since 2 Nov 2026 (updated 9 Nov).</strong>
     <ul>
@@ -1885,7 +1885,6 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
         <ul>
           <li>One more <code>build --all</code> with pyGeo on your machine: the label fix of 8 Nov changed every input hash.</li>
           <li>Similarity checks C1–C4 (CFD): scale, Mach, trailing edge, Re levels.</li>
-          <li>Push the raw XFOIL data.</li>
         </ul></li>
     </ul></div>
 </section>
@@ -2293,6 +2292,7 @@ __FD_CONCL__
     </ul></div>
   <h2 style="font-size:22px">The tool, updated</h2>
 <pre>pip install -e CFD_Automation                            # once, from the repo root: the shared cfdauto package (outputs: Stage_1_geometry/docs/)
+tar -xzf data/section_cache.tar.gz -C data              # the raw XFOIL sweeps (in git since 9 Nov): no XFOIL run needed
 python -m cfdauto.flowmap.tables --build                 # section tables (XFOIL, about 40 min on 2 cores; resumable)
 python -m cfdauto.flowmap.dataset                        # the flow dataset (__FD_ROWS__ rows, about 2 min): first approach;
                                                          #   do not rerun as is: it would put every wing at a 1 m mean chord

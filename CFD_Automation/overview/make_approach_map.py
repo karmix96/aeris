@@ -384,7 +384,7 @@ def fig_topology() -> str:
         return f'<polygon points="{" ".join(f"{cx + x * L:.1f},{cy - y * L:.1f}" for x, y in a)}" class="{cls}"/>'
     # first: overset
     cx, cy, L = 60, 110, 120
-    b.append(T(20, 22, "First plan: overset (ADflow only)", "t sm"))
+    b.append(T(20, 22, "First plan: overset (ADflow only; kept as a fallback)", "t sm"))
     b.append(f'<rect x="14" y="34" width="292" height="152" class="bgbox"/>')
     b.append(T(300, 50, "background box 0.03 c", "t xs mut", "end"))
     for k, r in enumerate((14, 28, 44)):
@@ -703,7 +703,7 @@ def page() -> str:
                     ["one matched C-H multiblock mesh; ADflow and SU2 (as unstructured hexes)", "wake lines to the far field (80 c; ladder 40 / 80 / 160): a rough +30–60 % cells",
                      "tip vortex resolved in the outboard blocks; no overlap; wall y⁺ ≤ 1 per Re level, growth 1.25 at VC = 1.107 at F"],
                     "Now (decided 6 Nov, decision 73; Stage 3, not built yet)"),
-              "The surface mesh stays the wall of the volume mesh. The cost moves to Stage 3: an open-line march, more wake cells and a tip vortex without its own tube, in exchange for one mesh family and one error bar for both solvers.")
+              "The surface mesh stays the wall of the volume mesh. The cost moves to Stage 3: an open-line march, more wake cells and a tip vortex without its own tube, in exchange for one mesh family and one error bar for both solvers. The overset plan is kept as a fallback (ADflow only) and for future work (owner, 9 Nov; not built).")
 
     s7 = step(7, "step-7", "Stages 2 → 3", "The cell budget: the laws we adjusted to keep F near 10 M cells",
               "The first rules met every target at the coarsest level, so the finest level went far past them. The new rules anchor each target at its own level; the lighter bubble table and the wider station gap at M do the rest.",

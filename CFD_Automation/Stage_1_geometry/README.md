@@ -107,6 +107,7 @@ level-flight flag (wing loading against real wings of the same full span) needs 
 are size-free and were rebuilt on the fixed nose on 7 Nov (no Stage 1 conclusion changes; `decisions/flow_maps.md`).
 
 ```
+tar -xzf data/section_cache.tar.gz -C data   # the raw XFOIL sweeps (9 Nov 2026), so no XFOIL run is needed
 python -m cfdauto.flowmap.tables --build     # section tables: 10 sections x 14 Re x 3 Mach x 49 angles (resumable)
 python -m cfdauto.flowmap.dataset            # data/flowdata/dataset.csv.gz: 400 focus wings x 4 section sets x 126 conditions
                                              #   (first approach: the focus wings at real size and speed; do not rerun as is)
@@ -126,6 +127,9 @@ python -m cfdauto.flowmap --type bwb --set reference --index 0 --speed 13.4 --al
   core.py       one wing: flow map, phenomena, proposed model, level flight, place in the dataset, Mach x angle sheet
 configs/flowmap.yaml   section sets per type, condition grid, realistic speeds, level-flight fit, thresholds
 data/section_tables/   the tables (tracked); data/section_cache/, data/flowdata/, data/flowmaps/ are not
+data/section_cache.tar.gz   the raw XFOIL sweeps (tracked since 9 Nov 2026: 2,752 sweeps, 1.4 MB): unpack with
+                       tar -xzf data/section_cache.tar.gz -C data, then `tables --assemble` rebuilds the 46 tables
+                       exactly (checked 9 Nov), and `--build` runs XFOIL only for sweeps not in it
 ```
 
 The tool and the dataset use the same engine, so a wing gives the same numbers in both (test

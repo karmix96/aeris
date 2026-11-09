@@ -195,11 +195,21 @@ def main(argv=None) -> None:
     p.add_argument("--tag", default=None, help="--family: the name of this part (default: the types joined by _)")
     p.add_argument("--band", choices=["on", "off"], default=None,
                    help="the transition band (default: the config's, on); off: no band, for fully turbulent runs")
+    p.add_argument("--open-holdouts", action="store_true",
+                   help="mesh the sealed hold-out sets (holdout_focus, holdout_full), opened once with the surface rules "
+                        "frozen (owner, 9 Nov 2026; decision 83). The seal is lifted in this process only; the wing is "
+                        "built by the same code as every other set (wing_from_set)")
     p.add_argument("--resume", default=None,
                    help="a .jsonl file: every row is appended as it is built, and rows already in it are not built "
                         "again, so a stopped screen goes on where it stopped (the full JSON is written at the end)")
     a = p.parse_args(argv)
     a.band_on = None if a.band is None else a.band == "on"
+    if a.open_holdouts:                          # decision 83: the hold-outs opened once, the surface rules frozen (82)
+        import cfdauto.geometry.build as geometry_build
+        geometry_build.SEALED_SETS = ()          # read by wing_from_set at call time; this process only
+        print("hold-outs opened (decision 83): the seal is lifted in this process only", flush=True)
+    elif any(s.startswith("holdout") for s in a.sets):
+        p.error("the hold-out sets are sealed: pass --open-holdouts (decision 83) to mesh them")
     if a.family:
         return main_family(a)
     rl = rules(a.level, a.config, a.band_on)

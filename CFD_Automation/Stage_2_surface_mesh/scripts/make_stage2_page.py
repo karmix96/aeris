@@ -268,6 +268,137 @@ def nose_table(nose: dict) -> str:
     return "".join(out)
 
 
+
+
+def holdout_section(hs: dict) -> str:
+    """Study 14: the hold-outs, opened once with the surface rules frozen (owner, 9 Nov 2026; decision 83)."""
+    L, R = hs["levels"], hs["against_study12"]
+    g = hs["gates"]
+    n_all = sum(L[lev]["builds"] for lev in LEVELS)
+    n_ok = sum(L[lev]["passed"] for lev in LEVELS)
+    n_crash = sum(L[lev]["crashed"] for lev in LEVELS)
+    n_rep = sum(L[lev]["nose_repairs"] for lev in LEVELS)
+    lim = {"VC": 17.1, "C": 13.2, "M": 10.2, "F": 7.89}
+    rows = "".join(
+        f"<tr><td>{lev}</td><td>{L[lev]['passed']} of {L[lev]['builds']}</td>"
+        f"<td>{L[lev]['cells']['median'] / 1e6:.2f} ({L[lev]['cells']['max'] / 1e6:.2f})</td>"
+        f"<td>{R[lev]['cells_median'] / 1e6:.2f} ({R[lev]['cells_max'] / 1e6:.2f})</td>"
+        f"<td>{L[lev]['nose_turning_max']:.2f}° (limit {lim[lev]}°)</td>"
+        f"<td>{L[lev]['cap_quads_min']:.3f} ({R[lev]['cap_quads_min']:.3f})</td></tr>" for lev in LEVELS)
+    head = ("<tr><th>Level</th><th>Passed</th><th>Cells, hold-outs: median (largest) [M]</th>"
+            "<th>Every set before (Study 12) [M]</th><th>Largest nose turning</th>"
+            "<th>Worst tip cap, hold-outs (Study 12); limit 0.05</th></tr>")
+    fails = [f for lev in LEVELS for f in L[lev]["failed"]]
+    fr = hs.get("family_ratios", {})
+    nose = [v["nose_root"] for v in fr.values() if "nose_root" in v]
+    nose_s = (f"{min(x['min'] for x in nose):.3f}–{max(x['max'] for x in nose):.3f}" if nose else "n/a")
+    cap_min = min(L[lev]["cap_quads_min"] for lev in LEVELS)
+    cap_lev = min(LEVELS, key=lambda lev: L[lev]["cap_quads_min"])
+    if fails:
+        fail_txt = "; ".join(f"{f['wing']} at Re {f['re']:.0e}: {', '.join(f['failed'] or [f.get('error') or '?'])}"
+                             for f in fails[:8])
+        res = (f"<strong>{len(fails)} of {n_all} builds fail</strong> ({fail_txt}{' …' if len(fails) > 8 else ''}). "
+               "No rule was changed (decision 82): the failures are reported as they are.")
+        concl = (f"The mesher fails on {len(fails)} of {n_all} builds of wings it had never seen. That is the honest "
+                 "generalisation number; the failed checks say where the rules do not yet cover the space.")
+    else:
+        res = (f"<strong>{n_ok} of {n_all} builds pass</strong>, {n_crash} crash, {n_rep} needed a nose repair.")
+        concl = (f"The mesher meshes wings it had never seen: {n_ok} of {n_all} builds pass every check, with no repair, "
+                 f"at every level and Re level. The tip cap stays the closest check (worst {cap_min:.3f} at {cap_lev}, limit 0.05). "
+                 "This is the first test of the rules on unseen wings; it says nothing yet about the flow.")
+    fig = figc("holdout_screen.png",
+               "Left: cells per level on the wing blocks, the 60 hold-outs (blue) against every set meshed before "
+               "(grey, Study 12): median (bar) and largest (tick). Right: the tip cap quality of every hold-out mesh, "
+               "per level, against the limit 0.05.",
+               "The hold-outs sit inside the range of the sets seen before, and every cap stays above the limit."
+               if not fails else "See the result above: the failed builds are counted, not hidden.")
+    return f"""
+  <h3 id="study14">Study 14 · The hold-outs: wings the mesher has never seen (9 Nov 2026)</h3>
+  <p><strong>What was done.</strong> The 60 hold-out wings (15 per type: 10 in the focus space, 5 in the full space) were sealed: never built, never meshed. With the surface rules frozen (decision 82), the owner opened them once (decision 83). Stage 1 built and checked them ({g['passed']} of {g['wings']} pass its four gates), then every wing was meshed at every level and at the four Re levels: {n_all} builds. The wings are built by the same code as every other set; the seal was lifted only in the two screen processes (<code>scripts/screen.py --open-holdouts</code>; <code>scripts/holdout_study.py</code>).</p>
+  <div class="tbl"><table class="mid">{head}{rows}</table></div>
+  <p><strong>Result.</strong></p>
+  <ul>
+    <li>{res}</li>
+    <li><strong>The family rule:</strong> the nose cell refines by {nose_s} per level step at the root (1.3 asked).</li>
+    <li><strong>Closest check:</strong> the tip cap, worst {cap_min:.3f} at {cap_lev} (limit 0.05; every set before: {R[cap_lev]['cap_quads_min']:.3f}).</li>
+  </ul>
+  {fig}
+  {cbox(concl)}"""
+
+
+def laws_glance() -> str:
+    """The laws at a glance (owner, 9 Nov 2026): the surface laws as built, read from laws.py, and the volume laws
+    Stage 3 starts from. Bold: the level where the target is set (decision 71); the others follow ÷ 1.3 per level."""
+    R = {lev: rules(lev) for lev in ("VC", "C", "M", "F")}
+    anchor = {n: R["VC"].anchor(n)[1] for n in ("nose_turning_deg", "te_spacing_c", "max_spacing_c", "base_cells",
+                                                 "chord_growth", "chord_growth_limit", "cells_per_bubble",
+                                                 "span_spacing_c", "min_cells_per_panel", "span_growth_limit", "yplus")}
+
+    def lv(name: str, f) -> str:
+        out = []
+        for lev, r in R.items():
+            s = f(r.setting(name))
+            out.append(f"<strong>{s}</strong>" if anchor[name] == lev else s)
+        return " / ".join(out)
+
+    def g(x, nd=3):
+        return f"{x:.{nd}g}"
+
+    def d2(x):                       # at least two decimals, at most three: 0.169, 0.13, 0.10, 0.077; 2.0, 1.54
+        s = f"{x:.3f}".rstrip("0")
+        return s if len(s.split(".")[1]) >= 2 else f"{x:.2f}"
+
+    def d1(x):                       # one or two decimals: 3.38, 2.6, 2.0, 1.54
+        s = f"{x:.2f}".rstrip("0")
+        return s + "0" if s.endswith(".") else s
+
+    s0 = " / ".join(f"{R[lev].first_cell_c(3.0e5) * 1e5:.1f}" for lev in R)
+    band = " / ".join(f"{R[lev].band_spacing_c(4.0e5) * 100:.2f}" for lev in R)
+    surf = [
+        ("1", "Nose: the largest turn per cell", lv("nose_turning_deg", lambda x: g(x)) + "° (each level checked against its own angle + 0.2°)"),
+        ("2", "Nose size from station to station", f"changes ≤ {R['VC'].nose_envelope:g} (every level; holds by construction)"),
+        ("3", "Trailing-edge cell", lv("te_spacing_c", lambda x: d2(x * 100)) + " % c"),
+        ("4–5", "Cells between the nose and the tail", "growth " + lv("chord_growth", lambda x: f"{x:.3g}") + " (checked ≤ "
+         + lv("chord_growth_limit", lambda x: f"{x:.3g}") + "); largest cell " + lv("max_spacing_c", lambda x: d1(x * 100)) + " % c"),
+        ("band", "Transition band, 0–100 % c on both sides, on for every run (decisions 56, 72, 81)",
+         "cells per bubble " + lv("cells_per_bubble", lambda x: f"{x:.3g}") + "; band cell at local Re ≥ 4 × 10⁵: " + band + " % c"),
+        ("6", "Cells across the blunt base", lv("base_cells", lambda x: f"{x:d}")),
+        ("7", "Trailing-edge thickness", "0.2 % c on every wing (Stage 1, decision 70)"),
+        ("8", "Gap between stations", lv("span_spacing_c", lambda x: f"{x:.2g}") + " c; gaps per panel ≥ "
+         + lv("min_cells_per_panel", lambda x: f"{x:d}") + "; gap growth ≤ " + lv("span_growth_limit", lambda x: f"{x:.3g}")),
+        ("9–10", "Stations near the tip", f"one station on every break; the last gap = {R['VC'].tip_gap_in_s0:g} × the first wall cell (every level)"),
+        ("11", "Tip cap", "built from the tip ring; quality (scaled Jacobian) ≥ 0.05, worst 0.057 at M (Study 12)"),
+        ("13", "First wall cell", "y⁺ " + lv("yplus", lambda x: f"{x:.2f}") + "; at Re 3 × 10⁵: s0 = " + s0 + " × 10⁻⁵ c"),
+        ("23", "Step between levels", "every size ÷ 1.3 (measured over every set: nose 1.295–1.304, trailing edge 1.300; Study 12)"),
+    ]
+    vol = [
+        ("12", "Blocks past the tip", "grow from the tip gap; Stage 3 sets the growth"),
+        ("13–14", "Layers off the wall", "first cell from law 13; growth ≤ <strong>1.25</strong> at VC (1.107 at F); ≥ 30 cells across the boundary layer"),
+        ("15", "Far field", "80 c (to test: 40 / 80 / 160)"),
+        ("17–18", "Wake", "C-H wake lines from the trailing edge to 80 c; 0.0075 c near the trailing edge"),
+        ("19", "Tip vortex", "no tube: fine cells along its path in the blocks past the tip"),
+        ("20", "Fine zone around the wing", "about 2 c"),
+        ("16, 21", "Background box, overlap", "the overset plan: kept as a fallback (decision 73), not built"),
+        ("22, 24", "Mesher settings, shock spacing", "not needed now (no supersonic flow)"),
+    ]
+
+    def tab(rows, head):
+        out = ['<div class="tbl"><table class="mid"><tr>' + "".join(f"<th>{h}</th>" for h in head) + "</tr>"]
+        out += [f"<tr><td>{a}</td><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows]
+        return "\n".join(out) + "</table></div>"
+
+    return f"""
+<section id="laws">
+  <h2>The laws at a glance</h2>
+  <p>"Law n" is the row of the laws table in the Grand Roadmap (Annex G). The surface values are read from <code>laws.py</code> when this page is built. <strong>Bold</strong> marks the level where the target is set: hard minimums at VC, accuracy at M, transition at F (decision 71). The other levels follow ÷ 1.3 per level.</p>
+  <h3>Surface (built in Stage 2): VC / C / M / F</h3>
+  {tab(surf, ("Law", "What it sets", "VC / C / M / F"))}
+  <h3>Volume (Stage 3, not built yet): starting values</h3>
+  {tab(vol, ("Law", "What it sets", "Starting value"))}
+  {cbox("Every surface law in the first table is built, and every build is checked against it (13 checks). The volume laws are starting values for Stage 3: the C-H wake lines and the blocks past the tip replace the overset boxes, which stay as a fallback.")}
+</section>"""
+
+
 def rules_table(cfg: dict) -> str:
     """cfg: the first approach's YAML (configs/surface_first.yaml); the New column is read from laws.py."""
     ch, sp = cfg["chord"], cfg["span"]
@@ -1106,8 +1237,8 @@ def build_page(d: dict) -> tuple[str, str]:
 <header>
   <div class="eyebrow">CFD_Automation · Stage 2 · surface mesh · cfdauto {__version__} · 2 Nov 2026 · updated 9 Nov 2026</div>
   <h1>Surface Mesh</h1>
-  <p class="lede">What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the <em>first approach</em>). A new approach was decided on 4–6 Nov and <strong>built on 7 Nov</strong>: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed {ok_new:,} of {n_new:,} builds (<a href="#study9">Study 9</a>).{lede_f} The section <a href="#change">What was first, and what changes</a> says what changed; an amber <em>What changes</em> box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–{13 if (STUDIES / 'band_option.json').exists() else (12 if sf else 11)} are new. Step by step from a wing to its surface mesh, with the decision and the law at each step: the <a href="https://claude.ai/artifact/KAFYcfZy9K8pPWQMp1M8it" target="_blank" rel="noopener">flowchart</a>.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes</a><a href="#why">Why structured</a><a href="#what">What Stage 2 is</a><a href="#primer">What the primer asks</a><a href="#how">The steps, one by one</a><a href="#rules">The rules</a><a href="#studies">Studies and conclusions</a><a href="#study9">Study 9: the new screen</a><a href="#study10">Study 10: similarity</a><a href="#study11">Study 11: refine map by Re</a><a href="#study12">Study 12: the family screen</a><a href="#study13">Study 13: the band option</a><a href="#steps">What was done, step by step</a><a href="#assumptions">Assumptions</a><a href="#findings">Findings and decisions</a><a href="#open">Open, weak points, to do</a><a href="#handover">Handover to Stage 3</a><a href="#files">Files and commands</a></nav>
+  <p class="lede">What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the <em>first approach</em>). A new approach was decided on 4–6 Nov and <strong>built on 7 Nov</strong>: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed {ok_new:,} of {n_new:,} builds (<a href="#study9">Study 9</a>).{lede_f} The section <a href="#change">What was first, and what changes</a> says what changed; an amber <em>What changes</em> box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–{14 if (STUDIES / 'holdout_screen.json').exists() else 13 if (STUDIES / 'band_option.json').exists() else (12 if sf else 11)} are new. Step by step from a wing to its surface mesh, with the decision and the law at each step: the <a href="https://claude.ai/artifact/KAFYcfZy9K8pPWQMp1M8it" target="_blank" rel="noopener">flowchart</a>.</p>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes</a><a href="#why">Why structured</a><a href="#what">What Stage 2 is</a><a href="#primer">What the primer asks</a><a href="#how">The steps, one by one</a><a href="#laws">The laws at a glance</a><a href="#rules">The rules</a><a href="#studies">Studies and conclusions</a><a href="#study9">Study 9: the new screen</a><a href="#study10">Study 10: similarity</a><a href="#study11">Study 11: refine map by Re</a><a href="#study12">Study 12: the family screen</a><a href="#study13">Study 13: the band option</a><a href="#study14">Study 14: the hold-outs</a><a href="#steps">What was done, step by step</a><a href="#assumptions">Assumptions</a><a href="#findings">Findings and decisions</a><a href="#open">Open, weak points, to do</a><a href="#handover">Handover to Stage 3</a><a href="#files">Files and commands</a></nav>
 </header>"""
 
     glance = f"""
@@ -1198,7 +1329,7 @@ def build_page(d: dict) -> tuple[str, str]:
   <p>The AERIS Mesh Automation Primer (Annex G, the Grand Roadmap) gives the surface mesh as recipe R-S.1–R-S.9 and the code step M1, with the family rule M4. The Stage 1 handover adds where the baseline must be fine per family. Item by item, with what was built and the evidence:</p>
   {primer_table()}
   <p>Two things in the primer are not in this stage on purpose: the constants it names (n_side 75, n_span 49, 1,601 dense points) were S8's values for one wing; here every count follows from a rule, so it changes with the wing and the Re. And the primer's M1 asks for a bit-identical rebuild of g83; CFD_Automation has no AERIS wings, so the equivalent test is a bit-identical rebuild of the same input (it passes).</p>
-  {chg("The primer's overset plan (R-V.6 and M3: boxes, overset export, overlap gate) is replaced by the matched C-H mesh (Stage 3). R-S.4 (trailing edge 0.1 % c) and R-S.5 (nose 10°) are now accuracy targets met at M (built 7 Nov), so they hold on M and F and are looser on VC and C. R-S.7 (the family rule) now also moves the growth limits and the counts from their anchor level.")}
+  {chg("The primer's overset plan (R-V.6 and M3: boxes, overset export, overlap gate) is replaced by the matched C-H mesh (Stage 3) and kept as a fallback (ADflow only) and for future work (owner, 9 Nov). R-S.4 (trailing edge 0.1 % c) and R-S.5 (nose 10°) are now accuracy targets met at M (built 7 Nov), so they hold on M and F and are looser on VC and C. R-S.7 (the family rule) now also moves the growth limits and the counts from their anchor level.")}
 </section>"""
 
     steps = f"""
@@ -1367,10 +1498,12 @@ def build_page(d: dict) -> tuple[str, str]:
     study12 = family_screen_section(json.loads(sf_path.read_text())) if sf_path.exists() else ""
     bo_path = STUDIES / "band_option.json"
     study13 = band_option_section(json.loads(bo_path.read_text())) if bo_path.exists() else ""
+    hs_path = STUDIES / "holdout_screen.json"
+    study14 = holdout_section(json.loads(hs_path.read_text())) if hs_path.exists() else ""
     studies = f"""
 <section id="studies">
   <h2>The studies, with their conclusions</h2>
-  <p>Studies 1–7 were run while building the mesher with the first approach (2–3 Nov): they are <strong>first-approach evidence</strong>, on the geometry of before 7 Nov (real size, the old nose rule, the old 20 reference wings, 13 of which were replaced on 7 Nov). Study 4 has two corrections, the second on 7 Nov. Studies 8–13 are <strong>new</strong> (7–9 Nov): the band count for decision 74 (Study 8, with a plan file, before the build; also on the old reference wings), the new screen of the built rules (Study 9), the similarity check (Study 10), the refine map at the Re levels (Study 11), the family screen of every set at every level (Study 12) and what the band costs (Study 13). Each study says what was done, what each figure shows, and what we conclude. None of them is a flow result: no solver has run on these surfaces.</p>
+  <p>Studies 1–7 were run while building the mesher with the first approach (2–3 Nov): they are <strong>first-approach evidence</strong>, on the geometry of before 7 Nov (real size, the old nose rule, the old 20 reference wings, 13 of which were replaced on 7 Nov). Study 4 has two corrections, the second on 7 Nov. Studies 8–14 are <strong>new</strong> (7–9 Nov): the band count for decision 74 (Study 8, with a plan file, before the build; also on the old reference wings), the new screen of the built rules (Study 9), the similarity check (Study 10), the refine map at the Re levels (Study 11), the family screen of every set at every level (Study 12), what the band costs (Study 13) and the hold-outs, wings the mesher has never seen (Study 14). Each study says what was done, what each figure shows, and what we conclude. None of them is a flow result: no solver has run on these surfaces.</p>
 
   <h3>Study 1 · The robustness screen (first approach)</h3>
   <p><strong>What was done.</strong> Every built wing of every type and set ({tot['n_wings']} wings: reference, training_focus, training_full, corner1, corner2) meshed at level C and Re 3 × 10⁵ on the mean chord, and the 20 reference wings at all four Re levels, with the numpy twin of the loft. Pass/fail limits were written before the run (the 13 checks). Failures stay in every count.</p>
@@ -1436,6 +1569,7 @@ def build_page(d: dict) -> tuple[str, str]:
   {study11}
   {study12}
   {study13}
+  {study14}
 </section>"""
     assumptions = """
 <section id="assumptions">
@@ -1546,7 +1680,7 @@ def build_page(d: dict) -> tuple[str, str]:
     <li><strong>Input per mesh:</strong> <code>surface.npz</code> with <code>wing (n_ring, n_span, 3)</code> ring index first, root to tip; <code>cap (n_chord, n_base, 3)</code> with i × j outboard; <code>u</code> (x/c of every node, NaN on the base), <code>y</code>, <code>v</code> per station; <code>stations.csv</code> with the local Re and chord per station; <code>quality.json</code> with <code>s0_tip_m</code>, <code>re_tip</code>, <code>mean_chord_m</code>.</li>
     <li><strong>The march (recipe R-V):</strong> first cell s0 per station from the local Re and y⁺ = 1 (law 13; <code>laws.first_cell_c</code>); growth ≤ 1.25 in the boundary layer; ≥ 30 cells across the boundary layer; reach about 2 chords; cap first cell = tip s0. New (built 7 Nov): y⁺ ≤ 1 and growth 1.25 are hard minimums at VC, so F gets y⁺ about 0.46 and growth 1.107, just above the 1.1 a transition model asks for (1.23 at VC would give exactly 1.1; decision 57); the last station gap at the tip is now 2 × s0, so the cap's first cell must be chosen against that gap. The cell estimate of Study 9 assumes this march (one layer count per block, 2 chords deep).</li>
     <li><strong>The family:</strong> every spacing ÷ 1.3 per level and the growth g^(1/1.3), as on the surface, so the volume levels are true scaled copies; base cells 8 / 10 / 14 / 18 (new names: VC, C, M, F).</li>
-    <li><strong>First plan (replaced):</strong> overset boxes (R-V.6): background 0.03 c, wake box 0.0075 c to 2 c then to 10 c, tube 15–20 cells across the core from 2 c behind the tip, far field 80 c (T2 decides); overset export and the overlap gate (M3).</li>
+    <li><strong>First plan (replaced on 6 Nov; kept as a fallback and for future work, owner 9 Nov; not built):</strong> overset boxes (R-V.6): background 0.03 c, wake box 0.0075 c to 2 c then to 10 c, tube 15–20 cells across the core from 2 c behind the tip, far field 80 c (T2 decides); overset export and the overlap gate (M3).</li>
     <li><strong>New plan: one matched C-H mesh for ADflow and SU2.</strong> The C block wraps the ring (the nose stays a spacing request inside it, no collar); wake lines from the trailing-edge corners and the base to the far field (80 c), fine near the trailing edge (the first plan's 0.0075 c wake spacing is the starting value); the stations go on past the tip into outboard H blocks, growing from the tip gap; the tip vortex is resolved there by clustering along its path (no tube); the cap is the wall of the first outboard block. Structured CGNS for ADflow; a converter to unstructured hexes (.su2) for SU2. Rough cost: +30–60 % cells on the wing blocks, to be counted on the first wing.</li>
     <li><strong>Where the march will be tested first:</strong> the tip squeeze (many gaps on the last panel, down to 2 × s0), the caps whose quads come closest to the limit (Study 9), the corner wings, and (new) the open-line march at the trailing edge.</li>
     <li><strong>What the meshes are now:</strong> the rebuilt sets at unit mean chord, one surface per wing, level and Re level, named <code>mesh_&lt;level&gt;_&lt;hash8&gt;_re&lt;Re&gt;</code> with the levels VC, C, M, F; the counts of every set at every level are in <code>data/studies/screen_family_VC.json</code> … <code>screen_family_F.json</code> and <code>screen_family_summary.json</code> (Study 12; the 7 Nov screen: <code>screen_VC.json</code>, <code>screen_F.json</code>, <code>screen_reference_new.json</code>). The band stays on (81); the rules are frozen (82).</li>
@@ -1584,7 +1718,7 @@ python scripts/refine_map_re.py        # Study 11: the refine map at the Re leve
 
     foot = f"""<footer>Stage 2 of CFD_Automation (karmix96/aeris, branch stage2-surface-mesh). Built and screened with the numpy twin of the loft on 2 Nov 2026 (first approach); updated 6 Nov 2026 with the new approach (decided) and 7 Nov 2026: the refine map from −5° and the band count (Study 8), the new rules built, the nose fix and similarity built in Stage 1, the new screen (Study 9), the similarity check (Study 10) and the refine map at the Re levels (Study 11); cfdauto {__version__}; first screen mesh code hash {screen['mesh_code_hash'][:12]}, new screen {sn.get('mesh_code_hash', '')[:12]} (the merge of the refine map by Re level changed only <code>refine_map.py</code> in that folder, not the mesher, so today's hash differs). Sources: Levy et al. 2013 (DPW gridding guidelines); Celik et al. 2008 (GCI, r ≥ 1.3); Ansys CFX Modeling Guide, γ-Re_θ transition model grid requirements; White, Viscous Fluid Flow (flat-plate friction); the AERIS Mesh Automation Primer, Annex G; S8 (section_o.py, strategy_s8.py).</footer>"""
 
-    body = head + glance + change + why + what + primer + how + rules_sec + studies + steps + assumptions + findings + open_sec + handover + files + foot
+    body = head + glance + change + why + what + primer + how + laws_glance() + rules_sec + studies + steps + assumptions + findings + open_sec + handover + files + foot
     inner = (f'<title>Surface Mesh</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
              f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">\n'
              f'<style>{CSS}</style>\n<div class="wrap">{body}</div>')

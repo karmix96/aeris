@@ -1,0 +1,1164 @@
+{
+ "what": "Stage 1 build, gates and labels of the 60 hold-out wings (numpy loft), opened once on 9 Nov 2026 (decision 83)",
+ "rows": [
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "aa0d89b3d6425d3c8cbfe7bf0c0b8a64bde51fe3634929722d322406a43bdbc7",
+   "surface_hash": "aa3b26a80524fe3d28215fb34de475976c37763af0ba6e2746356b23afae76b3",
+   "labels": [
+    "tailless",
+    "bwb",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "e7ac29f5b873052d6ca7d754cf6a1529f6be6be4888f06fa2b3828c6ced26fab",
+   "surface_hash": "3972609a6a3f6dba269f72232af71f3256046eb132102e1ecf22ae923626ce67",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "34121f380413b2030f2bbe64469bf1e3e370b4ccfa5ce2ba3b19b1215be11645",
+   "surface_hash": "af0236e9a67e278bb811501a2c158762803a050bdd4dc64472b4a17b81f3e426",
+   "labels": [
+    "tailless",
+    "bwb",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "94da2ff34e9b8b01fa6248bbd2ee586ebfa59e4f6961fcf73358deb7f0d7b59f",
+   "surface_hash": "eadc86e2ca3c0b2f73fca036a5df449ba2a3eb1f48e1ff1e02d9df541a0c0244",
+   "labels": [
+    "tailless",
+    "bwb",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "f3583515be47881f0952e91bc327b9147eacb7116649355ef26c53d05d0b53f3",
+   "surface_hash": "f90211c45de9bc20c04e8b908c4cc38eacd293497330ad006f1e4278b637d6fe",
+   "labels": [
+    "tailless",
+    "bwb",
+    "unswept_outer",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 5,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "af1b57bac543a9b4e8bbffbfa4979156d351489b56149cbe543038d4a2d2c5b9",
+   "surface_hash": "dcdba5598e07dff659a332b3ef24b43661d5f2127d188b6d57a20e440fe63ee7",
+   "labels": [
+    "tailless",
+    "bwb",
+    "unswept_outer",
+    "cranked",
+    "washout",
+    "dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 6,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "1606bb0609223b644fb8b92aaf2d94fe5b56a8f31372e9a170d667d6a978a1f1",
+   "surface_hash": "c05b8edcc894c82d7774173bb5a0093f6b1059bd1f94099062415139a095a575",
+   "labels": [
+    "tailless",
+    "bwb",
+    "unswept_outer",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 7,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "e9957fd9adaf9bb13161b1338b40b6b433fc82041497428c75c30ecefa08ef76",
+   "surface_hash": "e6a5faba2ac1a882aac5229b00a6e8a6059ef283ee6e8124b40b0b0988952338",
+   "labels": [
+    "tailless",
+    "bwb",
+    "unswept_outer",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 8,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "9ae6e0eeaad6cd2b36bdc5836c1be6ae67c21812e9843634323b1ff6e0ef86c4",
+   "surface_hash": "a71a8e7d4432ec33befb9c62aad45033737642d418e9c227f11e4d264745c0ad",
+   "labels": [
+    "tailless",
+    "bwb",
+    "unswept_outer",
+    "cranked",
+    "washout",
+    "varying_dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_focus",
+   "index": 9,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "77c2eb41fd3fb08b6b66dea3f1371ddc53b7f4a72f858e3eb35ac8f5a68460e5",
+   "surface_hash": "0ced2ff8ace79983c3d32ab544593112d144148ef6d30117c976df0fe41a530e",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_full",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "4285abb84d418e3d36ddbc9b28e61e70834f0f3279580195e74eb2f0207b2334",
+   "surface_hash": "d28b4b32ffb5886fcdece8226b6af6a53252ee2e341d4f0c983678534a8ecfda",
+   "labels": [
+    "tailless",
+    "bwb",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_full",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "00606ea57cdbecafb6cfae1c36fd33f9e9ea711029bf2190b5873a78fc942524",
+   "surface_hash": "107ea8a54225f1c62aa98071f7de2fa7c13514065e8f462fd7872a7b664d0261",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "anhedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_full",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "9d186350377dea8d288001e257818ee490544463c3661159a06f183d0414e5bc",
+   "surface_hash": "8a267130897ea80cdfe5766ac11adb7f103290cf9eea1607dce464bec11acb50",
+   "labels": [
+    "tailless",
+    "bwb",
+    "aft_swept",
+    "cranked",
+    "wash_in",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_full",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "8974d9fb5b9218241f36d5ff4aefdd0852f767be7b7e081ec94f5eaaec59dabd",
+   "surface_hash": "0c77add1d620af090acdd066c6ac09e485639098b0a7b02210bef13db38980eb",
+   "labels": [
+    "tailless",
+    "bwb",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "bwb",
+   "set": "holdout_full",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "27d405b2d76546eed6690f9a68b088f56ad785e041ac81d9eddafd14710b52ab",
+   "surface_hash": "97a85d1d213fa63740e5423f2bdc03fc8354302cd24af53f079b66bf6d7e5876",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "cranked",
+    "washout",
+    "anhedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "e19309a854493b641faf6da24e7794075ee917a0cbf88ed2d12c6b7d5a67e060",
+   "surface_hash": "a28240b8433b23af728cf79a510d81286dc6ab53e60db3a2ceeb0f8b6ba6363c",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "33a01519e79ca106c43e62ee1ea7cb20fc40603d6e3bd6d66e80788a2daefbc5",
+   "surface_hash": "9ef7700f3133bc0c4b26e949bf5146dd273a6f608b9484bc44d3b60c1ae7e3de",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "580832eb3547dbfadcbe3118c980810bc1bbcdb89de446321fd5b486dd9d31ec",
+   "surface_hash": "e6a3f9e305982dab56a814835253b016fc92fd1db0cb44d905363ac385844f24",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0ff66d1d33a71eb6cb44d063f37d15c02d126a11f7d325673a8f807640fca69b",
+   "surface_hash": "17b8b2f6af5eb0a51245b2dc9cb8d7c0535d5a35f40c16a3d8e23bb64c8e9b66",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "87f1349e1a79130e9e9b8e1b4248b7e01c9bb01e48c68c59f12fe0a4b6ec98fa",
+   "surface_hash": "1d5beb8d3e71f467fecc72274e3f2c53815ae6f85637ce79733a32941b8da78f",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 5,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "6f7891f0e310e392e6d30febbb66f8b045a88827f693152c4866febf1a0442f1",
+   "surface_hash": "b8e74f9337c13d6224b59977972ec8cf45e389883eed0c3e3f6ce4357121c67c",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 6,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "40662f8a8ccd5a3bc61b2a45b6c1afc6bdf1a52d30b3b245cc9e7c5ef7923665",
+   "surface_hash": "eba903514cec5fd687baaab4490d7357c4f599801782d47bd0ad35e6bde2d1b3",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 7,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "8efcc5e03e9903e4d4e91a4fc40da751883b2d83cad7af64304dc22b9d1c0631",
+   "surface_hash": "2aa76722ed173dd017dbb2defb4757ff654b2e2381d840d394e846bce9cac390",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 8,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "d92b25431eb255c100c92e5826df1ea0d7c185e37feec62cc45b52d74ffe8fef",
+   "surface_hash": "16a17f1f06f406aacfbb60a7c50c19973f59fbc6e41d030080aec3262d0ad62a",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "varying_dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_focus",
+   "index": 9,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "536a7498f4b258f38160b32c4feaa4932d4fe5f34e13cf52b39bc5ddc7df1d45",
+   "surface_hash": "f0a9429ef9c12e12cef13013415ca39e80b11e10f23151bb807720ea16942362",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_full",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "83fe709ade9fcf6dab28b99531ab04eb72c4029d6b316a9e43a3449d84bdf61e",
+   "surface_hash": "23ecf5c3b41da84d890ee5b36b57d71c2ba7ce6c28e9be70d03b53575b015730",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "dihedral",
+    "varying_dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_full",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "e56619fba0638684aff898b7ce7834d6d6d2e3895ef50b0e90ecfffe86905c9d",
+   "surface_hash": "fd01e103107887b159d6f2fe087b8598e0ce604d500a52c865a1dcfdbe50dbda",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "anhedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.09
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_full",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "344b12d6f2a55cc53c2bdc7727fc2dbe5ba58fd26209668f03fbc6c5d4d5fdb5",
+   "surface_hash": "273fac68bbd308332ea786f2991002eb8008a8e957af04db029d8c8b3024b9a6",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "wash_in",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.09
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_full",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "936d05bdfc8cf13f6c35c1a4743091f45545d921375ed88dc4db49aadd5d8fb0",
+   "surface_hash": "242ebaa19c24e2f9d6d2294d68f660b223d00fd78d48caf1a3962292acc95373",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "washout",
+    "anhedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "flying_wing",
+   "set": "holdout_full",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "71993a59130e8b4b7bc083cbd5d69708cc0c3cc7b56b77cd165e2b57b7b0157c",
+   "surface_hash": "178de637aa5650a9f2467041e68da648fc5f42d3004d7c3f1be278d7b5ba4e6b",
+   "labels": [
+    "tailless",
+    "flying_wing",
+    "aft_swept",
+    "wash_in",
+    "anhedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "90611f1e9cef8246a64c60e51fa7bc01d4845083eae56faba046afc78352fbc4",
+   "surface_hash": "1e0307a265cdc681bc2ea54e25b198cbdb804ed09e868266d981d4f905e8c2fa",
+   "labels": [
+    "conventional",
+    "cranked",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "b355ec166b8b9fa59d2359d8aa0debd931550f2480100b5bbe78eb25ab58cde4",
+   "surface_hash": "9275d6267fe721db19bb689c969888909a3eea284c51cb03d0cdcd014c830520",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.13
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "588c95907a6842123f5900860fa3b7a060ce251c8f437f7c54c107c29bfe3d27",
+   "surface_hash": "1a97c3935c218583974f4e4881112c1ee87ff9183fb4733bf19c245444f32039",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.14
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "cced59914c23755c65e117a02e6b5c9da412f2a634e7453d39b698b50a12250f",
+   "surface_hash": "9a2e3822f1a4f4c92a66d84b913b0947b894549ebcf52c60db9ef8a756f0fa50",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.13
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0d8377fdad4ccf84511a1970ce97cba9c2c354ef6f9e10f0dd8b0ba699866ac1",
+   "surface_hash": "8dd8c7cd1283a184d0c702a239c11dfb616dce8a1149e73858d33678d0d61dd6",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 5,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0f0a443d427a72e4d2bf164d927c347901ac72562efd625e14c3dcd70ff6d525",
+   "surface_hash": "a8864ff9b5134f21b95860a87c92dfc81a7999f67b9e35f3ea4093c2a0c76141",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 6,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0d4052b6add45845d6b4c871e981cdcecb498f9948c585e1fe25229b1be7e7b2",
+   "surface_hash": "d8b8b8714d89936f55fb02d91bb163daa29bea664341553b45746939d6f5581f",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 7,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0e90f929bff5591398ba77560fc3515ad39787acc3f83d68578f363153e71972",
+   "surface_hash": "2fe4bdd248ab72fd5052cc8185c6df445c31685a5dadede94fe6f3a4d07f4ea8",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral"
+   ],
+   "seconds": 0.13
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 8,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "f7c24441515db7075c0022af83de39866fb93835685c6d719448e75ba8a10a58",
+   "surface_hash": "b16ed78ed40ec56f3719f111d45b1f677237e9e0b4964ac54168253bc1a17a3b",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_focus",
+   "index": 9,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "a91c0f54c05abfa57c423f06524803c3bb747a8ceba52d77de34935981ef7164",
+   "surface_hash": "e893d540932bed1366dbe2145581b492daa35af3479eb908b6062cc640b89e01",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_full",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "7fa67bc38ec8545c95efc2c0281aac6e4f1e06eed4f1a7df99425b8d127cde40",
+   "surface_hash": "5ae4e5938c69086033064c31bff50cde1edce27bc00928b31d9b638409d0d5f9",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "washout",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_full",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "d7d19e8bed570f34f6e41a7e048cb07ec3a06d7eed24bc0df0beb03c301a8fef",
+   "surface_hash": "93655e71d4966d7dc04b223dc7add5345614bd9e507641dfce3f2e0c6c7e5b33",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "wash_in",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.13
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_full",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "8ad2c05b59c987d7fe6fbf499a4bd947410bcc98506447a06d671d5b75a2d52a",
+   "surface_hash": "d72b012e78a638fb59ab8d275bd52ed3a0b5738ed1f99fb4d05c0ffb2d49cdc6",
+   "labels": [
+    "conventional",
+    "cranked",
+    "aft_swept",
+    "anhedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_full",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "8eec547a48012e8dbf226e1464b00bf9ec738fbfb0ad1997135ddc730d35cb22",
+   "surface_hash": "bec9af08fef3bff42f7dac9ffd456d9b96c2757a9d6a2088737b52bab2f653b7",
+   "labels": [
+    "conventional",
+    "cranked",
+    "wash_in",
+    "anhedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "cranked",
+   "set": "holdout_full",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "59476908938fbc3a96c7976558bbdc4cc2ac68c3de43560861f4a63848b28c34",
+   "surface_hash": "398e777c505130c070452035e9babe1673dd869a67bd30e9e0467f466098b127",
+   "labels": [
+    "conventional",
+    "cranked",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "c91b64d7b2c4c6099eddeb87cce82389031a86de43d26ca050a968881ff01a3e",
+   "surface_hash": "001f3c162d2adc7deeb725261bf9f19fa85a1d89fc2deabb7b49f3dbdc5c319a",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "0a047cbb2a7b17b5d9ac348656417a94dcb75d0973b1c1d28fcb9e98d11cf08f",
+   "surface_hash": "f9a9cd60abb5e77fcdd6faa850e20463def1127e071f177d5a8453945140a7ca",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "f8dd512e50932c51680a11035f55f4361b19d4d6106d398d16028314e0510e5d",
+   "surface_hash": "8173cb2edfb00599248442c3e3805dea3d289538d47c1d2fff1cb944ce0167fe",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "d2028d50daf1718bbb69ffef5672bd12376a7492b9229983bb37d4b795f2e6db",
+   "surface_hash": "c27efd7d2307b5beb1c2a2003c0c73b64938b37315a4a95786285a1e24f34600",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "62cc285efa9d2f31628d0e5804b9fa7e465d87f8590a60e0aef9f618ed9ff294",
+   "surface_hash": "898cde58a2c626ee1ceca089081d3b346f08781e1ab332ad05543dc0c61023d6",
+   "labels": [
+    "conventional",
+    "tapered",
+    "straight_tapered",
+    "washout",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.11
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 5,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "d1c513be04b29c44cc662b34ecd63d06174c03a9fe2a0fdb3cbe290037f959d0",
+   "surface_hash": "50e52fc3c96b9ad61b66b691599175226de26097d28f4c9ffe0f6b6c4de369e7",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 6,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "7c26ca0f2744cb001398eac0dff0f59abf2990fe63ea1217022797285c9b42fa",
+   "surface_hash": "f9e3d6126ec388349dc0d37ae02bbfb8bb3b6ad65bd993ef162b84f072d83d44",
+   "labels": [
+    "conventional",
+    "tapered",
+    "forward_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 7,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "c0f93067d58fcaafa65f84cb759117218cd0486d0db8840371d2224239fe447f",
+   "surface_hash": "405ba62412ede054bf7830ea014ecb24ed97772fbd1fbf86f1dd8aecd44e5e82",
+   "labels": [
+    "conventional",
+    "tapered",
+    "straight_tapered",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 8,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "5e07f3dd8b792b623f9c0c2f441fee9011b0683d615980442f027994de96cc41",
+   "surface_hash": "34ce19af317418df94e7f7544e0e693300dcf9d2ffd1bba12695c03647a1484a",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_focus",
+   "index": 9,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "c541a6a665ec57783a4ef53fc9190a7a226185eafcf1341a35308343f53a7492",
+   "surface_hash": "8614d13a51863a7286d25861ae6b37812164f18dc6ef58048746fe51a505405d",
+   "labels": [
+    "conventional",
+    "tapered",
+    "straight_tapered",
+    "washout",
+    "dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_full",
+   "index": 0,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "95cfd0095cdcb7162977f1603e3a9095ad5a39308b0b49651b70a5d62ce21b9a",
+   "surface_hash": "765442a5e790d4abe619bbf70e8e03d0e32c0f242721eead5d331d97fdfa8393",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "anhedral",
+    "varying_dihedral",
+    "low_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_full",
+   "index": 1,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "3b87e1f596c19dbfb69ea366919e3e81365760d032c1048cc75eabde3c99e10a",
+   "surface_hash": "17a321f062bd307cb1a49c6387c083192a76c2c3fd2c27f55f001e5498bc21b7",
+   "labels": [
+    "conventional",
+    "tapered",
+    "forward_swept",
+    "wash_in",
+    "anhedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_full",
+   "index": 2,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "bceab6f6898eb7927328a57225a596544650b68dbae36a8061650fb80d965bc5",
+   "surface_hash": "dc86c24dbb7d9fa134f702ebc4de65ced68d5012cd2f93f9fa0979aa64601a15",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "washout",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_full",
+   "index": 3,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "7072a9d89873ca5ff072d5b117e1ce80be5083f0df051535a9b9c963730e28b7",
+   "surface_hash": "fb2d2e0b1fd8fc9aa20f21e813fbf33b1aca31b5e810931c1cd3c8d9303f8b8f",
+   "labels": [
+    "conventional",
+    "tapered",
+    "aft_swept",
+    "wash_in",
+    "varying_dihedral"
+   ],
+   "seconds": 0.12
+  },
+  {
+   "wing_type": "tapered",
+   "set": "holdout_full",
+   "index": 4,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "d295db4d0aba73b8af4bd8769099842a504d904bf096d83427e0120a226286d8",
+   "surface_hash": "8ffba6d64625e7c2f0e69ab36f8a20f13b9105ff78eb81893fdb608cd4d6ed92",
+   "labels": [
+    "conventional",
+    "tapered",
+    "forward_swept",
+    "wash_in",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "seconds": 0.14
+  }
+ ]
+}

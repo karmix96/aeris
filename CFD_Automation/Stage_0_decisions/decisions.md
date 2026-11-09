@@ -62,7 +62,8 @@ The sections below are updated to match.
 - **Volume mesh (owner, 6 Nov).** One matched C-H multiblock mesh for ADflow and SU2, instead of the
   overset wake box and vortex tube. SU2 has no overset and refuses structured CGNS; converted to
   unstructured hexes, it runs. Far field stays at the starting value of 80 chords (ladder 40 / 80 / 160).
-  The C-H wake lines may add about +45 % (30–60 %, rough) cells on the wing blocks.
+  The C-H wake lines may add about +45 % (30–60 %, rough) cells on the wing blocks. The overset plan is kept as a
+  fallback (ADflow only) and for future work (owner, 9 Nov; not built).
 - **Similarity (owner, 6 Nov; D3 section).** Every wing at unit mean chord; the Re on the mean chord is
   the input; Mach fixed at 0.1 (Prandtl–Glauert on CL and CM); trailing edge 0.2 % c. The root chord
   leaves the design vector (18 → 17 numbers). About 8,000 solves instead of 42,000. Built in the Stage 1
@@ -270,7 +271,8 @@ a different amount.
 - **Decided (owner, 6 Nov):** one matched C-H multiblock mesh for ADflow and SU2, instead of the overset
   wake box and tip-vortex tube (SU2 has no overset and refuses structured CGNS; converted to unstructured
   hexes, it runs). The C-H wake lines run to the far field and may add about +45 % (30–60 %) cells on the
-  wing blocks (rough count).
+  wing blocks (rough count). The overset plan is kept as a fallback (ADflow only) and for future work
+  (owner, 9 Nov; not built).
 - **Source:** the share is our choice; the wake-mesh rules are set in the mesh stage.
 
 #### 2. Iterations: 0.30 counts (10 % of 3)

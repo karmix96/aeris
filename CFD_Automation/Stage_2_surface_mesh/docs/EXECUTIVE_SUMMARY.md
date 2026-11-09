@@ -1,8 +1,8 @@
 # Stage_2 — Executive summary: the surface mesh
 
-6 Nov 2026, updated 8 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
+6 Nov 2026, updated 9 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
 
-> **What changed since 3 Nov (updated 8 Nov).** Sections 4–8 hold the details.
+> **What changed since 3 Nov (updated 9 Nov).** Sections 4–8 hold the details.
 >
 > - **Built on 7 Nov**
 >   - The new surface rules (decisions 71, 72, 74): levels VC, C, M, F with each target met at the level that needs it; the lighter band, tip gap and station gap; the lower band from the leading edge (option A, chosen by Mike on 7 Nov). The first approach is kept in `configs/surface_first.yaml`.
@@ -110,7 +110,7 @@ The steps are the same in both approaches; the numbers here are the first approa
 | Nose (law 1) | no node turns the surface by more than 10°, solved on the ring as built | Grand Roadmap starting value; S8 | 10° at M: 16.9 / 13 / 10 / 7.69°; solved at every level, the strictest spacing wins |
 | Trailing edge (law 3) | 0.1 % c at the two corners | DPW gridding guidelines | 0.1 % c at M: 0.169 / 0.130 / 0.100 / 0.077 % c |
 | Blunt base (law 6) | 8 cells at C (10, 14, 18 on the finer levels) | S8; our choice | 8 / 10 / 14 / 18 (≥ 8 at VC) |
-| Transition band | upper 0–85 % c, lower 60–100 % c; cell = bubble length / 20; bubble 0.40, 0.30, 0.10, 0.05 c at local Re 6 × 10⁴, 10⁵, 4 × 10⁵, 10⁶ | Stage 1 handover; Ansys CFX guide (20 per bubble) | upper 0–85 % c (as built band-size cells to the trailing edge; 0–100 % c is Mike's choice), lower 0–100 % c (74, A); cell = bubble / 9.1 / 11.8 / 15.4 / 20; bubble 0.40, 0.30, 0.10, 0.10 c |
+| Transition band | upper 0–85 % c, lower 60–100 % c; cell = bubble length / 20; bubble 0.40, 0.30, 0.10, 0.05 c at local Re 6 × 10⁴, 10⁵, 4 × 10⁵, 10⁶ | Stage 1 handover; Ansys CFX guide (20 per bubble) | upper 0–100 % c (Mike, 8 Nov), lower 0–100 % c (74, A); on for every run (81); cell = bubble / 9.1 / 11.8 / 15.4 / 20; bubble 0.40, 0.30, 0.10, 0.10 c |
 | Largest cell | 2 % c outside the bands | our choice | 2 % c at M: 3.38 / 2.60 / 2.00 / 1.54 % c |
 | Growth along the ring | 1.2 built, 1.25 checked | Stage 1 handover; DPW | built 1.2 / 1.15 / 1.11 / 1.087; checked 1.25 / 1.19 / 1.14 / 1.107 |
 | Stations (laws 8, 9) | one on every loft station; gap 0.2 × chord; ≥ 12 per panel; growth 1.2 (1.3 checked) | geometry; our starting values | gap 0.4225 / 0.325 / 0.25 / 0.192 × chord; ≥ 8 / 10 / 12 / 16 per panel; growth 1.2 at VC (checked 1.3 / 1.22 / 1.17 / 1.13) |
@@ -123,7 +123,7 @@ The steps are the same in both approaches; the numbers here are the first approa
 
 ## 4. The studies, with their conclusions
 
-None of them is a flow result: no solver has run on these surfaces. Studies 1–7 are first-approach evidence, on the geometry of before 7 Nov (real size, the old nose rule, the old 20 reference wings, 13 of which were replaced on 7 Nov). Studies 8–11 are new.
+None of them is a flow result: no solver has run on these surfaces. Studies 1–7 are first-approach evidence, on the geometry of before 7 Nov (real size, the old nose rule, the old 20 reference wings, 13 of which were replaced on 7 Nov). Studies 8–13 are new.
 
 **Study 1 · The robustness screen (first approach).** Every built wing of every type and set was meshed at level C and Re 3 × 10⁵, and the 20 reference wings at all four Re levels, with the numpy twin of the loft. The pass and fail limits were written before the run. Result: 790 builds, 790 passed, 0 refused, 0 crashed. The largest delivered turning was 10.02°, the largest growth 1.21 (limit 1.25), and 32 builds needed a nose repair. The lowest wing-quad quality was 0.09, on corner wings with an 85°-swept first panel. Build time: median 5.0 s, max 8.1 s.
 
@@ -269,7 +269,7 @@ In short: the pages use the 7 Nov count because we can check and redo it. The tw
 
 *What it shows.* Left: cells per mesh at F with the band on (blue) and off (amber), median (bar) and largest (tick), per Re level. Right: cells with the band ÷ cells without, per level (median line, range shaded).
 
-**Conclusion.** The band nearly doubles the cells from Re 3 × 10⁵ up: on ÷ off is 1.79–1.83 at 3 × 10⁵ and 1.87–1.91 at 10⁶ and 4 × 10⁶ (every level); at 10⁵ it costs almost nothing (1.08–1.09), because the band cell there is about the largest cell. The largest F mesh is 10.21 M on and 5.60 M off. With the band off, 78 of 80 C meshes fit the desktop today (28 with it) and 72 of 80 F meshes fit with +36 GB (21 with it). The family rule holds with the band off (the nose cell × 1.299–1.300 per step). **Negative finding:** with the band off, all 20 BWB reference builds at M fail the tip cap (scaled Jacobian 0.0495 against the limit 0.05; 0.057–0.078 with the band on); more smoothing does not help, so the band-off option would need a cap fix first. 300 of 320 builds pass. **Decided (Mike, 9 Nov): the band stays on for every run**, SA and LM alike; the switch stays unused; no cap change; the surface rules are frozen (decision 82).
+**Conclusion.** The band nearly doubles the cells from Re 3 × 10⁵ up: on ÷ off is 1.79–1.83 at 3 × 10⁵ and 1.87–1.91 at 10⁶ and 4 × 10⁶ (every level); at 10⁵ it costs almost nothing (1.08–1.09), because the band cell there is about the largest cell. The largest F mesh is 10.21 M on and 5.60 M off. With the band off, 78 of 80 C meshes fit the desktop today (28 with it) and 72 of 80 F meshes fit with +36 GB (21 with it). The family rule holds with the band off (the nose cell × 1.299–1.300 per step). **Negative finding:** with the band off, all 20 BWB reference builds at M fail the tip cap (scaled Jacobian 0.0495 against the limit 0.05; 0.057–0.077 with the band on); more smoothing does not help, so the band-off option would need a cap fix first. 300 of 320 builds pass. **Decided (Mike, 9 Nov): the band stays on for every run**, SA and LM alike; the switch stays unused; no cap change; the surface rules are frozen (decision 82).
 
 ## 5. What was first, and what changed with the new approach
 
@@ -321,7 +321,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 - **Numpy loft here; pyGeo checked on the reference wings only.** Every mesh so far was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.
 - **No solve yet.** Nothing here shows that the surface gives a good volume mesh or a converged run.
 - **The cap quads come close to the limit:** lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, against 0.05 (every set at every level, study 12). With the band off they cross it: 0.0495 on all 20 BWB reference builds at M (study 13); the band stays on, so the runs are not affected. Similarity made some caps worse (study 10).
-- **The stations are 17 % more than the plan.** The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.
+- **The stations are 17 % more than the plan.** The decided station growth 1.2 and 12 gaps per panel at M give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. Confirmed by Mike on 8 Nov (decision 77).
 - **The cell count is an estimate, and it hangs on the wall-layer rule.** This count: F 6.73 M median on the reference wings (5.91 M over every set), 10.21 M largest (one layer count per block, 2 chords deep). The first estimate of 6 Nov: 10.9 M, its rule not recorded. Both leave out the wake lines and the outboard blocks. Stage 3 sets the real rule.
 - **The coarse levels get a finer nose than they ask.** The nose is solved at every level and the strictest wins, so VC turns 14.6–16.1° against 16.9°: the price of an exact family rule.
 - **The coarse levels do not resolve transition.** VC and C have 9.1 and 11.8 cells per bubble, so transition results there must not be trusted.

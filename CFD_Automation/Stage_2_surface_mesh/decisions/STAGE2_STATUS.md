@@ -1,4 +1,4 @@
-# Stage_2 — Surface mesh: status and handover (2 Nov 2026, updated 8 Nov 2026)
+# Stage_2 — Surface mesh: status and handover (2 Nov 2026, updated 9 Nov 2026)
 
 Text copy for chats in this project. Repo: karmix96/aeris, branch `stage2-surface-mesh`,
 `CFD_Automation/Stage_2_surface_mesh/` (configs, decisions, docs, tests, scripts, studies) and the code in
@@ -77,7 +77,7 @@ nose turning, geometry kinks, nose envelope, chord growth, band spacing, trailin
 loft stations hit, tip gap, every ring in its station plane, wing quads (scaled Jacobian ≥ 0.05), cap quads
 (≥ 0.05; the two nose-corner cells reported apart, refused only if folded), ring count. Each level is checked against
 its own limits (turning 17.1 / 13.2 / 10.2 / 7.89°; growth along the ring 1.25 / 1.19 / 1.14 / 1.11 within 1 %;
-between station gaps 1.3 / 1.22 / 1.17 / 1.13). A refused mesh writes only `refusal.json`. Tests: 35 (`tests/mesh/`),
+between station gaps 1.3 / 1.22 / 1.17 / 1.13). A refused mesh writes only `refusal.json`. Tests: 45 (`tests/mesh/`),
 including the family test and a test of every value per level (`test_laws.py`).
 
 ## The band option (9 Nov; Study 13)
@@ -95,7 +95,7 @@ meshes are unchanged. The 20 reference wings × 4 Re × VC, C, M, F with the ban
 | F | 1.08 / 1.83 / 1.91 / 1.91 | 10.21 / 5.60 | 80 of 80 |
 
 - **Weak point:** with the band off, all 20 BWB reference builds at M fail the tip cap (scaled Jacobian 0.0495
-  against 0.05; 0.057–0.078 with the band on). More smoothing does not help. Fix the cap before any band-off run.
+  against 0.05; 0.057–0.077 with the band on). More smoothing does not help. Fix the cap before any band-off run.
 - Hardware, the reference wings, band off: 78 of 80 C meshes fit the desktop today (28 with the band); 72 of 80 F
   meshes fit with +36 GB (21 with the band).
 - `scripts/band_option.py`, `data/studies/band_option.json`, `docs/page/band_option.png`; `surface_rules.md` §20.
@@ -198,7 +198,8 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
 ## What was found and decided (OPEN_DECISIONS 56–80; `decisions/surface_rules.md`)
 
 - **Cells per bubble = 20** (Ansys CFX transition-model grid guide; the Stage 1 rule had no source): at C in the first
-  approach, at F now (9.1 at VC). Open: whether the coarse level needs it (T6 decides).
+  approach, at F now (9.1 at VC; decision 71). Settled for the mesh; the solver test T6 will show whether the coarse
+  levels need more.
 - **Wall-normal growth for a transition model 1.1** (same guide): settled by the levels, 1.25 at VC is 1.107 at F, just
   above it (1.23 at VC would give exactly 1.1).
 - **Upper band from the leading edge on every wing**; **lower band from the leading edge** (74, option A, 7 Nov).
@@ -243,7 +244,7 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
 - **The cap quads come close to the 0.05 limit** (lowest 0.075 at VC, 0.080 at C, 0.057 at M, 0.061 at F, every set; Study 12);
   similarity made some caps worse.
 - **The stations are 17 % more than the plan file** (station growth 1.2 and 12 gaps per panel at M, as decided, against
-  1.25 and 7), so about 17 % more cells than the plan's rules. If the plan file's values were meant, they need a decision.
+  1.25 and 7), so about 17 % more cells than the plan's rules. Confirmed by the owner on 8 Nov (decision 77).
 - **The cell count is an estimate and hangs on the wall-layer rule** (this count: one layer count per block, 2 chords
   deep; the first estimate of 6 Nov: rule not recorded); no wake lines, no outboard blocks. Stage 3 sets the real rule.
 - **The coarse levels get a finer nose than they ask** (solved at every level, the strictest wins: VC turns

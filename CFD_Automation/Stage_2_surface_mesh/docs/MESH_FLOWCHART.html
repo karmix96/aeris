@@ -320,7 +320,7 @@ footer a { color: var(--law); }
           <span class="chip chk"><b>band_spacing</b></span>
           <span class="chip chk"><b>te_spacing</b><span>law 3</span></span>
           <span class="chip chk"><b>ring_count</b></span></div></div>
-        <div class="g"><span class="gt">Span</span><div class="chips">
+        <div class="g"><span class="gt">Semi-span</span><div class="chips">
           <span class="chip chk"><b>span_growth</b><span>≤ <span data-k="sgl">1.168</span></span></span>
           <span class="chip chk"><b>loft_stations_hit</b></span>
           <span class="chip chk"><b>tip_gap</b><span>laws 9/10</span></span>
@@ -353,7 +353,7 @@ footer a { color: var(--law); }
     <div class="main card out" id="out">
       <span class="num">✓</span>
       <h2>The surface mesh</h2>
-      <p class="what"><code>mesh_&lt;level&gt;_&lt;wing hash&gt;_re&lt;Re&gt;/</code>: the wing grid (ring × stations) and the tip cap; <code>manifest.json</code> (every rule value with its reason, the input and code hashes, the nose label); <code>quality.json</code> (every check: value, limit, margin). Four levels per wing and Re, 1.3 apart.</p>
+      <p class="what"><code>mesh_&lt;level&gt;_&lt;wing hash&gt;_re&lt;Re&gt;/</code> (for example <code>mesh_M_1a2b3c4d_re3e5</code>): <code>surface.npz</code> (the wing grid, ring × stations, and the tip cap), <code>surface.xyz</code> (the same two blocks in Plot3D, for ParaView or Tecplot), <code>stations.csv</code> (one row per station); <code>quality.json</code> (every check with its value, limit and note, and the build info with every rule value, its anchor and its reason); <code>manifest.json</code> (the wing, rules and code hashes, the nose label, the counts and the node hash). Four levels per wing and Re, 1.3 apart.</p>
       <p class="vals">At <strong data-k="lv">M</strong>, every set (Study 12): ring <span class="v" data-k="ring">198–398</span> nodes × <span class="v" data-k="st">82–136</span> stations · cells on the wing blocks, median <span class="v" data-k="cells">2.70 M</span> (largest <span class="v" data-k="cmax">4.69 M</span>) · built in <span class="v" data-k="time">7.2 s</span> (median) · 3,128 of 3,128 meshes passed over all levels</p>
       <div class="chips">
         <span class="chip dec"><b>D73</b><span>next: one matched C-H volume mesh (Stage 3)</span></span>

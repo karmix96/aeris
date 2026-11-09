@@ -609,7 +609,7 @@ ratio kept (45 tests).
 - Hardware (wing blocks, the reference wings): with the band off, 78 of 80 C meshes fit the desktop today (28 with
   the band), and 72 of 80 F meshes fit with +36 GB (21 with the band).
 - **Weak point: 20 of 320 builds fail with the band off, all of them the BWB reference wings at M** (every Re): the
-  tip cap, scaled Jacobian 0.0495 against the limit 0.05 (0.057–0.078 with the band on). The five BWB reference tips
+  tip cap, scaled Jacobian 0.0495 against the limit 0.05 (0.057–0.077 with the band on). The five BWB reference tips
   give the same value. More smoothing does not help (400 to 3,200 sweeps: 0.0495 to 0.0490); the worst cell sits on
   the cap's edge at 88 % of the tip chord, where the section is under 1 mm thick. The same cell is 0.0775 with the
   band on: the coarser ring changes the cap's interior, not its edge spacing there.

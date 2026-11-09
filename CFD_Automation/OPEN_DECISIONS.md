@@ -428,7 +428,7 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     nose factor per family): cells with the band ÷ without = 1.08–1.09 at Re 1e5, 1.79–1.83 at 3e5, 1.87–1.91 at 1e6
     and 4e6 (median per level); largest F 10.21 M on, 5.60 M off. The band-on meshes are unchanged (the same nodes).
     **Weak point: with the band off, every BWB reference wing fails at M** (20 of 320 builds; the tip cap, scaled
-    Jacobian 0.0495 against the limit 0.05; 0.057–0.078 with the band on). More cap smoothing does not help (the worst cell
+    Jacobian 0.0495 against the limit 0.05; 0.057–0.077 with the band on). More cap smoothing does not help (the worst cell
     sits on the cap's edge near the trailing edge). To fix before any run with the band off.
     **Then decided (owner, 9 Nov 2026): the band stays on for every run, SA and LM alike.** One mesh family for both
     solvers, so the SA mesh study also speaks for the LM runs; the price is about 1.8–1.9 × the cells for the SA runs

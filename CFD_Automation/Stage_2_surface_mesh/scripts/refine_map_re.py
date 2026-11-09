@@ -229,7 +229,8 @@ def build() -> dict:
             nums.append(wing_numbers(sm))
             print(t, i, "strips", sm["shape"][0], "answered", sum(sm["fields"]["answered"]), "of", len(sm["fields"]["answered"]))
     doc = {"what": "refine map by Re level (similarity, decision 70): the 20 reference wings, Re on the mean chord "
-                   "10^5, 3 x 10^5, 1.5 x 10^6, 3 x 10^6 x root angle -5 to 12 deg, sea level, unit mean chord, the 2-D "
+                   "10^5, 3 x 10^5, 10^6, 4 x 10^6 (since 8 Nov; the 7 Nov run at 1.5 x 10^6 and 3 x 10^6: "
+                   "refine_map_re_levels_7nov.json) x root angle -5 to 12 deg, sea level, unit mean chord, the 2-D "
                    "tables at Mach 0.1, rebuilt on the fixed nose (decision 64)",
            "wings": wings, "numbers": nums, "summary": summary(wings, nums), "first_approach": first_approach(),
            "rules": {"decided_band": {k: list(v) for k, v in DECIDED_BAND.items()}, "margin": MARGIN,

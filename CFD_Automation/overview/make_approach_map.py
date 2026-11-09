@@ -597,10 +597,10 @@ def step(n: int, sid: str, stage: str, title: str, lead: str, body: str, concl: 
             f'<p class="lede">{lead}</p>{body}<p class="concl"><b>Conclusion</b>{concl}</p></section>')
 
 
-def cmp(first: list[str], now: list[str]) -> str:
+def cmp(first: list[str], now: list[str], now_label: str = "Now (decided 4–8 Nov, built 7–8 Nov)") -> str:
     li = lambda xs: "".join(f"<li>{x}</li>" for x in xs)
     return (f'<div class="cmp"><div><span class="k">First (30 Oct – 6 Nov)</span><ul>{li(first)}</ul></div>'
-            f'<div class="now"><span class="k">Now (decided 4–7 Nov, built 7 Nov)</span><ul>{li(now)}</ul></div></div>')
+            f'<div class="now"><span class="k">{now_label}</span><ul>{li(now)}</ul></div></div>')
 
 
 def laws_table() -> str:
@@ -665,7 +665,7 @@ def page() -> str:
               "The full space is what the generator promises to handle; the focus space is where real Class I–II wings sit, and where most runs go (100 wings per type, plus 5 reference wings).",
               '<div class="figwrap">' + fig_ranges() + "</div>" + size_table()
               + '<p class="note">First approach (left, grey): the focus wings at real size and speed. Now (right): the same shapes in mean chords (c̄).</p>',
-              "The focus space covers the real wings: most real values sit inside it, and so does the Greek RX-3 family (BWB, AR 8, sweep 33°; LOTUS and Archytas, 8 Nov). The BWB is the extreme shape: a root up to 2.83 mean chords and a tip down to 0.10, up to 17 × smaller. A survey of 202 fixed-wing UAVs (Mitridis et al. 2023) finds the spread inside each NATO class wide (span and cruise speed against weight: R² < 0.2), so a sampled range, not a trend line, is the right description.")
+              "The focus space covers the real wings: most real values sit inside it, and so does the Greek RX-3 family (BWB, AR 8, sweep 33°; LOTUS and Archytas, 8 Nov). The BWB is the extreme shape: a root up to 2.83 mean chords and a tip down to 0.10, up to 17 × smaller. A survey of 202 fixed-wing UAVs (Mitridis et al. 2023) finds the spread inside each NATO class wide (full span and cruise speed against weight: R² < 0.2), so a sampled range, not a trend line, is the right description.")
 
     s3 = step(3, "step-3", "Stage 0 → 1", "Similarity: size and speed become one number, the Re",
               "At low Mach, the shape, the Re and the angle set the flow. So a small slow wing and a large fast wing of the same shape need the same mesh. We build each shape once, at c̄ = 1, and give it the Re.",
@@ -701,7 +701,8 @@ def page() -> str:
               + cmp(["O-H body mesh to about 2 c, background box 0.03 c", "wake box 0.0075 c to 2 c, then to 10 c; vortex tube 15–20 cells across the core",
                      "overlap gate (≥ 5 cells); ADflow only"],
                     ["one matched C-H multiblock mesh; ADflow and SU2 (as unstructured hexes)", "wake lines to the far field (80 c; ladder 40 / 80 / 160): a rough +30–60 % cells",
-                     "tip vortex resolved in the outboard blocks; no overlap; wall y⁺ ≤ 1 per Re level, growth 1.25 at VC = 1.107 at F"]),
+                     "tip vortex resolved in the outboard blocks; no overlap; wall y⁺ ≤ 1 per Re level, growth 1.25 at VC = 1.107 at F"],
+                    "Now (decided 6 Nov, decision 73; Stage 3, not built yet)"),
               "The surface mesh stays the wall of the volume mesh. The cost moves to Stage 3: an open-line march, more wake cells and a tip vortex without its own tube, in exchange for one mesh family and one error bar for both solvers.")
 
     s7 = step(7, "step-7", "Stages 2 → 3", "The cell budget: the laws we adjusted to keep F near 10 M cells",
@@ -724,7 +725,7 @@ def page() -> str:
             '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">\n'
             f"<style>{CSS}</style>\n")
-    intro = ('<header style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">CFD_Automation · Stages 0–3 · updated 8 Nov 2026</span>'
+    intro = ('<header style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">CFD_Automation · Stages 0–3 · updated 9 Nov 2026</span>'
              '<h1>From a wing shape to a mesh that serves four Re levels</h1>'
              '<p class="lede">The flow of thought after the 4–7 Nov decisions, in seven steps. Wings and airfoil are drawn by the generator itself '
              '(reference wing 0 of each type, at unit mean chord). Click a step to jump to it.</p></header>')

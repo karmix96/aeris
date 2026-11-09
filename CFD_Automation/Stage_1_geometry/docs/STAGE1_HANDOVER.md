@@ -1,4 +1,4 @@
-# Stage_1 — Handover to the surface mesh (Stage 2 input; updated 8 Nov 2026)
+# Stage_1 — Handover to the surface mesh (Stage 2 input; updated 9 Nov 2026)
 
 Input for the surface/volume-mesh chat: where the baseline mesh must be fine, per family, before the whole mesh is
 refined by r ≥ 1.3, and what the two Stage 1 changes of 7 Nov 2026 change for the mesh. Source: Stage 1 (geometry +
@@ -8,6 +8,10 @@ Live pages of 6 Nov (before the two changes): summary https://claude.ai/artifact
 https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Automation/Stage_1_geometry`
 (commit cae32b7 or later: the sets rebuilt with both changes).
 
+> **Since then (8–9 Nov, Stage 2):** the surface rules are frozen (decision 82) and the transition band stays on for
+> every run, SA and LM alike (decision 81; with it off the BWB tip cap fails at level M, Stage 2 Study 13). Every
+> built set at every level: 3,128 of 3,128 builds pass (Study 12).
+>
 > **What changed on 7 Nov 2026 (both built; code, tests and sets done).**
 > - **Similarity (decision 70; decided by Mike on 6 Nov).** Every wing is built at **unit mean chord**: mean chord
 >   = area / full span = 1 (the geometric mean chord, not the MAC; on a BWB the MAC is 1.09–2.06 × larger). A wing
@@ -50,14 +54,15 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 >   real speed (first approach) and stay the record. The 2-D section tables are size-free and were rebuilt on
 >   the fixed nose (7 Nov; no Stage 1 conclusion changes: `decisions/flow_maps.md`).
 >
-> Earlier (2–6 Nov, unchanged): Stage 2 surface mesh works (790 of 790 builds pass 13 checks, on the first-approach
+> Earlier (2–6 Nov): Stage 2 surface mesh works (790 of 790 builds pass 13 checks, on the first-approach
 > wings; a station on every break; tip squeeze and band built; upper band from the leading edge on every wing).
 > Transition must be captured, with ADflow and SU2 (4 Nov). Angles −5° to post-stall, plus a post-stall study
 > (6 Nov). Mach scope extends toward 0.5, no supersonic flow (4 Nov); the Stage 1 data stop at Mach 0.2 and at root
-> angles 0–10°. Proposals (pending): one matched C-H volume mesh for both solvers (SU2 has no overset); ADflow SA for
-> mesh studies and fully turbulent data, SU2 SST + LM on about 20 % of the wings; relaxed band (0.5 % c where local
-> Re ≥ 4 × 10⁵); fine level 15.2 M cells median with the planned rules, 10.9 M with the relaxed band; core Mach
-> ≤ 0.2 now. Open: one more pyGeo `build --all` (the label fix of 8 Nov, decision 79, changed every input hash); push the raw
+> angles 0–10°. Decided 6 Nov: one matched C-H volume mesh for both solvers (decision 73; SU2 has no overset) and
+> the relaxed band (0.5 % c where local Re ≥ 4 × 10⁵, decision 72): fine level first estimated at 15.2 M cells
+> median, 10.9 M with the relaxed band; measured on 8 Nov (Stage 2 Study 12): 6.73 M median on the reference wings,
+> largest 10.21 M. Still proposals (pending): ADflow SA for mesh studies and fully turbulent data, SU2 SST + LM on
+> about 20 % of the wings (decision 76, chosen right before the runs); core Mach ≤ 0.2 now. Open: one more pyGeo `build --all` (the label fix of 8 Nov, decision 79, changed every input hash); push the raw
 > XFOIL data.
 
 ## What the two changes mean for the mesh (Stage 2)
@@ -132,15 +137,15 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
 
 | Where | Rule from G1 | Differs by family? | How sure |
 | --- | --- | --- | --- |
-| Chord: leading edge | no cell turns the surface by more than 10° (law 1); since 7 Nov the nose follows the airfoil file (201 points per side) | no | geometry rule; nose checked along the arc |
+| Chord: leading edge | no cell turns the surface by more than 10° at M (law 1; 16.9 / 13 / 10 / 7.69° at VC / C / M / F, decision 71); since 7 Nov the nose follows the airfoil file (201 points per side) | no | geometry rule; nose checked along the arc |
 | Chord: transition band | fine cells, growth along the surface ≤ 1.25; upper from the leading edge on every wing (written 0–100 % c since 8 Nov, owner; 0–85 % c before, with band cells to 100 % c as built), lower 0–100 % c (decision 74, 7 Nov; first 60–100 % c); a per-wing band from the refine map is a candidate (decision 65; now at the Re levels) | at the Re levels the refine map finds the upper transition past 85 % c at low Re (10⁵: 0–31 % of strips fit 0–85 % c); the lower band 0–100 % c holds every strip | 2-D, calm air; 3-D check pending |
-| Chord: bubbles in the band | resolve the bubble: about 0.4 c long at Re 6 × 10⁴, 0.1 c at 4 × 10⁵, down to about 0.015 c at roots above 10⁶ | long on small tips / at the lowest level; short on large roots / at the top level | XFOIL lengths; about 20 cells per bubble (Ansys CFX guidance), proposed as a fine-level target (pending); not met at the shortest root bubbles |
-| Chord: trailing edge | 0.1 % c spacing; 8 cells across the blunt base (0.2 % c on every wing since 7 Nov) | no | rule |
+| Chord: bubbles in the band | resolve the bubble: about 0.4 c long at Re 6 × 10⁴, 0.1 c at 4 × 10⁵, down to about 0.015 c at roots above 10⁶ | long on small tips / at the lowest level; short on large roots / at the top level | XFOIL lengths; about 20 cells per bubble (Ansys CFX guidance), a target at F (decided 6 Nov, decision 71); the mesh rule stops the bubble length at 0.10 c from local Re 4 × 10⁵ (decision 72), so 20 cells are not met at the shortest root bubbles |
+| Chord: trailing edge | 0.1 % c spacing at M; 8 cells across the blunt base at VC (10, 14, 18 at C, M, F; the base is 0.2 % c on every wing since 7 Nov) | no | rule |
 | Spanwise: breaks | a station exactly on b1 and b2; spanwise growth ≤ 1.3 (done in Stage 2: a station on every loft station; since 7 Nov the loft stations are b0–b3 only) | all; on the BWB b1 is the centre-body edge | geometry |
-| Spanwise: tip | stations squeezed toward the tip; cap first cell = tip first cell (done in Stage 2) | smallest tips on the BWB (down to 0.099 mean chords in the focus space; Re below 10⁵ at the lowest level) | geometry and Re |
-| Spanwise: station count | scale with semi-span over mean chord, not a fixed count (Stage 2: gap 0.2 × local chord, at least 12 per panel, growth 1.2); at unit mean chord the semi-span is AR / 2 mean chords | aspect ratio 2.5 to 20 | geometry; proposal |
-| Off the wall | first cell from y⁺ ≤ 1 at each case's Re (changes only about 20 % along the semi-span; the smallest chord sets it); growth ≤ 1.25 (1.1 with a transition model: Stage 3 decides, decision 57); ≥ 30 cells across the boundary layer at every station | BWB: root boundary layer up to about 10 × thicker than the tip's, so more layers there | flat-plate estimate; check y⁺ after one solve |
-| Around the wing | far field 80 c. The overset wake box (0.0075 c to 2 c, then growing to 10 c) and tip-vortex tube are under review: proposal (pending) is one matched C-H mesh for both solvers, with the wake band sized for −5° to stall and the tip vortex resolved by the outboard blocks | no | roadmap starting values; C-H cost not yet counted |
+| Spanwise: tip | stations squeezed toward the tip; cap first cell = tip first cell; last gap at the tip = 2 × the tip first cell (decision 72; done in Stage 2) | smallest tips on the BWB (down to 0.099 mean chords in the focus space; Re below 10⁵ at the lowest level) | geometry and Re |
+| Spanwise: station count | scale with semi-span over mean chord, not a fixed count (Stage 2: gap 0.25 × local chord and at least 12 gaps per panel at M, growth 1.2 at VC; decisions 71, 72); at unit mean chord the semi-span is AR / 2 mean chords | aspect ratio 2.5 to 20 | geometry; built and screened (Stage 2 Study 12) |
+| Off the wall | first cell from y⁺ ≤ 1 at each case's Re (changes only about 20 % along the semi-span; the smallest chord sets it); growth ≤ 1.25 at VC, 1.107 at F (decision 71 settles 57: near the 1.1 a transition model wants); ≥ 30 cells across the boundary layer at every station | BWB: root boundary layer up to about 10 × thicker than the tip's, so more layers there | flat-plate estimate; check y⁺ after one solve |
+| Around the wing | far field 80 c. The first plan, an overset wake box (0.0075 c to 2 c, then growing to 10 c) and a tip-vortex tube, was dropped on 6 Nov: one matched C-H mesh for both solvers (decision 73; Stage 3), with the wake band sized for −5° to stall and the tip vortex resolved by the outboard blocks | no | roadmap starting values; C-H cost not yet counted (rough +30–60 % cells on the wing blocks) |
 
 ## Where bubbles appear (upper surface, 2-D XFOIL, N_crit 9, 0–8°)
 

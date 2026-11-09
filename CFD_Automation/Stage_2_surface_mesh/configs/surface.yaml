@@ -79,7 +79,7 @@ wall:                             # first cell, needed here only for the last ga
   # s0 / c = y+ / (Re_c * sqrt(Cf / 2)),  Cf = 0.026 Re_c^(-1/7)  (turbulent flat plate, White 2006)
 
 sampling:
-  dense_per_side: 6001            # dense points per surface, uniform in sqrt(x/c) (clusters at the nose)
+  dense_per_side: 6001            # dense points per surface, cosine spaced in x/c (clusters at the nose and the TE)
   dense_span: 4001
   cap_smoothing: 400              # Laplacian sweeps on the tip cap, edges held (S8)
 

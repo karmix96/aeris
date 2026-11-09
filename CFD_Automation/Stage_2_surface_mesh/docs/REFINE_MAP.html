@@ -88,9 +88,9 @@ section, details, .tbl { min-width: 0; max-width: 100%; }
 
 <div class="wrap">
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 section tables · 3 Nov 2026 · updated 8 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 2 · refine map · from the Stage 1 section tables · 3 Nov 2026 · updated 9 Nov 2026</div>
   <h1>Where to refine: transition, bubbles and separation, per wing</h1>
-  <p class="lede">The transition band of the mesh is generic: one band for every wing. First (2–3 Nov) it was upper surface 0–85 % c, lower 60–100 % c. Since 7 Nov the lower band runs from the leading edge, 0–100 % c (decision 74). The upper band was written 0–85 % c until 8 Nov, but as built the upper side got band-size cells to the trailing edge too, because both sides share one node list; since 8 Nov it is written 0–100 % c (owner). This page reads the Stage 1 section tables for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip. First section: the map at the four Re levels on the mean chord (7 Nov, new). Below it, the interactive first-approach map, kept as the record.</p>
+  <p class="lede">The transition band of the mesh is generic: one band for every wing. First (2–3 Nov) it was upper surface 0–85 % c, lower 60–100 % c. Since 7 Nov the lower band runs from the leading edge, 0–100 % c (decision 74). The upper band was written 0–85 % c until 8 Nov, but as built the upper side got band-size cells to the trailing edge too, because both sides share one node list; since 8 Nov it is written 0–100 % c (owner), and since 9 Nov the band is on for every run, SA and LM alike (decision 81). So this map no longer sets the band; it shows where transition and bubbles sit inside it. This page reads the Stage 1 section tables for one wing at a time and shows where the flow turns turbulent, where the laminar bubbles sit and where it separates, strip by strip. First section: the map at the four Re levels on the mean chord (7 Nov, new). Below it, the interactive first-approach map, kept as the record.</p>
 </header>
 
 <section class="re" id="re-levels">
@@ -144,7 +144,7 @@ section, details, .tbl { min-width: 0; max-width: 100%; }
 <section class="grid2">
   <div class="box warnb"><h3>Limits of this map</h3><ul>
     <li>2-D strips: each strip is an XFOIL run of its section, free transition with N_crit 9 (calm air). Gusty air (N_crit 5) moves transition forward and shortens the laminar run; add margin for it.</li>
-    <li>One induced angle for the whole wing (elliptic): the local angle of attack along the span is root angle + twist − that one number. On swept and tapered wings the real local angle differs along the span; the tip is usually unloaded more than this says.</li>
+    <li>One induced angle for the whole wing (elliptic): the local angle of attack along the semi-span is root angle + twist − that one number. On swept and tapered wings the real local angle differs along the semi-span; the tip is usually unloaded more than this says.</li>
     <li>No crossflow transition on swept panels, no 3-D relief of bubbles, no tip vortex. Panels swept over about 25° with Re normal to the edge above 10⁶ can transition near the leading edge; the generic band's 0 % c start on the upper surface covers that, this map does not.</li>
     <li>Hatched strips had no XFOIL answer: past the section's 2-D stall, at high angle or at negative angle. At −5° these are mostly the washed-out outboard strips of the BWBs and flying wings (local angles −6° to −11°; some are below the tables' −10°). A strip with no answer anywhere in the range falls back to the generic band; a strip with some answers keeps only those.</li>
     <li>The dataset is the Stage 1 section tables (14 Re × 3 Mach × 49 angles per section, trilinear lookup); a strip between two sections takes the blend of its parents' answers.</li>

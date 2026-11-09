@@ -2,7 +2,7 @@
 
 These are the starting values the whole project is judged against. For each one: **the value**,
 **what it means in practice**, **why we chose it**, and **the source**. The same values, in a form a
-program can read, are in `values.yaml`. Updated 8 Nov 2026 (first updated 2 Nov 2026 with the
+program can read, are in `values.yaml`. Updated 9 Nov 2026 (first updated 2 Nov 2026 with the
 Stage 1 findings). The page "CFD Automation Stage 0" mirrors this file.
 
 ## A few words first
@@ -17,7 +17,7 @@ Stage 1 findings). The page "CFD Automation Stage 0" mirrors this file.
   solver iterates.
 - **Proposal, pending**: a proposal that is not decided yet. Everything else here is decided.
 
-## What changed since 2 Nov 2026 (updated 8 Nov)
+## What changed since 2 Nov 2026 (updated 9 Nov)
 
 The sections below are updated to match.
 
@@ -45,8 +45,8 @@ The sections below are updated to match.
 - **Angles of attack (owner, 6 Nov).** −5° to post-stall (was 0°, 4°, 8°, plus 12° for the nose and wake
   studies), plus a separate post-stall study (URANS or DDES on a few wings). Steady RANS is used up to
   stall onset. The Stage 1 dataset covers root angles 0–10° only.
-- **Mesh levels VC, C, M, F (owner, 6 Nov).** VC on the desktop; C, M and F on the university HPC (C,
-  about 2.3 M cells, is above the desktop limit of about 1.2 M). Hard minimums at VC: y+ ≤ 1, growth
+- **Mesh levels VC, C, M, F (owner, 6 Nov).** VC on the desktop; C, M and F on the university HPC (C:
+  1.26 M cells median, 2.19 M largest, Stage 2 Study 12; 264 of 782 C meshes fit the desktop limit of about 1.2 M). Hard minimums at VC: y+ ≤ 1, growth
   ≤ 1.25, base ≥ 8 cells, no kinks, tip gap. Accuracy targets at M, as DPW defines its medium grid: nose
   10°, trailing edge 0.1 % c, station gap, largest cell 2 % c. Transition targets at F: about 20 cells per
   bubble (Ansys CFX guidance). Every spacing ÷ 1.3 per level, so about 2.2× cells per level; wall layers
@@ -182,7 +182,7 @@ share**: not before (the answer is not good enough yet) and not long after (we a
 |---|---|---|---|---|---|---|---|
 | 1a | Mesh: along the chord | points around the airfoil | 35 % | 22.75 % | 0.68 counts | edge cells ≈ 0.1 % of local chord (DPW); since Stage 2 the transition band also sets cells here (D3) | carried about 88 % of the drag error |
 | 1b | Mesh: along the semi-span | sections from root to tip | 15 % | 9.75 % | 0.29 counts | Stage 2: a station on every loft station; gap 0.2 × local chord, ≥ 12 per panel, growth 1.2; last gap at the tip = the tip's first wall cell (our choice; first start was 0.1 % of semi-span at root and tip, DPW). Decided (owner, 6 Nov): tip gap 2 × s0; station gap 0.25 × local chord at M | — |
-| 1c | Mesh: away from the wall | thin layers through the boundary layer | 20 % | 13 % | 0.39 counts | first cell y+ ≈ 1; each layer ≤ 1.25 × the previous (DPW). Decided (owner, 6 Nov): 1.25 at VC is 1.107 at F, which meets the 1.1 of a transition model (Ansys CFX) | — |
+| 1c | Mesh: away from the wall | thin layers through the boundary layer | 20 % | 13 % | 0.39 counts | first cell y+ ≈ 1; each layer ≤ 1.25 × the previous (DPW). Decided (owner, 6 Nov): 1.25 at VC is 1.107 at F, just above the 1.1 of a transition model (Ansys CFX) | — |
 | 1d | Mesh: edges and blunt trailing edge | cells at nose, trailing edge and across the base | 15 % | 9.75 % | 0.29 counts | 0.1 % of chord at edges (DPW); 8 / 10 / 14 / 18 cells across the base at levels VC / C / M / F (our choice; the first approach named them C / M / F / FF) | base was the slowest part to settle |
 | 1e | Mesh: wake | cells behind the wing and around the tip vortex | 15 % | 9.75 % | 0.29 counts | set in the mesh stage (our choice). Decided (owner, 6 Nov): one matched C-H mesh for ADflow and SU2 | refining the near wake moved drag 23 counts |
 | **1** | **Mesh, all directions** | cells too big | **100 %** | **65 %** | **1.95 counts** | error bar from 3 meshes (Celik 2008) | — |
@@ -501,15 +501,15 @@ at all four levels.
 - **In practice:** every wing is solved at a mean chord of 1, and the Reynolds number on that chord is
   set directly as the input. Mach is fixed at 0.1, with a Prandtl–Glauert correction on CL and CM.
   Fixed once: trailing edge 0.2 % c; Tu 0.07 % (N_crit 9); T 288.15 K; γ 1.4; Pr 0.71; adiabatic wall.
-- **Status:** being built in the Stage 1 code now. All hashes change.
+- **Status:** built in Stage 1 on 7 Nov (722 of 722 wings rebuilt; every hash changed).
 - **What it changes:**
   - the root chord leaves the design vector (18 → 17 numbers);
   - meshes per wing 21 → 4;
   - dataset 42,000 → 8,000 solves at 5 angles; about 12,800 with about 8 angles from −5° to stall (the
     angle steps are still pending, see Angles);
   - corner set, part 1: 32 / 24 wings (2 per free variable) instead of 34 / 26 (D2).
-- **Checks first:** C1 scale; C2 Mach; C3 trailing edge; C4 Re-level interpolation (add a level near
-  7 × 10⁵ – 10⁶ only if needed; still pending).
+- **Checks first:** C1 scale; C2 Mach; C3 trailing edge; C4 Re-level interpolation (since 8 Nov the levels
+  are 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶, decision 78; C4 checked on 2-D data, the solver check still to run).
 - **Why:** CL, CD and CM depend on the shape, Re and Mach, not on the size itself. One mesh per wing
   and Re level then serves every real size and speed with that Re.
 - **Limit:** Re does not carry surface roughness or air turbulence.
@@ -542,8 +542,8 @@ at all four levels.
 - **Since Stage 2 (2 Nov 2026):** the surface mesher builds levels C, M, F and FF this way: every
   spacing ÷ 1.3 per level (checked within 3 %). Only the base counts step by 1.25, 1.4 and 1.29 (see 1d).
 - **Decided (owner, 6 Nov):**
-  - four levels VC, C, M, F: VC on the desktop; C, M and F on the university HPC (C, about 2.3 M cells,
-    is above the desktop limit of about 1.2 M);
+  - four levels VC, C, M, F: VC on the desktop; C, M and F on the university HPC (C: 1.26 M cells
+    median, 2.19 M largest, Stage 2 Study 12; 264 of 782 C meshes fit the desktop limit of about 1.2 M);
   - hard minimums at VC: y+ ≤ 1, growth ≤ 1.25, base ≥ 8 cells, no kinks, tip gap;
   - accuracy targets at M, as DPW defines its medium grid: nose 10°, trailing edge 0.1 % c, station gap,
     largest cell 2 % c;
@@ -669,11 +669,12 @@ CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works. No wing has bee
   only (SST aborted), so only SU2 (SST + LM) can do it. So far SU2 has run one smoke test on one ring
   mesh, not converged. Its cost on a full wing is unmeasured, and ADflow and SU2 SA have not yet been
   compared on the same mesh.
-- **Mesh size.** Estimated in Stage 2, the fine level has 15.2 M cells (median) with the planned rules,
-  against the proposed 9–11 M. The band change (decided 6 Nov) gives 10.9 M, but then the short high-Re
-  root bubbles (about 1.5 % c) get only about 3 nodes: fine for SA, not for LM. The C-H wake lines may
-  add about +45 % on the wing blocks, so F may land nearer 15 M than 11 M. The desktop takes about 1.2 M
-  cells: with F at 10.9 M, VC is about 1.0 M (median) and C about 2.3 M, so C does not fit on the desktop.
+- **Mesh size.** First estimate (6 Nov): the fine level F at 15.2 M cells (median) with the planned rules,
+  10.9 M with the lighter band (decided 6 Nov); then the short high-Re root bubbles (about 1.5 % c) get only
+  about 3 nodes: fine for SA, not for LM. Measured on 8 Nov (Stage 2 Study 12, wing blocks, every set at every
+  level): F 5.91 M median (6.73 M on the reference wings), largest 10.21 M; VC 0.60 M, C 1.26 M, M 2.70 M. The
+  C-H wake lines may add a rough +30–60 % (Stage 3 counts them). The desktop takes about 1.2 M cells: every
+  VC mesh and 264 of 782 C meshes.
 - **SU2 has no overset.** It also refuses structured CGNS (structured meshes converted to unstructured
   hexes do run). So the overset wake box and vortex tube cannot serve both solvers. The C-H mesh
   (decided 6 Nov) has its own costs: the tip vortex must be held by the outboard blocks without a tube,
@@ -689,7 +690,7 @@ CD 0.0184; LM CL 0.908, CD 0.0137. It shows the mesh path works. No wing has bee
   for the new ones.
 - **The Greek programmes rest on assumptions (8 Nov).** No wing area is published for LOTUS, Archytas or
   the RX-3, so their Re uses AR 8 (AR 6 would make it a third higher); the LOTUS speeds are planned values
-  from the press, and the sources disagree on several numbers (LOTUS weight 500–700 kg, demonstrator span
+  from the press, and the sources disagree on several numbers (LOTUS weight 500–700 kg, demonstrator full span
   6 or 7 m, Patroller top speed 265 or 314 km/h). LOTUS 11 m and the Patroller at top speed lie above the
   top level (extrapolated). The 1 × 10⁶ level makes drag read between the levels worse from 1 × 10⁶ to
   4 × 10⁶ (2-D, with transition: 6.8–7.0 % against 2.5–3.7 %, 90th percentile).

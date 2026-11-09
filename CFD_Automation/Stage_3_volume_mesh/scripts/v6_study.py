@@ -49,7 +49,10 @@ def main() -> None:
     rows = ref + rows_of(sorted({q.stem[len(f"screen_{PREFIX}"):] for q in STUDIES.glob(f"screen_{PREFIX}s_*.jsonl")}))
     fs = rows_of(("F_sample",)) + [r for r in rows_of(("F_ref",))]
     s = {"meshes": len(rows), "outcomes": dict(Counter(r["outcome"] for r in rows)),
-         "stopped": "9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)"}
+         "state": ("stopped on 9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)" if not PREFIX
+                   else "rule set 2 as it stands (decisions 107-111), screened on 9 Nov 2026 after 22:40")}
+    if not PREFIX:
+        s["stopped"] = "9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)"
     # decision 101 came while the screen ran (it judged every cell): a mesh refused only by check 3, whose cells but the
     # cap's two nose-corner columns are >= 0.05, passes under it
     d101 = [r for r in rows if r["outcome"] == "refused" and r.get("failed") == ["cell_quality"]
@@ -76,7 +79,17 @@ def main() -> None:
     pick = lambda f: [f(r) for r in ok]
     s["cells"] = dist(pick(lambda r: r["cells"]))
     s["cells_by_type"] = {t: dist([r["cells"] for r in ok if r["type"] == t]) for t in S.TYPES}
-    s["ram_gib"] = dist(pick(lambda r: r["ram_gib"]))
+    s["ram_gib"] = dist(pick(lambda r: r["ram_gib"]))                               # check 14's law (ANK then NK)
+    s["ram_gib_ank_only"] = dist(pick(lambda r: 2.69 + 7.23 * r["cells"] / 1e6))     # the runs' law (decision 112)
+    # thin margins: the worst cell of each mesh, the cap's two nose-corner columns apart (decisions 101, 110)
+    q = sorted(((r.get("min_sj_but_cap_nose_corners") or r["checks"]["cell_quality"]["value"]), r["type"], r["set"],
+                r["index"]) for r in ok)
+    s["thin_margins"] = {"below_0p05": sum(1 for x in q if x[0] < 0.05), "below_0p06": sum(1 for x in q if x[0] < 0.06),
+                         "below_0p075": sum(1 for x in q if x[0] < 0.075),
+                         "lowest": [{"min_sj": x[0], "wing": f"{x[1]} {x[2]} {x[3]}"} for x in q[:10]]}
+    ramps = [r.get("span_ramp") for r in ok if r.get("span_ramp")]
+    if ramps:
+        s["span_ramp"] = {"plane": dict(Counter(str(x["plane"]) for x in ramps)), "wake": dict(Counter(str(x["wake"]) for x in ramps))}
     s["fits_16GB"] = sum(r["fits"]["desktop_16GB"] for r in ok)
     s["fits_52GB"] = sum(r["fits"]["desktop_52GB"] for r in ok)
     for k, f in {"cell_quality": lambda r: r["checks"]["cell_quality"]["value"],
@@ -105,7 +118,8 @@ def main() -> None:
         ratio = a[:, 1] / a[:, 0]
         s["F_sample"] = {"wings": len(pairs), "note": "a seeded 10 % of each set and type, plus the 20 reference wings (V4)",
                          "cells": dist(a[:, 1]), "F_over_VC": dist(ratio),
-                         "ram_gib": dist(1.51 + 9.46 * a[:, 1] / 1e6)}
+                         "ram_gib": dist(1.51 + 9.46 * a[:, 1] / 1e6),
+                         "ram_gib_ank_only": dist(2.69 + 7.23 * a[:, 1] / 1e6)}
         allvc = np.array(list(vc.values()), float)
         s["F_estimated_all"] = {"wings": int(allvc.size), "cells": dist(allvc * np.median(ratio)),
                                 "note": "VC cells x the median F/VC of the counted sample"}

@@ -459,7 +459,7 @@ written, not run:
   aerodynamic chord, x = 0.814 c), `adflow_options.json`, `su2_sa.cfg`, `su2_sst_lm.cfg`. Its record:
   `data/studies/v7_case.json`.
 - `solve/run_adflow.py`: one ADflow SA point, with pieces copied from S8 (not imported): the freestream read back from
-  ADflow and checked before the solve (liftIndex 3: span +y, lift +z; S8 defect 14), the residual as
+  ADflow and checked before the solve (liftIndex 3: the semi-span along +y, lift +z; S8 defect 14), the residual as
   totalrfinal / totalr0 (S8 defect 16), fewer than 10 iterations or forces out of range is not converged, the options
   read back into `result.json`; `--preflight` reads the grid without iterating. ANK only (the RAM law is for ANK).
 - `solve/read_results.py`: the acceptance rule, written before any run: converged (ADflow: relative residual ≤ 1e−6;
@@ -519,6 +519,10 @@ Counts behind it (median at VC): P0 92 layers, 71 wake nodes, 354 C-line nodes, 
 
 ## 15. Rule set 2 (decision 107): the rules and limits, written before the rebuild
 
+> **Amended on 9 Nov, 22:04 (decision 111): the wake fan is −5° to +10°, 12 cells across it at M.** The first builds
+> of rule set 2 (sections 15.1 and 15.2, fan to +20°) found three construction faults; section 16 has the faults, the
+> fixes and the new fan, section 17 the results of the rule set as it stands.
+
 Mike, 9 Nov 2026, 20:30: "make medium around 10 million; the fine family can be over this limit". Package P2 of
 decision 105 meets it with the volume rules alone (counted M median about 11 M on the 20 reference wings at Re
 3 × 10⁵, against 20.7 M with rule set 1), so it became rule set 2 (`configs/volume.yaml`; rule set 1 kept in
@@ -552,7 +556,7 @@ tip about 0.015 c instead of 0.008 c at VC).
 Written at 20:40, before the rule-set-2 screens. One probe build was made first, to test the code: BWB reference wing 0
 at VC, Re 3 × 10⁵: every check passed, 2,720,808 cells (rule set 1: 4,930,448).
 
-### 15.1 V1 and V5 with rule set 2 (BWB reference wing 0, VC, Re 3 × 10⁵)
+### 15.1 First build: V1 and V5 (BWB reference wing 0, VC, Re 3 × 10⁵; fan to +20°, before section 16)
 
 `scripts/v1_study.py`, `scripts/v5_export.py` (rule set 2 by default) → `data/studies/r2_v1.json`,
 `docs/page/r2_v1_slices.png`, `data/studies/r2_v5_export.json`; the V7 case `data/studies/r2_v7_case.json`.
@@ -570,3 +574,258 @@ at VC, Re 3 × 10⁵: every check passed, 2,720,808 cells (rule set 1: 4,930,448
 
 **Conclusion.** Rule set 2 builds the V7 mesh with every check passed, at 0.55 × the cells; it now fits the 52 GB
 desktop for ADflow (27.2 GiB), so V7 can run there.
+
+### 15.2 First build: V2 and V3 (the 20 reference wings × 4 Re at VC; fan to +20°, before section 16)
+
+`scripts/screen.py --sets reference --re 1e5 3e5 1e6 4e6` (tags `ref_VC_a`, `ref_VC_b`), `scripts/v23_study.py` →
+`data/studies/r2_v23.json`, `docs/page/r2_v2_wall.png`, `docs/page/r2_v3_tip.png`.
+
+The figures were redrawn by the rerun (section 17.2); the numbers of the first build are kept here.
+
+| What | Rule set 1 (80 meshes) | Rule set 2 (80 meshes) | Limit |
+| --- | --- | --- | --- |
+| Outcome | 80 passed | 80 passed, rung 0 on all | |
+| Cells | 2.71–6.87 M (median 5.02 M) | 1.36–3.91 M (median 2.82 M) | |
+| ... at Re 3 × 10⁵ | 4.13–5.12 M (median 4.55 M) | 2.20–2.85 M (median 2.45 M) | |
+| ADflow RAM; fit 16 GB / 52 GB | 27–67 GiB; 0 / 40 | 14–38 GiB; 0 / 80 | information |
+| Layers · wake nodes · outboard stations | 91–100 · 66–86 · 67–92 | 66–84 · 47–56 · 45–58 | |
+| Cells across the boundary layer | ≥ 30.39 | ≥ 17.97 | ≥ 30 / ≥ 17.75 at VC |
+| Growth / its limit; wake / its limit | ≤ 0.996; ≤ 1.0009 | ≤ 0.995; ≤ 0.995 | ≤ 1.01 |
+| Spacing jump across the trailing-edge line | 9.5–537 | 1.01–1.03 | reported |
+| Smallest scaled Jacobian (the cap's corners exempt) | 0.062 (all cells) | 0.075 (cap corners 0.062) | ≥ 0.05 |
+| Cells at the base · TE corners | ≥ 0.57 · ≥ 0.57 | ≥ 0.55 · ≥ 0.56 | ≥ 0.05 |
+| Share of the cells outboard | 51–56 % | 41–46 % | |
+| Tip-vortex path at 4°, across / along, 0.5 · 1 · 2 c | 0.004 / 0.08 · 0.011 / 0.12 · 0.017 / 0.24 c | 0.005 / 0.10 · 0.013 / 0.19 · 0.021 / 0.37 c | |
+| Station gap near the tip (largest of 30 either side) | ≤ 0.07 c | ≤ 0.54 c | |
+
+**Conclusion.** Rule set 2 passes on all 80 reference meshes, at 0.55 × the cells of rule set 1, and every VC mesh now
+fits the 52 GB desktop. The spacing jump across the trailing-edge line is gone (1.01–1.03 instead of up to 537). The
+price is visible where it was named: VC has 18–30 cells across the boundary layer; the tip vortex sits in coarser
+cells (about 1.3 × across the wake and 1.5 × along it), and the station gaps 30 stations past the tip reach 0.54 c.
+
+## 16. What the first rule-set-2 runs found, and the four changes (decisions 108–111)
+
+Three faults of the construction (108–110) and one rule of Mike's (111). No check limit changed: the checks of section 4
+stand, reading the rules. Written at 22:30 on 9 Nov, after the probes named below and before the reruns of section 17.
+
+### 16.1 The band around a bent cut line (decision 108; completes 106)
+
+The first full-space screen of rule set 2 was stopped after 13 wings: check 11 refused 9 of them, check 3 one.
+
+| Full-space wing | Band cell / its limit, rule set 1 | Rule set 2, first run | After the fix (fan to +20°) |
+| --- | --- | --- | --- |
+| BWB 0 · 1 · 2 | 1.072 · 1.042 · 1.074 | 1.061 · 1.040 · 1.070 | 0.999 (wing 0) |
+| BWB 4 · 5 · 6 | 1.022 · 1.029 · 1.027 | 1.015 · 1.015 · 1.013 | |
+| Cranked (3 wings) | 1.017–1.020 | 1.010–1.016 | |
+| Limit | ≤ 1.01 | ≤ 1.01 | ≤ 1.01 |
+
+*Cause.* The band (law 18) is a fan of straight rays from the base mid-point. The mesh's cut line leaves the base
+along its normal and turns to +x; on a BWB centre body it falls 0.116 c behind the base (root of full-space wing 0,
+4.5 % of its local chord). Decision 106 raised the top of the envelope by that fall, but the cells still began to
+grow at the margin above the cut line, so just under the fan's upper edge they were sized for a point farther back.
+
+*Fix.* `plane.band_envelope`: per station, a table of the cross-cell limit against the height x above a line's start:
+the band cell at the nearest distance behind the base at which the band reaches x, taken over the upper lines (edge at
+margin + s tan α_hi − dz) and the lower lines (margin + s tan(−α_lo) + dz), with dz(s) the cut line's own height. The
+distribution reads the table (`march._cap_function`).
+
+**Conclusion.** The band is now exact for any cut line, and the 9 refused wings pass check 11 (section 17.4). My
+fix of decision 106 was incomplete: it moved where the band ends, not where its cells start to grow.
+
+### 16.2 The family ratio where the band rules (decision 109)
+
+The first family run of rule set 2 failed check 13 on 11 of the 20 reference wings.
+
+| Spacing ratio VC / C (limit 1.3 ± 3 %: 1.261–1.339) | First run | After the fix |
+| --- | --- | --- |
+| Band cell at the band's edge (every wing) | 1.285 | 1.300 (probed with the fan to +20°) |
+| Cell 1 local chord off the root wall, the worst wing (BWB 1) | 1.247 | 1.275 |
+| ... cranked 4 | 1.258 | 1.280 |
+
+*Cause.* The distribution took the band limit at each cell's start. A cell then lags the limit by 1 / (1 + slope / 2),
+and the slope is larger on the coarser level, so VC lagged more than C. The coarser fan of rule set 2 made the lag
+visible (rule set 1: 20 of 20 passed).
+
+*Fix.* Each cell takes the limit at its own centre (`march._walk`, four fixed-point steps).
+
+*Tried first and dropped.* Spare layers of a station given to its far part only: the growth scale fell to 0.41 on some
+stations, and the outer blend then broke the growth limit (1.39 against 1.3).
+
+**Conclusion.** Where the band limit sets a cell, the cells of two levels are now 1.300 apart by construction. With
+the fan to +10° the limit rarely sets it (the growth from the wall gives smaller cells), so the measured band-edge
+cell is 1.280–1.309 apart; check 13 passes on 20 of 20 wings (section 17.3).
+
+### 16.3 Very close stations (decision 110)
+
+With 16.1 and 16.2 in, check 3 (scaled Jacobian ≥ 0.05) refused 2 of 12 full-space wings probed; the first version
+of the fix then let a third through the screen.
+
+| Full-space BWB wing | Where | Stations there | Before | First version | Now |
+| --- | --- | --- | --- | --- | --- |
+| 3 | the wake, 24 c behind the kink | 0.05 c apart; chord 0.74 → 0.58 → 0.42 c; wake nodes 1.1 c apart in x | 0.044 | 0.083 | **0.088** |
+| 0 | 7 c above the centre body's trailing edge | 0.023 c apart; chord 2.57 → 2.44 → 2.30 c; layers 0.25 c apart | 0.049 | 0.049 | **0.061** |
+| 30 | the far wake behind the tip | 0.00012 c apart (the tip gap); chord 0.06 c, falling fast | (not probed) | 0.028 | **0.089** |
+
+*Cause.* A station's near field is sized in local chords (fine zone and band: 2 local chords), so the far nodes of two
+neighbouring stations sit at different distances. Where the station gap is tiny against that difference, the cells
+between them shear. The far cells are large (up to 4.7 c along the wake), so at a tip gap of 0.00012 c a difference of
+0.0024 c already brings a cell to 0.05.
+
+*Fix.* `volume.span_smooth`: the far part of each station's wall-normal distribution, and of its wake nodes in x,
+moves toward the Gaussian average of the stations within about 0.25 c along the semi-span. The near part (to the end of
+the fine zone and the band; 4 local chords behind the base for the wake) is never moved. Each station moves by the
+largest fraction that keeps every growth ratio of its far part under 1 + 0.9 × (the far limit − 1) (exact: every
+condition is linear in the fraction and holds at 0), lowered so the fraction changes by at most 1 per 0.5 c along
+the semi-span, so neighbours move alike. One ramp length for every station: the one with the largest smallest
+fraction. The ramp and the fractions are written to the mesh's info (`span_ramp`).
+
+*The first version, and what else was tried.* The first version moved every station fully or none: one station
+that could not take it stopped all (wing 30: no ramp fitted 6 stations at its kink, so nothing moved, 0.028). The
+mean of all stations as the target removes the trend along the semi-span but is far from the small stations' own
+distributions, so they can move only part of the way (wing 30: 0.030–0.046). Ramps chosen by the mean fraction
+picked a short ramp with a small fraction at the kink (wing 3: 0.043).
+
+*Measured bound (an experiment, not a mesh we keep).* With one distribution for every station, BWB wing 0 would reach
+0.070 in its C blocks and 0.051 in its wake blocks.
+
+**Conclusion.** The three wings pass with margin. The fix is a construction rule, not a limit, and the screens of
+section 17 were rerun with it. Very close stations with fast-changing chords stay the weakest place of the mesh:
+the screen counts them.
+
+### 16.4 The fan for −5° to +10° (decision 111)
+
+Mike, 9 Nov, 22:04: "I want to run from −5 to 10 AoA. You adjust the wake fan accordingly. If you think a margin is
+needed, let it be so."
+
+![The wake fan on a real mesh](../docs/page/r2_wake_fan.png)
+
+*What it shows.* BWB reference wing 0 at VC, Re 3 × 10⁵, rule set 2 as it stands. (a) One station plane: the fan
+(blue) starts 0.05 c above and below the trailing edge, its edges at −5° and +10°, its end 2 local chords behind;
+dashed: the freestream directions at −5°, 0°, 5° and 10°. (b) The trailing edge close up. (c) The cell height along
+the vertical line 1 local chord behind the trailing edge; red: the band cell there. (d) Top view: the fan behind every
+station.
+
+*Conclusion.* Every freestream direction from −5° to +10° lies inside the fan, and every cell inside it is no larger
+than the band cell (c).
+
+Cells counted at M, Re 3 × 10⁵, wing 0 of each reference type, the same angle per fan cell (1.25°)
+(`scripts/fan_options.py` → `data/studies/r2_fan_options.json`; counted before the final 12-cell rule, with 11.7):
+
+| Fan | M cells (median of 4) | Against the +20° fan |
+| --- | --- | --- |
+| −5° to +20°, 2 local chords (decision 87) | 10.5 M | |
+| −5° to +15° | 9.8 M | −7 to −9 % |
+| −5° to +12° | 9.3 M | −11 to −12 % |
+| **−5° to +10° (decision 111)** | **9.0 M** | −11 to −14 % |
+| −5° to +20°, 1 local chord long | 10.1 M | −4 % |
+| One angle only (a fan that follows the flow) | 9.0 M | −11 to −14 % |
+| No fan (the margin only) | 9.0 M | −11 to −14 % |
+
+Why no extra angle on top of the 0.05 c margin: (1) the downwash turns the wake below the freestream direction, so
++10° is an upper bound for the wake at α = 10° (the size of the turn is an estimate here, 2–4°; not measured);
+(2) at −5° a wake below the edge needs positive lift at −5° (strong camber), and the 0.05 c covers 1.4° at the fan's
+end; (3) at +10° the fan costs no cell, because the growth from the wall already gives cells that fine, so the cells
+just outside the fan are only slightly larger.
+
+One mesh per wing, Re and level still serves every steady angle (the same mesh error at every angle; one family check
+per wing). A mesh per angle would save nothing more: the fan is already free. The angle range is an input of the
+mesher (`alpha_lo_deg`, `alpha_hi_deg`); the post-stall study of decision 69 sets its own and gets its own mesh.
+
+**Conclusion.** The fan to +20° paid 11–14 % of the cells for angles this mesh does not serve. With −5° to +10° the
+fan is free. Not measured: where the wake goes in a solution; V7 checks it at −5° and +10°, and the top angle is one
+number to raise if it leaves the fan (+12°: about 2 % more cells).
+
+## 17. Rule set 2 as it stands (decisions 107–111): the reruns
+
+Everything below was rebuilt on 9 Nov after 22:55 with the rules and the final construction of section 16
+(`STAGE3_RULESET=2`, files `r2_*`). RAM: check 14 reports S8's law for ANK then NK (1.51 + 9.46 GiB per million
+cells); the runs are ANK only (2.69 + 7.23), so both are given (decision 112).
+
+### 17.1 V1 and V5 (BWB reference wing 0, VC, Re 3 × 10⁵)
+
+| | Rule set 1 | Rule set 2, first build (fan to +20°) | Rule set 2 as it stands |
+| --- | --- | --- | --- |
+| Outcome | every check passed | every check passed | every check passed |
+| Cells | 4,930,448 | 2,720,808 | **2,324,016** (0.47 × rule set 1) |
+| Inboard · outboard · wake blocks | 2,178,240 · 2,686,496 · 1,936,836 | 1,487,880 · 1,190,304 · 864,864 | 1,267,440 · 1,013,952 · 741,312 |
+| Layers · wake nodes · C-line nodes · stations | 95 · 74 · 377 · 61 + 75 | 73 · 53 · 335 · 61 + 49 | 62 · 53 · 335 · 61 + 49 |
+| Cells across the boundary layer (limit) | 30.48 (30) | 19.60 (17.75) | 18.05 (17.75) |
+| Band cells / the band cell (limit 1.01) | | | 0.928 |
+| Smallest scaled Jacobian (limit 0.05) | | | 0.099 (the cap's two nose-corner columns, exempt: 0.062) |
+| ADflow RAM: ANK only · ANK then NK | 38.3 · 48.2 GiB | 22.4 · 27.2 GiB | **19.5 · 23.5 GiB** |
+| CGNS · .su2 | 123.5 MB · 693.6 MB | 68.8 MB · 379.3 MB | 59.0 MB · 322.8 MB; check 15 passed |
+
+**Conclusion.** The V7 mesh has 2.32 M cells and every check passes; the files are read back exactly. It needs
+about 20–24 GiB for ADflow: more than the 16 GB desktop, well inside 48 GB.
+
+### 17.2 V2 and V3 (the 20 reference wings × 4 Re at VC)
+
+`scripts/screen.py --sets reference` (tags `ref_VC_a`, `ref_VC_b`), `scripts/v23_study.py` → `data/studies/r2_v23.json`.
+
+![V2 with rule set 2](../docs/page/r2_v2_wall.png)
+
+*What it shows.* The 80 reference meshes at VC: cells; cells across the boundary layer (limit 17.75 at VC); the
+in-plane wall angle; the 3-D angle (reported); the cells at the base and the trailing-edge corners; the spacing jump
+across the trailing-edge line.
+
+*Conclusion.* Every mesh is inside every limit; the jump across the trailing-edge line is 1.02–1.03.
+
+| What | Rule set 1 | Rule set 2, first build | Rule set 2 as it stands | Limit |
+| --- | --- | --- | --- | --- |
+| Outcome (80 meshes) | 80 passed | 80 passed | **80 passed**, no extra smoothing on any | |
+| Cells | 2.71–6.87 M (median 5.02 M) | 1.36–3.91 M (2.82 M) | 1.16–3.36 M (median 2.42 M) | |
+| ... at Re 3 × 10⁵ | 4.13–5.12 M (4.55 M) | 2.20–2.85 M (2.45 M) | 1.87–2.58 M (median 2.08 M) | |
+| ... at Re 10⁵ · 10⁶ · 4 × 10⁶ (median) | | | 1.33 · 2.53 · 3.03 M | |
+| ADflow RAM, ANK then NK; fit 16 GB / 52 GB | 27–67 GiB; 0 / 40 | 14–38 GiB; 0 / 80 | 12–33 GiB; 2 / 80 | information |
+| ADflow RAM, ANK only | | | 11–27 GiB | information |
+| Layers · wake nodes · outboard stations | 91–100 · 66–86 · 67–92 | 66–84 · 47–56 · 45–58 | 56–72 · 47–56 · 45–58 | |
+| Cells across the boundary layer | ≥ 30.39 | ≥ 17.97 | ≥ 17.92 | ≥ 17.75 at VC |
+| Growth / its limit; wake / its limit | ≤ 0.996; ≤ 1.0009 | ≤ 0.995; ≤ 0.995 | ≤ 0.999; ≤ 0.997 | ≤ 1.01 |
+| Spacing jump across the trailing-edge line | 9.5–537 | 1.01–1.03 | 1.02–1.03 | reported |
+| Smallest scaled Jacobian (the cap's corners exempt) | 0.062 | 0.075 | 0.075 (cap corners 0.062) | ≥ 0.05 |
+| Cells at the base · TE corners | ≥ 0.57 · ≥ 0.57 | ≥ 0.55 · ≥ 0.56 | ≥ 0.55 · ≥ 0.56 | ≥ 0.05 |
+| Share of the cells outboard | 51–56 % | 41–46 % | 41–46 % | |
+| Tip-vortex path at 4°, across / along, 0.5 · 1 · 2 c | 0.004 / 0.08 · 0.011 / 0.12 · 0.017 / 0.24 c | 0.005 / 0.10 · 0.013 / 0.19 · 0.021 / 0.37 c | 0.006 / 0.10 · 0.014 / 0.19 · 0.029 / 0.37 c | |
+| Station gap near the tip (largest of 30 either side) | ≤ 0.07 c | ≤ 0.54 c | ≤ 0.54 c | |
+
+**Conclusion.** With the fan to +10° and the three fixes, all 80 reference meshes pass, at 0.48 × the cells of rule
+set 1 (0.86 × the first build of rule set 2). Every VC mesh fits 48 GB for ADflow. The costs are the ones named:
+18–29 cells across the boundary layer at VC; the tip vortex in coarser cells than rule set 1 (1.2–1.7 × across
+its path and 1.3–1.6 × along it); station gaps up to 0.54 c 30 stations past the tip.
+
+### 17.3 V4: the family (the 20 reference wings, Re 3 × 10⁵)
+
+`scripts/family_study.py` (tags `ref_a`, `ref_b`: VC and C built, M and F counted; `f1`, `m4`: M and F built on four
+wings), `scripts/v4_study.py` → `data/studies/r2_v4.json`.
+
+![Check 13 and the cells per level, rule set 2](../docs/page/r2_v4_family.png)
+
+*What it shows.* (a) Check 13: every judged spacing, coarse over fine, between neighbouring levels (green: 1.3 ± 3 %).
+(b) Cells per level on the 20 reference wings: VC and C built, M and F counted; the target at M (about 10 M); grey:
+what 48 GB holds for ADflow by S8's two laws.
+
+*Conclusion.* Every judged spacing is inside 1.3 ± 3 %. M sits at the target; only VC and C are under the 48 GB band.
+
+| Judged spacing, VC / C (20 wings) | min – median – max | Limit |
+| --- | --- | --- |
+| First cell s0 · wall growth (as an exponent) | 1.300 · 1.300 | 1.261–1.339 |
+| Band cell at the band's edge | 1.280 – 1.298 – 1.309 | |
+| Outboard first gap | 1.276 – 1.296 – 1.314 | |
+| First wake cell | 1.300 | |
+| Cell 1 local chord off the root wall | 1.285 – 1.287 – 1.309 | |
+| Cell 1 local chord behind the root's base | 1.273 – 1.291 – 1.307 | |
+| Counts (reported): layers · wake nodes · outboard · stations · C line | 1.283 · 1.284 · 1.289 · 1.268 · 1.288 (medians) | whole numbers |
+| Cells per level step | 2.09 – 2.13 – 2.17 | 1.3³ = 2.20 |
+
+| Level | Cells, median (range) | ADflow RAM, median: ANK only · ANK then NK | Built here |
+| --- | --- | --- | --- |
+| VC | 2.08 M (1.87–2.58) | 18 · 21 GiB | 20 of 20 pass |
+| C | 4.43 M (3.99–5.54) | 35 · 43 GiB | 20 of 20 pass |
+| M | **9.53 M** (8.56–11.81) | 72 · 92 GiB | counted (section 17.3.1 for the four built) |
+| F | 20.7 M (18.7–25.7) | 152 · 197 GiB | counted |
+
+**Conclusion.** Check 13 passes on 20 of 20 families (worst 2.0 % off: the cell 1 local chord behind the base on BWB
+wing 4). In the first build 11 of 20 failed; the cause was the construction (section 16.2), not the rules. M is
+9.5 M cells (median), the target Mike set; F is 20.7 M. By S8's laws for ADflow only VC and C fit 48 GB: M needs
+72–92 GiB (decision 113: V7 measures it).
+

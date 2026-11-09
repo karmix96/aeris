@@ -1,9 +1,10 @@
 {
  "mesh": "volume_VC_e32d995a_re3e5",
- "mesh_node_hash": "3dab753504eff4482cde71cc7761cdb7a99d670710a70b2cb43424bb6b9c5bcd",
+ "mesh_folder": "/home/claude/karmix96/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/volume_VC_e32d995a_re3e5",
+ "mesh_node_hash": "ad948900f443d750f4db8833e8290f5573fb84513f59fdba2c610e5ad61dfb4c",
  "wing": "bwb reference 0",
  "level": "VC",
- "cells": 2720808,
+ "cells": 2324016,
  "alpha_deg": 4.0,
  "beta_deg": 0.0,
  "mach": 0.1,
@@ -27,7 +28,7 @@
  "adflow": {
   "model": "SA",
   "eddyVisInfRatio": 0.21,
-  "ram_gib_law": 27.248843680000004
+  "ram_gib_law": 23.495191360000003
  },
  "su2": {
   "version": "8.6.0",
@@ -39,6 +40,5 @@
   "turbulence_intensity": 0.001,
   "turb2lam_visc_ratio": 10.0
  },
- "surface_band": "on (decision 81: the band stays on for every run)",
- "rule_set": 2
+ "surface_band": "on (decision 81: the band stays on for every run)"
 }

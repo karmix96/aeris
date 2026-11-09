@@ -99,9 +99,12 @@ def figures(rows: list[dict]) -> None:
         a.annotate(t, (0.0, v), xycoords=("axes fraction", "data"), xytext=(4, 3), textcoords="offset points",
                    fontsize=7.6, color=S.MUTED)
     a.legend(loc="upper right", frameon=False, ncol=2)
-    S.strip(ax[0, 1], rows, lambda r: r["bl_cells_min"], limit=30, limit_text="limit ≥ 30",
+    sys.path.insert(0, str(HERE.parent))
+    from cfdauto.volume.laws import rules
+    lim = rules("VC", CONFIG).bl_cells                       # the VC limit of the rule set
+    S.strip(ax[0, 1], rows, lambda r: r["bl_cells_min"], limit=lim, limit_text=f"limit ≥ {lim:.3g}",
             ylabel="cells (smallest station)", title="(b) Cells across the boundary layer")
-    ax[0, 1].set_ylim(29, 34)
+    ax[0, 1].set_ylim(lim - 1, max(r["bl_cells_min"] for r in rows) + 1)
     S.strip(ax[0, 2], rows, lambda r: r["checks"]["wall_orthogonality"]["value"], limit=5.0, limit_text="limit ≤ 5°",
             log=True, ylabel="degrees (largest wall node)", title="(c) Wall angle in the station plane")
     S.strip(ax[1, 0], rows, lambda r: r["wall_angle_3d_deg"]["p95"], ylabel="degrees (95th percentile)",
@@ -109,8 +112,8 @@ def figures(rows: list[dict]) -> None:
     S.strip(ax[1, 1], rows, lambda r: min(r["base_cells_min_sj"], r["te_corner_cells_min_sj"]), limit=0.05,
             limit_text="limit ≥ 0.05", ylabel="smallest scaled Jacobian", title="(e) Cells at the base and the TE corners")
     ax[1, 1].set_ylim(0, 1.05)
-    S.strip(ax[1, 2], rows, lambda r: r["te_jump_ratio_max"], log=True, ylabel="last chordwise cell / s0",
-            title="(f) Spacing jump across the trailing edge")
+    S.strip(ax[1, 2], rows, lambda r: r["te_jump_ratio_max"], log=max(r["te_jump_ratio_max"] for r in rows) > 3,
+            ylabel="last chordwise cell / first cell behind the base", title="(f) Spacing jump across the trailing edge")
     S.save(fig, PAGE / f"{PREFIX}v2_wall.png")
 
     fig, ax = S.plt.subplots(1, 3, figsize=(13.2, 3.9))

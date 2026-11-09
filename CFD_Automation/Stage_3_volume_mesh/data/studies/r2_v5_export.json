@@ -4,10 +4,10 @@
  "level": "VC",
  "re": 300000.0,
  "outcome": "passed",
- "cells": 2720808,
- "nodes": 2861322,
- "seconds_build": 12.8,
- "seconds_write": 30.7,
+ "cells": 2324016,
+ "nodes": 2451132,
+ "seconds_build": 14.3,
+ "seconds_write": 29.9,
  "check15": {
   "n": 15,
   "name": "export_round_trip",
@@ -19,7 +19,7 @@
  "exports": {
   "cgns": {
    "file": "volume.cgns",
-   "bytes": 68800512,
+   "bytes": 58957824,
    "own_reader": {
     "coords_max_error": 0.0,
     "problems": [],
@@ -41,27 +41,27 @@
   },
   "su2": {
    "file": "volume.su2",
-   "points": 2780279,
-   "cells": 2720808,
+   "points": 2378614,
+   "cells": 2324016,
    "markers": {
     "wall": 15168,
-    "symmetry": 24798,
-    "farfield": 78390
+    "symmetry": 21124,
+    "farfield": 72340
    },
-   "bytes": 379275494,
+   "bytes": 322808148,
    "smallest_corner_jacobian": 2.90472127954058e-13,
    "inward_quads": 0,
    "orphan_quads": 0,
    "problems": [],
    "passed": true
   },
-  "seconds": 30.6
+  "seconds": 29.5
  },
  "files": {
-  "blocks.npz": 68674900,
+  "blocks.npz": 58830340,
   "manifest.json": 3542,
-  "quality.json": 28453,
-  "volume.cgns": 68800512,
-  "volume.su2": 379275494
+  "quality.json": 30202,
+  "volume.cgns": 58957824,
+  "volume.su2": 322808148
  }
 }

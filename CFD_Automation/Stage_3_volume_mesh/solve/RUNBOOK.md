@@ -14,7 +14,7 @@ Three runs: **ADflow SA**, **SU2 SA**, **SU2 SST + LM** (SU2 8.6.0).
 | files | `volume.cgns` (59.0 MB, ADflow), `volume.su2` (322.8 MB, SU2), from `scripts/v5_export.py` |
 | ADflow RAM | S8's laws (two-point fits at 0.57 and 1.11 M cells): ANK only, as run here, 2.69 + 7.23 GiB per M cells = **19.5 GiB**; ANK then NK 1.51 + 9.46 = 23.5 GiB (decision 112) |
 | ADflow time | 35.7 min per M cells on 6 ranks ≈ **1.4 h** (S8 law; this mesh is not S8's, so a guide only) |
-| units | lengths in mean chords; Re on the mean chord (1 mesh unit); span +y, lift +z |
+| units | lengths in mean chords; Re on the mean chord (1 mesh unit); the semi-span along +y, lift +z |
 
 ## 0. Make the mesh and the case (any machine with the repo, no solver needed)
 

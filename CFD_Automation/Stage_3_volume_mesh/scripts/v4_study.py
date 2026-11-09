@@ -81,7 +81,8 @@ def main() -> None:
         for lev, v in r["levels"].items():
             cells.setdefault(lev, []).append(v["cells"])
     s["cells"] = {lev: {"min": int(min(v)), "median": float(np.median(v)), "max": int(max(v)),
-                        "ram_gib_median": 1.51 + 9.46 * float(np.median(v)) / 1e6} for lev, v in cells.items()}
+                        "ram_gib_median": 1.51 + 9.46 * float(np.median(v)) / 1e6,
+                        "ram_gib_ank_only_median": 2.69 + 7.23 * float(np.median(v)) / 1e6} for lev, v in cells.items()}
     bvc = {}
     for r in deep:
         for lev, v in r["levels"].items():
@@ -132,14 +133,28 @@ def main() -> None:
         a.plot(np.full(len(v), li) + np.linspace(-0.2, 0.2, len(v)), v, "o" if all(built) else "o", ms=4,
                color=S.RAMP4[li], mfc=S.RAMP4[li] if all(built) else "white", mec=S.RAMP4[li], mew=1.0, zorder=3,
                label=("built" if all(built) else "counted") if li in (0, 2) else None)
-    a.axhspan(9, 11, color=S.LIMIT, alpha=0.10, lw=0)
-    a.annotate("asked for at F: 9–11 M", (3.0, 11), xytext=(0, 4), textcoords="offset points", ha="center",
-               fontsize=7.8, color=S.LIMIT)
-    for v, t in ((1.2, "16 GB desktop ≈ 1.2 M"), (5.0, "+ 36 GB ≈ 5.0 M")):
+    if PREFIX:                                    # rule set 2: the target is M about 10 M (decision 107)
+        a.plot([1.6, 2.4], [10, 10], color=S.LIMIT, lw=1.1, ls="--")
+        a.annotate("target at M:\nabout 10 M", (2.42, 10), xytext=(4, 0), textcoords="offset points", ha="left",
+                   va="center", fontsize=7.8, color=S.LIMIT)
+        a.axhspan(4.6, 5.9, color=S.MUTED, alpha=0.13, lw=0)
+        a.annotate("48 GB holds 4.6–5.9 M (ADflow, S8's two laws)", (0.0, 5.9), xycoords=("axes fraction", "data"),
+                   xytext=(4, 3), textcoords="offset points", fontsize=7.6, color=S.MUTED)
+        marks = ((1.2, "16 GB desktop ≈ 1.2 M"),)
+    else:
+        a.axhspan(9, 11, color=S.LIMIT, alpha=0.10, lw=0)
+        a.annotate("asked for at F: 9–11 M", (3.0, 11), xytext=(0, 4), textcoords="offset points", ha="center",
+                   fontsize=7.8, color=S.LIMIT)
+        marks = ((1.2, "16 GB desktop ≈ 1.2 M"), (5.0, "+ 36 GB ≈ 5.0 M"))
+    for v, t in marks:
         a.axhline(v, color=S.MUTED, lw=0.9, ls=":")
         a.annotate(t, (0.0, v), xycoords=("axes fraction", "data"), xytext=(4, 3), textcoords="offset points",
                    fontsize=7.6, color=S.MUTED)
     a.set_yscale("log")
+    from matplotlib.ticker import FixedLocator, NullFormatter
+    a.yaxis.set_major_locator(FixedLocator([1, 2, 5, 10, 20, 50]))
+    a.yaxis.set_major_formatter(S.plt.FuncFormatter(lambda v, _: f"{v:g}"))
+    a.yaxis.set_minor_formatter(NullFormatter())
     a.set_xticks(range(4), list(S.LEVELS))
     a.set_ylabel("cells (millions)")
     a.set_title("(b) Cells per level, 20 reference wings, Re 3e5")

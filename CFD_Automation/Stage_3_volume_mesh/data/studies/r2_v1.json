@@ -47,7 +47,7 @@
    "n": 6,
    "name": "growth",
    "passed": true,
-   "value": 0.994802837928136,
+   "value": 0.9950195546301709,
    "limit": "growth / limit <= 1.01 on every line: 1.25 inside the fine zone (2 local c), 1.3 beyond",
    "note": "CU_in station 60"
   },
@@ -55,7 +55,7 @@
    "n": 7,
    "name": "bl_cells",
    "passed": true,
-   "value": 18.05136016099873,
+   "value": 18.05134629575508,
    "limit": ">= 17.75 cells across delta (turbulent flat plate at x = 1 local c, from the local Re; decision 86)",
    "note": "station 60"
   },
@@ -147,7 +147,7 @@
   ]
  },
  "need": {
-  "layers_max": 60.61780209269112,
+  "layers_max": 60.61786994698771,
   "layers_station": 60,
   "wake_max": 50.34273980059515,
   "outboard": 46.183940503382054
@@ -166,57 +166,57 @@
  "quality_by_block": {
   "WU_in": {
    "min_det": 3.67276201023335e-12,
-   "min_sj": 0.22508406091856592,
+   "min_sj": 0.2691266312594338,
    "folded": 0
   },
   "CU_in": {
    "min_det": 1.6927888606182964e-12,
-   "min_sj": 0.6076519669652988,
+   "min_sj": 0.6008808588570849,
    "folded": 0
   },
   "CN_in": {
    "min_det": 1.5034894011007243e-12,
-   "min_sj": 0.603159423265114,
+   "min_sj": 0.5968648616871114,
    "folded": 0
   },
   "CL_in": {
    "min_det": 1.6740669654221256e-12,
-   "min_sj": 0.6073649655369335,
+   "min_sj": 0.6006934864802433,
    "folded": 0
   },
   "WL_in": {
    "min_det": 3.6309365640639492e-12,
-   "min_sj": 0.22509889812622585,
+   "min_sj": 0.26850503148804694,
    "folded": 0
   },
   "B_in": {
    "min_det": 3.680921969828946e-12,
-   "min_sj": 0.2251013020177985,
+   "min_sj": 0.27021859800585557,
    "folded": 0
   },
   "WU_out": {
    "min_det": 3.67276201023335e-12,
-   "min_sj": 0.9966569608386208,
+   "min_sj": 0.9965600011950495,
    "folded": 0
   },
   "CU_out": {
    "min_det": 1.6927888606298204e-12,
-   "min_sj": 0.9736527261214754,
+   "min_sj": 0.9736529984705712,
    "folded": 0
   },
   "CN_out": {
    "min_det": 1.503489401095607e-12,
-   "min_sj": 0.9895503486733448,
+   "min_sj": 0.9895503478514913,
    "folded": 0
   },
   "CL_out": {
    "min_det": 1.674066965421512e-12,
-   "min_sj": 0.9465694306707843,
+   "min_sj": 0.9465705009539941,
    "folded": 0
   },
   "WL_out": {
    "min_det": 3.6309365640639492e-12,
-   "min_sj": 0.9861827236148509,
+   "min_sj": 0.9861829849821687,
    "folded": 0
   },
   "B_out": {
@@ -230,9 +230,9 @@
    "folded": 0
   }
  },
- "bl_cells_min": 18.05136016099873,
- "band_cell_ratio_max": 0.9277443378788238,
- "seconds": 8.86,
+ "bl_cells_min": 18.05134629575508,
+ "band_cell_ratio_max": 0.9276785909124151,
+ "seconds": 7.25,
  "domain": {
   "x_b": 2.016125178172255,
   "z_m": 0.040417254594154885,

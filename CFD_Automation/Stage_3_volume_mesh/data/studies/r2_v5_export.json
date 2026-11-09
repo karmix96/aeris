@@ -6,8 +6,8 @@
  "outcome": "passed",
  "cells": 2324016,
  "nodes": 2451132,
- "seconds_build": 14.3,
- "seconds_write": 29.9,
+ "seconds_build": 11.3,
+ "seconds_write": 23.5,
  "check15": {
   "n": 15,
   "name": "export_round_trip",
@@ -48,20 +48,20 @@
     "symmetry": 21124,
     "farfield": 72340
    },
-   "bytes": 322808148,
+   "bytes": 322796512,
    "smallest_corner_jacobian": 2.90472127954058e-13,
    "inward_quads": 0,
    "orphan_quads": 0,
    "problems": [],
    "passed": true
   },
-  "seconds": 29.5
+  "seconds": 23.2
  },
  "files": {
   "blocks.npz": 58830340,
   "manifest.json": 3542,
-  "quality.json": 30202,
+  "quality.json": 30369,
   "volume.cgns": 58957824,
-  "volume.su2": 322808148
+  "volume.su2": 322796512
  }
 }

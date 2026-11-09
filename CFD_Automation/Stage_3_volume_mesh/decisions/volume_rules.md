@@ -785,7 +785,7 @@ across the trailing-edge line.
 | ADflow RAM, ANK only | | | 11–27 GiB | information |
 | Layers · wake nodes · outboard stations | 91–100 · 66–86 · 67–92 | 66–84 · 47–56 · 45–58 | 56–72 · 47–56 · 45–58 | |
 | Cells across the boundary layer | ≥ 30.39 | ≥ 17.97 | ≥ 17.92 | ≥ 17.75 at VC |
-| Growth / its limit; wake / its limit | ≤ 0.996; ≤ 1.0009 | ≤ 0.995; ≤ 0.995 | ≤ 0.999; ≤ 0.997 | ≤ 1.01 |
+| Growth / its limit; wake / its limit | ≤ 0.996; ≤ 1.0009 | ≤ 0.995; ≤ 0.995 | ≤ 0.996; ≤ 0.997 | ≤ 1.01 |
 | Spacing jump across the trailing-edge line | 9.5–537 | 1.01–1.03 | 1.02–1.03 | reported |
 | Smallest scaled Jacobian (the cap's corners exempt) | 0.062 | 0.075 | 0.075 (cap corners 0.062) | ≥ 0.05 |
 | Cells at the base · TE corners | ≥ 0.57 · ≥ 0.57 | ≥ 0.55 · ≥ 0.56 | ≥ 0.55 · ≥ 0.56 | ≥ 0.05 |
@@ -826,11 +826,11 @@ what 48 GB holds for ADflow by S8's two laws.
 | --- | --- | --- | --- |
 | VC | 2.08 M (1.87–2.58) | 18 · 21 GiB | 20 of 20 pass |
 | C | 4.43 M (3.99–5.54) | 35 · 43 GiB | 20 of 20 pass |
-| M | **9.53 M** (8.56–11.81) | 72 · 92 GiB | counted (section 17.3.1 for the four built) |
-| F | 20.7 M (18.7–25.7) | 152 · 197 GiB | counted |
+| M | **9.53 M** (8.56–11.81) | 72 · 92 GiB | counted; built on 4 wings (wing 0 of each type: 8.70–10.61 M), 4 of 4 pass |
+| F | 20.7 M (18.7–25.7) | 152 · 197 GiB | counted; built on BWB wing 0 (23.10 M, 67 s, 1.3 GiB to build), passes |
 
 **Conclusion.** Check 13 passes on 20 of 20 families (worst 2.0 % off: the cell 1 local chord behind the base on BWB
-wing 4). In the first build 11 of 20 failed; the cause was the construction (section 16.2), not the rules. M is
+wing 4). In the first build 11 of 20 failed; the cause was the construction (section 16.2), not the rules. M built on four wings and F on one: every check passes, and check 13 holds from VC to F on BWB wing 0 (worst 1.3 %). M is
 9.5 M cells (median), the target Mike set; F is 20.7 M. By S8's laws for ADflow only VC and C fit 48 GB: M needs
 72–92 GiB (decision 113: V7 measures it).
 

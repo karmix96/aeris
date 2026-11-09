@@ -105,8 +105,11 @@ The sections below are updated to match.
   (note at the end of D3).
 
 **Proposals, pending**
-- **Solver split.** ADflow SA for all mesh studies and the fully turbulent data; SU2 SST + LM on about
-  20 % of the wings first.
+- **Solver split, with the band option.** ADflow SA for all mesh studies and the fully turbulent data; SU2 SST
+  + LM on about 20 % of the wings first. Decided right before the runs, together with the transition band
+  option (Stage 2 decision 81, owner 9 Nov): the band on for transition runs, off for fully turbulent runs
+  (Stage 2 Study 13: the band nearly doubles the cells at Re ≥ 3 × 10⁵; with it off, the BWB tip cap fails
+  at M, to fix first).
 - **Mach.** Core data at Mach ≤ 0.2 now; Mach 0.3–0.5 later, with a fast-UAV family.
 - **Angles.** Mesh studies at −5°, 4° and the highest steady angle. Dataset from −5° to stall in about
   2.5° steps.

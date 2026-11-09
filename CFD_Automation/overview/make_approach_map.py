@@ -712,13 +712,13 @@ def page() -> str:
               + '<p class="note">The 7–8 Nov count can be redone: layers to 2 chords from the first cell (y⁺ = 1), growth 1.25 at VC; wing blocks only. The 6 Nov estimate (15.2 M and 10.9 M) did not record its wall-layer rule and used the first wings. Stage 3 sets the real wall-layer rule.</p>',
               f"F is {CELLS['F'][0]:.1f} M cells (median; largest {CELLS['F'][1]:.1f} M, at 4 × 10⁶) on the wing blocks, about 9–11 M with the C-H wake lines, inside the target. VC runs on the desktop ({CELLS['VC'][0]:.2f} M median); with +36 GB the desktop also takes C and M (wing blocks only); F needs the HPC.")
 
-    status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 8 Nov 2026</span><h2>Built, pending, next</h2>'
+    status = ('<section class="step" id="status"><span class="eyebrow">Where we stand · 9 Nov 2026</span><h2>Built, pending, next</h2>'
               '<div class="status"><div><span class="k ok">Built and checked</span><ul><li>Similarity, nose fix, 722 wings rebuilt</li>'
-              '<li>New surface rules; every set at every level: 3,128 of 3,128 builds pass, 0 nose repairs</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li><li>8 Nov: label tolerance (79): 2 labels; new input hashes, the same surfaces</li><li>8 Nov, your calls built: decision 77 confirmed; upper band 0–100 % c; a nose repair on the whole family (80)</li></ul></div>'
+              '<li>New surface rules; every set at every level: 3,128 of 3,128 builds pass, 0 nose repairs</li><li>Section tables rebuilt; refine map at the Re levels</li><li>8 Nov: Re levels 1 × 10⁵, 3 × 10⁵, 1 × 10⁶, 4 × 10⁶ (Greek UAVs in scope; no 5th level); tables to 1.5 × 10⁷</li><li>8 Nov, your machine: pyGeo build 722 of 722; the reference meshes on pyGeo equal the numpy ones (VC and F)</li><li>8 Nov: label tolerance (79): 2 labels; new input hashes, the same surfaces</li><li>8 Nov, your calls built: decision 77 confirmed; upper band 0–100 % c; a nose repair on the whole family (80)</li><li>9 Nov: the band is an option (81): off = 1.8–1.9 × fewer cells at Re ≥ 3 × 10⁵</li></ul></div>'
               '<div><span class="k you">Your calls</span><ul><li>Close Stage 2</li>'
-              '<li>Solver split (76); Stage 0 leftovers</li></ul></div>'
+              '<li>Right before the runs: the solver (76) and the band option (81), together</li><li>Stage 0 leftovers</li></ul></div>'
               '<div><span class="k next">Before Stage 3</span><ul><li>One more pyGeo build --all on your machine (new input hashes)</li>'
-              '<li>Start the C-H volume mesh on one wing; count its cells</li></ul></div></div></section>')
+              '<li>Fix the BWB tip cap for the band off (it fails at M)</li><li>Start the C-H volume mesh on one wing; count its cells</li></ul></div></div></section>')
 
     head = ('<title>CFD Automation Approach Map</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
             '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'

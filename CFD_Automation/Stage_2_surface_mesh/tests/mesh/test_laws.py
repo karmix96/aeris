@@ -109,3 +109,23 @@ def test_the_first_approach_keeps_its_meaning():
         assert r.base_cells == (8, 10, 14, 18)[k] and r.min_cells_per_panel == (12, 16, 21, 27)[k]
         assert r.band_lower == (0.6, 1.0)
         assert r.band_spacing_c(1.0e6) == pytest.approx(0.05 / 20 / s, rel=1e-12)
+
+
+def test_band_option(tmp_path):
+    """Owner, 9 Nov 2026: the transition band is an option, chosen right before the runs with the solver. Off: no
+    window, the band cell is the largest cell, every other rule the same; the config's chord.transition_band is the
+    default (true)."""
+    for lev in LEVELS:
+        on, off = rules(lev), rules(lev, band=False)
+        assert on.transition_band and not off.transition_band
+        assert off.band_upper == (0.0, 0.0) and off.band_lower == (0.0, 0.0)
+        for re in (1.0e5, 3.0e5, 1.0e6, 4.0e6):
+            assert off.band_spacing_c(re) == off.max_spacing_c
+            assert on.band_spacing_c(re) <= on.max_spacing_c
+        assert off.values()["transition_band"] is False and on.values()["transition_band"] is True
+        for name in NEW:                                                    # every other rule unchanged
+            assert off.setting(name) == on.setting(name)
+    cfg = tmp_path / "off.yaml"
+    cfg.write_text(STAGE2.joinpath("configs", "surface.yaml").read_text().replace(
+        "transition_band: true ", "transition_band: false"))
+    assert not rules("M", cfg).transition_band and rules("M", cfg, band=True).transition_band

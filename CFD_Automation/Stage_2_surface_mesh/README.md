@@ -11,7 +11,9 @@
 > both builder choices (decision 77), wrote the upper band 0–100 % c and made a nose repair belong to the family
 > (decision 80); the family screen (section 19): every set at every level, 3,128 of 3,128 builds pass, 0 nose
 > repairs (`scripts/screen.py --family`). The pyGeo run is done (8 Nov): the same meshes as the numpy loft on the 20
-> reference wings. Still to come: one pyGeo `build --all` after the label fix, the owner's word to close, then the
+> reference wings. On 9 Nov the transition band became an option (decision 81, `--band on|off`; section 20): chosen
+> right before the runs with the solver; with it off the BWB tip cap fails at M, to fix first. Still to come: one
+> pyGeo `build --all` after the label fix, the owner's word to close, then the
 > matched C-H volume mesh (Stage 3).
 
 One wing surface (the Stage 1 loft) in, one structured surface mesh out: a closed ring of points
@@ -32,6 +34,8 @@ python scripts/screen.py --level F --resume part.jsonl                          
 python scripts/screen_study.py                                                   # Study 9: merge, summary, figures
 python scripts/screen.py --family --types bwb cranked --tag bwb_cranked         # every level, one nose factor per family
 python scripts/screen_study.py --family                                          # Study 12: the family screen, figures
+python scripts/screen.py --family --sets reference --band off                     # the band option off (decision 81)
+python scripts/band_option.py                                                     # Study 13: what the band costs
 python scripts/similarity_check.py                                               # Study 10: the similarity check
 python scripts/make_figures.py --code <checkout of 7bcb7067>/CFD_Automation       # docs/*.png (first approach, as drawn)
 python -m pytest                                                                 # tests (test_family is slow)

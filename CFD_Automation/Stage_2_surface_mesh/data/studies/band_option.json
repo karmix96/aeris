@@ -1,0 +1,616 @@
+{
+ "levels": {
+  "VC": {
+   "builds": 80,
+   "passed_off": 80,
+   "families_repaired_off": 0,
+   "failed_off": [],
+   "cap_quads_min_off": 0.06578115593041683,
+   "cap_quads_min_on": 0.07490188416655738,
+   "per_re": {
+    "1e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 292374.0,
+      "max": 415974
+     },
+     "cells_off": {
+      "median": 268084.5,
+      "max": 319254
+     },
+     "ratio": {
+      "median": 1.0859417582106659,
+      "min": 1.0535795368548508,
+      "max": 1.3183540877097997
+     },
+     "ring_on": 133.0,
+     "ring_off": 122.0,
+     "same_stations": 20
+    },
+    "3e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 593167.5,
+      "max": 680217
+     },
+     "cells_off": {
+      "median": 326483.0,
+      "max": 380593
+     },
+     "ratio": {
+      "median": 1.7877336224352172,
+      "min": 1.703125,
+      "max": 1.9454354669464848
+     },
+     "ring_on": 220.0,
+     "ring_off": 122.0,
+     "same_stations": 20
+    },
+    "1e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 746925.0,
+      "max": 827568
+     },
+     "cells_off": {
+      "median": 397486.0,
+      "max": 463152
+     },
+     "ratio": {
+      "median": 1.8704380202032516,
+      "min": 1.786817286765468,
+      "max": 1.9455465317534284
+     },
+     "ring_on": 226.0,
+     "ring_off": 122.0,
+     "same_stations": 20
+    },
+    "4e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 926250.0,
+      "max": 1020600
+     },
+     "cells_off": {
+      "median": 493402.0,
+      "max": 571320
+     },
+     "ratio": {
+      "median": 1.8698587931048671,
+      "min": 1.7863894139886578,
+      "max": 1.9448325704649483
+     },
+     "ring_on": 226.0,
+     "ring_off": 122.0,
+     "same_stations": 20
+    }
+   },
+   "largest_off": 571320,
+   "largest_on": 1020600,
+   "fits_desktop_off": 80,
+   "fits_desktop_on": 80,
+   "fits_desktop_36_off": 80,
+   "fits_desktop_36_on": 80
+  },
+  "C": {
+   "builds": 80,
+   "passed_off": 80,
+   "families_repaired_off": 0,
+   "failed_off": [],
+   "cap_quads_min_off": 0.0716015922928062,
+   "cap_quads_min_on": 0.0803749376697056,
+   "per_re": {
+    "1e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 608251.0,
+      "max": 864950
+     },
+     "cells_off": {
+      "median": 561180.0,
+      "max": 654350
+     },
+     "ratio": {
+      "median": 1.0793884229110216,
+      "min": 1.055611390284757,
+      "max": 1.334005376344086
+     },
+     "ring_on": 169.0,
+     "ring_off": 156.0,
+     "same_stations": 20
+    },
+    "3e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 1258061.0,
+      "max": 1463560
+     },
+     "cells_off": {
+      "median": 690457.5,
+      "max": 808584
+     },
+     "ratio": {
+      "median": 1.8065236051502145,
+      "min": 1.7205392545598732,
+      "max": 1.9589456869009585
+     },
+     "ring_on": 284.0,
+     "ring_off": 156.0,
+     "same_stations": 20
+    },
+    "1e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 1593840.0,
+      "max": 1800225
+     },
+     "cells_off": {
+      "median": 844192.5,
+      "max": 994833
+     },
+     "ratio": {
+      "median": 1.8840464557236336,
+      "min": 1.804776869893149,
+      "max": 1.9590303030303031
+     },
+     "ring_on": 291.0,
+     "ring_off": 156.0,
+     "same_stations": 20
+    },
+    "4e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 1978178.0,
+      "max": 2192400
+     },
+     "cells_off": {
+      "median": 1042855.0,
+      "max": 1211840
+     },
+     "ratio": {
+      "median": 1.8835283679806647,
+      "min": 1.8043690715722909,
+      "max": 1.9583333333333333
+     },
+     "ring_on": 291.0,
+     "ring_off": 156.0,
+     "same_stations": 20
+    }
+   },
+   "largest_off": 1211840,
+   "largest_on": 2192400,
+   "fits_desktop_off": 78,
+   "fits_desktop_on": 28,
+   "fits_desktop_36_off": 80,
+   "fits_desktop_36_on": 80
+  },
+  "M": {
+   "builds": 80,
+   "passed_off": 60,
+   "families_repaired_off": 0,
+   "failed_off": [
+    {
+     "wing": "BWB reference 0",
+     "re": 100000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761442488,
+     "cap_quads_on": 0.05887679991906307
+    },
+    {
+     "wing": "BWB reference 0",
+     "re": 300000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761436769,
+     "cap_quads_on": 0.07747817953915462
+    },
+    {
+     "wing": "BWB reference 0",
+     "re": 1000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761446066,
+     "cap_quads_on": 0.0774774458627116
+    },
+    {
+     "wing": "BWB reference 0",
+     "re": 4000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761436769,
+     "cap_quads_on": 0.07748676196095844
+    },
+    {
+     "wing": "BWB reference 1",
+     "re": 100000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761442415,
+     "cap_quads_on": 0.0573103505960404
+    },
+    {
+     "wing": "BWB reference 1",
+     "re": 300000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761448156,
+     "cap_quads_on": 0.07747764583310993
+    },
+    {
+     "wing": "BWB reference 1",
+     "re": 1000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761442415,
+     "cap_quads_on": 0.07747790705714294
+    },
+    {
+     "wing": "BWB reference 1",
+     "re": 4000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761448156,
+     "cap_quads_on": 0.07748676196111635
+    },
+    {
+     "wing": "BWB reference 2",
+     "re": 100000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.049534737614316274,
+     "cap_quads_on": 0.05919117468014912
+    },
+    {
+     "wing": "BWB reference 2",
+     "re": 300000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.049534737614034666,
+     "cap_quads_on": 0.07748064548284055
+    },
+    {
+     "wing": "BWB reference 2",
+     "re": 1000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.049534737614034666,
+     "cap_quads_on": 0.07747756953518851
+    },
+    {
+     "wing": "BWB reference 2",
+     "re": 4000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.049534737614034666,
+     "cap_quads_on": 0.0774867619604101
+    },
+    {
+     "wing": "BWB reference 3",
+     "re": 100000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761469479,
+     "cap_quads_on": 0.06013402271314266
+    },
+    {
+     "wing": "BWB reference 3",
+     "re": 300000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761476999,
+     "cap_quads_on": 0.07747813641388537
+    },
+    {
+     "wing": "BWB reference 3",
+     "re": 1000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761476999,
+     "cap_quads_on": 0.07747708444974014
+    },
+    {
+     "wing": "BWB reference 3",
+     "re": 4000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761476999,
+     "cap_quads_on": 0.07748676196079446
+    },
+    {
+     "wing": "BWB reference 4",
+     "re": 100000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761459011,
+     "cap_quads_on": 0.060449555886873174
+    },
+    {
+     "wing": "BWB reference 4",
+     "re": 300000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.049534737614365824,
+     "cap_quads_on": 0.0774771189379295
+    },
+    {
+     "wing": "BWB reference 4",
+     "re": 1000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761462648,
+     "cap_quads_on": 0.0774776733994252
+    },
+    {
+     "wing": "BWB reference 4",
+     "re": 4000000.0,
+     "failed": [
+      "cap_quads"
+     ],
+     "cap_quads": 0.04953473761462648,
+     "cap_quads_on": 0.07748676196122045
+    }
+   ],
+   "cap_quads_min_off": 0.049534737614034666,
+   "cap_quads_min_on": 0.0573103505960404,
+   "per_re": {
+    "1e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 1286641.0,
+      "max": 1834560
+     },
+     "cells_off": {
+      "median": 1187337.0,
+      "max": 1396980
+     },
+     "ratio": {
+      "median": 1.0861008623390498,
+      "min": 1.0539858728557012,
+      "max": 1.3227293683725219
+     },
+     "ring_on": 218.0,
+     "ring_off": 200.0,
+     "same_stations": 20
+    },
+    "3e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 2684279.0,
+      "max": 3086352
+     },
+     "cells_off": {
+      "median": 1467090.5,
+      "max": 1705104
+     },
+     "ratio": {
+      "median": 1.8157273046297,
+      "min": 1.736660420159779,
+      "max": 1.971493057259212
+     },
+     "ring_on": 367.0,
+     "ring_off": 200.0,
+     "same_stations": 20
+    },
+    "1e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 3414528.0,
+      "max": 3792096
+     },
+     "cells_off": {
+      "median": 1810539.5,
+      "max": 2095632
+     },
+     "ratio": {
+      "median": 1.9009149217128845,
+      "min": 1.8095238095238095,
+      "max": 1.971575715559077
+     },
+     "ring_on": 377.0,
+     "ring_off": 200.0,
+     "same_stations": 20
+    },
+    "4e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 4201056.0,
+      "max": 4691596
+     },
+     "cells_off": {
+      "median": 2224005.0,
+      "max": 2593500
+     },
+     "ratio": {
+      "median": 1.9002317393364736,
+      "min": 1.808982456140351,
+      "max": 1.9706747481950262
+     },
+     "ring_on": 377.0,
+     "ring_off": 200.0,
+     "same_stations": 20
+    }
+   },
+   "largest_off": 2593500,
+   "largest_on": 4691596,
+   "fits_desktop_off": 12,
+   "fits_desktop_on": 8,
+   "fits_desktop_36_off": 80,
+   "fits_desktop_36_on": 80
+  },
+  "F": {
+   "builds": 80,
+   "passed_off": 80,
+   "families_repaired_off": 0,
+   "failed_off": [],
+   "cap_quads_min_off": 0.05371266189578466,
+   "cap_quads_min_on": 0.06072406152680868,
+   "per_re": {
+    "1e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 2795671.0,
+      "max": 3993696
+     },
+     "cells_off": {
+      "median": 2573680.5,
+      "max": 3018456
+     },
+     "ratio": {
+      "median": 1.082401616899578,
+      "min": 1.0592016238159676,
+      "max": 1.3305693753454948
+     },
+     "ring_on": 281.0,
+     "ring_off": 257.0,
+     "same_stations": 20
+    },
+    "3e+05": {
+     "wings": 20,
+     "cells_on": {
+      "median": 5881380.0,
+      "max": 6743184
+     },
+     "cells_off": {
+      "median": 3165999.0,
+      "max": 3694764
+     },
+     "ratio": {
+      "median": 1.8263647246599883,
+      "min": 1.731977818853974,
+      "max": 1.9965690155713909
+     },
+     "ring_on": 474.0,
+     "ring_off": 257.0,
+     "same_stations": 20
+    },
+    "1e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 7448800.5,
+      "max": 8283450
+     },
+     "cells_off": {
+      "median": 3880490.0,
+      "max": 4540200
+     },
+     "ratio": {
+      "median": 1.9113651298087,
+      "min": 1.824468085106383,
+      "max": 1.9966986883978228
+     },
+     "ring_on": 487.0,
+     "ring_off": 257.0,
+     "same_stations": 20
+    },
+    "4e+06": {
+     "wings": 20,
+     "cells_on": {
+      "median": 9212494.5,
+      "max": 10213490
+     },
+     "cells_off": {
+      "median": 4804312.5,
+      "max": 5599690
+     },
+     "ratio": {
+      "median": 1.9106989813839128,
+      "min": 1.823938468022337,
+      "max": 1.9957539989852324
+     },
+     "ring_on": 487.0,
+     "ring_off": 257.0,
+     "same_stations": 20
+    }
+   },
+   "largest_off": 5599690,
+   "largest_on": 10213490,
+   "fits_desktop_off": 0,
+   "fits_desktop_on": 0,
+   "fits_desktop_36_off": 72,
+   "fits_desktop_36_on": 21
+  }
+ },
+ "by_type_F": {
+  "bwb": {
+   "ratio_median_above_lowest_re": 1.8246683399067767
+  },
+  "flying_wing": {
+   "ratio_median_above_lowest_re": 1.8264729620661824
+  },
+  "cranked": {
+   "ratio_median_above_lowest_re": 1.9953987730061349
+  },
+  "tapered": {
+   "ratio_median_above_lowest_re": 1.9953504916283442
+  }
+ },
+ "checks": {
+  "nose_root_delivered_ratio": {
+   "min": 1.2989829520708558,
+   "max": 1.2997584349648812
+  }
+ },
+ "parts_off": [
+  {
+   "part": "bwb_cranked_noband_VC.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "flying_wing_tapered_noband_VC.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "bwb_cranked_noband_C.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "flying_wing_tapered_noband_C.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "bwb_cranked_noband_M.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "flying_wing_tapered_noband_M.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "bwb_cranked_noband_F.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  },
+  {
+   "part": "flying_wing_tapered_noband_F.json",
+   "mesh_code_hash": "75f25f07778fd5d1a29630d39adfed38b17ccf4110748e63ebda6d5d109afd84",
+   "builds": 40
+  }
+ ],
+ "note": "cells: the wing-block estimate of Study 9 (no C-H wake lines, no outer field past 2 chords, no outboard blocks); band on = Study 12, band off = --band off, the same wings, Re and levels"
+}

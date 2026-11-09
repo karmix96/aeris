@@ -357,6 +357,9 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     method (the plan agreed on 6 Nov) found it real, and it was fixed (64).
 76. **Solver split** (proposal, pending): ADflow SA for the mesh studies and the fully turbulent data; SU2 SST +
     LM on about 20 % of the wings. Needs an ADflow against SU2 SA code-to-code check and the SU2 cost per solve.
+    **Decided right before the runs, together with the band option (81; owner, 9 Nov 2026):** the meshes for
+    transition runs carry the band, those for fully turbulent runs may go without it (1.8–1.9 × fewer cells at
+    Re ≥ 3 × 10⁵).
 77. **Builder choices in the built rules (7 Nov).** All are stricter than decided; numbered as in
     `Stage_2_surface_mesh/decisions/surface_rules.md`, section 13. (1) The growth limits follow the family rule:
     along the ring 1.25 at VC (decided) gives 1.107 at F; between station gaps 1.3 at VC (not in 71–72) gives 1.127
@@ -417,3 +420,14 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     3,128 of 3,128 builds pass (782 families × 4 levels), 0 families needed a repair, every family carries one factor
     at every level, all labelled "none"; the largest turning stays inside every check limit (M 10.02°, F 7.72°).
     The upper band at 0–100 % c added 2 ring nodes on some meshes (VC 44 of 782, F 383 of 782; cells at most +1.1 %).
+81. **The transition band is an option (owner, 9 Nov 2026), chosen right before the runs together with the solver
+    (76).** On: the band cells everywhere (0–100 % c on both sides), for runs with a transition model (SU2 SST + LM).
+    Off: no band, the largest-cell rule only, for fully turbulent runs (ADflow SA); every other rule the same. Built:
+    `chord.transition_band` in `configs/surface.yaml` (default true), `--band on|off` on `python -m cfdauto.mesh` and
+    `scripts/screen.py`; with the band off the mesh name ends in `_noband` and the manifest says
+    `transition_band: false`; 2 tests. Measured (Stage 2 Study 13, the 20 reference wings × 4 Re × VC, C, M, F, one
+    nose factor per family): cells with the band ÷ without = 1.08–1.09 at Re 1e5, 1.79–1.83 at 3e5, 1.87–1.91 at 1e6
+    and 4e6 (median per level); largest F 10.21 M on, 5.60 M off. The band-on meshes are unchanged (the same nodes).
+    **Weak point: with the band off, every BWB reference wing fails at M** (20 of 320 builds; the tip cap, scaled
+    Jacobian 0.0495 against the limit 0.05; 0.057–0.078 with the band on). More cap smoothing does not help (the worst cell
+    sits on the cap's edge near the trailing edge). To fix before any run with the band off.

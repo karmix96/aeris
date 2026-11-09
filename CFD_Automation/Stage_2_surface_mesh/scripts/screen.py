@@ -6,6 +6,9 @@
     python scripts/screen.py --family --types bwb cranked --resume data/meshes/screen_family/bwb_cranked.jsonl
         # every level of each wing and Re with ONE nose factor (owner, 8 Nov 2026: the ratio between levels stays
         # exactly 1.3, also when a nose repair is needed; each row carries the family's repair label)
+    python scripts/screen.py --family --sets reference --band off
+        # without the transition band (the option for fully turbulent runs, owner 9 Nov 2026): the part's name and
+        # the single-level file get _noband
 
 Writes data/studies/screen_<level>.json (one row per wing and Re: passed, every check with its value, limit and
 margin, the failed checks with their rule, counts, the nose source per station, the spacings for the family
@@ -136,13 +139,13 @@ def mesh_row(row: dict, w, m, rl) -> dict:
                 "input_hash": w.input_hash, "node_hash": m.node_hash()}
 
 
-def one(wing_type: str, set_name: str, index: int, re: float, level: str, config=None) -> dict:
+def one(wing_type: str, set_name: str, index: int, re: float, level: str, config=None, band=None) -> dict:
     row = {"wing_type": wing_type, "set": set_name, "index": index, "re_mean": re, "level": level}
     t0 = time.time()
     try:
-        rl = rules(level, config)
+        rl = rules(level, config, band)
         w = wing_from_set(wing_type, set_name, index)
-        m = build_surface(w.loft, re, level, config)
+        m = build_surface(w.loft, re, level, config, band=band)
         row = mesh_row(row, w, m, rl)
     except Exception as exc:  # a crash is a failure with a reason, never a missing row
         row |= {"built": False, "passed": False, "failed": ["exception"], "error": f"{type(exc).__name__}: {exc}",
@@ -151,16 +154,16 @@ def one(wing_type: str, set_name: str, index: int, re: float, level: str, config
     return row
 
 
-def family_rows(wing_type: str, set_name: str, index: int, re: float, levels, config=None) -> list[dict]:
+def family_rows(wing_type: str, set_name: str, index: int, re: float, levels, config=None, band=None) -> list[dict]:
     """Every level of one wing at one Re, built by build_family (one nose factor for the family)."""
     base = {"wing_type": wing_type, "set": set_name, "index": index, "re_mean": re}
     t0 = time.time()
     try:
         w = wing_from_set(wing_type, set_name, index)
-        meshes = build_family(w.loft, re, levels, config)
+        meshes = build_family(w.loft, re, levels, config, band)
         rows = []
         for lev, m in meshes.items():
-            r = mesh_row(base | {"level": lev}, w, m, rules(lev, config))
+            r = mesh_row(base | {"level": lev}, w, m, rules(lev, config, band))
             r["seconds"] = m.info["seconds"]
             rows.append(r)
         return rows
@@ -170,10 +173,10 @@ def family_rows(wing_type: str, set_name: str, index: int, re: float, levels, co
                         "seconds": round(time.time() - t0, 2)} for lev in levels]
 
 
-def check_rules(level: str, config=None) -> dict:
+def check_rules(level: str, config=None, band=None) -> dict:
     """Every check's rule in words at this level (from one small build: the text does not depend on the wing)."""
     w = wing_from_set("tapered", "reference", 0)
-    m = build_surface(w.loft, 3.0e5, level, config)
+    m = build_surface(w.loft, 3.0e5, level, config, band=band)
     return {c.name: c.limit for c in m.checks}
 
 
@@ -190,17 +193,21 @@ def main(argv=None) -> None:
                         "<out-dir>/<tag>_<level>.json per level")
     p.add_argument("--out-dir", default=None, help="--family: default data/meshes/screen_family")
     p.add_argument("--tag", default=None, help="--family: the name of this part (default: the types joined by _)")
+    p.add_argument("--band", choices=["on", "off"], default=None,
+                   help="the transition band (default: the config's, on); off: no band, for fully turbulent runs")
     p.add_argument("--resume", default=None,
                    help="a .jsonl file: every row is appended as it is built, and rows already in it are not built "
                         "again, so a stopped screen goes on where it stopped (the full JSON is written at the end)")
     a = p.parse_args(argv)
+    a.band_on = None if a.band is None else a.band == "on"
     if a.family:
         return main_family(a)
-    rl = rules(a.level, a.config)
+    rl = rules(a.level, a.config, a.band_on)
     level = rl.level
     other = a.config and Path(a.config).resolve() != CONFIG.resolve()
+    nb = "" if rl.transition_band else "_noband"
     out = Path(a.out) if a.out else STAGE2 / "data" / "studies" / (
-        f"screen_{level}_{Path(a.config).stem}.json" if other else f"screen_{level}.json")
+        f"screen_{level}_{Path(a.config).stem}{nb}.json" if other else f"screen_{level}{nb}.json")
     if out.resolve() == FIRST_SCREEN.resolve() and not a.out:
         p.error(f"{FIRST_SCREEN.name} holds the first approach's screen: pass --out to write a new screen at level C")
     done, log = {}, None
@@ -227,7 +234,7 @@ def main(argv=None) -> None:
                     if key in done:
                         rows.append(done[key])
                         continue
-                    r = one(t, s, i, re, level, a.config)
+                    r = one(t, s, i, re, level, a.config, a.band_on)
                     rows.append(r)
                     if log is not None:
                         with open(log, "a") as f:
@@ -241,7 +248,7 @@ def main(argv=None) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"code_version": __version__, "mesh_code_hash": mesh_code_hash(), "level": level,
                                "config": str(a.config or CONFIG), "rules": rl.values(),
-                               "check_rules": check_rules(level, a.config),
+                               "check_rules": check_rules(level, a.config, a.band_on),
                                "cell_estimate": {"wall_growth_vc": WALL_GROWTH_VC, "wall_depth_c": WALL_DEPTH_C,
                                                  "formula": "n = max_j ceil(ln(1 + (g-1) D/s0_j) / ln g); cells = "
                                                             "(n_ring-1)(n_span-1) n + cap_quads n"},
@@ -251,10 +258,10 @@ def main(argv=None) -> None:
 
 def main_family(a) -> None:
     """--family: each wing and Re at every level of the config, built together with one nose factor."""
-    levels = rules(None, a.config).names
+    levels = rules(None, a.config, a.band_on).names
     out_dir = Path(a.out_dir) if a.out_dir else STAGE2 / "data" / "meshes" / "screen_family"
     out_dir.mkdir(parents=True, exist_ok=True)
-    tag = a.tag or "_".join(a.types)
+    tag = a.tag or "_".join(a.types) + ("" if rules(None, a.config, a.band_on).transition_band else "_noband")
     log = Path(a.resume) if a.resume else out_dir / f"{tag}.jsonl"
     done = {}
     if log.exists():
@@ -276,7 +283,7 @@ def main_family(a) -> None:
                     if all(k in done for k in keys):
                         rows += [done[k] for k in keys]
                         continue
-                    fam = family_rows(t, s, i, re, levels, a.config)
+                    fam = family_rows(t, s, i, re, levels, a.config, a.band_on)
                     rows += fam
                     with open(log, "a") as f:
                         for r in fam:
@@ -288,12 +295,12 @@ def main_family(a) -> None:
                                       if r["built"] else f"{r['level']} {r['error']}" for r in fam)
                           + f"  nose: {nf.get('label', '?')}  {sum(r['seconds'] for r in fam):5.1f} s", flush=True)
     for lev in levels:
-        rl = rules(lev, a.config)
+        rl = rules(lev, a.config, a.band_on)
         lr = [r for r in rows if r["level"] == lev]
         (out_dir / f"{tag}_{lev}.json").write_text(json.dumps(
             {"code_version": __version__, "mesh_code_hash": mesh_code_hash(), "level": lev, "family": True,
              "levels": levels, "config": str(a.config or CONFIG), "rules": rl.values(),
-             "check_rules": check_rules(lev, a.config),
+             "check_rules": check_rules(lev, a.config, a.band_on),
              "cell_estimate": {"wall_growth_vc": WALL_GROWTH_VC, "wall_depth_c": WALL_DEPTH_C},
              "summary": summarise(lr), "rows": lr}, indent=1))
     fams = [r for r in rows if r["level"] == levels[0] and r.get("built")]

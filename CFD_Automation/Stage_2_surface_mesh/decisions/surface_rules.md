@@ -577,3 +577,43 @@ corner1 and corner2 at Re 3 × 10⁵, and the 20 reference wings at the four Re 
 is below about 0.38 % (rule of three, 95 % confidence), for the surface alone. The family rule holds by construction,
 also for the nose, and no family needed a repair. The upper band at 0–100 % c costs at most +1.1 % cells. Not shown:
 the volume mesh (Stage 3), the solver, and pyGeo on the full sets (checked on the reference wings only).
+
+
+## 20. The transition band as an option (9 Nov 2026; decision 81, Study 13)
+
+**What was decided (owner, 9 Nov).** The band is an option, chosen right before the runs together with the solver
+(decision 76): on for runs with a transition model (SU2 SST + LM), off for fully turbulent runs (ADflow SA).
+
+**What was built.** `chord.transition_band: true` in `configs/surface.yaml` (the default); `rules(level, config,
+band)` and `build_surface` / `build_family(..., band=...)`; `--band on|off` on `python -m cfdauto.mesh` and on
+`scripts/screen.py`. Off: the band windows are empty and the band cell is the largest cell, so the ring follows the
+nose, trailing-edge and largest-cell rules only; every other rule is the same, and the family rule holds (the asked
+nose spacing × 1.3 per step; delivered at the root 1.299–1.300). The mesh name ends in `_noband`; the manifest says
+`transition_band: false`; the band check says "option off". The band-on meshes are unchanged (the same node hash).
+Tests: the rules with the band off; a VC and C family at Re 10⁶ with fewer ring nodes, the same stations and the
+ratio kept (45 tests).
+
+**Study 13.** The 20 reference wings × 4 Re × VC, C, M, F built with the band off (`scripts/screen.py --family
+--sets reference --band off`), against the family screen (Study 12, band on); `scripts/band_option.py`,
+`data/studies/band_option.json`, `docs/page/band_option.png`.
+
+| Level | Cells on ÷ off, Re 10⁵ | 3 × 10⁵ | 10⁶ | 4 × 10⁶ | Largest on / off [M] | Passed, band off |
+| --- | --- | --- | --- | --- | --- | --- |
+| VC | 1.09 | 1.79 | 1.87 | 1.87 | 1.02 / 0.57 | 80 of 80 |
+| C | 1.08 | 1.81 | 1.88 | 1.88 | 2.19 / 1.21 | 80 of 80 |
+| M | 1.09 | 1.82 | 1.90 | 1.90 | 4.69 / 2.59 | 60 of 80 |
+| F | 1.08 | 1.83 | 1.91 | 1.91 | 10.21 / 5.60 | 80 of 80 |
+
+- At Re 10⁵ the band cell is about the largest cell, so the band costs almost nothing; from 3 × 10⁵ the bubble is
+  short (the 0.10 c floor from local Re 4 × 10⁵) and the band nearly doubles the ring.
+- Hardware (wing blocks, the reference wings): with the band off, 78 of 80 C meshes fit the desktop today (28 with
+  the band), and 72 of 80 F meshes fit with +36 GB (21 with the band).
+- **Weak point: 20 of 320 builds fail with the band off, all of them the BWB reference wings at M** (every Re): the
+  tip cap, scaled Jacobian 0.0495 against the limit 0.05 (0.057–0.078 with the band on). The five BWB reference tips
+  give the same value. More smoothing does not help (400 to 3,200 sweeps: 0.0495 to 0.0490); the worst cell sits on
+  the cap's edge at 88 % of the tip chord, where the section is under 1 mm thick. The same cell is 0.0775 with the
+  band on: the coarser ring changes the cap's interior, not its edge spacing there.
+
+**Conclusion.** The option works and is cheap to choose: the band nearly doubles the cells at Re ≥ 3 × 10⁵ and
+costs almost nothing at 10⁵. With the band off the BWB tip cap fails at M, so the cap must be fixed before any run
+with the band off. Not shown: the full sets with the band off.

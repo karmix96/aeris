@@ -31,7 +31,7 @@ from cfdauto.mesh.laws import first_cell_c, rules  # noqa: E402
 
 FIRST = ROOT / "configs" / "surface_first.yaml"    # the first approach (2-3 Nov): every first-approach value
 LEVELS = ("VC", "C", "M", "F")                     # the new levels (built 7 Nov)
-N_TESTS = 43                                       # pytest Stage_2_surface_mesh/tests, 8 Nov 2026 (2 for the family nose)
+N_TESTS = 45                                       # pytest Stage_2_surface_mesh/tests, 9 Nov 2026 (2 for the family nose, 2 for the band option)
 STAGE1 = ROOT.parent / "Stage_1_geometry"
 DOCS = ROOT / "docs"
 PAGE = DOCS / "page"
@@ -809,6 +809,57 @@ def family_screen_section(sf: dict) -> str:
   {cbox(f"The rules mesh every wing at every level: {ok:,} of {builds:,} builds passed" + (f", so, by the rule of three, the true failure rate per level on this design space is below about {300 / full['VC']['builds']:.2f} % with 95 % confidence, for the surface alone" if ok == builds else "") + f". The family rule now holds by construction, also for the nose: one nose factor per family at every level; {'no family needed a repair' if rep == 0 else f'{rep} families needed one, and it went on every level'}. {band_c} What this does not show: the volume mesh (Stage 3), the solver, and node-by-node agreement with pyGeo on the full sets (checked on the reference wings).")}"""
 
 
+
+def band_option_section(bo: dict) -> str:
+    """Study 13: the transition band as an option (owner, 9 Nov 2026), from data/studies/band_option.json."""
+    L = bo["levels"]
+    res = list(L["VC"]["per_re"])
+    re_txt = {"1e+05": "10⁵", "3e+05": "3 × 10⁵", "1e+06": "10⁶", "4e+06": "4 × 10⁶"}
+    rows = "".join(
+        f"<tr><td>{lev}</td>" + "".join(f"<td>{L[lev]['per_re'][r]['ratio']['median']:.2f}</td>" for r in res)
+        + f"<td>{L[lev]['largest_on'] / 1e6:.2f} / {L[lev]['largest_off'] / 1e6:.2f}</td>"
+        + f"<td>{L[lev]['passed_off']} of {L[lev]['builds']}</td></tr>" for lev in LEVELS)
+    head = "<tr><th>Level</th>" + "".join(f"<th>on ÷ off, Re {re_txt.get(r, r)}</th>" for r in res) + \
+           "<th>Largest on / off [M]</th><th>Passed, band off</th></tr>"
+    fails = [f for lev in LEVELS for f in L[lev]["failed_off"]]
+    n_fail = len(fails)
+    n_all = sum(L[lev]["builds"] for lev in LEVELS)
+    fail_lev = sorted({lev for lev in LEVELS if L[lev]["failed_off"]})
+    fail_wings = sorted({f["wing"] for f in fails})
+    cap_off = min(f["cap_quads"] for f in fails) if fails else None
+    cap_on = min(f["cap_quads_on"] for f in fails) if fails else None
+    cap_on_hi = max(f["cap_quads_on"] for f in fails) if fails else None
+    lo3 = min(L[lev]["per_re"]["3e+05"]["ratio"]["median"] for lev in LEVELS)
+    hi3 = max(L[lev]["per_re"]["4e+06"]["ratio"]["median"] for lev in LEVELS)
+    lo1 = min(L[lev]["per_re"]["1e+05"]["ratio"]["median"] for lev in LEVELS)
+    hi1 = max(L[lev]["per_re"]["1e+05"]["ratio"]["median"] for lev in LEVELS)
+    nr = bo["checks"].get("nose_root_delivered_ratio") or {}
+    fail_s = (f"<strong>{n_fail} of {n_all} builds fail with the band off</strong>: "
+              f"{', '.join(fail_wings)} at {', '.join(fail_lev)} (every Re), the tip cap: scaled Jacobian "
+              f"{cap_off:.4f} against the limit 0.05 ({cap_on:.3f}–{cap_on_hi:.3f} with the band on). More smoothing does not help "
+              f"(400 to 3,200 sweeps: 0.0495 to 0.0490): the worst cell sits on the cap's edge at 88 % of the tip "
+              f"chord, where the section is under 1 mm thick." if fails else "every build passes with the band off.")
+    fig = figc("band_option.png",
+               "Left: cells per mesh at F with the band on (blue) and off (amber), median (bar) and largest (tick), per "
+               "Re level, 20 reference wings. Right: cells with the band ÷ cells without, per level (median line, range "
+               "shaded).",
+               f"The band nearly doubles the cells from Re 3 × 10⁵ up and costs almost nothing at 10⁵ ({lo1:.2f}–{hi1:.2f}), "
+               "where the band cell is about the largest cell.")
+    return f"""
+  <h3 id="study13">Study 13 · The transition band as an option (9 Nov 2026)</h3>
+  <p><strong>What was done.</strong> The owner made the band an option (decision 81), chosen right before the runs together with the solver (76): <strong>on</strong> for runs with a transition model (SU2 SST + LM), <strong>off</strong> for fully turbulent runs (ADflow SA). Off: no band windows, the largest-cell rule only; every other rule the same. Built: <code>chord.transition_band</code> in <code>configs/surface.yaml</code> (default true) and <code>--band on|off</code> on <code>python -m cfdauto.mesh</code> and <code>scripts/screen.py</code>; the mesh name ends in <code>_noband</code>; the band-on meshes are unchanged (the same nodes). Then the 20 reference wings × 4 Re × VC, C, M, F with the band off, one nose factor per family, against Study 12. Code: <code>scripts/band_option.py</code>; data: <code>data/studies/band_option.json</code>.</p>
+  <div class="tbl"><table class="mid">{head}{rows}</table></div>
+  <p><strong>Result.</strong></p>
+  <ul>
+    <li><strong>The cost of the band:</strong> on ÷ off is {lo1:.2f}–{hi1:.2f} at Re 10⁵ and {lo3:.2f}–{hi3:.2f} from 3 × 10⁵ up (medians per level). From 3 × 10⁵ the bubble is short (the 0.10 c floor from local Re 4 × 10⁵), and the band nearly doubles the ring; the stations do not change.</li>
+    <li><strong>Hardware</strong> (wing blocks, the reference wings): with the band off, {L['C']['fits_desktop_off']} of 80 C meshes fit the desktop today ({L['C']['fits_desktop_on']} with it); {L['F']['fits_desktop_36_off']} of 80 F meshes fit with +36 GB ({L['F']['fits_desktop_36_on']} with it).</li>
+    <li><strong>The family rule with the band off:</strong> the nose cell refines by {nr.get('min', float('nan')):.3f}–{nr.get('max', float('nan')):.3f} per step at the root; no family needed a repair.</li>
+    <li><strong>Weak point:</strong> {fail_s}</li>
+  </ul>
+  {fig}
+  {cbox(f"The option works and is cheap to choose: the band nearly doubles the cells at Re ≥ 3 × 10⁵ ({lo3:.2f}–{hi3:.2f}) and costs almost nothing at 10⁵. With the band off, {n_fail} of {n_all} builds fail (the BWB tip cap at M), so the cap must be fixed before any run with the band off. Not shown: the full sets with the band off.")}"""
+
+
 def refine_re_section(rre: dict, uc: dict) -> str:
     """Study 11: the refine map at the Re levels (7 Nov; data/studies/refine_map_re.json, scripts/refine_map_re.py)."""
     s, ab = rre["summary"], rre["as_built"]
@@ -1056,7 +1107,7 @@ def build_page(d: dict) -> tuple[str, str]:
   <div class="eyebrow">CFD_Automation · Stage 2 · surface mesh · cfdauto {__version__} · 2 Nov 2026 · updated 8 Nov 2026</div>
   <h1>Surface Mesh</h1>
   <p class="lede">What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the <em>first approach</em>). A new approach was decided on 4–6 Nov and <strong>built on 7 Nov</strong>: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed {ok_new:,} of {n_new:,} builds (<a href="#study9">Study 9</a>).{lede_f} The section <a href="#change">What was first, and what changes</a> says what changed; an amber <em>What changes</em> box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–{12 if sf else 11} are new.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes</a><a href="#why">Why structured</a><a href="#what">What Stage 2 is</a><a href="#primer">What the primer asks</a><a href="#how">The steps, one by one</a><a href="#rules">The rules</a><a href="#studies">Studies and conclusions</a><a href="#study9">Study 9: the new screen</a><a href="#study10">Study 10: similarity</a><a href="#study11">Study 11: refine map by Re</a><a href="#study12">Study 12: the family screen</a><a href="#steps">What was done, step by step</a><a href="#assumptions">Assumptions</a><a href="#findings">Findings and decisions</a><a href="#open">Open, weak points, to do</a><a href="#handover">Handover to Stage 3</a><a href="#files">Files and commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes</a><a href="#why">Why structured</a><a href="#what">What Stage 2 is</a><a href="#primer">What the primer asks</a><a href="#how">The steps, one by one</a><a href="#rules">The rules</a><a href="#studies">Studies and conclusions</a><a href="#study9">Study 9: the new screen</a><a href="#study10">Study 10: similarity</a><a href="#study11">Study 11: refine map by Re</a><a href="#study12">Study 12: the family screen</a><a href="#study13">Study 13: the band option</a><a href="#steps">What was done, step by step</a><a href="#assumptions">Assumptions</a><a href="#findings">Findings and decisions</a><a href="#open">Open, weak points, to do</a><a href="#handover">Handover to Stage 3</a><a href="#files">Files and commands</a></nav>
 </header>"""
 
     glance = f"""
@@ -1313,6 +1364,8 @@ def build_page(d: dict) -> tuple[str, str]:
     study11 = refine_re_section(rre, uc)
     sf_path = STUDIES / "screen_family_summary.json"
     study12 = family_screen_section(json.loads(sf_path.read_text())) if sf_path.exists() else ""
+    bo_path = STUDIES / "band_option.json"
+    study13 = band_option_section(json.loads(bo_path.read_text())) if bo_path.exists() else ""
     studies = f"""
 <section id="studies">
   <h2>The studies, with their conclusions</h2>
@@ -1381,6 +1434,7 @@ def build_page(d: dict) -> tuple[str, str]:
   {study10}
   {study11}
   {study12}
+  {study13}
 </section>"""
     assumptions = """
 <section id="assumptions">
@@ -1443,7 +1497,7 @@ def build_page(d: dict) -> tuple[str, str]:
   <ul>
     <li><strong>Numpy loft here; pyGeo checked on the reference wings only.</strong> Every mesh on this page was built on the numpy twin of the loft. On Mike's machine (8 Nov) the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). The full sets were not meshed on pyGeo.</li>
     <li><strong>No solve yet.</strong> Nothing here shows that the surface gives a good volume mesh or a converged run.</li>
-    <li><strong>The cap quads come close to the limit.</strong> {f"Lowest {cap_s}, against the refusal limit 0.05 (every set at every level, Study 12)." if sf else f"Lowest {vcf['cap_quads_J']['min']:.3f} at VC and {ff['cap_quads_J']['min']:.3f} at F, against the refusal limit 0.05 (Study 9)."} Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). The march will say whether this matters.</li>
+    <li><strong>The cap quads come close to the limit.</strong> {f"Lowest {cap_s}, against the refusal limit 0.05 (every set at every level, Study 12)." if sf else f"Lowest {vcf['cap_quads_J']['min']:.3f} at VC and {ff['cap_quads_J']['min']:.3f} at F, against the refusal limit 0.05 (Study 9)."} Similarity made some caps worse: the old trailing-edge floor had given small tips a thicker base (Study 10). <strong>With the band off they cross it:</strong> all 20 BWB reference builds at M, 0.0495 (Study 13); more smoothing does not help. The march will say whether this matters.</li>
     <li><strong>The stations are 17 % more than the plan.</strong> The decided station growth (1.2) and gaps per panel (12 at M) give 7–14 more stations than the plan file's 1.25 and 7 gaps per panel, so about 17 % more cells than the plan's rules would give. If the plan file's values were meant, they need a decision.</li>
     <li><strong>The cell count is an estimate, and it hangs on the wall-layer rule.</strong> Two counts exist: the first estimate (6 Nov: F 10.9 M; its wall-layer rule not recorded; the first-approach reference wings) and this one ({"Study 12" if sf else "Study 9"}: F {fcell['median'] / 1e6:.2f} M median on the reference wings; one layer count per block, 2 chords deep, growth 1.25 at VC by the family rule, s0 from y⁺ per station). The pages use this one because it can be redone. Both leave out the C-H wake lines (+30–60 %, rough) and the outboard blocks. Stage 3 sets the real wall-layer rule.</li>
     <li><strong>The coarse levels get a finer nose than they ask.</strong> The nose is solved at every level and the strictest wins (owner, 7 Nov), so VC, C and M take the nose of a finer level where it is stricter (VC {nt['VC']['min']:.1f}–{nt['VC']['max']:.1f}° against 16.9°), and a build pays up to four solves per station. This keeps the family rule exact; the first build (VC and F only) needed a repair at M on the flying wings, and that is gone (Study 9).</li>
@@ -1466,7 +1520,9 @@ def build_page(d: dict) -> tuple[str, str]:
     <li><s>The nose at M (owner point 2)</s> <span class="flag ok">done 7 Nov: solved at every level, the strictest wins</span></li>
     <li><s>Mike: confirm or change the two builder choices left, and the upper band</s> — done 8 Nov: both builder choices confirmed (the growth limits by the family rule; the station growth 1.2 with at least 12 gaps per panel at M); the upper band written 0–100 % c; the nose repair belongs to the family (Study 12).</li>
     <li><strong>pyGeo run (Mike's machine): done on 8 Nov.</strong> pyGeo tests 24 of 24, Stage 1 tests 204 (1 skipped), <code>build --all</code> 722 of 722 (manifests pushed), Stage 2 tests 41; the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) (record: <code>data/studies/screen_VC_pygeo_oldlevels.json</code>; the new-level runs as printouts). Stage 1 then fixed its label rules (decision 79, 8 Nov): every wing's input hash changed, its surface did not (the same surface hash on all 722), so every mesh and screen here stands; re-meshed spot check: 5 builds, the same node hashes.</li>
-    <li><strong>Close Stage 2:</strong> the final page, summary and handover; notify.</li>
+    <li><strong>pyGeo <code>build --all</code> once more (Mike's machine):</strong> new input hashes after the label fix; the surfaces are the same.</li>
+    <li><strong>Fix the BWB tip cap for the band off</strong> (Study 13): all 20 BWB reference builds at M fail it with the band off.</li>
+    <li><strong>Close Stage 2:</strong> the final page, summary and handover; notify. Right before the runs: the band option (81) and the solver (76), together.</li>
     <li><strong>Stage 3:</strong> the matched C-H volume mesh on one wing first (open-line march, wake lines to the far field, outboard blocks and the tip vortex, far field 80 c; CGNS for ADflow, a converter to .su2 for SU2), count its cells, then the first solves.</li>
     <li><strong>Ladders after the first solves:</strong> chordwise (T6: cells per bubble, the band), spanwise (station gap, 12 per panel, tip gap), the nose angle (12 / 10 / 8 / 6°).</li>
     <li><strong>Decide 65 and 66</strong> (the per-wing band, the AVL + NeuralFoil upgrade) after the first 3-D transition runs (SU2 LM on the BWB centre body first), with the flow dataset per Re level at unit mean chord.</li>

@@ -12,6 +12,11 @@ rule on the other levels. With r = 1.3, level k and anchor a (VC = 0, C = 1, M =
                                                      rounded (the base to an even count, the gaps per panel up)
     growth ratios                 x ** r^(a - k)     1.2 at VC: 1.15 at C, 1.11 at M, 1.087 at F
 
+The transition band is an option (owner, 9 Nov 2026): chord.transition_band in the YAML, or band= in rules() (the
+command line: --band on|off). On: the band cell (bubble length / cells per bubble) is the largest ring cell inside the
+band windows (0-100 % c on both sides since 8 Nov), for runs with a transition model. Off: no band, the largest-cell
+rule only, for fully turbulent runs; every other rule is the same. Chosen right before the runs, with the solver.
+
 The power of r is a whole number of level steps, so a value is exactly x at its anchor. A plain number keeps the
 first approach's meaning (configs/surface_first.yaml, configs/surface_plan_VC.yaml): the value at the coarsest
 level, scaled as the first code did (spacings / r^k, counts * r^k, growth g^(1/r^k)); the nose angle, the growth
@@ -80,6 +85,7 @@ class Rules:
     ratio: float
     raw: dict
     config: str = ""
+    band: bool = True                 # the transition band option (rules(band=...) or chord.transition_band)
 
     @property
     def names(self) -> list[str]:
@@ -193,12 +199,18 @@ class Rules:
         return float(self.setting("max_spacing_c"))
 
     @property
+    def transition_band(self) -> bool:
+        """The band option: True = band cells in the band windows (transition runs), False = no band."""
+        return bool(self.band)
+
+    @property
     def band_upper(self) -> tuple[float, float]:
-        return tuple(self.raw["chord"]["band_upper"])
+        """The upper band window, x/c from the leading edge; (0, 0) with the band off."""
+        return tuple(self.raw["chord"]["band_upper"]) if self.band else (0.0, 0.0)
 
     @property
     def band_lower(self) -> tuple[float, float]:
-        return tuple(self.raw["chord"]["band_lower"])
+        return tuple(self.raw["chord"]["band_lower"]) if self.band else (0.0, 0.0)
 
     def bubble_length_c(self, re_local: float) -> float:
         """Laminar-bubble length / chord at a local Re (Stage 1 XFOIL table, log-log, constant outside)."""
@@ -212,7 +224,10 @@ class Rules:
         return float(self.setting("cells_per_bubble"))
 
     def band_spacing_c(self, re_local: float) -> float:
-        """Cell size over the transition band / chord: bubble length / cells per bubble, at most the largest cell."""
+        """Cell size over the transition band / chord: bubble length / cells per bubble, at most the largest cell.
+        With the band off: the largest cell (no band)."""
+        if not self.band:
+            return self.max_spacing_c
         return min(self.bubble_length_c(re_local) / self.cells_per_bubble, self.max_spacing_c)
 
     # --- along the span -----------------------------------------------------------------
@@ -269,6 +284,7 @@ class Rules:
         out = {"level": self.level, "k": self.k, "ratio": self.ratio, "levels": self.names, "config": self.config}
         out |= {n: self.setting(n) for n in SETTINGS}
         out |= {"nose_turning_tol_deg": self.nose_turning_tol_deg, "nose_envelope": self.nose_envelope,
+                "transition_band": self.transition_band,
                 "band_upper": list(self.band_upper), "band_lower": list(self.band_lower),
                 "bubble_length": self.raw["chord"]["bubble_length"], "tip_gap_in_s0": self.tip_gap_in_s0,
                 "anchors": {n: self.anchor(n)[1] or f"{self.names[0]} (plain)" for n in SETTINGS},
@@ -282,12 +298,14 @@ def first_cell_c(re_c: float, yplus: float = 1.0) -> float:
     return yplus / (re_c * np.sqrt(0.5 * cf))
 
 
-def rules(level: str | None = None, config: str | Path | None = None) -> Rules:
-    """The rules at one level of the config's ladder (default: its coarsest level)."""
+def rules(level: str | None = None, config: str | Path | None = None, band: bool | None = None) -> Rules:
+    """The rules at one level of the config's ladder (default: its coarsest level). band: the transition band
+    option (None: the config's chord.transition_band, true when not written)."""
     path = str(config or CONFIG)
     raw = _load(path)
     names = list(raw["levels"]["names"])
     level = names[0] if level is None else level
     if level not in names:
         raise ValueError(f"level must be one of {names} (config {path})")
-    return Rules(level=level, k=names.index(level), ratio=float(raw["levels"]["ratio"]), raw=raw, config=path)
+    on = bool(raw["chord"].get("transition_band", True)) if band is None else bool(band)
+    return Rules(level=level, k=names.index(level), ratio=float(raw["levels"]["ratio"]), raw=raw, config=path, band=on)

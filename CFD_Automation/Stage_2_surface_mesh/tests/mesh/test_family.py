@@ -76,3 +76,22 @@ def test_family_nose_repair_keeps_the_ratio_and_is_labelled(bwb, monkeypatch):
 
 def test_no_repair_means_label_none(mesh_vc):
     assert mesh_vc.info["nose_repair"]["label"] == "none" and mesh_vc.info["nose_factor"] == 1.0
+
+
+def test_band_off_is_a_coarser_ring_with_the_family_kept(bwb):
+    """The band option off (fully turbulent runs): fewer ring nodes at a Re where the band cell is finer than the
+    largest cell, every check passed, the asked nose spacing still x r between levels, and the name says _noband."""
+    import cfdauto.mesh.surface as S
+    on = S.build_family(bwb.loft, 1.0e6, ["VC", "C"])
+    off = S.build_family(bwb.loft, 1.0e6, ["VC", "C"], band=False)
+    r = rules("VC").ratio
+    for lev in ("VC", "C"):
+        assert off[lev].passed and off[lev].info["rules"]["transition_band"] is False
+        assert off[lev].info["n_ring"] < on[lev].info["n_ring"]
+        assert off[lev].info["n_span"] == on[lev].info["n_span"]          # the stations do not depend on the band
+    a, b = off["VC"].stations[0], off["C"].stations[0]
+    assert a["h_le_c_asked"] / b["h_le_c_asked"] == pytest.approx(r, rel=1e-12)
+
+    class W:                                                               # mesh_name needs only the input hash
+        input_hash = "0123456789abcdef"
+    assert S.mesh_name(off["VC"], W).endswith("_noband") and not S.mesh_name(on["VC"], W).endswith("_noband")

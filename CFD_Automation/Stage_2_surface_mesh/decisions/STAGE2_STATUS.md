@@ -14,7 +14,9 @@ the numpy twin of the loft; on Mike's machine (8 Nov) the 20 reference wings on 
 > 10⁵, 3 × 10⁵, 10⁶, 4 × 10⁶ (decision 78); the 20 reference wings screened again at them, 320 of 320 pass, and the
 > refine map redone. The owner's choices of 8 Nov built: decision 77 confirmed, the upper band 0–100 % c, a nose
 > repair belongs to the family (80). **The family screen** (Study 12, 8 Nov): every set at every level, 3,128 of
-> 3,128 builds pass, 0 nose repairs. Decisions 64, 67–80 in `CFD_Automation/OPEN_DECISIONS.md`.
+> 3,128 builds pass, 0 nose repairs. **9 Nov:** the transition band is an option (81), chosen right before the runs with
+> the solver (Study 13: the band nearly doubles the cells at Re ≥ 3 × 10⁵; with it off, the BWB tip cap fails at M,
+> to fix before such runs). Decisions 64, 67–81 in `CFD_Automation/OPEN_DECISIONS.md`.
 >
 > | What | First (built 2–3 Nov) | New approach | Status |
 > | --- | --- | --- | --- |
@@ -30,6 +32,7 @@ the numpy twin of the loft; on Mike's machine (8 Nov) the 20 reference wings on 
 > | Fine level | no target | F 6.73 M cells median on the wing blocks (20 reference wings × 4 Re; 5.91 M over every set; max 10.21 M, BWB reference wing 3 at 4 × 10⁶; 6.70 M and 10.17 M before the upper band change; 6.9 M and 9.7 M at the old levels), below the 9–11 M asked (this count: its rule is written down, so it can be redone); the first estimate (6 Nov) 10.9 M, its wall-layer rule not recorded, on the first-approach reference wings; the C-H wake lines add a rough +30–60 %; Stage 3 sets the real wall-layer rule | counted 7 Nov (Study 9); every set at every level 8 Nov (Study 12) |
 > | Builder choices (77) | — | all stricter than decided: (1) the ring and station growth limits follow the family rule (1.107 / 1.127 at F); the kink check uses each level's turning limit; (2) the nose: solved at every level, the strictest wins (first at VC and F only, and M then needed a repair on all 20 flying-wing reference builds; then 0 repairs on the reference builds and 4 of 782 F builds of the full sets; with decision 80 none of 782 families; VC turns 14.6–16.1° instead of 16.9°); (3) station growth 1.2 kept (+17 % stations against the plan file's 1.25 and 7 gaps per panel) | (2) decided 7 Nov (owner); (1), (3) confirmed by Mike 8 Nov |
 > | Nose repair (80) | one round on the whole wing at the level that needed it (it broke the 1.3 step there) | a round only past the level's check limit (angle + 0.2°); a repair belongs to the family: one factor at every level, so every spacing still refines by exactly 1.3; every mesh labelled (`nose_repair`, `nose_family`) | decided and built 8 Nov (owner); Study 12: 0 of 782 families needed one |
+> | Transition band option (81) | the band always on | on (transition runs) or off (fully turbulent runs), chosen right before the runs with the solver (76); off: 1.8–1.9 × fewer cells at Re ≥ 3 × 10⁵ (Study 13); off fails the BWB tip cap at M (0.0495 against 0.05): to fix first | built 9 Nov (owner) |
 
 ## What Stage 2 is
 
@@ -74,6 +77,26 @@ loft stations hit, tip gap, every ring in its station plane, wing quads (scaled 
 its own limits (turning 17.1 / 13.2 / 10.2 / 7.89°; growth along the ring 1.25 / 1.19 / 1.14 / 1.11 within 1 %;
 between station gaps 1.3 / 1.22 / 1.17 / 1.13). A refused mesh writes only `refusal.json`. Tests: 35 (`tests/mesh/`),
 including the family test and a test of every value per level (`test_laws.py`).
+
+## The band option (9 Nov; Study 13)
+
+The owner made the transition band an option (81): on for transition runs (SU2 SST + LM), off for fully turbulent
+runs (ADflow SA), chosen right before the runs with the solver (76). Built: `chord.transition_band` (default true),
+`--band on|off`; off = no band windows, the largest-cell rule only; the mesh name ends in `_noband`; the band-on
+meshes are unchanged. The 20 reference wings × 4 Re × VC, C, M, F with the band off, against Study 12 (band on):
+
+| Level | Cells on ÷ off at Re 10⁵ / 3 × 10⁵ / 10⁶ / 4 × 10⁶ | Largest on / off [M] | Passed, band off |
+| --- | --- | --- | --- |
+| VC | 1.09 / 1.79 / 1.87 / 1.87 | 1.02 / 0.57 | 80 of 80 |
+| C | 1.08 / 1.81 / 1.88 / 1.88 | 2.19 / 1.21 | 80 of 80 |
+| M | 1.09 / 1.82 / 1.90 / 1.90 | 4.69 / 2.59 | 60 of 80 |
+| F | 1.08 / 1.83 / 1.91 / 1.91 | 10.21 / 5.60 | 80 of 80 |
+
+- **Weak point:** with the band off, all 20 BWB reference builds at M fail the tip cap (scaled Jacobian 0.0495
+  against 0.05; 0.057–0.078 with the band on). More smoothing does not help. Fix the cap before any band-off run.
+- Hardware, the reference wings, band off: 78 of 80 C meshes fit the desktop today (28 with the band); 72 of 80 F
+  meshes fit with +36 GB (21 with the band).
+- `scripts/band_option.py`, `data/studies/band_option.json`, `docs/page/band_option.png`; `surface_rules.md` §20.
 
 ## The family screen (8 Nov; every set at every level; Study 12)
 
@@ -252,7 +275,8 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   vortex resolved there by clustering along its path (no tube); the cap is the wall of the first outboard block.
   Structured CGNS for ADflow; a converter to unstructured hexes (.su2) for SU2. Rough cost +30–60 % cells.
 - Before any solve: one pyGeo `build --all` on Mike's machine (new input hashes after the label fix; the same
-  surfaces) and the owner's word to close Stage 2. Decided on 8 Nov: 77 confirmed, the upper band 0–100 % c, a nose
+  surfaces) and the owner's word to close Stage 2. Right before the runs: the band option (81) and the solver (76),
+  together; if the band is off, the BWB tip cap must be fixed first (Study 13). Decided on 8 Nov: 77 confirmed, the upper band 0–100 % c, a nose
   repair per family (80). The pyGeo run is done (8 Nov).
 - Stage 1's label fix (decision 79, 8 Nov) changed every wing's input hash, not its surface (the same surface hash on
   all 722): every mesh and screen here stands (5 builds re-meshed: the same node hashes); mesh names
@@ -265,11 +289,13 @@ pip install -e CFD_Automation
 cd CFD_Automation/Stage_2_surface_mesh
 python -m cfdauto.mesh --type bwb --set reference --index 0 --level VC --re 3e5    # levels VC, C, M, F
 python -m cfdauto.mesh --type bwb --set reference --index 0 --level C --re 3e5 --config configs/surface_first.yaml
-python -m pytest                       # 43 tests (test_family is slow)
+python -m pytest                       # 45 tests (test_family is slow)
 python scripts/screen.py --level VC    # and --level F; --sets reference --level C / M; --resume <part>.jsonl
 python scripts/screen_study.py         # merge the parts; data/studies/screen_*.json; docs/page/screen_new_*.png
 python scripts/screen.py --family --types bwb cranked --tag bwb_cranked   # every level, one nose factor per family
 python scripts/screen_study.py --family   # data/studies/screen_family_*.json; docs/page/family_*.png (Study 12)
+python scripts/screen.py --family --sets reference --band off --types bwb cranked   # the band option off (Study 13)
+python scripts/band_option.py          # Study 13: data/studies/band_option.json, docs/page/band_option.png
 python scripts/similarity_check.py; python scripts/built_figures.py
 python scripts/change_figures.py; python scripts/make_stage2_page.py; python scripts/page_to_markdown.py; python scripts/make_summary_page.py
 ```

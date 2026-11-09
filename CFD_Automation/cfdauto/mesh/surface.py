@@ -85,15 +85,17 @@ def mesh_code_hash() -> str:
     return h.hexdigest()
 
 
-def build_surface(loft, re_mean: float, level: str | None = None, config=None, nose_factor: float = 1.0) -> SurfaceMesh:
+def build_surface(loft, re_mean: float, level: str | None = None, config=None, nose_factor: float = 1.0,
+                  band: bool | None = None) -> SurfaceMesh:
     """level: a level of the config's ladder (VC, C, M, F; default the coarsest). config: a rules file
-    (default configs/surface.yaml; the first approach: configs/surface_first.yaml). nose_factor: the family's nose
+    (default configs/surface.yaml; the first approach: configs/surface_first.yaml). band: the transition band option
+    (None: the config's; False: no band, for fully turbulent runs; owner, 9 Nov 2026). nose_factor: the family's nose
     repair (1.0 = none; build_family sets it, the same at every level). A round still needed here is applied and
     recorded (info["turning_repairs"] > 0): then this level is off the family ratio until the family is rebuilt with
     build_family."""
-    rc: Rules = get_rules(None, config)            # the coarsest level
-    rl: Rules = get_rules(level or rc.level, config)
-    solvers = [get_rules(lev, config) for lev in rc.nose_solve_levels]   # VC, C, M, F (the first approach: C)
+    rc: Rules = get_rules(None, config, band)      # the coarsest level
+    rl: Rules = get_rules(level or rc.level, config, band)
+    solvers = [get_rules(lev, config, band) for lev in rc.nose_solve_levels]   # VC, C, M, F (the first approach: C)
     tab = SpanTable.of(loft, rl.dense_span)
 
     # 1. stations; the tip gap is the tip first cell at this Re (laws 9, 10, 13)
@@ -187,20 +189,20 @@ def build_surface(loft, re_mean: float, level: str | None = None, config=None, n
     return mesh
 
 
-def build_family(loft, re_mean: float, levels=None, config=None) -> dict[str, SurfaceMesh]:
+def build_family(loft, re_mean: float, levels=None, config=None, band: bool | None = None) -> dict[str, SurfaceMesh]:
     """Every level of one wing at one Re with ONE nose factor, so that every spacing refines by exactly 1.3 between
     levels, also when a nose repair is needed (owner, 8 Nov 2026). First every level with factor 1; if a level needs
     repair rounds, the factor 0.9^n (n the most rounds any level needed) goes on every level and all are rebuilt,
     until no level needs a round. Each mesh then carries info["nose_family"]: the factor, the rounds, the levels
     that needed them, and a label (none, or family repair)."""
     import time
-    levels = list(levels or get_rules(None, config).names)
+    levels = list(levels or get_rules(None, config, band).names)
     factor, found, t_all = 1.0, [], 0.0
     for _ in range(12):
         meshes, secs = {}, {}
         for lev in levels:
             t0 = time.time()
-            meshes[lev] = build_surface(loft, re_mean, lev, config, nose_factor=factor)
+            meshes[lev] = build_surface(loft, re_mean, lev, config, nose_factor=factor, band=band)
             secs[lev] = time.time() - t0
         t_all += sum(secs.values())
         need = {lev: m.info["turning_repairs"] for lev, m in meshes.items() if m.info["turning_repairs"]}
@@ -295,7 +297,8 @@ def run_checks(m: SurfaceMesh, secs, specs, st, tab, rl: Rules) -> list[Check]:
               f"<= {rl.chord_growth_limit:.4g} ({lev}) within 1 % (the lower side follows the upper side's arc fraction; "
               "where the two noses differ, open decision 64, its first cells grow a little faster)"),
         Check("band_spacing", worst["band"] <= 1.01, worst["band"],
-              f"<= 1 x the band cell asked at {lev} (bubble length / {rl.cells_per_bubble:.3g}), within 1 %"),
+              f"<= 1 x the band cell asked at {lev} (bubble length / {rl.cells_per_bubble:.3g}), within 1 %"
+              if rl.transition_band else "no transition band (option off): nothing to check"),
         Check("te_spacing", worst["te"] <= 1.01, worst["te"],
               f"<= 1 x the trailing-edge cell asked at {lev} ({100 * rl.te_spacing_c:.3g} % c; law 3), within 1 %"),
         Check("span_growth", span_growth <= rl.span_growth_limit, span_growth, f"<= {rl.span_growth_limit:.4g} ({lev})"),
@@ -343,7 +346,9 @@ def wing_from_set(wing_type: str, set_name: str, index: int, backend: str | None
 
 
 def mesh_name(mesh: SurfaceMesh, wing: Wing) -> str:
-    return f"mesh_{mesh.level}_{wing.input_hash[:8]}_{fmt_re(mesh.re_mean)}"
+    """mesh_<level>_<wing hash 8>_<Re>; with the transition band off, _noband at the end."""
+    tail = "" if mesh.info["rules"].get("transition_band", True) else "_noband"
+    return f"mesh_{mesh.level}_{wing.input_hash[:8]}_{fmt_re(mesh.re_mean)}{tail}"
 
 
 def write(mesh: SurfaceMesh, wing: Wing, out: Path) -> Path:

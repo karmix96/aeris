@@ -527,7 +527,7 @@ Mike, 9 Nov 2026, 20:30: "make medium around 10 million; the fine family can be 
 decision 105 meets it with the volume rules alone (counted M median about 11 M on the 20 reference wings at Re
 3 × 10⁵, against 20.7 M with rule set 1), so it became rule set 2 (`configs/volume.yaml`; rule set 1 kept in
 `configs/volume_rules1.yaml`). The study scripts build rule set 2 by default and prefix its files `r2_`
-(`STAGE3_RULESET=1` rebuilds the record).
+(`STAGE3_RULESET=1` builds rule set 1's rules with the construction of the day; the recorded numbers of sections 8–14 came from the construction before decisions 106 and 108–110, at commit `3ddc29c`).
 
 | Rule (the check that reads it) | Rule set 1: VC / C / M / F | Rule set 2: VC / C / M / F |
 | --- | --- | --- |
@@ -657,40 +657,45 @@ cell is 1.280–1.309 apart; check 13 passes on 20 of 20 wings (section 17.3).
 
 ### 16.3 Very close stations (decision 110)
 
-With 16.1 and 16.2 in, check 3 (scaled Jacobian ≥ 0.05) refused 2 of 12 full-space wings probed; the first version
-of the fix then let a third through the screen.
+With 16.1 and 16.2 in, check 3 (scaled Jacobian ≥ 0.05) refused 2 of 12 full-space wings probed. The fix took three
+versions, each found by a screen:
 
-| Full-space BWB wing | Where | Stations there | Before | First version | Now |
-| --- | --- | --- | --- | --- | --- |
-| 3 | the wake, 24 c behind the kink | 0.05 c apart; chord 0.74 → 0.58 → 0.42 c; wake nodes 1.1 c apart in x | 0.044 | 0.083 | **0.088** |
-| 0 | 7 c above the centre body's trailing edge | 0.023 c apart; chord 2.57 → 2.44 → 2.30 c; layers 0.25 c apart | 0.049 | 0.049 | **0.061** |
-| 30 | the far wake behind the tip | 0.00012 c apart (the tip gap); chord 0.06 c, falling fast | (not probed) | 0.028 | **0.089** |
+| Wing (all BWB) | Where | Stations there | Before | 22:00 | 22:55 | Now (23:55) |
+| --- | --- | --- | --- | --- | --- | --- |
+| full 3 | the wake, 24 c behind the kink | 0.05 c apart; chord 0.74 → 0.58 → 0.42 c | 0.044 | 0.083 | 0.088 | **0.088** |
+| full 0 | 7 c above the centre body's trailing edge | 0.023 c apart; chord 2.57 → 2.44 → 2.30 c | 0.049 | 0.049 | 0.061 | **0.062** |
+| full 30 | the far wake behind the tip | 0.00012 c apart (the tip gap); chord 0.06 c, falling fast | | 0.028 | 0.089 | **0.093** |
+| full 31 | | | | | 0.050 | **0.056** |
+| corner2 0 | the wake behind the centre body | | | | 0.041 | **0.052** |
+| corner2 6 | the wake, 17 c behind the root | 0.0137 c apart; chord 2.45 → 1.13 c within 0.14 c; the trailing edge 0.145 c forward per station | | | 0.024 | **0.032 (refused)** |
 
 *Cause.* A station's near field is sized in local chords (fine zone and band: 2 local chords), so the far nodes of two
 neighbouring stations sit at different distances. Where the station gap is tiny against that difference, the cells
-between them shear. The far cells are large (up to 4.7 c along the wake), so at a tip gap of 0.00012 c a difference of
-0.0024 c already brings a cell to 0.05.
+between them shear: a cell's scaled Jacobian is about the gap over the offset.
 
 *Fix.* `volume.span_smooth`: the far part of each station's wall-normal distribution, and of its wake nodes in x,
 moves toward the Gaussian average of the stations within about 0.25 c along the semi-span. The near part (to the end of
 the fine zone and the band; 4 local chords behind the base for the wake) is never moved. Each station moves by the
 largest fraction that keeps every growth ratio of its far part under 1 + 0.9 × (the far limit − 1) (exact: every
 condition is linear in the fraction and holds at 0), lowered so the fraction changes by at most 1 per 0.5 c along
-the semi-span, so neighbours move alike. One ramp length for every station: the one with the largest smallest
-fraction. The ramp and the fractions are written to the mesh's info (`span_ramp`).
+the semi-span, so neighbours move alike. One ramp length for every station, 1 to 32 start distances: the one that
+leaves the smallest largest offset between neighbouring stations per unit of their gap (what check 3 sees). The
+ramp, the fractions and that offset are written to the mesh's info (`span_ramp`).
 
-*The first version, and what else was tried.* The first version moved every station fully or none: one station
-that could not take it stopped all (wing 30: no ramp fitted 6 stations at its kink, so nothing moved, 0.028). The
-mean of all stations as the target removes the trend along the semi-span but is far from the small stations' own
-distributions, so they can move only part of the way (wing 30: 0.030–0.046). Ramps chosen by the mean fraction
-picked a short ramp with a small fraction at the kink (wing 3: 0.043).
+*The versions.* 22:00 moved every station fully or none: one station that could not take it stopped all (wing 30:
+no ramp fitted 6 stations at its kink, so nothing moved). 22:55 gave each station its own fraction but chose the ramp
+by the largest smallest fraction, which favoured ramps so long that nothing moved where it mattered (corner2 6: ramp
+32, the far wake 17 c behind the root not moved). Ramps shorter than one start distance broke the growth limit after
+the outer blend (1.032 on wing 3), so they are out. Also tried: the mean of all stations as the target (it removes
+the trend but is far from the small stations' own distributions: 0.030–0.046 on wing 30).
 
 *Measured bound (an experiment, not a mesh we keep).* With one distribution for every station, BWB wing 0 would reach
 0.070 in its C blocks and 0.051 in its wake blocks.
 
-**Conclusion.** The three wings pass with margin. The fix is a construction rule, not a limit, and the screens of
-section 17 were rerun with it. Very close stations with fast-changing chords stay the weakest place of the mesh:
-the screen counts them.
+**Conclusion.** Every wing probed passes but BWB corner2 wing 6, the most extreme corner of the design space, which
+stays refused (0.032): its trailing edge moves 10 × the station gap per station, and the far wake cannot be lined up
+within the growth limit. A fix would space the far wake by x for all stations at once (a redesign, not built). Very
+close stations with fast-changing chords stay the weakest place of the mesh; the screen of section 17.4 counts them.
 
 ### 16.4 The fan for −5° to +10° (decision 111)
 

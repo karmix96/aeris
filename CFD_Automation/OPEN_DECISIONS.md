@@ -580,24 +580,33 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     1.300 ×, the cell at 1 local chord 1.275 × (BWB reference wing 1, the worst before) and 1.280 × (cranked 4).
     Tried first and dropped: giving a station's spare layers to its far part only (the growth scale fell to 0.41 on
     some stations and the outer blend then broke the growth limit: 1.39 against 1.3).
-110. **The far cells of very close stations are lined up along the semi-span (9 Nov 2026, 22:00; revised 22:55).** With
-    108 and 109 in, check 3 refused 2 of 12 full-space wings probed: BWB wing 3 (0.044: at its kink the chord goes
-    0.74 → 0.58 → 0.42 c over stations 0.05 c apart, and their wake nodes sat 1.1 c apart in x 24 c behind the wing)
-    and BWB wing 0 (0.049: a centre body whose chord goes 2.57 → 2.44 → 2.30 c over stations 0.023 c apart). Cause: the
-    near field of a station is sized in local chords (fine zone, band), so the far nodes of neighbouring stations sit
-    at different distances; where the station gap is tiny the cells between them shear. Fix (construction):
-    `volume.span_smooth` moves the far part of each station's wall-normal distribution, and of its wake nodes in x,
-    toward the Gaussian average of the stations within about 0.25 c along the semi-span; the near part (to the end of
-    the fine zone and the band) is never moved. Each station moves by the largest fraction that keeps every growth
-    ratio of its far part under the limit (exact: the conditions are linear in the fraction), lowered so the fraction
-    changes by at most 1 per 0.5 c along the semi-span (neighbours move alike); one ramp length for every station,
-    the one with the largest smallest fraction. **The first version (22:00)** moved every station fully or none:
-    one station that could not take it stopped all, so the rule-set-2 screen refused BWB full-space wing 30 (0.028,
-    at a tip whose chord falls to 0.06 c, stations 0.00012 c apart). Measured (smallest scaled Jacobian, limit 0.05):
-    BWB full-space wings 0 · 3 · 30: before 0.049 · 0.044 · —; first version 0.049 · 0.083 · 0.028; now 0.061 ·
-    0.088 · 0.089. Tried and dropped: the mean of all stations as the target (it removes the trend but is far from
-    the small stations: 0.030–0.046 on wing 30); ramps chosen by the mean fraction (wing 3: 0.043). The screens of
-    section 17 of `volume_rules.md` were rerun with this version.
+110. **The far cells of very close stations are lined up along the semi-span (9 Nov 2026, 22:00; redone 22:55 and
+    23:55).** With 108 and 109 in, check 3 refused 2 of 12 full-space wings probed: BWB wing 3 (0.044: at its kink the
+    chord goes 0.74 → 0.58 → 0.42 c over stations 0.05 c apart, and their wake nodes sat 1.1 c apart in x 24 c behind
+    the wing) and BWB wing 0 (0.049: a centre body whose chord goes 2.57 → 2.44 → 2.30 c over stations 0.023 c apart).
+    Cause: the near field of a station is sized in local chords (fine zone, band), so the far nodes of neighbouring
+    stations sit at different distances; where the station gap is tiny the cells between them shear. Fix
+    (construction): `volume.span_smooth` moves the far part of each station's wall-normal distribution, and of its wake
+    nodes in x, toward the Gaussian average of the stations within about 0.25 c along the semi-span; the near part (to
+    the end of the fine zone and the band) is never moved. Each station moves by the largest fraction that keeps every
+    growth ratio of its far part under the limit (exact: the conditions are linear in the fraction), lowered so the
+    fraction changes by at most 1 per 0.5 c along the semi-span (neighbours move alike). One ramp for every station:
+    the one that leaves the smallest largest offset between neighbouring stations per unit of their gap (what check 3
+    sees), of ramps 1 to 32 start distances long. Three versions, each found by a screen:
+    - **22:00** moved every station fully or none: one station that could not take it stopped all (BWB full-space
+      wing 30: 0.028, at a tip whose chord falls to 0.06 c, stations 0.00012 c apart).
+    - **22:55** per-station fractions, but the ramp was chosen by the largest smallest fraction, which favoured ramps
+      so long that nothing moved where it mattered: the full-space screen refused BWB corner2 wings 0 (0.041) and 6
+      (0.024), 300 of 302 passed.
+    - **23:55** the ramp chosen by the shear left. Ramps shorter than one start distance are out: they broke the
+      growth limit after the outer blend (1.032 on BWB full-space wing 3).
+    Measured (smallest scaled Jacobian, limit 0.05), BWB full-space 0 · 3 · 30 · 31, corner2 0 · 6: before 110
+    0.049 · 0.044 · — · — · — · —; 22:00 0.049 · 0.083 · 0.028 · — · — · —; 22:55 0.061 · 0.088 · 0.089 · 0.050 · 0.041 ·
+    0.024; 23:55 0.062 · 0.088 · 0.093 · 0.056 · 0.052 · **0.032 (still refused)**. Tried and dropped: the mean of all
+    stations as the target (0.030–0.046 on wing 30). **Not fixed: BWB corner2 wing 6** (its chord falls from 2.45 to
+    1.13 c within 0.14 c of the semi-span, its trailing edge moves 0.145 c forward per station 0.0137 c apart); a fix
+    would space the far wake by x for every station at once (a redesign, not built). The screens of section 17 of
+    `volume_rules.md` were rerun with the 23:55 version.
 111. **Angles of attack −5° to +10° for this mesh; the wake fan follows (Mike, 9 Nov 2026, 21:53 and 22:04: "I want to
     run from −5 to 10 AoA. You adjust the wake fan accordingly. If you think a margin is needed, let it be so").** The
     fan was −5° to +20° (decision 87), sized for post-stall, which decision 69 already gives to a separate study

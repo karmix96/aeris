@@ -84,6 +84,10 @@ def test_span_smooth_moves_only_the_far_parts():
         assert np.maximum(r, 1.0 / r).max() <= 1.27
     far = (D > 30.0).all(axis=1)
     assert np.abs(np.diff(out[far], axis=1)).max() < 0.7 * np.abs(np.diff(D[far], axis=1)).max()
+    # the ramp is chosen by what is left: the largest offset between neighbours per unit gap, over the far nodes
+    pair = (D[:, 1:] >= 3.0) & (D[:, :-1] >= 3.0)
+    before = (np.abs(np.diff(D, axis=1)) / np.diff(y)[None, :])[pair].max()
+    assert info["largest_offset_per_gap"] < before
     same, info0 = span_smooth(D, y, start, 1.0001)          # every line breaks this limit already: nothing is moved
     assert info0["fraction_mean"] == 0.0 and np.array_equal(same, D)
 

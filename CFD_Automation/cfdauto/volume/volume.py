@@ -100,7 +100,8 @@ def smoothstep(t: Array) -> Array:
 
 
 SPAN_SMOOTH_C = 0.25                      # decision 110: kernel width (mean chords) along the semi-span
-SPAN_RAMPS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0)   # ramp lengths tried, in units of each station's start distance
+SPAN_RAMPS = (1.0, 2.0, 4.0, 8.0, 16.0, 32.0)   # ramp lengths tried, in units of each station's start distance (a
+                                                # shorter one broke the growth limit after the outer blend: 1.032)
 SPAN_FRACTION_SLOPE_C = 0.5               # the moved fraction changes by at most 1 per 0.5 c along the semi-span
 
 
@@ -135,11 +136,13 @@ def span_smooth(D: Array, y: Array, start: Array, g_lim: float, origin: Array | 
     w = smoothstep((D - origin - start) / (r start)) and the fraction f_k: the largest that keeps every growth ratio of
     its far part (larger / smaller, from the last near cell on) <= g_lim (exact), then lowered so it changes by at
     most 1 per SPAN_FRACTION_SLOPE_C along the semi-span (neighbours move alike). One ramp length r for every station:
-    of SPAN_RAMPS, the one with the largest smallest fraction (then the largest mean f w over the far nodes).
+    of SPAN_RAMPS, the one that leaves the smallest largest offset between neighbouring stations per unit of their gap,
+    over the far nodes (the tangent of the shear: what check 3 sees). A first version chose the ramp with the largest
+    smallest fraction, which favoured ramps so long that nothing moved where it mattered (BWB corner2 6: 0.024).
     Why: the near part follows the local chord (fine zone and band in local chords), so where the chord changes fast
     along the semi-span (a tapered tip, a BWB centre body or kink) the far nodes of stations a hair apart were up to
     20 x their gap apart and the cells between them sheared below the quality limit (check 3, V6 rule set 2).
-    Returns (D moved, {"ramp", "fraction_min", "fraction_mean", "fractions"})."""
+    Returns (D moved, {"ramp", "fraction_min", "fraction_mean", "largest_offset_per_gap", "fractions"})."""
     n1, N = D.shape
     o = np.zeros(N) if origin is None else np.asarray(origin, float)
     W = np.exp(-0.5 * ((y[:, None] - y[None, :]) / sigma) ** 2) + np.exp(-0.5 * ((y[:, None] + y[None, :]) / sigma) ** 2)
@@ -148,18 +151,20 @@ def span_smooth(D: Array, y: Array, start: Array, g_lim: float, origin: Array | 
     T = o[None, :] + (T - T[0][None, :]) * ((D[-1] - o) / (T[-1] - T[0]))[None, :]
     first = np.array([max(int(np.searchsorted(D[:, k] - o[k], start[k])), 1) for k in range(N)])
     far = np.arange(n1)[:, None] >= first[None, :]
+    pair = far[:, 1:] & far[:, :-1]
+    gap = np.maximum(np.diff(y), 1e-300)
     best = None
     for r in SPAN_RAMPS:
         w = smoothstep((D - o[None, :] - start[None, :]) / (r * start[None, :]))
         fk = np.array([_largest_fraction(D[:, k], w[:, k], T[:, k] - D[:, k], first[k], g_lim) for k in range(N)])
         fk = np.min(fk[None, :] + np.abs(y[:, None] - y[None, :]) / SPAN_FRACTION_SLOPE_C, axis=1).clip(0.0, 1.0)
-        score = (round(float(fk.min()), 2), float((fk[None, :] * w)[far].mean()))
-        if best is None or score > best[0]:
-            best = (score, r, w, fk)
-    _, r, w, fk = best
-    C = D + fk[None, :] * w * (T - D)
+        C = D + fk[None, :] * w * (T - D)
+        shear = float((np.abs(np.diff(C, axis=1)) / gap[None, :])[pair].max()) if N > 1 and pair.any() else 0.0
+        if best is None or shear < best[0]:
+            best = (shear, r, C, fk)
+    shear, r, C, fk = best
     return C, {"ramp": float(r), "fraction_min": float(fk.min()), "fraction_mean": float(fk.mean()),
-               "fractions": [round(float(v), 4) for v in fk]}
+               "largest_offset_per_gap": shear, "fractions": [round(float(v), 4) for v in fk]}
 
 
 def wake_first_cells(sts: list[pl.Station], rl: VolumeRules) -> Array:

@@ -135,10 +135,12 @@ def row_of(vm, w, lev, re, seconds_surface) -> dict:
 
 
 def sample(sets, types, share: float, seed: int) -> set:
-    """A seeded share of every set and type (at least one wing each): the same wings on every run."""
+    """A seeded share of every set and type (at least one wing each): the same wings on every run, however the types
+    are split over runs (the seed uses the type's place in TYPES)."""
     out = set()
     for si, s in enumerate(sets):
-        for ti, t in enumerate(types):
+        for t in types:
+            ti = TYPES.index(t)
             n = sum(1 for tt, ss, _ in wings([s], [t]))
             if n:
                 rng = np.random.default_rng([seed, si, ti])

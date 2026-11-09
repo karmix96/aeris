@@ -117,10 +117,10 @@ def run_checks(vm) -> tuple[list[Check], list[str]]:
         per_block[name] = {"min_det": a, "min_sj": s, "folded": n}
         jmin, sjmin, bad = min(jmin, a), min(sjmin, s), bad + n
     vm.info["quality_by_block"] = per_block
-    # Reported, not judged (V4): Stage 2 exempts the cap's two nose-corner quads from its 0.05 limit (three corners on
-    # the smooth ring: the angle is 180 deg minus the ring's turning; Stage 2 checks.cap_quads). The CAP block sweeps
-    # them outboard as two columns of cells. Check 3 still judges every cell, as written in V0; this is what an
-    # exemption would change (a decision for Mike).
+    # Decision 101 (Mike, 9 Nov 2026): as Stage 2 does for the cap's two nose-corner quads (three corners on the smooth
+    # ring: the angle is 180 deg minus the ring's turning, so it falls with the level; Stage 2 checks.cap_quads), check 3
+    # judges every cell but the CAP block's two columns over those quads; the columns are reported on their own, and a
+    # folded cell there still refuses the mesh (check 2 judges every cell).
     qcap = cell_quality_map(B["CAP"])
     corner = float(min(qcap[0, 0].min(), qcap[0, -1].min()))
     qcap[0, 0], qcap[0, -1] = np.inf, np.inf
@@ -130,9 +130,10 @@ def run_checks(vm) -> tuple[list[Check], list[str]]:
     out.append(Check(2, "no_folded_cell", bad == 0, float(bad),
                      "0 cells with a corner Jacobian <= 0 (every corner of every cell)",
                      f"smallest corner determinant {jmin:.3e}"))
-    out.append(Check(3, "cell_quality", sjmin >= ch["min_scaled_jacobian"], sjmin,
-                     f">= {ch['min_scaled_jacobian']} (smallest corner scaled Jacobian of every cell)",
-                     f"the cap's two nose-corner columns {corner:.4f}; every other cell >= {rest:.4f}"))
+    out.append(Check(3, "cell_quality", rest >= ch["min_scaled_jacobian"], rest,
+                     f">= {ch['min_scaled_jacobian']} (smallest corner scaled Jacobian of every cell but the cap's two "
+                     f"nose-corner columns, reported on their own: decision 101)",
+                     f"the cap's two nose-corner columns {corner:.4f}; every cell {sjmin:.4f}"))
 
     # 4. wall orthogonality in the station plane (the first line against the ring's bisector normal)
     from .march import line_normals

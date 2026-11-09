@@ -68,7 +68,8 @@ plane:                            # how the grid in one station plane is built (
 
 checks:                           # the Stage 3 checks (decisions/volume_rules.md, V0); written before any mesh is judged
   wall_on_surface_c: 1.0e-12      # 1: every wall node = the Stage 2 node
-  min_scaled_jacobian: 0.05       # 3: smallest corner scaled Jacobian of every cell (Stage 2's surface limit)
+  min_scaled_jacobian: 0.05       # 3: smallest corner scaled Jacobian of every cell (Stage 2's surface limit) but the
+                                  # cap's two nose-corner columns, exempt as in Stage 2 (decision 101, Mike, 9 Nov 2026)
   wall_angle_deg: 5.0             # 4: in the station plane, the first line within 5 deg of the wall normal
   s0_tol: 0.01                    # 5, 11: first cells within 1 %
   growth_tol: 0.01                # 6, 11, 12: growth within 1 % of its limit

@@ -11,7 +11,9 @@ Branch `stage3-volume-mesh` (from `stage2-surface-mesh`: Stage 2 is not merged i
 - In each station plane (y = const) a C around the ring and the wake, out to the far field. The planes are stacked
   root to tip; past the tip the tip plane is swept outboard, and the tip cap with it.
 - Every check and its limit is in this file and in `configs/volume.yaml`. They were written before any mesh was
-  judged and have not changed since.
+  judged and their limits have not changed (check 10 got a 1e−9 c round-off tolerance in V2; check 3 got Stage 2's
+  exemption for the cap's two nose-corner columns in V4, decided by Mike, decision 101). The
+  construction changed ten times, each after a check failed (section 7). Results: sections 8–13.
 
 ## 1. The plan
 
@@ -105,14 +107,14 @@ Written before any mesh was judged (`configs/volume.yaml`, `checks:`). A mesh re
 | --- | --- | --- | --- | --- | --- |
 | 1 | Wall on the surface | every wall node (wing, base, cap) against the Stage 2 node | ≤ 1e−12 c | yes | decision 82: the surface is frozen |
 | 2 | No folded cell | the Jacobian at every corner of every cell | > 0 | yes | a folded cell stops the solver or gives nonsense |
-| 3 | Cell quality | the smallest corner scaled Jacobian of every cell | ≥ 0.05 | yes | Stage 2's limit for the surface quads; the cap's cells inherit it |
+| 3 | Cell quality | the smallest corner scaled Jacobian of every cell; since 9 Nov (decision 101, Mike) but the CAP block's two columns over the cap's two nose-corner quads, reported on their own as Stage 2 does | ≥ 0.05 | yes | Stage 2's limit for the surface quads; the cap's cells inherit it, and its exemption |
 | 4 | Wall orthogonality | in the station plane, the angle between the first grid line and the ring normal (bisector), every wall node but the two trailing-edge corners | ≤ 5° | yes | the boundary layer needs lines square to the wall; the 3-D angle is reported (decision 89) |
 | 5 | First cell | the first cell of every wing and base line against the station's s0 | within 1 % | yes | law 13; y⁺ ≤ 1 is a hard minimum |
 | 6 | Growth | along every wall-normal line: inside the fine zone against the wall growth, beyond against the far growth | ≤ limit × 1.01 | yes | DPW; Annex G |
 | 7 | Cells across the boundary layer | cells between the wall and δ (turbulent flat plate at the trailing edge, local Re) | ≥ 30 at VC (39, 50.7, 65.9) | yes | Annex G; decision 86 |
 | 8 | Interfaces | every matched pair of faces, node to node; no open face | ≤ 1e−10 c | yes | a gap is a hole in the domain |
 | 9 | Symmetry plane | y on every root face | \|y\| ≤ 1e−12 c | yes | ADflow and SU2 need a true plane |
-| 10 | Far field | the distance from every far-field node to the nearest wall node | ≥ 80 c | yes | law 15 |
+| 10 | Far field | the distance from every far-field node to the nearest wall node | ≥ 80 c (round-off 1e−9 c, V2) | yes | law 15 |
 | 11 | Wake | the streamwise growth along the wake lines (wall growth inside the band length, far growth beyond); every cell inside the band against the band cell | ≤ limit × 1.01 | yes | laws 17, 18 |
 | 12 | Outboard | the first gap past the tip against the wing's tip gap; the growth (1.15 to 2 c, the far growth beyond) | 1 %; × 1.01 | yes | law 12 |
 | 13 | Family ratios | between neighbouring levels: s0 per station, the wall growth limit, the band cell, the first outboard gap, the first wake cell, the cell at 1 local chord from the root's wall and behind the root's trailing edge | 1.3 within 3 % | yes (V4) | law 23; exceptions named: the base cells 8 / 10 / 14 / 18 (Stage 2) and the whole-number counts (layers, wake nodes, outboard stations) |
@@ -304,7 +306,8 @@ resolve its core. Whether that matters is a solver question (V7, then the mesh s
 
 `scripts/family_study.py` (per wing: the Stage 2 family, the volume built at the levels that fit here, counted at the
 rest; check 13 on the built ones), `scripts/v4_study.py` → `data/studies/v4.json`, `docs/page/v4_family.png`.
-VC and C built on all 20; M built on one wing per type; F built on BWB reference wing 0; every level counted.
+VC and C built on all 20; M built on one wing per type; F built on BWB and flying-wing reference wing 0; every level
+counted.
 
 ![V4: check 13 and the cells per level](../docs/page/v4_family.png)
 
@@ -328,8 +331,8 @@ reference wings (VC and C built, M and F counted), against the 16 GB and 52 GB d
 | --- | --- | --- | --- |
 | VC | 4.55 M (4.13–5.12) | 45 GiB | 20 of 20 passed |
 | C | 9.73 M (8.85–10.97) | 94 GiB | 20 of 20 passed |
-| M | 20.79 M (18.99–23.48), counted | 198 GiB | cranked 0, tapered 0 passed; BWB 0, flying wing 0 refused (check 3) |
-| F | 45.35 M (41.27–50.71), counted | 431 GiB | BWB 0 refused (check 3) |
+| M | 20.79 M (18.99–23.48), counted | 198 GiB | 4 of 4 pass with decision 101 (BWB 0, flying wing 0 refused by check 3 before it) |
+| F | 45.35 M (41.27–50.71), counted | 431 GiB | BWB 0, flying wing 0 pass with decision 101 (refused before it) |
 
 The counter (`count_volume`) against the built meshes: within 0.6 % at M (cranked 0 exact, tapered 0 −0.6 %). Building
 is cheap: M 46–81 s and 1.1 GiB, F 110 s and 2.2 GiB peak. The solver is the cost.
@@ -343,12 +346,18 @@ quads, and the outboard planes repeat the tip ring. Every other cell of these me
 0.0795 at F; flying wing 0: 0.0855, 0.0871), and every other check passes (`data/studies/v4_cap_split.json`). The
 cranked and tapered caps pass (their corner angles are larger).
 
+**Decided (Mike, 9 Nov 2026; decision 101): exempt the two columns, as Stage 2 does.** Check 3 now judges every cell but
+these two columns, which are reported on their own; a folded cell there still refuses the mesh (check 2). Rebuilt with
+it: BWB 0 at M and F and flying wing 0 at M and F pass (every other cell ≥ 0.077, every other check passed before too).
+The VC and C screens are unchanged by it (the two columns are ≥ 0.053 there).
+
 **Conclusion.** The family is a true 1.3-scaled copy: check 13 passes on 20 of 20 families at VC/C (worst 2.3 %:
-BWB 2, the cell 1 local chord from the wall, 1.270) and on BWB 0 from VC to F. Two honest negatives: (1) under check 3
-as written, the BWB and flying-wing meshes are refused at M and F, by the two cap columns that Stage 2 exempts; the fix
-is a decision for Mike (carry Stage 2's exemption into check 3, or change the frozen cap); (2) the cost: F is 45 M
-cells (median; 51 M largest), about 4–5 × the 9–11 M asked, and M is about 21 M. Only VC and C were built on every
-reference wing here; M on four, F on one (time on 2 cores, not memory).
+BWB 2, the cell 1 local chord from the wall, 1.270) and on BWB 0 from VC to F; with decision 101, every mesh built at
+M and F passes (BWB 0, flying wing 0, cranked 0, tapered 0 at M; BWB 0 and flying wing 0 at F). Honest negatives: (1)
+the cap's two nose-corner columns stay below 0.05 at M and F (0.045, 0.037): exempt, not fixed, as in Stage 2; (2) the
+cost: F is 45 M cells (median; 51 M largest), about 4–5 × the 9–11 M asked, and M is about 21 M (decision 102: Mike to
+think it over). Only VC and C were built on every reference wing here; M on four, F on two (time on 2 cores, not
+memory).
 
 ## 11. V5: the solver files and check 15
 

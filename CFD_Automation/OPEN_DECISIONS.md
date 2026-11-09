@@ -522,11 +522,18 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     point = the quarter point of the mean aerodynamic chord), the ADflow run with S8's safeguards (liftIndex 3 read
     back, totalrfinal / totalr0), the SU2 configs (SU2's own Langtry-Menter tutorial numerics, as S8), the acceptance
     rule (converged and settled), the runbook. Where it runs: Mike (ask item 3).
-101. **The cap's two nose-corner columns refuse BWB and flying-wing meshes at M and F (V4, 9 Nov 2026). To decide (Mike).**
-    Check 3 (every cell ≥ 0.05, written in V0) refuses BWB 0 at M (0.0447) and F (0.0367), flying wing 0 at M (0.0458) and
-    F (0.0380): the CAP block's two columns over the cap's two nose-corner quads, which Stage 2 exempts from the same
-    limit (three corners on the smooth ring; the angle is 180° minus the ring's turning, so it falls with the level).
-    Every other cell ≥ 0.077; every other check passes. Measured and reported on every mesh
-    (`cap_nose_corner_min_sj`, `min_sj_but_cap_nose_corners`); check 3 unchanged until Mike decides: carry Stage 2's
-    exemption into check 3 (report the two columns on their own, refuse only if folded), or change the frozen cap.
-
+101. **The cap's two nose-corner columns: exempt from check 3, as in Stage 2 (Mike, 9 Nov 2026).** Check 3 (every cell
+    ≥ 0.05, written in V0) refused BWB 0 at M (0.0447) and F (0.0367) and flying wing 0 at M (0.0458) and F (0.0380): the
+    CAP block's two columns over the cap's two nose-corner quads, which Stage 2 exempts from the same limit (three
+    corners on the smooth ring; the angle is 180° minus the ring's turning, so it falls with the level). Every other
+    cell ≥ 0.077; every other check passed. Now check 3 judges every cell but these two columns; they are reported on
+    their own (`cap_nose_corner_min_sj`), and a folded cell there still refuses the mesh (check 2). The 0.05 limit is
+    unchanged.
+102. **The cost: needs more thought (Mike, 9 Nov 2026).** F is 45.4 M cells (median; 41.3–50.7 M) on the 20 reference
+    wings at Re 3 × 10⁵, against 9–11 M asked; M about 21 M. Counted options, F median (VC median): outboard growth
+    1.25 38.3 M (3.88 M); 1.30 36.4 M (3.67 M); 30 boundary-layer cells at M 40.7 M (4.12 M); both 34.3 M (3.50 M); the
+    band off 32.3 M (3.28 M); all three 24.5 M (2.52 M), and then M about 11 M (F ÷ 2.2, not counted)
+    (`data/studies/cost_options.json`). No rule changed.
+103. **Where the solves run: needs further thinking (Mike, 9 Nov 2026).** V7 stays written, not run. The V7 mesh (4.93 M
+    cells, about 48.2 GiB for ADflow) is at the edge of the 52 GB desktop (about 5.0 M cells, Stage 2's figure).
+104. **The hold-outs for the volume mesh: not yet (Mike, 9 Nov 2026).** V8 waits; they stay sealed for the volume mesh.

@@ -365,7 +365,8 @@ BWB and cranked have 17 variables; flying wing and tapered have 13.
 ### Hold-out sets: 10 + 5 wings per type, opened once at the end
 - **In practice:** `holdout_focus`: 10 wings in the focus space; `holdout_full`: 5 in the full space.
   Drawn now and locked away. Nobody builds or looks at them until every rule is final. Then they are
-  run once, and the result is the honest test of "it works on wings it has never seen".
+  run once, and the result is the honest test of "it works on wings it has never seen". 
+  On 9 Nov 2026 (owner, Stage 2 decision 83) they were opened once for the surface mesh only, with the surface rules frozen (Stage 2 Study 14). They stay closed for tuning the volume mesh and the solver, and run once more when those rules are final.
 - **Why:** if we look at the test wings while tuning, we tune to them without meaning to, and the
   test stops being a test.
 - **Source:** Dwork et al. 2015 (Science), 2017 (CACM).

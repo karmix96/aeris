@@ -272,3 +272,30 @@ noses, up to 40° off the surface normal in 3-D (y⁺ only falls); (3) the spaci
 reaches 537 at Re 4 × 10⁶, because the base is a wall at y⁺ 1 next to the wing's last chordwise cell; (4) the
 tightest checks are the growth (0.996 × its limit at the most) and the band cells (1.0009 × the band cell at the most;
 both limits allow 1.01).
+
+## 9. V3: the cap, the outboard blocks and the tip vortex (the same 80 meshes)
+
+![V3: the cap, the vortex path and the outboard share](../docs/page/v3_tip.png)
+
+*What it shows.* (a) the worst cell of the CAP block per mesh; (b) the cells on the tip-vortex path at 4°, 0.5, 1 and 2
+local chords behind the tip trailing edge (median, and the range over the 80 meshes), across the wake (z) and along it;
+(c) the share of the cells in the outboard blocks.
+
+| What | Measured (80 meshes) | Limit |
+| --- | --- | --- |
+| Cap block, smallest scaled Jacobian | 0.0617–0.0971: the worst part of all 80 meshes | ≥ 0.05 |
+| Outboard blocks · inboard blocks, smallest scaled Jacobian | 0.77–0.97 · 0.18–0.88 | ≥ 0.05 |
+| Outboard: first gap against the tip gap; growth | exact; within its limits (check 12 on all 80) | 1 %; × 1.01 |
+| Share of the cells outboard | 51–56 % (median 54 %) | |
+| Vortex path at 4°, across / along, 0.5 c | 0.0037 / 0.082 c (median) | |
+| ... 1 c | 0.0110 / 0.118 c | |
+| ... 2 c | 0.0167 / 0.243 c | |
+| ... at 20°, 2 c (the band's edge) | 0.080 (largest 0.138) / 0.243 c | |
+| Station gap next to the tip (largest of the 30 either side) | 0.0019–0.0709 c | |
+
+**Conclusion.** The cap and the outboard blocks pass on all 80. The cap's cells are the worst cells of every mesh
+(0.062 at the lowest): they are the Stage 2 cap quads swept outboard, so a better cap belongs to the frozen surface. The
+outboard blocks are good (≥ 0.77) but hold 51–56 % of the cells: in a matched mesh every outboard station carries the
+whole plane. The tip-vortex path is fine across the wake (0.004–0.017 c at 4°) and coarse along it (0.08–0.24 c, the
+band allows 4 × the cross cell); at 20° and 2 c it sits at the band's edge (0.08 c). Enough to carry the vortex, not to
+resolve its core. Whether that matters is a solver question (V7, then the mesh study of Stage 4).

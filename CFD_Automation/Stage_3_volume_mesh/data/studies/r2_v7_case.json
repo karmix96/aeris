@@ -1,7 +1,7 @@
 {
  "mesh": "volume_VC_e32d995a_re3e5",
  "mesh_folder": "/home/claude/karmix96/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/volume_VC_e32d995a_re3e5",
- "mesh_node_hash": "ad948900f443d750f4db8833e8290f5573fb84513f59fdba2c610e5ad61dfb4c",
+ "mesh_node_hash": "2bcddabb14fa9379295245b7af5af19ae9fb47a474909be6d501b7e65d5ad1be",
  "wing": "bwb reference 0",
  "level": "VC",
  "cells": 2324016,

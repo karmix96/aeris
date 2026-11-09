@@ -47,10 +47,12 @@ def dist(v) -> dict:
 def main() -> None:
     ref = [r for r in rows_of(("ref_VC_a", "ref_VC_b")) if r["re"] == 3e5]
     rows = ref + rows_of(sorted({q.stem[len(f"screen_{PREFIX}"):] for q in STUDIES.glob(f"screen_{PREFIX}s_*.jsonl")}))
-    fs = rows_of(("F_sample",)) + [r for r in rows_of(("F_ref",))]
+    samples = {L: rows_of(sorted({q.stem[len(f"screen_{PREFIX}"):]
+                                  for q in STUDIES.glob(f"screen_{PREFIX}{L}_sample*.jsonl")})) for L in ("M", "F")}
     s = {"meshes": len(rows), "outcomes": dict(Counter(r["outcome"] for r in rows)),
          "state": ("stopped on 9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)" if not PREFIX
-                   else "rule set 2 as it stands (decisions 107-111), screened on 9 Nov 2026 after 22:40")}
+                   else "rule set 2 as it stands (decisions 107-111; 110 in its 23:55 version), screened on 9-10 Nov 2026 "
+                        "from 23:59")}
     if not PREFIX:
         s["stopped"] = "9 Nov 2026, 20:09, by decision 105 (the cells must drop: the rules will change)"
     # decision 101 came while the screen ran (it judged every cell): a mesh refused only by check 3, whose cells but the
@@ -88,8 +90,11 @@ def main() -> None:
                          "below_0p075": sum(1 for x in q if x[0] < 0.075),
                          "lowest": [{"min_sj": x[0], "wing": f"{x[1]} {x[2]} {x[3]}"} for x in q[:10]]}
     ramps = [r.get("span_ramp") for r in ok if r.get("span_ramp")]
-    if ramps:
-        s["span_ramp"] = {"plane": dict(Counter(str(x["plane"]) for x in ramps)), "wake": dict(Counter(str(x["wake"]) for x in ramps))}
+    if ramps:                                     # decision 110: which ramp each mesh used, and how far it could move
+        s["span_ramp"] = {part: {"ramp": {str(k): v for k, v in sorted(Counter(x[part]["ramp"] for x in ramps).items())},
+                                 "fraction_min": dist([x[part]["fraction_min"] for x in ramps]),
+                                 "largest_offset_per_gap": dist([x[part].get("largest_offset_per_gap") for x in ramps])}
+                          for part in ("plane", "wake")}
     s["fits_16GB"] = sum(r["fits"]["desktop_16GB"] for r in ok)
     s["fits_52GB"] = sum(r["fits"]["desktop_52GB"] for r in ok)
     for k, f in {"cell_quality": lambda r: r["checks"]["cell_quality"]["value"],
@@ -104,25 +109,27 @@ def main() -> None:
                  "outboard_share": lambda r: r["parts"]["outboard"] / r["cells"],
                  "seconds": lambda r: r["seconds"]}.items():
         s[k] = dist(pick(f))
-    # F: counted on the sample; the ratio F / VC on the same wings carries the rest
+    # M and F: counted on the sample; the ratio to VC on the same wings carries the rest
     vc = {(r["type"], r["set"], r["index"]): r["cells"] for r in ok}
-    pairs = [(vc[(r["type"], r["set"], r["index"])], r["cells"]) for r in fs
-             if r.get("outcome") == "counted" and (r["type"], r["set"], r["index"]) in vc]
-    for t in ("ref_a", "ref_b"):                              # the reference wings: F counted in the family study (V4)
-        p = STUDIES / f"family_{PREFIX}{t}.jsonl"
-        if p.exists():
-            for r in map(json.loads, p.read_text().splitlines()):
-                pairs.append((r["levels"]["VC"]["cells"], r["levels"]["F"]["cells"]))
-    if pairs:
+    allvc = np.array(list(vc.values()), float)
+    for L, rs in samples.items():
+        pairs = [(vc[(r["type"], r["set"], r["index"])], r["cells"]) for r in rs
+                 if r.get("outcome") == "counted" and (r["type"], r["set"], r["index"]) in vc]
+        for t in ("ref_a", "ref_b"):                          # the reference wings: M and F counted in the family study (V4)
+            p = STUDIES / f"family_{PREFIX}{t}.jsonl"
+            if p.exists():
+                for r in map(json.loads, p.read_text().splitlines()):
+                    pairs.append((r["levels"]["VC"]["cells"], r["levels"][L]["cells"]))
+        if not pairs:
+            continue
         a = np.array(pairs, float)
         ratio = a[:, 1] / a[:, 0]
-        s["F_sample"] = {"wings": len(pairs), "note": "a seeded 10 % of each set and type, plus the 20 reference wings (V4)",
-                         "cells": dist(a[:, 1]), "F_over_VC": dist(ratio),
-                         "ram_gib": dist(1.51 + 9.46 * a[:, 1] / 1e6),
-                         "ram_gib_ank_only": dist(2.69 + 7.23 * a[:, 1] / 1e6)}
-        allvc = np.array(list(vc.values()), float)
-        s["F_estimated_all"] = {"wings": int(allvc.size), "cells": dist(allvc * np.median(ratio)),
-                                "note": "VC cells x the median F/VC of the counted sample"}
+        s[f"{L}_sample"] = {"wings": len(pairs), "note": "a seeded 10 % of each set and type, plus the 20 reference wings (V4)",
+                            "cells": dist(a[:, 1]), f"{L}_over_VC": dist(ratio),
+                            "ram_gib": dist(1.51 + 9.46 * a[:, 1] / 1e6),
+                            "ram_gib_ank_only": dist(2.69 + 7.23 * a[:, 1] / 1e6)}
+        s[f"{L}_estimated_all"] = {"wings": int(allvc.size), "cells": dist(allvc * np.median(ratio)),
+                                   "note": f"VC cells x the median {L}/VC of the counted sample"}
     (STUDIES / f"{PREFIX}v6.json").write_text(json.dumps(s, indent=1))
 
     fig, ax = S.plt.subplots(1, 3, figsize=(13.2, 4.0))

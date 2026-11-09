@@ -1,0 +1,523 @@
+{
+ "meshes": 722,
+ "outcomes": {
+  "passed": 721,
+  "refused": 1
+ },
+ "state": "rule set 2 as it stands (decisions 107-111; 110 in its 23:55 version), screened on 9-10 Nov 2026 from 23:59",
+ "passes_with_decision_101": [],
+ "outcomes_with_decision_101": {
+  "passed": 721,
+  "refused": 1
+ },
+ "screened_of": {
+  "reference": {
+   "bwb": [
+    5,
+    5
+   ],
+   "flying_wing": [
+    5,
+    5
+   ],
+   "cranked": [
+    5,
+    5
+   ],
+   "tapered": [
+    5,
+    5
+   ]
+  },
+  "training_focus": {
+   "bwb": [
+    100,
+    100
+   ],
+   "flying_wing": [
+    100,
+    100
+   ],
+   "cranked": [
+    100,
+    100
+   ],
+   "tapered": [
+    100,
+    100
+   ]
+  },
+  "training_full": {
+   "bwb": [
+    40,
+    40
+   ],
+   "flying_wing": [
+    40,
+    40
+   ],
+   "cranked": [
+    40,
+    40
+   ],
+   "tapered": [
+    40,
+    40
+   ]
+  },
+  "corner1": {
+   "bwb": [
+    32,
+    32
+   ],
+   "flying_wing": [
+    24,
+    24
+   ],
+   "cranked": [
+    32,
+    32
+   ],
+   "tapered": [
+    24,
+    24
+   ]
+  },
+  "corner2": {
+   "bwb": [
+    8,
+    8
+   ],
+   "flying_wing": [
+    7,
+    7
+   ],
+   "cranked": [
+    8,
+    8
+   ],
+   "tapered": [
+    7,
+    7
+   ]
+  }
+ },
+ "by_set": {
+  "reference": {
+   "bwb": {
+    "passed": 5
+   },
+   "flying_wing": {
+    "passed": 5
+   },
+   "cranked": {
+    "passed": 5
+   },
+   "tapered": {
+    "passed": 5
+   }
+  },
+  "training_focus": {
+   "bwb": {
+    "passed": 100
+   },
+   "flying_wing": {
+    "passed": 100
+   },
+   "cranked": {
+    "passed": 100
+   },
+   "tapered": {
+    "passed": 100
+   }
+  },
+  "training_full": {
+   "bwb": {
+    "passed": 40
+   },
+   "flying_wing": {
+    "passed": 40
+   },
+   "cranked": {
+    "passed": 40
+   },
+   "tapered": {
+    "passed": 40
+   }
+  },
+  "corner1": {
+   "bwb": {
+    "passed": 32
+   },
+   "flying_wing": {
+    "passed": 24
+   },
+   "cranked": {
+    "passed": 32
+   },
+   "tapered": {
+    "passed": 24
+   }
+  },
+  "corner2": {
+   "bwb": {
+    "passed": 7,
+    "refused": 1
+   },
+   "flying_wing": {
+    "passed": 7
+   },
+   "cranked": {
+    "passed": 8
+   },
+   "tapered": {
+    "passed": 7
+   }
+  }
+ },
+ "failed_checks": {
+  "cell_quality": 1
+ },
+ "refused": [
+  {
+   "type": "bwb",
+   "set": "corner2",
+   "index": 6,
+   "failed": [
+    "cell_quality"
+   ],
+   "values": {
+    "cell_quality": 0.03174088456401735
+   }
+  }
+ ],
+ "crashed": [],
+ "review": {},
+ "cells": {
+  "n": 722,
+  "min": 1754576.0,
+  "median": 2104280.0,
+  "p95": 2482225.5999999996,
+  "max": 2948384.0
+ },
+ "cells_by_type": {
+  "bwb": {
+   "n": 185,
+   "min": 2157654.0,
+   "median": 2335884.0,
+   "p95": 2582304.0,
+   "max": 2948384.0
+  },
+  "flying_wing": {
+   "n": 176,
+   "min": 1840328.0,
+   "median": 2084012.0,
+   "p95": 2254464.0,
+   "max": 2392152.0
+  },
+  "cranked": {
+   "n": 185,
+   "min": 1797464.0,
+   "median": 2018360.0,
+   "p95": 2303025.5999999996,
+   "max": 2601790.0
+  },
+  "tapered": {
+   "n": 176,
+   "min": 1754576.0,
+   "median": 2015324.0,
+   "p95": 2238006.0,
+   "max": 2461360.0
+  }
+ },
+ "ram_gib": {
+  "n": 722,
+  "min": 18.108288960000003,
+  "median": 21.416488800000003,
+  "p95": 24.991854176,
+  "max": 29.401712640000007
+ },
+ "ram_gib_ank_only": {
+  "n": 722,
+  "min": 15.37558448,
+  "median": 17.9039444,
+  "p95": 20.636491088,
+  "max": 24.006816320000002
+ },
+ "thin_margins": {
+  "below_0p05": 1,
+  "below_0p06": 3,
+  "below_0p075": 5,
+  "lowest": [
+   {
+    "min_sj": 0.03174088456401735,
+    "wing": "bwb corner2 6"
+   },
+   {
+    "min_sj": 0.05208091286156282,
+    "wing": "bwb corner2 0"
+   },
+   {
+    "min_sj": 0.056039969661572826,
+    "wing": "bwb training_full 31"
+   },
+   {
+    "min_sj": 0.062168001665157305,
+    "wing": "bwb training_full 0"
+   },
+   {
+    "min_sj": 0.06529075206683607,
+    "wing": "tapered corner2 4"
+   },
+   {
+    "min_sj": 0.08280326374818106,
+    "wing": "cranked corner2 6"
+   },
+   {
+    "min_sj": 0.08763772292360429,
+    "wing": "bwb training_full 3"
+   },
+   {
+    "min_sj": 0.0880162054453664,
+    "wing": "flying_wing training_full 6"
+   },
+   {
+    "min_sj": 0.08858117184001629,
+    "wing": "flying_wing training_full 12"
+   },
+   {
+    "min_sj": 0.08993546374821508,
+    "wing": "tapered training_full 34"
+   }
+  ]
+ },
+ "span_ramp": {
+  "plane": {
+   "ramp": {
+    "1.0": 416,
+    "2.0": 36,
+    "4.0": 56,
+    "8.0": 19,
+    "16.0": 48,
+    "32.0": 147
+   },
+   "fraction_min": {
+    "n": 722,
+    "min": 0.4658293582345122,
+    "median": 0.999,
+    "p95": 0.999,
+    "max": 0.999
+   },
+   "largest_offset_per_gap": {
+    "n": 722,
+    "min": 0.030597752566957164,
+    "median": 0.23096927760164188,
+    "p95": 4.106696759458651,
+    "max": 10.28695517898874
+   }
+  },
+  "wake": {
+   "ramp": {
+    "1.0": 133,
+    "2.0": 46,
+    "4.0": 36,
+    "8.0": 17,
+    "16.0": 14,
+    "32.0": 476
+   },
+   "fraction_min": {
+    "n": 722,
+    "min": 0.24816706289791332,
+    "median": 0.999,
+    "p95": 0.999,
+    "max": 0.999
+   },
+   "largest_offset_per_gap": {
+    "n": 722,
+    "min": 0.03370812550436337,
+    "median": 0.9986280701331038,
+    "p95": 6.959193636333454,
+    "max": 30.55663761658241
+   }
+  }
+ },
+ "fits_16GB": 0,
+ "fits_52GB": 722,
+ "cell_quality": {
+  "n": 722,
+  "min": 0.03174088456401735,
+  "median": 0.10843262095100252,
+  "p95": 0.34531135038034894,
+  "max": 0.3975020106500337
+ },
+ "growth_over_limit": {
+  "n": 722,
+  "min": 0.9891447174482755,
+  "median": 0.992590373040022,
+  "p95": 0.9956770974968981,
+  "max": 1.0015319414516994
+ },
+ "bl_cells_min": {
+  "n": 722,
+  "min": 17.947222937195775,
+  "median": 19.939327983942974,
+  "p95": 21.328062606500705,
+  "max": 21.492712921115565
+ },
+ "wall_angle_in_plane_deg": {
+  "n": 722,
+  "min": 0.00034010853073776926,
+  "median": 0.002125729500318107,
+  "p95": 0.03668020560205021,
+  "max": 0.09260576029093504
+ },
+ "wall_angle_3d_max_deg": {
+  "n": 722,
+  "min": 2.0303819848621623,
+  "median": 21.453666527404394,
+  "p95": 54.05987521793252,
+  "max": 74.20837017049799
+ },
+ "cap_min_sj": {
+  "n": 722,
+  "min": 0.029587237525059,
+  "median": 0.06215457835440018,
+  "p95": 0.09709006803822813,
+  "max": 0.09710081726954758
+ },
+ "inboard_min_sj": {
+  "n": 722,
+  "min": 0.03174088456401735,
+  "median": 0.6528151045669169,
+  "p95": 0.8664050002985993,
+  "max": 0.9481276049912253
+ },
+ "outboard_min_sj": {
+  "n": 722,
+  "min": 0.5917953713745282,
+  "median": 0.9323200506517261,
+  "p95": 0.9684329750861732,
+  "max": 0.9707850960145947
+ },
+ "base_te_cells_min_sj": {
+  "n": 722,
+  "min": 0.08915656733624547,
+  "median": 0.9565432349755453,
+  "p95": 0.9844633533715968,
+  "max": 0.9970766113806113
+ },
+ "wake_over_limit": {
+  "n": 722,
+  "min": 0.9892440444543409,
+  "median": 0.9937312368291302,
+  "p95": 0.9965583111167139,
+  "max": 1.0077304694413007
+ },
+ "rung": {
+  "n": 722,
+  "min": 0.0,
+  "median": 0.0,
+  "p95": 0.0,
+  "max": 0.0
+ },
+ "outboard_share": {
+  "n": 722,
+  "min": 0.3608961522644026,
+  "median": 0.4281763056870917,
+  "p95": 0.44802580433322214,
+  "max": 0.47473489389935863
+ },
+ "seconds": {
+  "n": 722,
+  "min": 4.34,
+  "median": 7.25,
+  "p95": 8.889,
+  "max": 12.73
+ },
+ "M_sample": {
+  "wings": 94,
+  "note": "a seeded 10 % of each set and type, plus the 20 reference wings (V4)",
+  "cells": {
+   "n": 94,
+   "min": 8190346.0,
+   "median": 9587126.0,
+   "p95": 11729228.0,
+   "max": 12815558.0
+  },
+  "M_over_VC": {
+   "n": 94,
+   "min": 4.472971504715047,
+   "median": 4.55192389051428,
+   "p95": 4.600424248861809,
+   "max": 4.645590891946083
+  },
+  "ram_gib": {
+   "n": 94,
+   "min": 78.99067316000001,
+   "median": 92.20421196000001,
+   "p95": 112.46849688000002,
+   "max": 122.74517868000001
+  },
+  "ram_gib_ank_only": {
+   "n": 94,
+   "min": 61.90620158,
+   "median": 72.00492098000001,
+   "p95": 87.49231843999999,
+   "max": 95.34648434
+  }
+ },
+ "M_estimated_all": {
+  "wings": 722,
+  "cells": {
+   "n": 722,
+   "min": 7986696.412122983,
+   "median": 9578522.404331388,
+   "p95": 11298902.01028614,
+   "max": 13420819.568010055
+  },
+  "note": "VC cells x the median M/VC of the counted sample"
+ },
+ "F_sample": {
+  "wings": 94,
+  "note": "a seeded 10 % of each set and type, plus the 20 reference wings (V4)",
+  "cells": {
+   "n": 94,
+   "min": 17673552.0,
+   "median": 20744828.0,
+   "p95": 25472042.0,
+   "max": 27825880.0
+  },
+  "F_over_VC": {
+   "n": 94,
+   "min": 9.669533728450926,
+   "median": 9.872550433727511,
+   "p95": 10.001489401065799,
+   "max": 10.054279078077542
+  },
+  "ram_gib": {
+   "n": 94,
+   "min": 168.70180192,
+   "median": 197.75607288,
+   "p95": 242.47551732000002,
+   "max": 264.7428248
+  },
+  "ram_gib_ank_only": {
+   "n": 94,
+   "min": 130.46978096,
+   "median": 152.67510644,
+   "p95": 186.85286366,
+   "max": 203.87111240000002
+  }
+ },
+ "F_estimated_all": {
+  "wings": 722,
+  "cells": {
+   "n": 722,
+   "min": 17322140.04980788,
+   "median": 20774610.426684126,
+   "p95": 24505897.42388953,
+   "max": 29108069.737995256
+  },
+  "note": "VC cells x the median F/VC of the counted sample"
+ }
+}

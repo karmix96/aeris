@@ -1,7 +1,8 @@
 # Stage 3 — volume mesh: the plan, the rules and the checks (V0, 9 Nov 2026)
 
 Branch `stage3-volume-mesh` (from `stage2-surface-mesh`: Stage 2 is not merged into main yet). Code:
-`CFD_Automation/cfdauto/volume/`. Rules: `configs/volume.yaml`. Decisions 84–93 in `CFD_Automation/OPEN_DECISIONS.md`.
+`CFD_Automation/cfdauto/volume/`. Rules: `configs/volume.yaml` (rule set 2; rule set 1 in `configs/volume_rules1.yaml`).
+Decisions 84–113 in `CFD_Automation/OPEN_DECISIONS.md`.
 
 ## 0. In one breath
 
@@ -13,7 +14,9 @@ Branch `stage3-volume-mesh` (from `stage2-surface-mesh`: Stage 2 is not merged i
 - Every check and its limit is in this file and in `configs/volume.yaml`. They were written before any mesh was
   judged and their limits have not changed (check 10 got a 1e−9 c round-off tolerance in V2; check 3 got Stage 2's
   exemption for the cap's two nose-corner columns in V4, decided by Mike, decision 101). The
-  construction changed ten times, each after a check failed (section 7). Results: sections 8–13.
+  construction changed ten times in rule set 1 (section 7) and three times in rule set 2 (section 16), each after a
+  check failed. Results: rule set 1 in sections 8–14; rule set 2 (decisions 107–111: M about 10 M cells, angles −5° to
+  +10°) in sections 15–17; the conclusion in 17.5.
 
 ## 1. The plan
 
@@ -742,7 +745,8 @@ number to raise if it leaves the fan (+12°: about 2 % more cells).
 
 ## 17. Rule set 2 as it stands (decisions 107–111): the reruns
 
-Everything below was rebuilt on 9 Nov after 22:55 with the rules and the final construction of section 16
+Everything below was rebuilt on 9–10 Nov from 23:59 with the rules and the final construction of section 16 (decision
+110 in its 23:55 version)
 (`STAGE3_RULESET=2`, files `r2_*`). RAM: check 14 reports S8's law for ANK then NK (1.51 + 9.46 GiB per million
 cells); the runs are ANK only (2.69 + 7.23), so both are given (decision 112).
 
@@ -834,3 +838,86 @@ wing 4). In the first build 11 of 20 failed; the cause was the construction (sec
 9.5 M cells (median), the target Mike set; F is 20.7 M. By S8's laws for ADflow only VC and C fit 48 GB: M needs
 72–92 GiB (decision 113: V7 measures it).
 
+### 17.4 V6: every built set at VC (the 702 built wings and the 20 reference wings, Re 3 × 10⁵)
+
+`scripts/screen.py` (tags `s_a1`, `s_b1`: the full space and the two corner sets; `s_a2`, `s_b2`: the focus set),
+with M and F counted on a seeded 10 % of each set and type (`M_sample_a/b`, `F_sample_a/b`: the same wings),
+`scripts/v6_study.py` → `data/studies/r2_v6.json`, `docs/page/r2_v6_screen.png`; the 20 reference wings from 17.2.
+Screened on 9–10 Nov from 23:59 with the 23:55 version of decision 110. The hold-outs are not in it (decision 104).
+
+![V6 with rule set 2](../docs/page/r2_v6_screen.png)
+
+*What it shows.* All 722 meshes at VC, Re 3 × 10⁵, by wing type (the bar is the median): (a) cells; (b) the
+worst cell of each mesh (the smallest scaled Jacobian, the cap's two nose-corner columns apart; red: the limit 0.05);
+(c) the largest growth over its limit (red: the pass line 1.01).
+
+*Conclusion.* One mesh of 722 is under the cell limit: BWB corner2 wing 6
+(0.032). Every other mesh is inside every limit.
+
+| Set | BWB | flying wing | cranked | tapered | All |
+| --- | --- | --- | --- | --- | --- |
+| reference | 5 pass | 5 pass | 5 pass | 5 pass | 20 of 20 |
+| training_focus | 100 pass | 100 pass | 100 pass | 100 pass | 400 of 400 |
+| training_full | 40 pass | 40 pass | 40 pass | 40 pass | 160 of 160 |
+| corner1 | 32 pass | 24 pass | 32 pass | 24 pass | 112 of 112 |
+| corner2 | 7 pass, 1 refused | 7 pass | 8 pass | 7 pass | 29 of 30 |
+
+| What | Rule set 1 (447 meshes, stopped; section 12) | Rule set 2 (722 meshes) |
+| --- | --- | --- |
+| Outcomes | 427 passed, 20 refused (check 11, the wake band; with decision 101) | **721 passed, 1 refused** (check 3, the cell quality); no crash, none to review |
+| Cells at VC | 3.88–5.49 (median 4.47) M | 1.75–2.95 (median 2.10) M |
+| ... by wing type, median | | BWB 2.34; flying wing 2.08; cranked 2.02; tapered 2.02 M |
+| M counted (94 wings: the sample and the 20 reference wings) | | 8.2–12.8 (median 9.6) M; M / VC 4.47–4.65 |
+| F counted (rule set 1: 63 wings; rule set 2: 94) | 39.1–51.1 (median 44.3) M | 17.7–27.8 (median 20.7) M; F / VC 9.67–10.05 |
+| ADflow RAM at VC: ANK only · ANK then NK (S8's laws) | — · 38–53 (median 44) GiB | 15–24 (median 18) · 18–29 (median 21) GiB; fit 16 GB: 0; fit 52 GB: 722 |
+| ADflow RAM at M, the counted wings: ANK only · ANK then NK | | 62–95 (median 72) · 79–123 (median 92) GiB |
+| Growth / its limit (pass ≤ 1.01) | 0.9902–0.9956 (median 0.9930) | 0.9891–1.0015 (median 0.9926) |
+| Wake / its limit (check 11, pass ≤ 1.01) | 0.9892–1.0778 (median 0.9929) | 0.9892–1.0077 (median 0.9937) |
+| Cells across the boundary layer, fewest per mesh | 30.45–31.10; limit 30 | 17.95–21.49 (median 19.94); limit 17.75 |
+| In-plane wall angle; 3-D angle, largest (reported) | ≤ 0.065°; 2–60 (median 15)° | ≤ 0.093°; 2–74 (median 21)° |
+| Smallest scaled Jacobian (the cap's two nose-corner columns apart; limit 0.05) | | 0.032–0.398 (median 0.108); under 0.06: 3; under 0.075: 5 |
+| ... by part: cap · inboard · outboard · base and TE corners | 0.040–0.097 · ≥ 0.053 · ≥ 0.71 · ≥ 0.21 | 0.030–0.097 · ≥ 0.032 · ≥ 0.59 · ≥ 0.09 |
+| Share of the cells outboard | 51–57 (median 54) % | 36–47 (median 43) % |
+| Decision 110: the ramp chosen, start distances (meshes), plane · wake | | 1 (416) and 32 (147) · 32 (476) and 1 (133) |
+| Extra smoothing (rung) · build time | 0 on all · 8–19 (median 13) s | 0 on all · 4–13 (median 7) s |
+
+**Findings.**
+
+1. **721 of 722 pass.** The focus set, where most runs go: 400 of 400. The full
+   space: 160 of 160. Corner 1: 112 of 112. Corner 2: 29 of 30. The reference wings:
+   20 of 20. No mesh crashed, none needs review, none needed the extra smoothing.
+2. **The one refusal: BWB corner2 wing 6** (check 3: 0.032; limit 0.05), as found in 16.3.
+   Its chord falls from 2.45 to 1.13 c within 0.14 c of the semi-span and its trailing edge moves 0.145 c forward per
+   station, so the far wake 17 c behind the root cannot be lined up within the growth limit. The mesher refuses it and
+   writes why (`refusal.json`); nothing was tuned to make it pass. A fix would space the far wake by x for every station
+   at once (a redesign, not built).
+3. **The wake band of rule set 1 is fixed** (decisions 108, 111). Check 11 refused 20 of the 27 full-space wings
+   screened then; now none of 722. Largest: 1.0077 × the band cell (BWB corner2 wing 4; pass ≤ 1.01).
+4. **Thin margins** (inside the limits, worth watching). The worst cell under 0.06 on 3 meshes and under
+   0.075 on 5: BWB corner2 0 0.052, BWB full-space 31 0.056, BWB full-space 0 0.062, tapered corner2 4 0.065. The growth over its limit by up to 0.15 % on 2
+   meshes (flying wing corner2 1: 1.0015; cranked corner2 5: 1.0011; pass ≤ 1.01). All thin ones are BWB or corner
+   wings.
+5. **The level sizes are steady on every wing counted:** M / VC 4.47–4.65, F / VC 9.67–10.05
+   (V4: the counts in each direction grow 1.27–1.29 per level, so 2.09–2.17 cells per level, against 1.3³ = 2.20). M is
+   9.6 M cells (median of 94 wings; 8.2–12.8 M), F 20.7 M. Across all 722
+   meshes, VC × the median ratio gives M 8.0–13.4 M (an estimate, not a count).
+6. **Memory (S8's laws, decision 112):** every VC mesh fits a 48 GB machine (24–29 GiB at most),
+   none the 16 GB desktop; M needs 62–123 GiB: a cluster job until V7 measures it (decision 113).
+
+**Conclusion.** On every built set the volume mesher is robust: 721 of 722 meshes pass, with
+no limit changed and nothing tuned per wing. The one refusal is the most extreme corner of the design space, refused
+with its reason, as the brief asks. The weak places are known and counted: very close stations with fast-changing
+chords (BWB centre bodies and corner wings) sit nearest the cell limit.
+
+### 17.5 Conclusion of rule set 2
+
+- **Mike's targets are met.** M about 10 M cells: 9.5 M on the 20 reference wings, 9.6 M on the 94 counted wings (medians); F above it
+  (20.7 M), as allowed. One mesh per wing, Re and level serves every angle from −5° to +10°.
+- **Every check passes** on 80 of 80 reference meshes (4 Re), 20 of 20 families (check 13, worst 2.0 % off) and
+  721 of 722 screened meshes; M built on 4 wings and F on 1, all pass.
+- **No limit changed.** The screens found three faults in how the mesh is built (decisions 108–110); each was fixed and
+  every study rerun with the fix.
+- **The costs, named:** 18–29 cells across the boundary layer at VC (30 at M); the tip vortex in cells 1.2–1.7 × larger
+  across its path than rule set 1; station gaps up to 0.54 c far past the tip; 1.25° per fan cell at M.
+- **Not shown yet:** that ADflow and SU2 converge on it (V7); the real memory (by S8's laws M needs 72–92 GiB at the
+  median, up to 123 GiB; decision 113); where the wake goes at −5° and +10° (decision 111); the hold-outs (V8, with Mike's OK, rules frozen).

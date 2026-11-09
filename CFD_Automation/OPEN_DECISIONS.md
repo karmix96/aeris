@@ -606,7 +606,8 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     stations as the target (0.030–0.046 on wing 30). **Not fixed: BWB corner2 wing 6** (its chord falls from 2.45 to
     1.13 c within 0.14 c of the semi-span, its trailing edge moves 0.145 c forward per station 0.0137 c apart); a fix
     would space the far wake by x for every station at once (a redesign, not built). The screens of section 17 of
-    `volume_rules.md` were rerun with the 23:55 version.
+    `volume_rules.md` were rerun with the 23:55 version: every built set at VC, 721 of 722 meshes pass; corner2 wing 6
+    is the one refused (section 17.4).
 111. **Angles of attack −5° to +10° for this mesh; the wake fan follows (Mike, 9 Nov 2026, 21:53 and 22:04: "I want to
     run from −5 to 10 AoA. You adjust the wake fan accordingly. If you think a margin is needed, let it be so").** The
     fan was −5° to +20° (decision 87), sized for post-stall, which decision 69 already gives to a separate study

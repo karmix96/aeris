@@ -921,3 +921,40 @@ chords (BWB centre bodies and corner wings) sit nearest the cell limit.
   across its path than rule set 1; station gaps up to 0.54 c far past the tip; 1.25° per fan cell at M.
 - **Not shown yet:** that ADflow and SU2 converge on it (V7); the real memory (by S8's laws M needs 72–92 GiB at the
   median, up to 123 GiB; decision 113); where the wake goes at −5° and +10° (decision 111); the hold-outs (V8, with Mike's OK, rules frozen).
+
+## 18. What if the domain were smaller? (10 Nov 2026, Mike's question; a what-if, the rules unchanged)
+
+`scripts/far_field_study.py` → `data/studies/far_field_scenarios.json`. The 20 reference wings at Re 3 × 10⁵. A
+scenario is (front, aft) in mean chords: *front* is today's far.distance_c (the half circle ahead, so also above and
+below, and the distance past the tip); *aft* moves the outflow behind the most aft trailing edge. Today both are 80 (law
+15). Cells counted at VC, C, M and F; the VC meshes also built, with check 10 asking for *front*.
+
+| Front / aft (c̄) | VC | C | M (range) | F | vs today | Cells across at M: layers · wake · past the tip | ADflow RAM at M (S8's laws) | VC meshes built |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 / 20 | 1.59 M | 3.35 M | 7.12 M (6.30–9.08) | 15.4 M | −25 % | 84 · 68 · 66 | 54–69 GiB | **6 of 20 pass** (growth 11, wake 5 refused) |
+| 20 / 40 | 1.74 M | 3.69 M | 7.91 M (7.06–9.92) | 17.2 M | −17 % | 89 · 74 · 71 | 60–76 GiB | 20 of 20 pass |
+| 40 / 40 (half) | 1.90 M | 4.01 M | 8.56 M (7.71–10.74) | 18.7 M | −10 % | 95 · 74 · 75 | 65–82 GiB | 20 of 20 pass |
+| 40 / 80 | 1.94 M | 4.12 M | 8.74 M (7.91–10.98) | 19.1 M | −8 % | 95 · 79 · 75 | 66–84 GiB | 20 of 20 pass |
+| 80 / 80 (today) | 2.08 M | 4.46 M | 9.53 M (8.56–11.81) | 20.7 M | — | 100 · 79 · 80 | 72–92 GiB | 20 of 20 pass |
+
+(Medians; "vs today" is the median of each wing's ratio, the same at every level within 1 %.)
+
+**Findings.**
+
+1. **The domain costs few cells.** The cells grow by up to 1.3 per cell away from the wing, so halving the distance
+   removes only 3–5 cells across in each direction: half the domain (40 / 40) saves 10 %; 20 / 40 saves 17 %.
+2. **10 / 20 breaks the mesh:** 14 of the 20 VC meshes are refused (growth up to 5.5 % over its limit at the tip
+   station's nose, check 6; the streamwise wake growth, check 11). The far boundary is then so close that the blend to
+   it (decision 84) bends the outer cells too fast. It would need a rule change, not just a smaller number.
+3. **No scenario brings M into 48 GB** by S8's laws (M must be under about 5.8 M cells for that): even 10 / 20 needs
+   54–69 GiB. The domain is not the lever for the memory.
+4. **What a smaller domain costs in accuracy is not measured.** A far field 10–40 chords away moves lift and drag
+   (the boundary holds the free stream where the wing's flow has not died out); Stage 4's far-field study (40 / 80 /
+   160) measures it, and 20 can be added to it.
+5. **A small fault found on the way:** the count (`count_volume`) is one wall-normal layer above the built mesh on 22 of
+   the 100 VC cases here (the count 1.5–1.8 % high; always high, never low), e.g. BWB reference wing 3 today: counted
+   2,582,304, built 2,544,564. The M and F counts of V6 can be high by as much. Not fixed yet.
+
+**Conclusion.** Shrinking the domain saves little (10 % at half the size, 17 % at 20 / 40) and gets nowhere near 48 GB
+at M; 10 / 20 fails the checks. Keep 80 until Stage 4 measures what 40 and 20 cost in lift and drag; if they cost
+nothing, 20 / 40 is the smallest that builds today.

@@ -9,3 +9,6 @@ Stage_3_volume_mesh/data/meshes/
 !Stage_3_volume_mesh/docs/page/*.png
 !Stage_3_volume_mesh/docs/*.png
 Stage_3_volume_mesh/docs/VOLUME_MESH.body.html
+
+# the app's written folders (app/README.md)
+app/output/

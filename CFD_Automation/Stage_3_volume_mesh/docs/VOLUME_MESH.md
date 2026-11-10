@@ -17,7 +17,7 @@ One matched C-H mesh per wing, Re and level (VC, C, M, F), on the frozen Stage 2
 
 **Rule set 2: M about 10 M cells**
 
-Rule set 1 worked but cost too much (M 20.8 M, F 45 M). Mike set the target on 9 Nov: M about 10 M, F may be above; and the angles: −5° to +10°. Rule set 2 (decisions 107, 111) meets it with the volume rules alone; the surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). Push access was not granted: the branch comes as a git bundle.
+Rule set 1 worked but cost too much (M 20.8 M, F 45 M). Mike set the target on 9 Nov: M about 10 M, F may be above; and the angles: −5° to +10°. Rule set 2 (decisions 107, 111) meets it with the volume rules alone; the surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). In main on GitHub since 10 Nov, with an app to load or make a wing and look at its meshes (`CFD_Automation/app`).
 
 ### Rule set 2: the screens
 

@@ -250,8 +250,8 @@ def build_page() -> tuple[str, str]:
     <div class="box verdict"><h3>Where it stands</h3><div class="big">Rule set 2: M about {gM.get('median', 0) / 1e6:.0f} M cells</div>
       <p>Rule set 1 worked but cost too much (M 20.8 M, F 45 M). Mike set the target on 9 Nov: M about 10 M, F may be
       above; and the angles: −5° to +10°. Rule set 2 (decisions 107, 111) meets it with the volume rules alone; the
-      surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). Push
-      access was not granted: the branch comes as a git bundle.</p></div>
+      surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). In main
+      on GitHub since 10 Nov, with an app to load or make a wing and look at its meshes (<code>CFD_Automation/app</code>).</p></div>
     <div class="box good"><h3>Rule set 2: the screens</h3><div class="big">{g23.get('outcomes', {}).get('passed', '—')} of {g23.get('meshes', '—')} reference · {f"{g6o.get('passed', 0)} of {g6.get('meshes', 0)} all sets" if g6 else "all sets: running"}</div>
       <p>V2/V3: the 20 reference wings × 4 Re at VC. V4: the family, check 13 {g13.get('passed', '—')} of {g13.get('of', '—')}.
       V6: every built set at VC (not the hold-outs){"; refused: " + "; ".join(f"{TYPE_NAME.get(r['type'], r['type'])} {r['set']} wing {r['index']} (cell quality {r['values'].get('cell_quality', 0):.3f}, limit 0.05)" for r in g6['refused']) if g6.get('refused') else ""}{"" if g6 else ", running when this page was built"}.</p></div>

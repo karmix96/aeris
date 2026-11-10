@@ -501,6 +501,8 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
 94. **Branch.** Stage 2 is not merged into main yet (`stage2-surface-mesh` is 105 commits ahead), so `stage3-volume-mesh`
     starts from `stage2-surface-mesh`. Push access was not granted in this session: the branch is committed here and
     handed over as a git bundle (or pushed once access is granted).
+    **10 Nov 2026 (Mike): everything in main.** Push access granted; main fast-forwarded to `stage3-volume-mesh`
+    (main ← `stage2-surface-mesh` ← `stage3-volume-mesh`, no merge commit); both branches stay on GitHub.
 95. **Check 10 allows round-off (V2, 9 Nov 2026).** The outboard far field sits exactly 80 c past the tip, so the distance
     is 80 c to round-off; 6 of 80 meshes read 79.99999999999999 c and were refused on the first screen. The comparison
     now allows 1e−9 c (`checks.far_tol_c`); the limit stays 80 c.

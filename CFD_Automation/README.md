@@ -16,6 +16,9 @@ Standalone; merged into AERIS when finished.
   about 9.5 M cells; one mesh for −5° to +10°; every built set at VC: 721 of 722 meshes pass.
 - **The approach in seven pictures** (7 Nov 2026, Stage 3 added 10 Nov): `overview/APPROACH_MAP.html`, built by
   `overview/make_approach_map.py`.
+- **Run it locally** (Stage 1 to Stage 3, the app, V7): `RUN_LOCAL.md`.
+- **The app** (10 Nov 2026): load or create a wing, build its surface and volume meshes, look at them in 3-D and plane
+  by plane: `streamlit run CFD_Automation/app/app.py` (`app/README.md`).
 
 ```
 cfdauto/                           the code of every stage (one Python package)
@@ -33,6 +36,7 @@ Stage_1_geometry/                  Stage 1: configs, data, docs, tests, scripts
   decisions/*.md                   Stage 1 notes (trailing edge, loft, root section, ranges, flow maps, ...)
 Stage_2_surface_mesh/              Stage 2: configs/surface.yaml, decisions/, docs/, tests/, scripts/, data/studies/
 Stage_3_volume_mesh/               Stage 3: configs/volume.yaml, decisions/, docs/, tests/, scripts/, solve/, data/studies/
+app/                               the app: app.py (Streamlit), core.py, figures.py, tests/
 overview/                          the approach map (one page, drawn from the generator)
 references/                        sources (REFERENCES.md, references.bib)
 ```

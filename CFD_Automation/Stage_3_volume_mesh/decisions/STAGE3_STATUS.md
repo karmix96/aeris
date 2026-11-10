@@ -1,7 +1,8 @@
-# Stage 3 — status and handover (10 Nov 2026, 02:00)
+# Stage 3 — status and handover (10 Nov 2026, 08:15)
 
-Branch `stage3-volume-mesh` (from `stage2-surface-mesh`; Stage 2 is not merged into main). Push access was not granted
-in this session: the branch is handed over as a git bundle (decision 94). Code: `CFD_Automation/cfdauto/volume/`
+In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stage3-volume-mesh`, which starts from
+`stage2-surface-mesh`; decision 94). Run it locally: `CFD_Automation/RUN_LOCAL.md`; look at any wing's meshes:
+`streamlit run CFD_Automation/app/app.py` (`app/README.md`). Code: `CFD_Automation/cfdauto/volume/`
 (Stage 2's `cfdauto/mesh/` untouched). Rules: `configs/volume.yaml` (rule set 2; rule set 1 kept in
 `configs/volume_rules1.yaml`). Plan, checks and results: `decisions/volume_rules.md`. Decisions 84–113 in
 `CFD_Automation/OPEN_DECISIONS.md`.

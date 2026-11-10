@@ -1,7 +1,7 @@
 # Stage_3 — Volume mesh page (text copy, 10 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_3_volume_mesh/docs/VOLUME_MESH.html` (repo karmix96/aeris,
-branch `stage3-volume-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
+branch `main`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
 line with its caption. Companion files: 'Stage_3 Executive summary', 'Stage_3 Volume mesh status and handover',
 'Stage_3 Mesh flowchart'. If this copy and the repository ever differ, the repository wins.
 
@@ -372,9 +372,12 @@ Not opened (Mike, 9 Nov: not yet; decision 104). They are run once, at the end, 
       configs/volume.yaml               the rules and the check limits
       decisions/volume_rules.md         the plan, rules, checks, V0 measurements, what changed
       decisions/STAGE3_STATUS.md        status and the handover to Stage 4
+      scripts/one_mesh.py               one wing's volume mesh (any set, level, Re; --count)
       scripts/screen.py                 the screen (one JSON row per mesh)
       scripts/v23_study.py v4_study.py v6_study.py cost_options.py v5_export.py   the studies
       solve/                            the V7 case, ADflow run, results reader, runbook
       tests/                            pytest (Stage_3_volume_mesh/tests)
+    CFD_Automation/app/                the app: load or make a wing, build and look at its meshes
+    CFD_Automation/RUN_LOCAL.md        every command, Stage 1 to V7
 
 CFD_Automation Stage 3 · built by scripts/make_stage3_page.py from configs/volume.yaml and data/studies/\*.json · 10 Nov 2026

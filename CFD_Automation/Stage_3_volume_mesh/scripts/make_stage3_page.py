@@ -549,10 +549,13 @@ CFD_Automation/Stage_3_volume_mesh/
   configs/volume.yaml               the rules and the check limits
   decisions/volume_rules.md         the plan, rules, checks, V0 measurements, what changed
   decisions/STAGE3_STATUS.md        status and the handover to Stage 4
+  scripts/one_mesh.py               one wing's volume mesh (any set, level, Re; --count)
   scripts/screen.py                 the screen (one JSON row per mesh)
   scripts/v23_study.py v4_study.py v6_study.py cost_options.py v5_export.py   the studies
   solve/                            the V7 case, ADflow run, results reader, runbook
-  tests/                            pytest (Stage_3_volume_mesh/tests)</pre>
+  tests/                            pytest (Stage_3_volume_mesh/tests)
+CFD_Automation/app/                the app: load or make a wing, build and look at its meshes
+CFD_Automation/RUN_LOCAL.md        every command, Stage 1 to V7</pre>
 </section>"""
 
     r2 = rule_set_2()

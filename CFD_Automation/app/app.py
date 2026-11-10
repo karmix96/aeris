@@ -239,6 +239,8 @@ with tab_v:
         m[2].metric("Checks passed", f"{ok} of {len(vm.checks)}")
         m[3].metric("ADflow RAM, S8 laws", f"{r['ANK only']:.0f}–{r['ANK then NK']:.0f} GiB")
         m[4].metric("Built in", f"{vm.info.get('seconds_total', vm.info.get('seconds_build', 0)):.0f} s")
+        st.caption("Checks 1–13 judge the mesh; 14 is the cells and the RAM (information only); 15 runs when the solver "
+                   "files are written (Files tab).")
         pl = core.planes(vm)
         n_in = sum(p["side"] == "in" for p in pl)
         c1, c2, c3 = st.columns([3, 2, 2])

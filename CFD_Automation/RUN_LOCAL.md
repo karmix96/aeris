@@ -53,7 +53,7 @@ python -m cfdauto.mesh --type bwb --set reference --index 0 --level VC --re 3e5 
 python -m cfdauto.mesh --type bwb --set reference --index 0 --family --re 3e5            # VC, C, M, F of one wing
 # Study 12, every set at every level (3,128 builds; about 2.9 h per process): run the two in two terminals
 python scripts/screen.py --family --types bwb cranked --tag bwb_cranked
-python scripts/screen.py --family --types flying_wing tapered --tag fw_tapered
+python scripts/screen.py --family --types flying_wing tapered --tag flying_wing_tapered
 python scripts/screen_study.py --family                                                   # the summary and figures
 ```
 

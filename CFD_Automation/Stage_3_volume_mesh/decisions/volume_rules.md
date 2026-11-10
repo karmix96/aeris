@@ -958,3 +958,20 @@ below, and the distance past the tip); *aft* moves the outflow behind the most a
 **Conclusion.** Shrinking the domain saves little (10 % at half the size, 17 % at 20 / 40) and gets nowhere near 48 GB
 at M; 10 / 20 fails the checks. Keep 80 until Stage 4 measures what 40 and 20 cost in lift and drag; if they cost
 nothing, 20 / 40 is the smallest that builds today.
+
+## 19. What makes the mesh big, in order (10 Nov 2026, Mike's question)
+
+From the measured studies; `scripts/size_factors.py` → `data/studies/size_factors.json` adds the Re levels with the
+band on and off (rule set 2, the 20 reference wings at VC, counts).
+
+| # | Factor | Measured effect on the cells | Where measured |
+| --- | --- | --- | --- |
+| 1 | **The level** | × 2.09–2.17 per level: VC 2.08, C 4.46, M 9.53, F 20.7 M (F ≈ 10 × VC) | V4 (17.3) |
+| 2 | **The Re** | Re 10⁵ → 4 × 10⁶: × 2.3 with the band (1.33 → 3.03 M at VC), × 1.6 without it (1.27 → 2.03 M): a thinner first cell (y⁺ 1) gives more layers (58 → 71) and a smaller tip gap more stations (56 → 75) | size_factors |
+| 3 | **The wing's shape** | × 1.7 between the smallest and the largest of the 702 built wings (1.75–2.95 M at VC); BWB median 15 % above the others. Mostly the chordwise count (269–347 nodes; correlation with the cells 0.89) and the wake nodes (0.85); the aspect ratio itself hardly (−0.16) | V6 (17.4) |
+| 4 | **The transition band** (on for every run, decision 81) | × 1.45–1.49 at Re ≥ 3 × 10⁵ (the chordwise nodes 210 → 306–314), × 1.05 at 10⁵ | size_factors |
+| 5 | **The growth and resolution rules** | each 4–19 %: outboard growth 1.15 → 1.3 −19 %; the wake fan to +10° instead of +20° −11 to −14 %; 30 cells across the boundary layer at M, not VC, −10 %; the fan 1 chord long instead of 2 −4 %. Together rule set 1 → 2: F 44.3 → 20.7 M (× 0.47) | cost_options (rule set 1), r2_fan_options |
+| 6 | **The far-field size** | half (40 / 40) −10 %; 20 / 40 −17 % | section 18 |
+
+**Conclusion.** The level and the Re set the size; the wing shape moves it by up to × 1.7; the band is the largest
+choice that is ours (× 1.5 at Re ≥ 3 × 10⁵); each growth or fan rule is worth 4–19 %; the domain matters least.

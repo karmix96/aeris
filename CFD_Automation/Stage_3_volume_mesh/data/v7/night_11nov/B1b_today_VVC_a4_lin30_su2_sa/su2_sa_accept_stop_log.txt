@@ -1,0 +1,7 @@
+{
+ "folder": "runs/n11_today_VVC_a4_lin30/su2_sa",
+ "rule": "solve/read_results.py: 6 orders of rms[Rho] (or 1e-12) and settled forces",
+ "accepted_at": null,
+ "stopped": null,
+ "seconds": 300
+}

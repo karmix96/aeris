@@ -1,0 +1,5 @@
+{
+ "run": "B1b_today_VVC_a4_lin30_su2_sa",
+ "case_dir": "runs/n11_today_VVC_a4_lin30",
+ "solver_folder": "su2_sa"
+}

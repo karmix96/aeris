@@ -1,0 +1,29 @@
+{
+ "ADflow SA": {
+  "verdict": "not run"
+ },
+ "SU2 SA": {
+  "solver": "SU2",
+  "iterations": 117,
+  "rms_rho_final": -7.800139296,
+  "orders_dropped": 2.0660410130000004,
+  "converged": false,
+  "coefficients": {
+   "cl": 0.1979596416,
+   "cd": 0.006594462627,
+   "cmy": 0.008311245257
+  },
+  "settled": false,
+  "reason": "117 iterations: too short to judge",
+  "window": 117,
+  "forces_breakdown": "forces_breakdown.dat",
+  "verdict": "not accepted",
+  "why": [
+   "not converged",
+   "117 iterations: too short to judge"
+  ]
+ },
+ "SU2 SST+LM": {
+  "verdict": "not run"
+ }
+}

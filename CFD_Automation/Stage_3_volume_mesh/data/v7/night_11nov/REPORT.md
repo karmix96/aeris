@@ -1,7 +1,7 @@
 # V7 night run, 11–12 Nov 2026: the first solves on Stage 3 meshes
 
 Claude Code, alone on Mike's desktop, following `solve/NIGHT_11NOV.md`. **In progress.** This file is rewritten after
-every finished run. Last update: 12 Nov, 01:45 (A1, A1b, B1 done; B1b, SU2 SA with 30 linear iterations, running since 01:31).
+every finished run. Last update: 12 Nov, 01:55 (A1, A1b, B1, B1b done; A4 running since 01:46, then A5, then B1c and B2).
 
 One wing: BWB reference wing 0, Re 3 × 10⁵ on the mean chord, Mach 0.1, the transition band on.
 
@@ -35,7 +35,7 @@ without the trailing-edge base and the tip cap (section 3, Q7).
 | A1 | today VVC | 1,075,074 | ADflow SA, as written | 4° | 30.2 min | 182 | 4.21 | not accepted: not converged; stopped, see 6 | 10.28 | 9.57 | 0.1906 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
 | A1b | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | 4° | 31.2 min | 153 | 6.01 | **converged** (9.76 × 10⁻⁷); the rule says "not accepted": see below | 10.99 | 10.22 | 0.1907 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
 | B1 | today VVC | 1,075,074 | SU2 SA, as written | 4° | 29.3 min | 582 | 2.83 | not accepted: not converged, forces not settled; stopped, see 6 | 7.32 | 6.81 | 0.1883 | 67.7 | −0.00621 | 0.01298 | 0.01246 | 4.82, 3.88 (first node) |
-| B1b | today VVC | 1,075,074 | SU2 SA, `LINEAR_SOLVER_ITER= 30` | 4° | running since 01:31 | | | | 9.25 (plateau) | 8.60 | | | | | | |
+| B1b | today VVC | 1,075,074 | SU2 SA, `LINEAR_SOLVER_ITER= 30` | 4° | 15.4 min | 117 | 2.4 | not accepted: not converged; stopped, see 6 | 9.25 | 8.60 | 0.1980 | 65.9 | −0.00479 | 0.01139 | 0.00831 | |
 
 **A1b converged and its forces are settled, but the plan's rule cannot say so.** `read_results.py` needs at least
 225 iterations before it judges "settled" (the last 20 %, at least 200, plus 25); A1b converged in 153. Measured from
@@ -106,8 +106,11 @@ size, not two.
 written (B1), the adaptive CFL collapses: SU2 cuts it ×0.1 whenever the linear solver misses the accepted linear
 residual of 10⁻³ in its 10 iterations, and doubles it otherwise, so it cycled between 1 and 86. In 582 iterations
 the density residual fell 2.8 orders and the momentum residual stalled at 10⁻⁷·³ from iteration 120; CD was still
-falling 15 counts per 100 iterations. B1b (try 1 of 2) gives the linear solver 30 iterations: the CFL reached 419
-by iteration 25 and the density residual 10⁻⁸·² (B1 needed 470 iterations for that).
+falling 15 counts per 100 iterations. B1b (try 1 of 2) gives the linear solver 30 iterations: the linear solves now converge (to 10⁻⁴ at CFL 30 to
+500), the CFL reached 419 by iteration 25 and the density residual 10⁻⁸·² (B1 needed 470 iterations for that). But
+then the density residual stayed at 10⁻⁸·¹ from iteration 25 to 117, the CFL was still reset every few dozen
+iterations, and the forces drifted (CL +0.0003 per iteration). So the stall is not the linear solver: it is the
+nonlinear iteration (the slope limiter is the usual cause) or the pressure field below.
 
 **Q3, ADflow SA against SU2 SA (provisional: SU2 not converged).** At B1's last iteration the lift agrees within
 1.2 % (0.1883 against 0.1907) and the friction drag is 10 % higher (SU2 129.8 counts, ADflow 117.8), but the
@@ -121,7 +124,9 @@ alone is about +21 counts).
   (`B1_today_VVC_a4_su2_sa/su2_sa/cp_against_adflow_A1b_it500.png`), and its stagnation pressure overshoots: wall
   Cp up to 1.9 along the whole leading edge and 2.25 at the tip, against the isentropic 1.0025 at Mach 0.1 (195 nodes
   above it, all at x/c ≤ 0.004). ADflow overshoots too, but to 1.17 (20 cells, all at the nose).
-- Two readings, not separated tonight: SU2 is far from converged; and SU2's compressible Roe scheme at Mach 0.1,
+- It is systematic, not B1's transient: B1b, on a different CFL path, has the same overshoot (wall Cp to 2.26,
+  192 nodes above 1.0025) and again a negative pressure drag (−47.9 counts at iteration 117; friction 113.9).
+- Two readings: SU2 is far from converged; and SU2's compressible Roe scheme at Mach 0.1,
   without a low-Mach correction, overshoots the stagnation pressure (a known property of upwind schemes at low Mach).
   S8's SU2 report already says the incompressible solver is the one for this regime ("AERIS flies at Mach 0.084 —
   effectively incompressible — so the INC_RANS cases are the ones in our regime"). The case files use `SOLVER= RANS`.
@@ -177,6 +182,9 @@ and not committed: the plan names only this folder.
 - `timeLimit` as a float (4.1), the same value.
 - A1b, A1's first retry of two allowed: `ANKUseTurbDADI=false`. Why: A1's turbulence residual stalled (Q1). It worked;
   no second try was needed.
+- A4 and A5: `ANKUseTurbDADI=false`, as A1b. Why: on the same mesh and solver, A1 showed that the case's
+  turbulence update stalls and A1b that this one option converges; running A4 and A5 as written first would have
+  cost two stalled runs.
 - B1b, B1's first retry of two allowed: `su2_sa_lin30.cfg`, a copy of `su2_sa.cfg` with `LINEAR_SOLVER_ITER= 30`
   (was 10) and `LINSOL` added to `HISTORY_OUTPUT` (output only: the linear residual in the history). Why: B1's
   adaptive CFL collapsed (Q1). Cost: 1.9 GiB more (9.25 GiB) and about 5.5 s per iteration instead of 3.0 s.
@@ -198,6 +206,10 @@ and not committed: the plan names only this folder.
   host pagefile nears full: 2.5 GiB over its start, about 4.5 of the 5 GiB. My first rule, 2 GiB over the start, would have
   killed A1 at its third sample: the pagefile grew by 1.99 GiB while WSL's swap stayed at 0.001 GiB. It was replaced
   at 23:53, before it acted (both records are kept).
+- **B1b was stopped at 15 min** (the stall above), and **B1's second try waits until after A4 and A5.** The plan's
+  order is B1's tries, then A4, A5, B2. A4 and A5 (ADflow with A1b's option, about 31 min each) answer Q5 for
+  certain; B1's second try may not converge, so it goes after them. B1c is B1b plus `LOW_MACH_CORR= YES` (Roe's
+  low-Mach correction): it tests the pressure overshoot, the larger of B1's two problems for Q3.
 - **B1 was stopped at 29 min, before its 2.5 h cap**, for the same reason as A1: the CFL collapse was measured and
   explained, and at its rate it could not converge in the cap. SU2 8.5.0 catches SIGTERM and writes all its output
   files ("Interrupt signal (15) received, saving files and exiting"), so B1's files are at its last iteration, 582.

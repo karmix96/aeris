@@ -3,6 +3,7 @@
 
     mpirun -np 6 python solve/run_adflow.py --case runs/v7_a4 --preflight    # reads the grid, no iteration
     mpirun -np 6 python solve/run_adflow.py --case runs/v7_a4                # the solve -> runs/v7_a4/adflow/result.json
+    mpirun -np 6 python solve/run_adflow.py --case runs/v7_a4 --lift-distribution 150 --slices 0.5,0.9,0.95,0.98
 
 Pieces copied from S8 (solve_s8.py, preflight_adflow.py), not imported: the freestream is read back from ADflow and
 checked before the solve (liftIndex 3: span +y, lift +z; S8 defect 14 turned alpha into sideslip); the residual is
@@ -67,6 +68,10 @@ def main() -> int:
     ap.add_argument("--preflight", action="store_true", help="read and partition the grid, report, no iteration")
     ap.add_argument("--set-option", action="append", default=[], metavar="KEY=VALUE",
                     help="any other ADflow option (recorded in result.json)")
+    ap.add_argument("--lift-distribution", type=int, default=0, metavar="N",
+                    help="after the solve: the spanwise lift distribution in N segments along y (lift_distribution.dat)")
+    ap.add_argument("--slices", default="", metavar="F1,F2,...",
+                    help="after the solve: Cp slices at these fractions of the semi-span (slices.dat), e.g. 0.5,0.9,0.98")
     a = ap.parse_args()
     case = json.loads((a.case / "case.json").read_text())
     opts = json.loads((a.case / "adflow_options.json").read_text())
@@ -146,6 +151,28 @@ def main() -> int:
         res["history"] = f"unavailable: {e}"
     (out / "result.json").write_text(json.dumps(res, indent=1))
     print(json.dumps({k: v for k, v in res.items() if k != "history"}, indent=1))
+    if a.lift_distribution or a.slices:
+        # Added 11 Nov 2026 for the tip comparison of decision 114; not tested on ADflow when written. It runs after
+        # result.json is on disk, so a failure here cannot lose the solve: it is recorded in result.json["extras"].
+        extras = {}
+        try:
+            if a.lift_distribution:
+                solver.addLiftDistribution(a.lift_distribution, "y")
+            if a.slices:
+                fr = [float(f) for f in a.slices.split(",") if f.strip()]
+                solver.addSlices("y", [f * r["semi_span"] for f in fr])
+                extras["slice_fractions"] = fr
+            if a.lift_distribution:
+                solver.writeLiftDistributionFile(str(out / "lift_distribution.dat"))
+                extras["lift_distribution"] = f"{a.lift_distribution} segments along y: lift_distribution.dat"
+            if a.slices:
+                solver.writeSlicesFile(str(out / "slices.dat"))
+                extras["slices"] = "slices.dat"
+        except Exception as e:                                 # recorded, the solve stands
+            extras["error"] = f"{type(e).__name__}: {e}"
+        res["extras"] = extras
+        (out / "result.json").write_text(json.dumps(res, indent=1))
+        print(json.dumps({"extras": extras}, indent=1))
     return 0
 
 

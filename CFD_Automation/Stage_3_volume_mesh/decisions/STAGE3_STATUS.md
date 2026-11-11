@@ -141,7 +141,8 @@ today's M the F, starting from 800 k. What-if studies on copies of the rules fil
 ## Next
 
 0. **Mike's word on decision 114** (the light rules). If yes: build rule set 3, re-screen, then V7 on both meshes.
-1. **V7 on Mike's machine** (`solve/RUNBOOK.md`): ADflow SA, SU2 SA, SU2 SST + LM on BWB 0 at VC, α 4°.
+1. **V7 on Mike's machine** (`solve/RUNBOOK.md`): ADflow SA, SU2 SA, SU2 SST + LM on BWB 0 at VC, α 4°. The night of
+   11–12 Nov: `solve/NIGHT_11NOV.md` (also VVC, the light VC of decision 114, the wake, the pyGeo mesh check).
 2. In the same session: **the memory** (ADflow as run, ADflow with ILU fill 0, SU2) and **the wake at −5° and +10°**
    (two more points with the volume solution kept).
 3. With those numbers: whether M can run on 48 GB, and whether the fan's top angle stays at +10°.

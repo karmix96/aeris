@@ -5,6 +5,12 @@ with rule set 2 as it stands (decisions 107–111: the wake fan −5° to +10°)
 than the 16 GB desktop, well inside 48 GB. Where it runs: Mike (decision 103). **V7 also measures the memory**
 (decision 113) and **where the wake goes** at −5° and +10° (decision 111): sections 5 and 6.
 
+**11–12 Nov: the night run on Mike's desktop: `NIGHT_11NOV.md`** (what runs tonight, in which order, and what to send
+back: today's VVC and VC and the light VC of decision 114, ADflow SA, SU2 SA and SST + LM, the wake at −5° and +10°,
+the pyGeo mesh check). New for it: `scripts/whatif_mesh.py` (what-if meshes with solver files),
+`scripts/pygeo_mesh_check.py`, the memory watchdog `solve/rss_watch.py`, and `run_adflow.py --lift-distribution N
+--slices F1,F2,...` (after the solve; not yet tested on ADflow).
+
 The case (fixed by the brief): **BWB reference wing 0, VC, Re 3 × 10⁵, α 4°, Mach 0.1, transition band on.**
 Three runs: **ADflow SA**, **SU2 SA**, **SU2 SST + LM** (SU2 8.6.0).
 

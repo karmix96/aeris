@@ -1,0 +1,21 @@
+{
+ "mesh": "volume_VC_e32d995a_re3e5",
+ "outcome": "passed",
+ "cells": 2324016,
+ "check15": {
+  "n": 15,
+  "name": "export_round_trip",
+  "passed": true,
+  "value": 0.0,
+  "limit": "CGNS read back exactly (own reader and libcgns); .su2: counts equal, every face welded, no inside-out cell, boundary quads face out",
+  "note": "su2: ok"
+ },
+ "files": {
+  "blocks.npz": 58830340,
+  "manifest.json": 3542,
+  "quality.json": 30318,
+  "volume.cgns": 58957824,
+  "volume.su2": 322848977
+ }
+}
+37.53 s wall, 1435820 kB max RSS

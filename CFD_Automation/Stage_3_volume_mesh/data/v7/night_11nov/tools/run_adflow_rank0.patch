@@ -1,0 +1,40 @@
+diff --git a/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py b/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py
+index e810812a..c09f02f4 100644
+--- a/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py
++++ b/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py
+@@ -108,8 +108,9 @@ def main() -> int:
+         except Exception as e:                                 # reported, not swallowed
+             rep["wall_surface_nodes"] = f"unavailable: {e}"
+         rep["memory"] = peak_memory(solver.comm, case.get("cells"))
+-        (out / "preflight.json").write_text(json.dumps(rep, indent=1))
+-        print(json.dumps(rep, indent=1))
++        if solver.comm.rank == 0:                              # 11 Nov night: one writer (every rank wrote the file)
++            (out / "preflight.json").write_text(json.dumps(rep, indent=1))
++            print(json.dumps(rep, indent=1))
+         return 0
+     solver(ap_)
+     funcs = {}
+@@ -149,8 +150,9 @@ def main() -> int:
+                           if k.lower() in ("iter", "totalres", "resrho", "cl", "cd", "cmy", "cdp", "cdv")}
+     except Exception as e:
+         res["history"] = f"unavailable: {e}"
+-    (out / "result.json").write_text(json.dumps(res, indent=1))
+-    print(json.dumps({k: v for k, v in res.items() if k != "history"}, indent=1))
++    if solver.comm.rank == 0:                                  # 11 Nov night: one writer (see the preflight)
++        (out / "result.json").write_text(json.dumps(res, indent=1))
++        print(json.dumps({k: v for k, v in res.items() if k != "history"}, indent=1))
+     if a.lift_distribution or a.slices:
+         # Added 11 Nov 2026 for the tip comparison of decision 114; not tested on ADflow when written. It runs after
+         # result.json is on disk, so a failure here cannot lose the solve: it is recorded in result.json["extras"].
+@@ -171,8 +173,9 @@ def main() -> int:
+         except Exception as e:                                 # recorded, the solve stands
+             extras["error"] = f"{type(e).__name__}: {e}"
+         res["extras"] = extras
+-        (out / "result.json").write_text(json.dumps(res, indent=1))
+-        print(json.dumps({"extras": extras}, indent=1))
++        if solver.comm.rank == 0:
++            (out / "result.json").write_text(json.dumps(res, indent=1))
++            print(json.dumps({"extras": extras}, indent=1))
+     return 0
+ 
+ 

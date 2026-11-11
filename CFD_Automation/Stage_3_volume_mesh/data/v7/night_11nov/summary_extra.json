@@ -1,0 +1,81 @@
+{
+ "machine": {
+  "cpu": "Intel Core i5-10400 @ 2.90 GHz, 6 physical cores, 12 threads, 1 socket",
+  "host_ram_gib": 15.86,
+  "host_dimms": "2 x 8 GB",
+  "wsl_mem_total_gib": 13.651,
+  "wsl_mem_available_gib_at_2335": 12.65,
+  "wsl_swap_gib": 8.0,
+  "wslconfig": {
+   "file": "C:\\Users\\mike\\.wslconfig",
+   "memory": "14GB",
+   "swap": "8GB",
+   "autoMemoryReclaim": "gradual",
+   "changed_tonight": false
+  },
+  "host_pagefile_allocated_mb": 5120,
+  "disk_free": "918 GB of 1007 GB",
+  "kernel": "6.18.54.1-microsoft-standard-WSL2",
+  "adflow": "2.13.1 (MACH-Aero env /home/mike_kara/miniconda3/envs/mach-aero, Python 3.11)",
+  "adflow_links": "Open MPI 5.0.10, PETSc 3.21.6, CGNS 4.5.2 (ADF only) from /home/mike_kara/packages",
+  "adflow_launcher": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun (Open MPI 5.0.10)",
+  "mpi4py": "4.1.2",
+  "su2": "8.5.0 Harrier (not 8.6.0): AERIS_MESH_STUDY/tools/su2_8.5.0/bin/SU2_CFD, static, MPICH inside",
+  "su2_launcher": "/home/mike_kara/miniconda3/pkgs/mpich-5.0.1-hfbb40bb_4/bin/mpiexec.hydra (MPICH 5.0.1)",
+  "venv": "/home/mike_kara/aeris/.venv (conda env), Python 3.13.9, pyGeo 1.17.0, pySpline 1.5.4, cfdauto 0.7.0 (editable)",
+  "commit_at_start": "f5ea83c2",
+  "stage3_tests": "45 passed in 36.0 s"
+ },
+ "q6_pygeo_mesh_check": {
+  "meshes": 20,
+  "same": 20,
+  "both_passed": 20,
+  "surface_max_node_difference": 4.574118861455645e-14,
+  "volume_max_node_difference": 4.2085446239070734e-11,
+  "backends": [
+   "numpy",
+   "pygeo"
+  ],
+  "levels": [
+   "VC"
+  ],
+  "res": [
+   300000.0
+  ],
+  "conclusion": "the same meshes on both lofts, nodes apart by round-off",
+  "wall_time": "8 min 41 s",
+  "file": "data/studies/pygeo_mesh_check.json"
+ },
+ "meshes": {
+  "whatif_today_VVC_e32d995a_re3e5": {
+   "cells": 1075074,
+   "plan_cells": 1075074,
+   "cgns_mb": 27.8,
+   "su2_mb": 144.2,
+   "loft": "pygeo",
+   "build_s": 25.4
+  },
+  "volume_VC_e32d995a_re3e5": {
+   "cells": 2324016,
+   "plan_cells": 2324016,
+   "cgns_mb": 59.0,
+   "su2_mb": 322.8,
+   "loft": "pygeo (the default of wing_from_set here)",
+   "build_s": 37.5
+  },
+  "whatif_light_VC_e32d995a_re3e5": {
+   "cells": 1475376,
+   "plan_cells": 1475376,
+   "cgns_mb": 37.9,
+   "su2_mb": 201.7,
+   "loft": "pygeo",
+   "build_s": 29.3
+  },
+  "check_production": {
+   "max_node_difference": 5.023537141823908e-12,
+   "same_node_hash": false,
+   "whatif_passed": true,
+   "production_passed": true
+  }
+ }
+}

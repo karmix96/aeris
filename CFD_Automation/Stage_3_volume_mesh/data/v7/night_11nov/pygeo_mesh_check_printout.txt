@@ -1,0 +1,39 @@
+bwb         0  Re 3e+05  VC   same True  cells [2324016, 2324016]  surface 5.10702591327572e-15  volume 1.283950723518501e-11  passed [True, True] [True, True]  26.4 s
+bwb         1  Re 3e+05  VC   same True  cells [2211924, 2211924]  surface 6.8833827526759706e-15  volume 3.417710559006082e-12  passed [True, True] [True, True]  123.0 s
+bwb         2  Re 3e+05  VC   same True  cells [2582304, 2582304]  surface 4.440892098500626e-15  volume 4.519051799434237e-12  passed [True, True] [True, True]  -69.4 s
+bwb         3  Re 3e+05  VC   same True  cells [2544564, 2544564]  surface 4.218847493575595e-15  volume 2.5123014779637742e-11  passed [True, True] [True, True]  29.0 s
+bwb         4  Re 3e+05  VC   same True  cells [2232584, 2232584]  surface 4.574118861455645e-14  volume 9.201528428093297e-12  passed [True, True] [True, True]  25.5 s
+flying_wing 0  Re 3e+05  VC   same True  cells [2036992, 2036992]  surface 5.329070518200751e-15  volume 8.65441052155802e-12  passed [True, True] [True, True]  24.4 s
+flying_wing 1  Re 3e+05  VC   same True  cells [1954976, 1954976]  surface 2.886579864025407e-15  volume 1.8545165403338615e-12  passed [True, True] [True, True]  23.3 s
+flying_wing 2  Re 3e+05  VC   same True  cells [2206720, 2206720]  surface 5.329070518200751e-15  volume 3.161915174132446e-12  passed [True, True] [True, True]  28.5 s
+flying_wing 3  Re 3e+05  VC   same True  cells [2268928, 2268928]  surface 4.440892098500626e-15  volume 1.7763568394002505e-11  passed [True, True] [True, True]  26.9 s
+flying_wing 4  Re 3e+05  VC   same True  cells [2122400, 2122400]  surface 5.329070518200751e-15  volume 4.1389114358025836e-12  passed [True, True] [True, True]  25.9 s
+cranked     0  Re 3e+05  VC   same True  cells [1946752, 1946752]  surface 4.085620730620576e-14  volume 1.752198386384407e-11  passed [True, True] [True, True]  25.1 s
+cranked     1  Re 3e+05  VC   same True  cells [1955904, 1955904]  surface 5.329070518200751e-15  volume 1.0402345651527867e-11  passed [True, True] [True, True]  25.2 s
+cranked     2  Re 3e+05  VC   same True  cells [2014920, 2014920]  surface 6.217248937900877e-15  volume 2.9388047551037744e-11  passed [True, True] [True, True]  126.7 s
+cranked     3  Re 3e+05  VC   same True  cells [1983552, 1983552]  surface 5.329070518200751e-15  volume 1.736566446197685e-11  passed [True, True] [True, True]  25.1 s
+cranked     4  Re 3e+05  VC   same True  cells [1893408, 1893408]  surface 3.8191672047105385e-14  volume 8.58335624798201e-12  passed [True, True] [True, True]  -73.6 s
+tapered     0  Re 3e+05  VC   same True  cells [1941328, 1941328]  surface 7.549516567451064e-15  volume 1.0253131677018246e-11  passed [True, True] [True, True]  25.7 s
+tapered     1  Re 3e+05  VC   same True  cells [1870736, 1870736]  surface 3.9968028886505635e-15  volume 1.6413537196058314e-11  passed [True, True] [True, True]  22.7 s
+tapered     2  Re 3e+05  VC   same True  cells [2160200, 2160200]  surface 9.769962616701378e-15  volume 4.2085446239070734e-11  passed [True, True] [True, True]  28.1 s
+tapered     3  Re 3e+05  VC   same True  cells [2118048, 2118048]  surface 6.217248937900877e-15  volume 5.101696842757519e-12  passed [True, True] [True, True]  26.1 s
+tapered     4  Re 3e+05  VC   same True  cells [1972432, 1972432]  surface 8.881784197001252e-15  volume 1.715960706860642e-11  passed [True, True] [True, True]  25.7 s
+{
+ "meshes": 20,
+ "same": 20,
+ "both_passed": 20,
+ "surface_max_node_difference": 4.574118861455645e-14,
+ "volume_max_node_difference": 4.2085446239070734e-11,
+ "backends": [
+  "numpy",
+  "pygeo"
+ ],
+ "levels": [
+  "VC"
+ ],
+ "res": [
+  300000.0
+ ],
+ "conclusion": "the same meshes on both lofts, nodes apart by round-off"
+}
+exit=0

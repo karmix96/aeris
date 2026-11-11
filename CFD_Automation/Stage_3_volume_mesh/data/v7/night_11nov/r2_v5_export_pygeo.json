@@ -1,0 +1,67 @@
+{
+ "mesh": "volume_VC_e32d995a_re3e5",
+ "wing": "bwb reference 0",
+ "level": "VC",
+ "re": 300000.0,
+ "outcome": "passed",
+ "cells": 2324016,
+ "nodes": 2451132,
+ "seconds_build": 13.0,
+ "seconds_write": 23.6,
+ "check15": {
+  "n": 15,
+  "name": "export_round_trip",
+  "passed": true,
+  "value": 0.0,
+  "limit": "CGNS read back exactly (own reader and libcgns); .su2: counts equal, every face welded, no inside-out cell, boundary quads face out",
+  "note": "su2: ok"
+ },
+ "exports": {
+  "cgns": {
+   "file": "volume.cgns",
+   "bytes": 58957824,
+   "own_reader": {
+    "coords_max_error": 0.0,
+    "problems": [],
+    "zones": 13,
+    "one2one": 44,
+    "version": 3.4000000953674316,
+    "passed": true
+   },
+   "libcgns": {
+    "library": "libcgns.so",
+    "version": 3.4,
+    "cgsize_t_bits": 32,
+    "coords_max_error": 0.0,
+    "zones": 13,
+    "one2one": 44,
+    "problems": [],
+    "passed": true
+   }
+  },
+  "su2": {
+   "file": "volume.su2",
+   "points": 2378614,
+   "cells": 2324016,
+   "markers": {
+    "wall": 15168,
+    "symmetry": 21124,
+    "farfield": 72340
+   },
+   "bytes": 322848977,
+   "smallest_corner_jacobian": 2.9047212797523446e-13,
+   "inward_quads": 0,
+   "orphan_quads": 0,
+   "problems": [],
+   "passed": true
+  },
+  "seconds": 23.4
+ },
+ "files": {
+  "blocks.npz": 58830340,
+  "manifest.json": 3542,
+  "quality.json": 30318,
+  "volume.cgns": 58957824,
+  "volume.su2": 322848977
+ }
+}

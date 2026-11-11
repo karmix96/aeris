@@ -1,0 +1,11 @@
+/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_light_VC_e32d995a_re3e5
+  passed; 1,475,376 cells; y+ 1; wall growth 1.28; tip gap 77.5 x s0; loft pygeo; every check passed; 29 s
+  blocks.npz  37.7 MB
+  manifest.json  0.0 MB
+  quality.json  0.0 MB
+  volume.cgns  37.9 MB
+  volume.su2  201.7 MB
+  whatif.json  0.0 MB
+  whatif_surface.yaml  0.0 MB
+  whatif_volume.yaml  0.0 MB
+29.26 s wall, 905876 kB max RSS

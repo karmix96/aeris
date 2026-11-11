@@ -1,0 +1,11 @@
+/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_today_VVC_e32d995a_re3e5
+  passed; 1,075,074 cells; y+ 1.3; wall growth 1.337; tip gap 2.0 x s0; loft pygeo; every check passed; 25 s
+  blocks.npz  27.6 MB
+  manifest.json  0.0 MB
+  quality.json  0.0 MB
+  volume.cgns  27.8 MB
+  volume.su2  144.2 MB
+  whatif.json  0.0 MB
+  whatif_surface.yaml  0.0 MB
+  whatif_volume.yaml  0.0 MB
+25.35 s wall, 760536 kB max RSS

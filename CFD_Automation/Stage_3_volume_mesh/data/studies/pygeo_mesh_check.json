@@ -1,0 +1,1082 @@
+{
+ "summary": {
+  "meshes": 20,
+  "same": 20,
+  "both_passed": 20,
+  "surface_max_node_difference": 4.574118861455645e-14,
+  "volume_max_node_difference": 4.2085446239070734e-11,
+  "backends": [
+   "numpy",
+   "pygeo"
+  ],
+  "levels": [
+   "VC"
+  ],
+  "res": [
+   300000.0
+  ],
+  "conclusion": "the same meshes on both lofts, nodes apart by round-off"
+ },
+ "rows": [
+  {
+   "type": "bwb",
+   "index": 0,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 5.10702591327572e-15,
+   "n_ring": [
+    238,
+    238
+   ],
+   "n_span": [
+    61,
+    61
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2324016,
+    2324016
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.283950723518501e-11,
+   "min_sj": [
+    0.09899158867143923,
+    0.09899158867150927
+   ],
+   "same": true,
+   "seconds": 26.4
+  },
+  {
+   "type": "bwb",
+   "index": 1,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 6.8833827526759706e-15,
+   "n_ring": [
+    238,
+    238
+   ],
+   "n_span": [
+    58,
+    58
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2211924,
+    2211924
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 3.417710559006082e-12,
+   "min_sj": [
+    0.09899112522872085,
+    0.09899112522886339
+   ],
+   "same": true,
+   "seconds": 123.0
+  },
+  {
+   "type": "bwb",
+   "index": 2,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 4.440892098500626e-15,
+   "n_ring": [
+    238,
+    238
+   ],
+   "n_span": [
+    64,
+    64
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2582304,
+    2582304
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 4.519051799434237e-12,
+   "min_sj": [
+    0.09898983020297716,
+    0.09898983020297716
+   ],
+   "same": true,
+   "seconds": -69.4
+  },
+  {
+   "type": "bwb",
+   "index": 3,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 4.218847493575595e-15,
+   "n_ring": [
+    238,
+    238
+   ],
+   "n_span": [
+    64,
+    64
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2544564,
+    2544564
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 2.5123014779637742e-11,
+   "min_sj": [
+    0.09899936877975764,
+    0.0989993687789864
+   ],
+   "same": true,
+   "seconds": 29.0
+  },
+  {
+   "type": "bwb",
+   "index": 4,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 4.574118861455645e-14,
+   "n_ring": [
+    238,
+    238
+   ],
+   "n_span": [
+    59,
+    59
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2232584,
+    2232584
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 9.201528428093297e-12,
+   "min_sj": [
+    0.09899170694040078,
+    0.0989917069403883
+   ],
+   "same": true,
+   "seconds": 25.5
+  },
+  {
+   "type": "flying_wing",
+   "index": 0,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 5.329070518200751e-15,
+   "n_ring": [
+    224,
+    224
+   ],
+   "n_span": [
+    60,
+    60
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2036992,
+    2036992
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 8.65441052155802e-12,
+   "min_sj": [
+    0.103649989797401,
+    0.10364998979742714
+   ],
+   "same": true,
+   "seconds": 24.4
+  },
+  {
+   "type": "flying_wing",
+   "index": 1,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 2.886579864025407e-15,
+   "n_ring": [
+    220,
+    220
+   ],
+   "n_span": [
+    57,
+    57
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1954976,
+    1954976
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.8545165403338615e-12,
+   "min_sj": [
+    0.10230510934068286,
+    0.10230510934070326
+   ],
+   "same": true,
+   "seconds": 23.3
+  },
+  {
+   "type": "flying_wing",
+   "index": 2,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 5.329070518200751e-15,
+   "n_ring": [
+    230,
+    230
+   ],
+   "n_span": [
+    65,
+    65
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2206720,
+    2206720
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 3.161915174132446e-12,
+   "min_sj": [
+    0.10568898034954258,
+    0.10568898034951411
+   ],
+   "same": true,
+   "seconds": 28.5
+  },
+  {
+   "type": "flying_wing",
+   "index": 3,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 4.440892098500626e-15,
+   "n_ring": [
+    232,
+    232
+   ],
+   "n_span": [
+    66,
+    66
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2268928,
+    2268928
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.7763568394002505e-11,
+   "min_sj": [
+    0.10638375461649112,
+    0.10638375461630192
+   ],
+   "same": true,
+   "seconds": 26.9
+  },
+  {
+   "type": "flying_wing",
+   "index": 4,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 5.329070518200751e-15,
+   "n_ring": [
+    232,
+    232
+   ],
+   "n_span": [
+    61,
+    61
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2122400,
+    2122400
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 4.1389114358025836e-12,
+   "min_sj": [
+    0.10638183955422668,
+    0.1063818395541717
+   ],
+   "same": true,
+   "seconds": 25.9
+  },
+  {
+   "type": "cranked",
+   "index": 0,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 4.085620730620576e-14,
+   "n_ring": [
+    200,
+    200
+   ],
+   "n_span": [
+    62,
+    62
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1946752,
+    1946752
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.752198386384407e-11,
+   "min_sj": [
+    0.33724381033674705,
+    0.3372438103367433
+   ],
+   "same": true,
+   "seconds": 25.1
+  },
+  {
+   "type": "cranked",
+   "index": 1,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 5.329070518200751e-15,
+   "n_ring": [
+    204,
+    204
+   ],
+   "n_span": [
+    61,
+    61
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1955904,
+    1955904
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.0402345651527867e-11,
+   "min_sj": [
+    0.3388199410263867,
+    0.3388199410264363
+   ],
+   "same": true,
+   "seconds": 25.2
+  },
+  {
+   "type": "cranked",
+   "index": 2,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 6.217248937900877e-15,
+   "n_ring": [
+    202,
+    202
+   ],
+   "n_span": [
+    68,
+    68
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2014920,
+    2014920
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 2.9388047551037744e-11,
+   "min_sj": [
+    0.3380278576266961,
+    0.33802785762659515
+   ],
+   "same": true,
+   "seconds": 126.7
+  },
+  {
+   "type": "cranked",
+   "index": 3,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 5.329070518200751e-15,
+   "n_ring": [
+    204,
+    204
+   ],
+   "n_span": [
+    61,
+    61
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1983552,
+    1983552
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.736566446197685e-11,
+   "min_sj": [
+    0.33881957358528786,
+    0.3388195735853552
+   ],
+   "same": true,
+   "seconds": 25.1
+  },
+  {
+   "type": "cranked",
+   "index": 4,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 3.8191672047105385e-14,
+   "n_ring": [
+    200,
+    200
+   ],
+   "n_span": [
+    60,
+    60
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1893408,
+    1893408
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 8.58335624798201e-12,
+   "min_sj": [
+    0.33724346741481454,
+    0.33724346741483674
+   ],
+   "same": true,
+   "seconds": -73.6
+  },
+  {
+   "type": "tapered",
+   "index": 0,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 7.549516567451064e-15,
+   "n_ring": [
+    204,
+    204
+   ],
+   "n_span": [
+    62,
+    62
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1941328,
+    1941328
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.0253131677018246e-11,
+   "min_sj": [
+    0.3388209480094915,
+    0.3388209480093702
+   ],
+   "same": true,
+   "seconds": 25.7
+  },
+  {
+   "type": "tapered",
+   "index": 1,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 3.9968028886505635e-15,
+   "n_ring": [
+    204,
+    204
+   ],
+   "n_span": [
+    58,
+    58
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1870736,
+    1870736
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.6413537196058314e-11,
+   "min_sj": [
+    0.3388201154606714,
+    0.3388201154606672
+   ],
+   "same": true,
+   "seconds": 22.7
+  },
+  {
+   "type": "tapered",
+   "index": 2,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 9.769962616701378e-15,
+   "n_ring": [
+    218,
+    218
+   ],
+   "n_span": [
+    68,
+    68
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2160200,
+    2160200
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 4.2085446239070734e-11,
+   "min_sj": [
+    0.34448891982671936,
+    0.34448891982683677
+   ],
+   "same": true,
+   "seconds": 28.1
+  },
+  {
+   "type": "tapered",
+   "index": 3,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 6.217248937900877e-15,
+   "n_ring": [
+    220,
+    220
+   ],
+   "n_span": [
+    65,
+    65
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    2118048,
+    2118048
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 5.101696842757519e-12,
+   "min_sj": [
+    0.3453126601762877,
+    0.34531266017650997
+   ],
+   "same": true,
+   "seconds": 26.1
+  },
+  {
+   "type": "tapered",
+   "index": 4,
+   "re": 300000.0,
+   "level": "VC",
+   "backends": [
+    "numpy",
+    "pygeo"
+   ],
+   "loft_backends_got": [
+    "numpy",
+    "pygeo"
+   ],
+   "same_input_hash": true,
+   "surface_passed": [
+    true,
+    true
+   ],
+   "surface_failed": [
+    [],
+    []
+   ],
+   "surface_same_shapes": true,
+   "surface_max_node_difference": 8.881784197001252e-15,
+   "n_ring": [
+    206,
+    206
+   ],
+   "n_span": [
+    63,
+    63
+   ],
+   "volume_passed": [
+    true,
+    true
+   ],
+   "volume_failed": [
+    [],
+    []
+   ],
+   "cells": [
+    1972432,
+    1972432
+   ],
+   "volume_same_shapes": true,
+   "volume_max_node_difference": 1.715960706860642e-11,
+   "min_sj": [
+    0.33961686577691763,
+    0.33961686577691763
+   ],
+   "same": true,
+   "seconds": 25.7
+  }
+ ]
+}

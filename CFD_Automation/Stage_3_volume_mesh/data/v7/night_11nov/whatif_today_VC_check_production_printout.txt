@@ -1,0 +1,11 @@
+{
+ "level": "VC",
+ "cells_whatif": 2324016,
+ "cells_production": 2324016,
+ "same_block_shapes": true,
+ "max_node_difference": 5.023537141823908e-12,
+ "same_node_hash": false,
+ "whatif_passed": true,
+ "production_passed": true
+}
+31.20 s wall, 392556 kB max RSS

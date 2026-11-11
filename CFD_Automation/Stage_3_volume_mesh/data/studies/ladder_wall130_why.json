@@ -1,0 +1,65 @@
+{
+ "wing": "bwb reference 3",
+ "level": "VC",
+ "re": 300000.0,
+ "cases": {
+  "wall 1.30": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 2409588,
+   "growth_over_limit": 1.001104716672364,
+   "where": "WU_in station 63"
+  },
+  "stations 1.25": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 2409324,
+   "growth_over_limit": 0.9961475206863272,
+   "where": "WU_in station 57"
+  },
+  "tip gap DPW": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 1719804,
+   "growth_over_limit": 0.9964094634213051,
+   "where": "WU_in station 42"
+  },
+  "wall 1.30 + stations": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 2281644,
+   "growth_over_limit": 1.001741629513894,
+   "where": "WU_in station 57"
+  },
+  "wall 1.30 + tip gap": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 1628604,
+   "growth_over_limit": 0.9948824305467746,
+   "where": "WU_in station 42"
+  },
+  "stations + tip gap": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 1652184,
+   "growth_over_limit": 0.9975485451311563,
+   "where": "WU_in station 39"
+  },
+  "all three, wall 1.30": {
+   "outcome": "refused",
+   "failed": [
+    "growth"
+   ],
+   "cells": 1564632,
+   "growth_over_limit": 1.0105342697416753,
+   "where": "WU_in station 39"
+  },
+  "all three, wall 1.28 (light)": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 1598328,
+   "growth_over_limit": 0.9920512170074999,
+   "where": "WU_in station 39"
+  }
+ }
+}

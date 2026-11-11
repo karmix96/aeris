@@ -1144,3 +1144,95 @@ check passing; the band off would reach 3.5–4 M but breaks the BWB cap.
 5. **Leave alone:** the 8 rules that cost nothing.
 6. **None of this proves accuracy:** these are counts and mesh checks. Stage 4 (V7, then the grid study) measures lift
    and drag on the lighter meshes.
+7. **Amended the same evening (section 21.1):** built on all 20 reference wings at VC, the three changes together are
+   refused on BWB reference wing 3 by the growth check (1.0105 against 1.01) with the wall-normal growth at 1.30. With
+   1.28 every mesh built passes; the package is taken with 1.28 (M 5.5 M at Re 3 × 10⁵ on the 20 reference wings, 6.4 M
+   at 4 × 10⁶ on wing 0 of each type).
+
+## 21. The ladder: today, lighter, and an 800 k start (11 Nov 2026, Mike's question)
+
+Mike: "what is the current mesh sizes and propose plan to reduce the sizes changing only the too strict things or making
+the current M mesh make it be the Fine... i mean start from 800k mesh vvcoarse and gradually move to the F mesh."
+
+`scripts/ladder_study.py` → `data/studies/ladder.json` (wing 0 of each type at the 4 Re), `ladder_ref20.json` (the 20
+reference wings, Re 3 × 10⁵), `ladder_family.json`; `scripts/size_figures.py` → `docs/page/ladder.png`. Two rule sets on
+the same wings: **today** (rule set 2) and **light**: wall-normal growth 1.28 at VC (1.21, 1.16, 1.12 at C, M, F),
+station growth 1.25 at VC, the tip gap 0.1 % of the semi-span at M (DPW's value). Five levels: **VVC** is one step
+(1.3) under VC with every anchor left where it is, so VVC is past the hard minimums (y⁺ 1.3; wall growth 1.34 today,
+1.38 light). A what-if: copies of the rules files with `names: [VVC, VC, C, M, F]`; the volume laws read the level's y⁺
+from the surface copy (a hook in the script; the package is not changed). Adding the level changes nothing above it:
+today's VC, C, M and F counts are the known ones (V4: 2.08, 4.46, 9.53, 20.7 M).
+
+### 21.1 Why 1.28, not the 1.30 of section 20 (a negative finding)
+
+The first run used the light rules of section 20.5 (wall-normal growth 1.30); its files are kept
+(`ladder_wall130.json`, `ladder_wall130_ref20.json`, `ladder_wall130_family.json`). Section 20.4 had built only wing 0
+of each type. Built on all 20 reference wings at VC, **BWB reference wing 3 is refused by the growth check** (1.0105 ×
+its limit; 1.01 is allowed), and two VVC meshes with it (BWB 2 at Re 3 × 10⁵, BWB 0 at 10⁵). Each of the three changes
+alone and each pair pass on that wing (0.995–1.002; `ladder_study.py --why130` → `ladder_wall130_why.json`). The cause: at 1.30 the wall growth equals the far limit (1.30), so
+nothing is left for the far-field blend (decision 84). With 1.28 the three refused meshes pass (BWB 3 at VC: 0.992) for
+2 % more cells. So the light rules are taken with 1.28; the 20.4 numbers (1.30) are about 2–4 % lower than the ones here.
+
+### 21.2 The sizes
+
+Cells in millions. The 20 reference wings at Re 3 × 10⁵, median (range):
+
+| rules | VVC | VC | C | M | F |
+| --- | --- | --- | --- | --- | --- |
+| today | 0.98 (0.89–1.21) | 2.08 (1.87–2.58) | 4.46 (4.04–5.54) | 9.53 (8.56–11.8) | 20.7 (18.7–25.7) |
+| light | 0.58 (0.52–0.75) | 1.25 (1.14–1.60) | 2.63 (2.38–3.37) | 5.53 (4.99–7.12) | 12.0 (10.8–15.6) |
+
+Wing 0 of each type at the four Re, median:
+
+| Re | rules | VVC | VC | C | M | F |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10⁵ | today | 0.59 | 1.27 | 2.69 | 5.71 | 12.4 |
+| | light | 0.39 | 0.84 | 1.77 | 3.71 | 7.98 |
+| 3 × 10⁵ | today | 0.92 | 1.99 | 4.21 | 9.07 | 19.7 |
+| | light | 0.55 | 1.20 | 2.50 | 5.28 | 11.4 |
+| 10⁶ | today | 1.13 | 2.47 | 5.28 | 11.2 | 24.4 |
+| | light | 0.62 | 1.34 | 2.81 | 5.97 | 12.9 |
+| 4 × 10⁶ | today | 1.38 | 2.97 | 6.31 | 13.5 | 29.4 |
+| | light | 0.67 | 1.46 | 3.04 | 6.41 | 13.9 |
+
+The same cells, spent differently (the levels of the two rule sets that have about the same size):
+
+| About | Today's rules give | The light rules give |
+| --- | --- | --- |
+| 0.8–1.5 M | VVC: y⁺ 1.3, nose 22° per cell, trailing-edge cell 0.22 % c, 7 cells per bubble | **VC**: y⁺ 1, nose 16.9°, 0.17 % c, 9.1 per bubble |
+| 1.8–3.0 M | VC: y⁺ 1, nose 16.9°, 0.17 % c, 9.1 per bubble | **C**: y⁺ 0.77, nose 13°, 0.13 % c, 11.8 per bubble |
+| 3.7–6.4 M | C: y⁺ 0.77, nose 13°, 0.13 % c, 11.8 per bubble | **M**: y⁺ 0.59, nose 10°, 0.10 % c, 15.4 per bubble (DPW's medium values) |
+| 8.0–13.9 M | M: y⁺ 0.59, nose 10°, 0.10 % c, 15.4 per bubble | **F**: y⁺ 0.46, nose 7.7°, 0.077 % c, 20 per bubble (the transition guide) |
+
+### 21.3 Findings
+
+1. **Today** (wing 0 of each type, over the four Re): VC 1.3–3.0 M, C 2.7–6.3 M, M 5.7–13.5 M, F 12–29 M. M is above
+   10 M from Re 10⁶ up.
+2. **The light rules move every level one step down in size, and no target moves.** The light F (8.0–13.9 M) is
+   today's M (5.7–13.5 M); the light M (3.7–6.4 M) is today's C; the light C is today's VC; the light VC (0.8–1.5 M)
+   is today's VVC (0.6–1.4 M). M keeps DPW's medium values and F the transition guide's. On the 20 reference wings at
+   Re 3 × 10⁵ the light M is 5.53 M (× 0.58); at 4 × 10⁶ 6.41 M (× 0.48).
+3. **Renaming today's levels one step down** ("today's M becomes the F") gives the same sizes, but every level is
+   then one step coarser on the wing (the table above), the top level no longer meets the transition guide (15.4 cells
+   per bubble, wall growth 1.14), and the bottom level is past the hard minimums (y⁺ 1.3). At the same cost the light
+   rules spend the cells on the wing instead of on the ramp to the tip cap.
+4. **The start of the ladder.** With the light rules VC is 0.8–1.5 M (four levels); with VVC added the ladder starts
+   at 0.4–0.7 M (five levels). Mike's 800 k lies between.
+5. **VVC is a preview level, not a level to claim accuracy on:** it is past the hard minimums (y⁺ 1.3, wall growth
+   1.38). With 1.28 every VVC mesh built here passes (36 of 36 with the light rules, 36 of 36 with today's).
+6. **Checks.** All 360 counted surfaces pass (160 in the 4-Re run, 200 on the 20 reference wings). Built: VVC and VC
+   with both rule sets 144 of 144, C with the light rules 36 of 36. The light rules built as one family on BWB 0 at Re
+   3 × 10⁵: VVC 0.70 M, VC 1.48 M, C 3.11 M and M 6.62 M all pass every check, with no nose repair, and check 13 passes
+   (worst 2.0 %: the band cell, VVC / VC 1.275).
+7. **Memory, by S8's ANK-only law** (2.69 + 7.23 GiB per M cells; a two-point fit, V7 measures it). Light: VC 9–13 GiB,
+   C 15–25, M 30–49, F 60–103. Today: VC 12–24, C 22–48, M 44–100, F 92–215. So with the light rules VC sits at the edge
+   of the 16 GB desktop, C fits 48 GB, M fits 48 GB at Re 3 × 10⁵ (41–43 GiB) and is at its edge or over from 10⁶ up
+   (46 and 49 GiB against about 45 usable), and F stays an HPC job.
+
+**What `ladder.png` shows.** Cells per level (log scale) at Re 3 × 10⁵ and 4 × 10⁶, the median of wing 0 of each type:
+today's rules and the light rules; open markers: VVC; the dashed line is 10 M.
+**Conclusion.** Loosening the three too-strict rules is the better of Mike's two options: it gives the sizes of
+"today's M becomes the F" (F 8–14 M, M 4–6 M, VC about 1 M) and keeps every level's accuracy target; what it gives up is
+the wall-resolved tip cap. The wall-normal growth goes to 1.28, not 1.30 (21.1). Which level then becomes the production
+mesh is for Stage 4's grid study: the coarsest level inside the Stage 0 error budget. Not decided (decision 114); no
+rule is changed.

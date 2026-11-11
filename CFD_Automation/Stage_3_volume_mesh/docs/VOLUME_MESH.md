@@ -1,15 +1,15 @@
-# Stage_3 — Volume mesh page (text copy, 10 Nov 2026)
+# Stage_3 — Volume mesh page (text copy, 11 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_3_volume_mesh/docs/VOLUME_MESH.html` (repo karmix96/aeris,
 branch `main`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
 line with its caption. Companion files: 'Stage_3 Executive summary', 'Stage_3 Volume mesh status and handover',
 'Stage_3 Mesh flowchart'. If this copy and the repository ever differ, the repository wins.
 
-CFD_Automation · Stage 3 · volume mesh · cfdauto 0.7.0 · 10 Nov 2026
+CFD_Automation · Stage 3 · volume mesh · cfdauto 0.7.0 · 11 Nov 2026
 
 # Volume Mesh
 
-One matched C-H mesh per wing, Re and level (VC, C, M, F), on the frozen Stage 2 surface: structured CGNS for ADflow, the same cells as `.su2` for SU2. What it is, how one is built, every check, what was measured, what is weak and what is left. Every check and limit was written before the first mesh was judged (V0) and none changed; the construction changed ten times, each after a check failed ([What changed](#changes)). The first rule set worked but cost too much (M 20.8 M, F 45 M cells). On 9 Nov Mike set the target, M about 10 M with F above it, and rule set 2 (decision 107) meets it with the volume rules alone: its results come first, the first rule set's follow as the record ([Cost](#cost) has the packages that were counted). Step by step from a surface to its volume mesh, with the rule, the decision and the value per level: the <a href="https://claude.ai/artifact/EWgreAJioSL4yNMwoGFUpD" target="_blank" rel="noopener">flowchart</a>.
+One matched C-H mesh per wing, Re and level (VC, C, M, F), on the frozen Stage 2 surface: structured CGNS for ADflow, the same cells as `.su2` for SU2. What it is, how one is built, every check, what was measured, what is weak and what is left. Every check and limit was written before the first mesh was judged (V0) and none changed; the construction changed ten times, each after a check failed ([What changed](#changes)). The first rule set worked but cost too much (M 20.8 M, F 45 M cells). On 9 Nov Mike set the target, M about 10 M with F above it, and rule set 2 (decision 107) meets it with the volume rules alone: its results come first, the first rule set's follow as the record ([Cost](#cost) has the packages that were counted). On 10–11 Nov the size was studied ([The size](#size)): what drives it, which rules are stricter than the published guides, and a lighter ladder that is not decided yet (decision 114). Step by step from a surface to its volume mesh, with the rule, the decision and the value per level: the <a href="https://claude.ai/artifact/EWgreAJioSL4yNMwoGFUpD" target="_blank" rel="noopener">flowchart</a>.
 
 ## At a glance
 
@@ -18,6 +18,12 @@ One matched C-H mesh per wing, Re and level (VC, C, M, F), on the frozen Stage 2
 **Rule set 2: M about 10 M cells**
 
 Rule set 1 worked but cost too much (M 20.8 M, F 45 M). Mike set the target on 9 Nov: M about 10 M, F may be above; and the angles: −5° to +10°. Rule set 2 (decisions 107, 111) meets it with the volume rules alone; the surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). In main on GitHub since 10 Nov, with an app to load or make a wing and look at its meshes (`CFD_Automation/app`).
+
+### The size, studied (11 Nov)
+
+**M 5.5–6.4 M possible · not decided**
+
+Today M is 9.5 M at Re 3 × 10⁵ and 13.5 M at 4 × 10⁶. Three rules are stricter than the published guides: the tip gap (36–1,100 × finer than DPW), the wall-normal growth and the station growth. Loosened together: M 5.5 and 6.4 M with the band kept, and each level becomes about as big as the level below it today. It gives up the wall-resolved tip cap and needs one solver check and Mike's word (decision 114). [The size](#size).
 
 ### Rule set 2: the screens
 
@@ -47,7 +53,7 @@ No solver has run on a Stage 3 mesh, so where the wake goes is not checked. Rule
 
 **15 checks · 45 tests**
 
-Rules in `configs/volume.yaml` (rule set 1 kept in `configs/volume_rules1.yaml`); checks and limits in `decisions/volume_rules.md`; code in `cfdauto/volume/` (Stage 2's `cfdauto/mesh/` untouched); decisions 84–113 in `OPEN_DECISIONS.md`.
+Rules in `configs/volume.yaml` (rule set 1 kept in `configs/volume_rules1.yaml`); checks and limits in `decisions/volume_rules.md`; code in `cfdauto/volume/` (Stage 2's `cfdauto/mesh/` untouched); decisions 84–114 in `OPEN_DECISIONS.md`.
 
 ## Rule set 2 (decisions 107–111): M about 10 M cells, angles −5° to +10°
 
@@ -93,6 +99,14 @@ Mike, 9 Nov 20:30: "make medium around 10 million; the fine family can be over t
 - **V5** (the V7 mesh, rule set 2): 2,324,016 cells; check 15 passed; CGNS 59 MB (libcgns: exact), .su2 323 MB.
 - **V6** (every built set at VC, Re 3 × 10⁵, with the 20 reference wings): 721 of 722 pass; refused: BWB corner2 wing 6 (cell quality 0.032); cells 1.75–2.95 M (median 2.10 M); M counted on 94 wings: 8.2–12.8 M (median 9.6 M); F counted on 94 wings: 17.7–27.8 M (median 20.7 M).
 
+*\[Figure: Rule set 2 as built: BWB reference wing 0 at VC, Re 3 × 10⁵, one colour per block. The station planes at the root, mid semi-span and the tip; the root's trailing edge close up (the base block in orange); the root plane out to the far field; a plane across the wake just behind the wing (dashed: the tip).\]*
+
+**Conclusion.** One C per station, square to the wall, with the wake fan behind the trailing edge and the base block between the two wake lines; 2,324,016 cells (wing stations 1,267,440, past the tip 1,013,952, cap 42,624). In the last panel the station planes crowd at the tip: the tip gap is 2 × the first wall cell ([The size](#size)).
+
+*\[Figure: Rule set 2, the 80 reference meshes at VC (light to dark: Re 10⁵ to 4 × 10⁶). (a) The worst cell of the CAP block. (b) The cells on the tip-vortex path at 4°, 0.5, 1 and 2 local chords behind the tip trailing edge: across the wake and along it (median and range). (c) The share of the cells in the blocks past the tip.\]*
+
+**Conclusion.** The cap passes on all 80 (0.062–0.097; limit 0.05) and is the part nearest its limit on the BWB and flying wing. The blocks past the tip hold 41–46 % of the cells. The vortex path is fine across the wake (0.0056, 0.014, 0.029 c at 0.5, 1, 2 c) and coarse along it (0.10, 0.19, 0.37 c): enough to carry a vortex, not to resolve its core.
+
 *\[Figure: Rule set 2. (a) Check 13: every judged spacing, coarse over fine, between neighbouring levels (green: 1.3 ± 3 %). (b) Cells per level on the 20 reference wings: VC and C built, M and F counted; the target at M; grey: what 48 GB holds for ADflow by S8's two laws.\]*
 
 **Conclusion.** Check 13 passes on 20 of 20 families (worst 2.0 % off; 11 of 20 failed before the fix of decision 109). M is 9.5 M cells (median; 8.6–11.8 M), the target Mike set; F is 20.7 M. By S8's laws for ADflow only VC and C fit 48 GB; M needs 72–92 GiB (decision 113: V7 measures it).
@@ -107,6 +121,136 @@ Mike, 9 Nov 20:30: "make medium around 10 million; the fine family can be over t
 
 **Conclusion.** Rule set 2 as it stands meets Mike's targets for the cells (M 9.5 M median) and the angles (one mesh for −5° to +10°): 80 of 80 reference meshes, 20 of 20 families and 721 of 722 screened meshes pass, after three construction faults were fixed and no limit changed. It does not make M fit 48 GB for ADflow (by S8's laws, 72–92 GiB); the first solves measure that, and where the wake goes.
 
+## The size of the mesh: what drives it, and what can be loosened (10–11 Nov)
+
+Mike, 10–11 Nov: how big is the domain, what makes the mesh big, and what can be loosened without losing accuracy ("for a structured mesh, pre-stall, above 10 M is too much"). Every study here is a what-if: the rules files are copied and changed, the rules themselves are not (they stay frozen). They count cells and run the mesh checks; none is a solver result. The record: `decisions/volume_rules.md`, sections 18–21.
+
+### 1. The wing and the flow set every count
+
+| count (the same in every station plane) | range, 702 wings | it follows                         | correlation |
+|-----------------------------------------|------------------|------------------------------------|-------------|
+| stations along the semi-span            | 52–84            | the semi-span in local chords      | +0.75       |
+| nodes around the section                | 269–347          | the taper (tip chord / root chord) | −0.91       |
+| wake nodes, base to outflow             | 46–60            | the smallest chord                 | −0.96       |
+| wall-normal layers                      | 59–71            | the largest chord                  | +0.62       |
+| stations past the tip                   | 48–49            | the same on every wing at one Re   | —           |
+
+*\[Figure: (a) The cells at VC against Re, one line per reference wing (band on). (b)–(d) A count of the mesh against the wing quantity its rule uses, one marker per wing: the 702 built wings at VC, Re 3 × 10⁵.\]*
+
+**Conclusion.** The mesh is set by the wing and the Re. Every count changes from wing to wing and follows what its rule computes it from; the counts multiplied give the cells (correlation 0.995). The aspect ratio alone hardly matters (−0.16); the chords do. Each wing has its own Re curve (× 1.72–2.40 from Re 10⁵ to 4 × 10⁶). The angle of attack is not an input: one mesh serves −5° to +10°, and the fan for it costs no cells (a fan to +20° would add 13–17 %).
+
+### 2. Re and the transition band
+
+*\[Figure: The cells at VC against Re, with the band (as every run has it) and without: the median of the 20 reference wings and their range.\]*
+
+**Conclusion.** From Re 10⁵ to 4 × 10⁶ the mesh grows × 2.3 with the band and × 1.6 without it. The band costs × 1.05 at 10⁵ and × 1.46–1.50 from 3 × 10⁵ up (decision 81 keeps it on for every run).
+
+| median at VC, 20 reference wings | Re 10⁵ | Re 3 × 10⁵ | Re 10⁶ | Re 4 × 10⁶ |
+|----------------------------------|--------|------------|--------|------------|
+| cells, band on                   | 1.33 M | 2.08 M     | 2.53 M | 3.03 M     |
+| cells, band off                  | 1.27 M | 1.43 M     | 1.69 M | 2.03 M     |
+| nodes around the section         | 219    | 306        | 314    | 314        |
+| wall-normal layers               | 58     | 60         | 65     | 71         |
+| stations along the semi-span     | 56     | 61.5       | 68     | 75         |
+| stations past the tip            | 45     | 48.5       | 53     | 58         |
+| wake nodes                       | 48     | 48         | 48     | 48         |
+
+**Conclusion.** Three counts grow with Re: the nodes around (the band switches on), the layers (a thinner first cell) and the stations, along the wing and past the tip. The stations grow only because the tip gap is 2 × the first wall cell, which shrinks with Re.
+
+### 3. The domain: what a smaller far field saves
+
+*\[Figure: The cells at M for five far-field sizes (ahead / behind the wing, in mean chords): the median of the 20 reference wings and their range, Re 3 × 10⁵. Today is 80 / 80. The VC meshes were also built and checked.\]*
+
+**Conclusion.** The domain costs few cells, because the cells grow by up to 1.3 per cell away from the wing (10 / 20: −25 %; 20 / 40: −17 %; 40 / 40: −10 %; 40 / 80: −8 %). At 10 / 20 14 of 20 VC meshes are refused (growth, wake). What a smaller domain costs in lift and drag is not measured: Stage 4's far-field study (40 / 80 / 160) does that. Keep 80.
+
+### 4. The general rules, one loosened at a time
+
+*\[Figure: One bar per rule: the change in cells at M when only that rule is loosened (the median of wing 0 of each type, Re 3 × 10⁵; today 9.07 M). Hatched: a mesh fails a check, named beside the rule. Checked: the 20 reference surfaces at VC, 4 at M, and 4 volume builds at VC per rule.\]*
+
+**Conclusion.** Three rules make most of the size: the tip gap (2 × the first wall cell), the band and the cells per bubble, 25–34 % each. The growth rates and the far field are worth 5–11 % each. Eight rules cost nothing, and a ninth only on the BWB: another rule sets their count. The tip cap is the weak place: the band off, a coarser trailing-edge cell or a faster growth around the section can push it below its limit.
+
+| rule, loosened alone                                                                                                                                                                                                                                                                                                                   | cells at M               | checks                                                                                 |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|----------------------------------------------------------------------------------------|
+| tip gap 100 x s0 (not 2)                                                                                                                                                                                                                                                                                                               | −34 %                    | all pass                                                                               |
+| transition band off                                                                                                                                                                                                                                                                                                                    | −31 %                    | **fails:** the tip-cap cells (BWB 0) at M                                              |
+| band: 10 cells per bubble at F (not 20)                                                                                                                                                                                                                                                                                                | −25 %                    | all pass                                                                               |
+| tip gap 20 x s0 (not 2)                                                                                                                                                                                                                                                                                                                | −20 %                    | all pass                                                                               |
+| far field 40 mean chords (not 80)                                                                                                                                                                                                                                                                                                      | −11 %                    | all pass                                                                               |
+| wall-normal growth 1.30 at VC (not 1.25)                                                                                                                                                                                                                                                                                               | −10 %                    | all pass                                                                               |
+| far growth built 1.28 at VC (not 1.22)                                                                                                                                                                                                                                                                                                 | −6 %                     | **fails:** the wake growth (a VC build)                                                |
+| station growth 1.25 at VC (not 1.20)                                                                                                                                                                                                                                                                                                   | −6 %                     | all pass                                                                               |
+| trailing-edge cell 0.2 % c at M (not 0.1 %)                                                                                                                                                                                                                                                                                            | −4 %                     | **fails:** the tip-cap cells (BWB 0) at M                                              |
+| 8 station gaps per panel at M (not 12)                                                                                                                                                                                                                                                                                                 | −4 %                     | **fails:** the station growth (BWB 3) at VC                                            |
+| chordwise growth 1.25 at VC (not 1.20)                                                                                                                                                                                                                                                                                                 | −2 %                     | passes at Re 3 × 10⁵; at 10⁵ the tip cap fails on the BWB and flying wings (package A) |
+| nose turning 13 deg at M (not 10)                                                                                                                                                                                                                                                                                                      | −1 %                     | all pass                                                                               |
+| 20 cells across the boundary layer at M (not 30)                                                                                                                                                                                                                                                                                       | 0 % (the BWB only: −4 %) | all pass                                                                               |
+| largest chordwise cell 3 % c at M (not 2 %); station gap 0.35 local c at M (not 0.25); wall fine zone 1 local chord (not 2); wake band cell 1.5 % c at M (not 0.75 %); 8 cells across the wake fan at M (not 12); wake band cell aspect up to 16 (not 8); outboard fine zone 1 mean chord (not 2); wake fan 1 local chord long (not 2) | 0 % each                 | all pass: another rule sets that count                                                 |
+
+Against the published guides (DPW-4 and HiLiftPW-1 gridding guidelines, DLR's DPW-4 grids, the Ansys CFX guide for the transition model):
+
+| rule                       | ours: VC / C / M / F                                                                                  | the guides (their medium grid unless said)                                                                                                                                                | ours is                                                                 |
+|----------------------------|-------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| first cell                 | y⁺ 1 / 0.77 / 0.59 / 0.46                                                                             | DPW-4, HiLiftPW-1: y⁺ 1 / 2⁄3 / 4⁄9 (coarse / medium / fine)                                                                                                                              | the same                                                                |
+| wall-normal growth         | 1.25 / 1.19 / 1.14 / 1.11                                                                             | DPW-4, HiLiftPW-1: below 1.25 on every grid; DLR's DPW-4 family: 1.30 / 1.20 / 1.135; Ansys CFX (transition model): 1.05 and 1.1 no effect, 1.2 and 1.4 move transition a little upstream | about one level stricter than DPW, so that F meets the transition guide |
+| leading and trailing edge  | LE 0.04–0.26 % local c at M (median 0.06 %, from the 10° turning); TE 0.1 % local c at M              | DPW-4: about 0.1 % local chord at both                                                                                                                                                    | finer at the LE on most wings; the same at the TE                       |
+| blunt trailing edge        | 8 / 10 / 14 / 18 cells                                                                                | DPW-4: at least 12 (medium), 16 (fine)                                                                                                                                                    | the same                                                                |
+| **station gap at the tip** | 2 × s0: 0.0028 % of the semi-span at Re 10⁵, 0.0011 % at 3 × 10⁵, 0.00009 % at 4 × 10⁶ (medians at M) | DPW-4, HiLiftPW-1: about 0.1 % of the local semi-span                                                                                                                                     | **36–1,100 × finer**                                                    |
+| far field                  | 80 mean chords + the wing                                                                             | DPW-4, HiLiftPW-1: about 100 reference chords                                                                                                                                             | a little closer                                                         |
+| cells per bubble           | 9.1 / 11.8 / 15.4 / 20                                                                                | Ansys CFX: at least 20 nodes over the bubble                                                                                                                                              | meets it at F only                                                      |
+| the medium mesh            | M 9.1–13.5 M cells for a wing alone                                                                   | DPW-4: about 8 M (CRM wing-body), 10 M (wing-body-tail)                                                                                                                                   | as big as a whole aircraft's                                            |
+
+**Conclusion.** One rule is far stricter than the guides: the station gap at the tip. Ours is 2 × the first wall cell, because the tip cap is a wall reached along the stations (the blocks past the tip), so its first wall cell sets the gap; in DPW's meshes the tip has its own wall layers. The wall-normal growth is one level stricter than DPW. The cells per bubble, the trailing edge, the first cell and the far field sit at the guides or below them: not to loosen.
+
+### 5. The loosened rules together
+
+*\[Figure: The cells at M of wing 0 of each type (median) at Re 3 × 10⁵ and 4 × 10⁶: today, and with rules loosened together. The dashed line is 10 M. Hatched: a check fails.\]*
+
+**Conclusion.** Today M is 9.1 M at Re 3 × 10⁵ but 13.5 M at 4 × 10⁶. Two growth rates and the tip gap at DPW's value bring it to 5.1 and 6.2 M with the band kept and every check of that run passing (but see the negative finding below), and the stations stop growing with Re. Without the band it would be 3.5–4.0 M, but the BWB tip cap fails at M.
+
+| rules                                                     | M at Re 3 × 10⁵ | M at Re 4 × 10⁶  | checks (every counted surface; 8 volume builds at VC) |
+|-----------------------------------------------------------|-----------------|------------------|-------------------------------------------------------|
+| today (rule set 2)                                        | 9.07 M          | 13.48 M          | all pass                                              |
+| A2: wall-normal growth 1.30 and station growth 1.25 at VC | 7.67 M (× 0.85) | 11.20 M (× 0.83) | all pass                                              |
+| A2 + tip gap 100 × s0                                     | 5.11 M (× 0.57) | 8.12 M (× 0.60)  | all pass                                              |
+| **A2 + tip gap 0.1 % of the semi-span at M (DPW)**        | 5.07 M (× 0.56) | 6.17 M (× 0.46)  | all pass                                              |
+| A2 + DPW tip gap + band off (fully turbulent runs only)   | 3.47 M (× 0.38) | 4.02 M (× 0.30)  | **fails:** the BWB tip cap at M                       |
+
+**Negative finding.** Found later the same day, when all 20 reference wings were built at VC (part 6): with the wall-normal growth at 1.30 and the other two changes, BWB reference wing 3 is refused by the growth check (1.0105 × its limit; 1.01 is allowed). Each change alone and each pair pass. At 1.30 the wall growth equals the far limit, so nothing is left for the far-field blend. With 1.28 the mesh passes (0.992) and has 2 % more cells: part 6 uses 1.28.
+
+The tip gap at DPW's value is 13–2,204 × the first wall cell, so the cap's first cell sits at about y⁺ 50–800 at M: the cap is then no longer a wall-resolved wall. It is a small part of the wall, but what that does to lift, drag and the tip vortex needs one solver check (the same wing with both tip gaps). The way without that cost is a tip wrapped by the wall-normal lines (an O-type cap): a large change to Stages 2 and 3.
+
+### 6. The ladder: today, lighter, and one more coarse level
+
+Mike, 11 Nov: change only the too-strict things, or make today's M the new F, and "start from 800k". The lighter rules here: wall-normal growth 1.28 at VC (1.21, 1.16, 1.12 at C, M, F), station growth 1.25 at VC, the tip gap at DPW's 0.1 % of the semi-span at M. Counted on the 20 reference wings at Re 3 × 10⁵ and on wing 0 of each type at 4 × 10⁶, with five levels: VVC is one step (1.3) under VC, every anchor left where it is, so VVC is past the hard minimums (y⁺ 1.3).
+
+*\[Figure: Cells per level (log scale) at Re 3 × 10⁵ and 4 × 10⁶, the median of wing 0 of each type: today's rules (grey, dashed) and the three too-strict rules loosened (blue). Open markers: VVC, past the hard minimums. The dashed red line is 10 M.\]*
+
+**Conclusion.** With the three too-strict rules loosened every level is about as big as the level below it is today: the new F (12.0–13.9 M) is today's M (9.53–13.5 M), the new M (5.53–6.41 M) is today's C, and VC starts at 1.25–1.46 M. No accuracy target moves: M keeps DPW's medium values and F the transition guide's. Renaming today's levels one step down would give the same sizes with every level one step coarser on the wing. What the lighter rules give up is the wall-resolved tip cap. Not decided (decision 114); not a solver result.
+
+| level                            | today, Re 3 × 10⁵ (the 20 reference wings: median, range) | today, Re 4 × 10⁶ | lighter rules, Re 3 × 10⁵ | lighter rules, Re 4 × 10⁶ | lighter rules: ADflow RAM (S8's ANK-only law) and where it fits |
+|----------------------------------|-----------------------------------------------------------|-------------------|---------------------------|---------------------------|-----------------------------------------------------------------|
+| **VVC** (new: one step under VC) | 0.98 M (0.89–1.21)                                        | 1.38 M            | **0.58 M** (0.52–0.75)    | **0.67 M**                | 7–8 GiB: 16 GB desktop                                          |
+| **VC**                           | 2.08 M (1.87–2.58)                                        | 2.97 M            | **1.25 M** (1.14–1.60)    | **1.46 M**                | 12–13 GiB: 16 GB desktop at Re 3 × 10⁵, 48 GB at 4 × 10⁶        |
+| **C**                            | 4.46 M (4.04–5.54)                                        | 6.31 M            | **2.63 M** (2.38–3.37)    | **3.04 M**                | 22–25 GiB: 48 GB                                                |
+| **M**                            | 9.53 M (8.56–11.8)                                        | 13.5 M            | **5.53 M** (4.99–7.12)    | **6.41 M**                | 43–49 GiB: 48 GB at Re 3 × 10⁵, HPC at 4 × 10⁶                  |
+| **F**                            | 20.7 M (18.7–25.7)                                        | 29.4 M            | **12.0 M** (10.8–15.6)    | **13.9 M**                | 90–103 GiB: HPC                                                 |
+
+The same cells, spent differently:
+
+| about this many cells | today's rules give                                                   | the lighter rules give                                                        |
+|-----------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| 1.25–1.46 M           | VVC: y⁺ 1.3, nose 22° per cell, TE cell 0.22 % c, 7 cells per bubble | **VC**: y⁺ 1, nose 16.9°, TE cell 0.17 % c, 9.1 cells per bubble              |
+| 2.63–3.04 M           | VC: y⁺ 1, nose 16.9°, TE 0.17 % c, 9.1 per bubble                    | **C**: y⁺ 0.77, nose 13°, TE 0.13 % c, 11.8 per bubble                        |
+| 5.53–6.41 M           | C: y⁺ 0.77, nose 13°, TE 0.13 % c, 11.8 per bubble                   | **M**: y⁺ 0.59, nose 10°, TE 0.10 % c, 15.4 per bubble (DPW's medium values)  |
+| 12.0–13.9 M           | M: y⁺ 0.59, nose 10°, TE 0.10 % c, 15.4 per bubble                   | **F**: y⁺ 0.46, nose 7.7°, TE 0.077 % c, 20 per bubble (the transition guide) |
+
+- **Checks:** every one of the 360 counted surfaces passes its checks; the volume was built at VVC and VC (both rule sets) and at C (lighter rules): all 180 builds pass.
+- **Built as a family** (BWB reference wing 0, Re 3 × 10⁵, the lighter rules): VVC 0.70 M, passed; VC 1.48 M, passed; C 3.11 M, passed; M 6.62 M, passed. Check 13 (every spacing 1.3 between neighbouring levels, within 3 %): passes, worst 2.0 % (the band cell, VVC / VC 1.275).
+- **Counted, not built, at M and F** (and at C with today's rules): the count can run one layer high (today's built C median is 4.43 M against 4.46 M counted).
+- **Which level is the production mesh** is not a naming choice: Stage 4's grid study gives the error of each level, and the coarsest level inside the Stage 0 error budget is the one to run.
+
+**Open.** Proposed, not decided (decision 114): a rule set 3 with the three too-strict rules loosened (the tip gap needs a new Stage 2 law, so Mike's word and a re-screen), checked by one solver run on both meshes before it is frozen. Until then rule set 2 stands.
+
 ## Rule set 1: the first build (V0–V7, the record)
 
 Everything below was built and measured with rule set 1 (`configs/volume_rules1.yaml`). It works and passes its checks, but costs about twice what Mike asked for at M; its numbers stay here as the record and as the baseline of the cost study.
@@ -118,7 +262,11 @@ Everything below was built and measured with rule set 1 (`configs/volume_rules1.
 - **One mesh for both solvers** (decision 73): ADflow reads it as structured CGNS; SU2 reads the same cells as unstructured hexahedra.
 - **Three outcomes:** passed, refused (only `refusal.json` is written), needs review (every check passed, but the plane needed more smoothing). Failures stay in every count.
 
-*\[Figure: BWB reference wing 0 at VC, Re 3 × 10⁵: the station planes at the root, mid semi-span and the tip; the root's trailing edge close up; the root plane out to the far field; the wake in the y–z plane behind the wing.\]*
+*\[Figure: The 13 blocks by name, on BWB reference wing 0 at VC, Re 3 × 10⁵ (rule set 2). (a) One station plane, the root: six blocks around the section. (b) The same plane out to the far field. (c) From above: every line is one station plane; the wing-station blocks (\*\_in) run root to tip, the outboard blocks (\*\_out) from the tip to the far field, and the CAP block sits on the tip cap.\]*
+
+**Conclusion.** Six blocks per station plane, twice (along the wing, past the tip), plus the cap block: 13. The station planes crowd at the tip, where the gap is 2 × the first wall cell: the place the size study found too strict.
+
+*\[Figure: Rule set 1 (the first build). BWB reference wing 0 at VC, Re 3 × 10⁵: the station planes at the root, mid semi-span and the tip; the root's trailing edge close up; the root plane out to the far field; the wake in the y–z plane behind the wing.\]*
 
 **Conclusion.** One C per station, square to the wall, the wake band behind the trailing edge, the base block between the two wake lines, the outboard planes past the tip. 4,930,448 cells; every check passes (V1).
 
@@ -176,6 +324,8 @@ Written in V0, before any mesh was judged, and approved by Mike. A refusing chec
 | march (chosen)                | 0 of 501           | 0.626 (0.927)                     | 0.05°      | 0.997          | 6.6 s |
 | algebraic                     | 501 of 501         | folded                            | —          | —              | 5.8 s |
 | elliptic (300 Winslow sweeps) | 501 of 501         | folded                            | —          | 15.4           | 231 s |
+
+*\[Figure: The three ways to build a station plane, on the same 501 station planes of 8 wings at VC (V0), one dot per plane. Left: the smallest scaled Jacobian of the plane (below 0 is a folded cell; dashed: the limit 0.05). Right: the largest angle between the first line and the wall normal (dashed: the limit 5°).\]*
 
 **Conclusion.** The march folds no plane; the other two fold every plane, at the concave trailing-edge corners. Not close, so Mike was not asked (decision 84).
 
@@ -345,6 +495,9 @@ Not opened (Mike, 9 Nov: not yet; decision 104). They are run once, at the end, 
 ## Weak points and open items
 
 - **Cost and memory.** Rule set 2: M about 9.5 M cells, F about 21 M (rule set 1: 45 M at F). The plan assumed 10 M cells in 48 GB; by S8's laws 48 GB holds 4.6–5.9 M, so VC and C fit and M and F need the HPC. The laws are two-point fits at 0.57 and 1.11 M cells: V7 measures (decisions 112, 113).
+- **The mesh grows with Re, and the tip gap is why** (11 Nov, [The size](#size)): M is 9.1 M at Re 3 × 10⁵ and 13.5 M at 4 × 10⁶ on wing 0 of each type. The last station gap at the tip is 2 × the first wall cell (36–1,100 × finer than DPW's guide), because the tip cap is a wall reached along the stations; with the gap at 100 × the first wall cell a third of the cells go. A lighter rule set is proposed, not decided (decision 114).
+- **The tip cap is fragile to any change of the ring:** with the band off, a coarser trailing-edge cell or a faster growth around the section, the BWB or flying-wing cap falls below its limit (0.05).
+- **The count runs one layer high** on about a fifth of the meshes (`count_volume` against the built mesh: 1.5–1.8 % more cells, never fewer); the counted M and F cells can be that much high. Not fixed.
 - **The fan ends at +10°** (decision 111). Above it the wake leaves the fine cells; post-stall needs its own mesh. Where the wake really goes at −5° and +10° is not measured (V7).
 - **Very close stations with fast-changing chords sit nearest the cell-quality limit** (decision 110): steep BWB centre bodies, kinks, corner wings. One wing is refused: BWB corner2 wing 6 (0.032; limit 0.05), whose chord halves within 0.14 c of the semi-span; a fix would space the far wake by x for every station at once (a redesign, not built). In the screen: 3 of 722 meshes have their worst cell under 0.06.
 - **No solve yet** on a Stage 3 mesh (V7 needs Mike's machine). Accepting the files is shown; converging is not.
@@ -359,7 +512,7 @@ Not opened (Mike, 9 Nov: not yet; decision 104). They are run once, at the end, 
 
 ## Next, and the handover to Stage 4
 
-- **Next:** V7 on Mike's machine: the three solves, the memory (decision 113) and the wake at −5° and +10° (decision 111). Then the hold-outs (V8) when Mike says, with the rules frozen.
+- **Next:** Mike's word on the lighter rule set (decision 114); V7 on Mike's machine: the three solves, the memory (decision 113), the wake at −5° and +10° (decision 111) and, if rule set 3 is built, the same wing on both meshes. Then the hold-outs (V8) when Mike says, with the rules frozen.
 - **Stage 4 gets:** per wing, Re and level, a folder `volume_<level>_<hash8>_re<Re>/` with `blocks.npz`, `quality.json` (every check, the info), `manifest.json` (hashes of the code, the rules and the nodes; the BCs; the interfaces), `volume.cgns`, `volume.su2`; a refused mesh only `refusal.json`.
 - **Build:** `build_volume(surface)` then `write(vm, wing, out, formats=("npz", "cgns", "su2"))`; cost first with `count_volume(surface)`.
 - **First:** run V7 and read it with `solve/read_results.py`; send back the memory numbers; then the hold-outs (V8) with the rules frozen.
@@ -375,9 +528,11 @@ Not opened (Mike, 9 Nov: not yet; decision 104). They are run once, at the end, 
       scripts/one_mesh.py               one wing's volume mesh (any set, level, Re; --count)
       scripts/screen.py                 the screen (one JSON row per mesh)
       scripts/v23_study.py v4_study.py v6_study.py cost_options.py v5_export.py   the studies
+      scripts/far_field_study.py size_factors.py size_drivers.py knob_study.py light_set.py ladder_study.py
+                                        the size studies of 10-11 Nov; size_figures.py, blocks_figure.py: their figures
       solve/                            the V7 case, ADflow run, results reader, runbook
       tests/                            pytest (Stage_3_volume_mesh/tests)
     CFD_Automation/app/                the app: load or make a wing, build and look at its meshes
     CFD_Automation/RUN_LOCAL.md        every command, Stage 1 to V7
 
-CFD_Automation Stage 3 · built by scripts/make_stage3_page.py from configs/volume.yaml and data/studies/\*.json · 10 Nov 2026
+CFD_Automation Stage 3 · built by scripts/make_stage3_page.py from configs/volume.yaml and data/studies/\*.json · 11 Nov 2026

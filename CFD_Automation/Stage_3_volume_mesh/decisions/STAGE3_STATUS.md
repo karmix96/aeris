@@ -1,10 +1,10 @@
-# Stage 3 — status and handover (10 Nov 2026, 08:15)
+# Stage 3 — status and handover (11 Nov 2026)
 
 In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stage3-volume-mesh`, which starts from
 `stage2-surface-mesh`; decision 94). Run it locally: `CFD_Automation/RUN_LOCAL.md`; look at any wing's meshes:
 `streamlit run CFD_Automation/app/app.py` (`app/README.md`). Code: `CFD_Automation/cfdauto/volume/`
 (Stage 2's `cfdauto/mesh/` untouched). Rules: `configs/volume.yaml` (rule set 2; rule set 1 kept in
-`configs/volume_rules1.yaml`). Plan, checks and results: `decisions/volume_rules.md`. Decisions 84–113 in
+`configs/volume_rules1.yaml`). Plan, checks and results: `decisions/volume_rules.md`. Decisions 84–114 in
 `CFD_Automation/OPEN_DECISIONS.md`.
 
 ## In one breath
@@ -17,6 +17,9 @@ In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stag
   changed (decisions 108–110).
 - **Memory: 10 M cells do not fit 48 GB** by S8's laws for ADflow (48 GB holds 4.6–5.9 M). VC and C fit; M and F need
   the HPC. Mike: keep the mesh; V7 measures the real memory first (decision 113).
+- **11 Nov: the size was studied; a lighter rule set is proposed, not decided (decision 114).** Three rules are
+  stricter than the published guides (the tip gap, the wall-normal growth, the station growth); loosened, M is 5.5 M
+  at Re 3 × 10⁵ and 6.4 M at 4 × 10⁶ (today 9.5 and 13.5 M). Rule set 2 stands until Mike decides.
 - Not done: the first solves (V7) and the hold-outs (V8).
 
 ## Where each step stands (rule set 2 as it stands)
@@ -65,11 +68,50 @@ In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stag
 | 112 | Check 14's RAM law was mislabelled: it is S8's ANK-then-NK law; ANK only is about 20 % less. Both are shown |
 | 113 | 48 GB: keep the mesh; VC and C on the desktop, M and F on the HPC; V7 measures the memory (Mike) |
 
+## 11 Nov: the size study and a lighter ladder (not decided)
+
+Mike: "for a structured mesh, pre-stall, above 10 M is too much"; then: change only the too-strict things, or make
+today's M the F, starting from 800 k. What-if studies on copies of the rules files; no rule changed. The record:
+`decisions/volume_rules.md`, sections 18–21; on the page: *The size*.
+
+- **The mesh follows the wing and the Re** (702 wings): every count follows the wing quantity its rule uses; the counts
+  give the cells (correlation 0.995). The angle of attack costs no cells up to +10°.
+- **Today's sizes grow with Re:** M 5.7 / 9.1 / 11.2 / 13.5 M and F 12 / 20 / 24 / 29 M at Re 10⁵ / 3 × 10⁵ / 10⁶ /
+  4 × 10⁶ (wing 0 of each type).
+- **21 rules loosened one at a time (M, Re 3 × 10⁵):** the tip gap 2 → 100 × s0 −34 %; the band off −31 %; 10 cells
+  per bubble −25 %; the far field 40 c̄ −11 %; the wall-normal growth 1.30 at VC −10 %; the rest 0–6 %; 8 rules 0 %.
+- **Against the guides:** the tip gap (2 × s0) is 36–1,100 × finer than DPW's 0.1 % of the semi-span, because the cap
+  is a wall reached along the stations; the wall-normal growth is one level stricter than DPW; the rest sit at the
+  guides (the cells per bubble meet the transition guide only at F).
+- **The light rules:** wall-normal growth 1.28 at VC (1.30 is refused on BWB reference wing 3: growth 1.0105 against
+  1.01), station growth 1.25 at VC, the tip gap at DPW's value. Every level moves one step down in size and no
+  accuracy target moves:
+
+  | 20 reference wings, Re 3 × 10⁵, median | VC | C | M | F |
+  | --- | --- | --- | --- | --- |
+  | today | 2.08 M | 4.46 M | 9.53 M | 20.7 M |
+  | light | 1.25 M | 2.63 M | 5.53 M | 12.0 M |
+
+  Counted (the count can run one layer high: the built C median of today is 4.43 M). At Re 4 × 10⁶ (wing 0 of each
+  type): M 13.5 → 6.4 M, F 29.4 → 13.9 M. Every mesh built passes (180 of 180 at VVC, VC and C); the family check 13
+  passes on BWB 0 from VVC to M.
+- **Renaming today's levels one step down** gives the same sizes with every level one step coarser on the wing: not
+  advised. A VVC level (one step under VC: 0.4–0.7 M light) is past the hard minimums (y⁺ 1.3): a preview level only.
+- **What the light rules give up:** the wall-resolved tip cap (its first cell at y⁺ about 50–800 at M). One solver
+  check is needed: the same wing on both meshes. The way without that cost is a tip wrapped by the wall-normal lines
+  (an O-type cap): a large change.
+- **Not to loosen:** 20 cells per bubble at F, the trailing-edge cell, the first cell, the far field (Stage 4 measures
+  40 / 80 / 160), the growth around the section (breaks the tip cap at Re 10⁵). The band off breaks the BWB cap at M.
+- Found on the way: the count runs one layer high on about a fifth of the meshes (1.5–1.8 %; not fixed); the rules
+  loaders cache a file by its name (the what-if scripts now write a new name per text).
+
 ## Mike's calls
 
 1. **Where the solves run (103):** open. The V7 mesh needs about 20–24 GiB for ADflow: not the 16 GB desktop.
 2. **The hold-outs (104):** not yet.
-3. Decided on 9 Nov: 101, 105, 107, 111, 113 (above).
+3. **A rule set 3 with the light rules (114):** open. It needs a new Stage 2 law for the tip gap (so the frozen
+   surface is reopened) and a re-screen of Stages 2 and 3.
+4. Decided on 9 Nov: 101, 105, 107, 111, 113 (above).
 
 ## Weak points (rule set 2)
 
@@ -94,6 +136,7 @@ In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stag
 
 ## Next
 
+0. **Mike's word on decision 114** (the light rules). If yes: build rule set 3, re-screen, then V7 on both meshes.
 1. **V7 on Mike's machine** (`solve/RUNBOOK.md`): ADflow SA, SU2 SA, SU2 SST + LM on BWB 0 at VC, α 4°.
 2. In the same session: **the memory** (ADflow as run, ADflow with ILU fill 0, SU2) and **the wake at −5° and +10°**
    (two more points with the volume solution kept).

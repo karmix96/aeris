@@ -27,6 +27,7 @@ LEVELS = ("VC", "C", "M", "F")
 TYPES = ("bwb", "flying_wing", "cranked", "tapered")
 TYPE_NAME = {"bwb": "BWB", "flying_wing": "flying wing", "cranked": "cranked", "tapered": "tapered"}
 N_TESTS = 45
+RE_WORDS = {"1e+05": "10⁵", "3e+05": "3 × 10⁵", "1e+06": "10⁶", "4e+06": "4 × 10⁶"}
 PACKAGES_CONCLUSION = ("With four levels no package brings F to 9–11 M: the volume rules alone (P2) give F 24.2 M (median), the two Stage 2 changes on top 14.0 M (P5), everything counted 12.5 M (P6). What is left is the plane (about 210–310 C-line nodes × 70 layers) times the stations (53–62 along the wing, 40–48 past the tip); the surface band and the tip squeeze are Stage 2's. Mike's target (9 Nov, 20:30) is M about 10 M with F above it: P2 meets it with the volume rules alone (M 11.1 M median, 10.0–13.0 M; F 24.2 M; VC 2.45 M, 25 GiB for ADflow, every VC mesh fits the 52 GB desktop), so P2 became rule set 2 (decision 107). If M must come lower, the next step is the tip gap (P3: M 9.6 M), which changes the frozen surface. No package lets a VC mesh fit the 16 GB desktop but one (P6, 1 of 20).")
 R2_V2_CONCLUSION = ("All 80 reference meshes pass every check with the fan to +10° and the fixes of decisions 108–110, at 0.48 × "
                     "the cells of rule set 1 (median 2.42 M; 2.08 M at Re 3 × 10⁵). The spacing jump across the trailing-edge "
@@ -150,6 +151,14 @@ def rule_set_2() -> str:
                      + "".join(f"; {L} counted on {v6[L + '_sample']['wings']} wings: {v6[L + '_sample']['cells']['min'] / 1e6:.1f}–{v6[L + '_sample']['cells']['max'] / 1e6:.1f} M (median {v6[L + '_sample']['cells']['median'] / 1e6:.1f} M)"
                                for L in ("M", "F") if v6.get(L + "_sample")) + ".</li>")
     figs = ""
+    if v1:
+        c1 = v1["cells"]
+        figs += figc("r2_v1_slices.png", "Rule set 2 as built: BWB reference wing 0 at VC, Re 3 × 10⁵, one colour per block. The station planes at the root, mid semi-span and the tip; the root's trailing edge close up (the base block in orange); the root plane out to the far field; a plane across the wake just behind the wing (dashed: the tip).",
+                     f"One C per station, square to the wall, with the wake fan behind the trailing edge and the base block between the two wake lines; {c1['total']:,} cells (wing stations {c1['inboard']:,}, past the tip {c1['outboard']:,}, cap {c1['cap']:,}). In the last panel the station planes crowd at the tip: the tip gap is 2 × the first wall cell (<a href=\"#size\">The size</a>).")
+    if v23.get("v3"):
+        v3 = v23["v3"]; vp = v3.get("vortex_path", {})
+        figs += figc("r2_v3_tip.png", "Rule set 2, the 80 reference meshes at VC (light to dark: Re 10⁵ to 4 × 10⁶). (a) The worst cell of the CAP block. (b) The cells on the tip-vortex path at 4°, 0.5, 1 and 2 local chords behind the tip trailing edge: across the wake and along it (median and range). (c) The share of the cells in the blocks past the tip.",
+                     f"The cap passes on all 80 ({v3['cap_min_sj']['min']:.3f}–{v3['cap_min_sj']['max']:.3f}; limit 0.05) and is the part nearest its limit on the BWB and flying wing. The blocks past the tip hold {100 * v3['outboard_share_of_cells']['min']:.0f}–{100 * v3['outboard_share_of_cells']['max']:.0f} % of the cells. The vortex path is fine across the wake ({vp.get('d0.5c_a4', {}).get('cross', {}).get('median', 0):.4f}, {vp.get('d1c_a4', {}).get('cross', {}).get('median', 0):.3f}, {vp.get('d2c_a4', {}).get('cross', {}).get('median', 0):.3f} c at 0.5, 1, 2 c) and coarse along it ({vp.get('d0.5c_a4', {}).get('streamwise', {}).get('median', 0):.2f}, {vp.get('d1c_a4', {}).get('streamwise', {}).get('median', 0):.2f}, {vp.get('d2c_a4', {}).get('streamwise', {}).get('median', 0):.2f} c): enough to carry a vortex, not to resolve its core.")
     if v4:
         figs += figc("r2_v4_family.png", "Rule set 2. (a) Check 13: every judged spacing, coarse over fine, between neighbouring levels (green: 1.3 ± 3 %). (b) Cells per level on the 20 reference wings: VC and C built, M and F counted; the target at M; grey: what 48 GB holds for ADflow by S8's two laws.",
                      R2_V4_CONCLUSION)
@@ -204,6 +213,205 @@ def rule_set_2() -> str:
 </section>"""
 
 
+def j_words(where: str) -> str:
+    """Check 13's 'where' note in words (band_cell VVC/VC = 1.2746 -> the band cell, VVC / VC 1.275)."""
+    names = {"s0": "the first cell", "wall_growth": "the wall growth", "band_cell": "the band cell",
+             "outboard_first_gap": "the first gap past the tip", "first_wake_cell": "the first wake cell",
+             "cell_1c_wall": "the cell 1 local chord from the root's wall",
+             "cell_1c_wake": "the cell 1 local chord behind the root's trailing edge"}
+    try:
+        key, pair, _, val = where.split()
+        return f"{names.get(key, key)}, {pair.replace('/', ' / ')} {float(val):.3f}"
+    except ValueError:
+        return where
+
+
+def size_glance() -> str:
+    """The at-a-glance box of the size study (11 Nov)."""
+    ld, l20 = load("ladder.json").get("summary", {}), load("ladder_ref20.json").get("summary", {})
+    if not ld:
+        return ""
+    src = l20 or ld
+    t3, l3 = src["today"]["by_re"]["3e+05"]["M"]["cells"]["median"] / 1e6, src["light"]["by_re"]["3e+05"]["M"]["cells"]["median"] / 1e6
+    t4, l4 = ld["today"]["by_re"]["4e+06"]["M"]["cells"]["median"] / 1e6, ld["light"]["by_re"]["4e+06"]["M"]["cells"]["median"] / 1e6
+    return (f'<div class="box verdict"><h3>The size, studied (11 Nov)</h3><div class="big">M {l3:.1f}–{l4:.1f} M possible · not decided</div>'
+            f'<p>Today M is {t3:.1f} M at Re 3 × 10⁵ and {t4:.1f} M at 4 × 10⁶. '
+            'Three rules are stricter than the published guides: the tip gap (36–1,100 × finer than DPW), the wall-normal growth and the station growth. '
+            f'Loosened together: M {l3:.1f} and {l4:.1f} M with the band kept, and each level becomes about as big as the level below it today. '
+            'It gives up the wall-resolved tip cap and needs one solver check and Mike\'s word (decision 114). <a href="#size">The size</a>.</p></div>')
+
+
+def size_study() -> str:
+    """The size studies of 10-11 Nov (volume_rules.md, sections 18-21): what drives the cells, which rules are stricter
+    than the published guides, the rules loosened together, and the ladder. What-if studies; no rule changed."""
+    ff = load("far_field_scenarios.json").get("summary", {})
+    sfr = load("size_factors.json").get("rows", [])
+    sd = load("size_drivers.json").get("summary", {})
+    kn = load("knob_study.json").get("summary", {})
+    ls = load("light_set_A2_B2_100_B2_dpw_C2.json").get("summary", {})
+    ld = load("ladder.json").get("summary", {})
+    l20 = load("ladder_ref20.json").get("summary", {})
+    fam = load("ladder_family.json")
+    if not (ff and sfr and sd and kn and ls and ld):
+        return ""
+    med = lambda v: sorted(v)[len(v) // 2] if len(v) % 2 else 0.5 * (sorted(v)[len(v) // 2 - 1] + sorted(v)[len(v) // 2])
+    Mc = lambda x: f"{x / 1e6:.2f}" if x < 1e7 else f"{x / 1e6:.1f}"
+    # 1. the wing and the flow
+    cr, co = sd["counts_range"], sd["correlations"]
+    c_of = lambda key: next(v for k, v in co.items() if k.startswith(key))
+    sg = lambda v: f"{v:+.2f}".replace("-", "−")
+    drivers = table(["count (the same in every station plane)", "range, 702 wings", "it follows", "correlation"], [
+        ["stations along the semi-span", f"{cr['n_span'][0]:.0f}–{cr['n_span'][1]:.0f}", "the semi-span in local chords", sg(c_of('n_span'))],
+        ["nodes around the section", f"{cr['n_c'][0]:.0f}–{cr['n_c'][1]:.0f}", "the taper (tip chord / root chord)", sg(c_of('n_c'))],
+        ["wake nodes, base to outflow", f"{cr['n_wake'][0]:.0f}–{cr['n_wake'][1]:.0f}", "the smallest chord", sg(c_of('n_wake'))],
+        ["wall-normal layers", f"{cr['n_layers'][0]:.0f}–{cr['n_layers'][1]:.0f}", "the largest chord", sg(c_of('n_layers'))],
+        ["stations past the tip", f"{cr['n_out'][0]:.0f}–{cr['n_out'][1]:.0f}", "the same on every wing at one Re", "—"]])
+    prod = c_of("cells ~ (around")
+    # 2. Re and the band
+    res = sorted({r["re"] for r in sfr})
+    by = lambda re, band, k: med([r[k] for r in sfr if r["re"] == re and r["band"] == band])
+    re_rows = [[name, *[(f"{by(re, True, k) / 1e6:.2f} M" if k == "cells" else f"{by(re, True, k):g}") for re in res]]
+               for name, k in (("cells, band on", "cells"), ("nodes around the section", "n_c"), ("wall-normal layers", "n_layers"),
+                               ("stations along the semi-span", "n_span"), ("stations past the tip", "n_out"), ("wake nodes", "n_wake"))]
+    re_rows.insert(1, ["cells, band off", *[f"{by(re, False, 'cells') / 1e6:.2f} M" for re in res]])
+    on_off = [by(re, True, "cells") / by(re, False, "cells") for re in res]
+    # 3. the domain
+    ffk = list(ff)
+    ff_txt = "; ".join(f"{k.replace('front ', '').replace(' / aft ', ' / ')}: {100 * (ff[k]['M']['vs_today']['median'] - 1):+.0f} %" for k in ffk[:-1]).replace("-", "−")
+    bad_ff = ff[ffk[0]]["VC_built"]
+    # 4. one rule at a time
+    words = {"cap_quads": "the tip-cap cells", "span_growth": "the station growth", "wake": "the wake growth", "bwb": "BWB"}
+    kn_rows, zero = [], []
+    for k in sorted((k for k in kn if k != "base"), key=lambda k: kn[k]["M"]["vs_base"]["median"]):
+        v = 100 * (kn[k]["M"]["vs_base"]["median"] - 1)
+        b = kn[k]["built_VC_wing0"]
+        fails = [f"{', '.join(b['failed'])} (a VC build)"] if b["passed"] < b["of"] else []
+        fails += [f"{', '.join(f['failed'])} at {lev}" for lev, f in kn[k].get("surfaces", {}).items() if f["passed"] < f["of"]]
+        note = "; ".join(fails)
+        for code, w in words.items():
+            note = note.replace(code, w)
+        if k == "chord_g125":
+            note = "passes at Re 3 × 10⁵; at 10⁵ the tip cap fails on the BWB and flying wings (package A)"
+        if k == "bl_20":
+            kn_rows.append([kn[k]["words"], f"0 % (the BWB only: {100 * (kn[k]['M']['vs_base']['min'] - 1):+.0f} %)".replace("-", "−"), "all pass"])
+            continue
+        if abs(v) < 0.5 and not note:
+            zero.append(kn[k]["words"])
+            continue
+        kn_rows.append([kn[k]["words"], f"{v:+.0f} %".replace("-", "−"), f"<strong>fails:</strong> {note}" if fails else (note or "all pass")])
+    kn_rows.append(["; ".join(zero), "0 % each", "all pass: another rule sets that count"])
+    guides = table(["rule", "ours: VC / C / M / F", "the guides (their medium grid unless said)", "ours is"], [
+        ["first cell", "y⁺ 1 / 0.77 / 0.59 / 0.46", "DPW-4, HiLiftPW-1: y⁺ 1 / 2⁄3 / 4⁄9 (coarse / medium / fine)", "the same"],
+        ["wall-normal growth", "1.25 / 1.19 / 1.14 / 1.11", "DPW-4, HiLiftPW-1: below 1.25 on every grid; DLR's DPW-4 family: 1.30 / 1.20 / 1.135; Ansys CFX (transition model): 1.05 and 1.1 no effect, 1.2 and 1.4 move transition a little upstream", "about one level stricter than DPW, so that F meets the transition guide"],
+        ["leading and trailing edge", "LE 0.04–0.26 % local c at M (median 0.06 %, from the 10° turning); TE 0.1 % local c at M", "DPW-4: about 0.1 % local chord at both", "finer at the LE on most wings; the same at the TE"],
+        ["blunt trailing edge", "8 / 10 / 14 / 18 cells", "DPW-4: at least 12 (medium), 16 (fine)", "the same"],
+        ["<strong>station gap at the tip</strong>", "2 × s0: 0.0028 % of the semi-span at Re 10⁵, 0.0011 % at 3 × 10⁵, 0.00009 % at 4 × 10⁶ (medians at M)", "DPW-4, HiLiftPW-1: about 0.1 % of the local semi-span", "<strong>36–1,100 × finer</strong>"],
+        ["far field", "80 mean chords + the wing", "DPW-4, HiLiftPW-1: about 100 reference chords", "a little closer"],
+        ["cells per bubble", "9.1 / 11.8 / 15.4 / 20", "Ansys CFX: at least 20 nodes over the bubble", "meets it at F only"],
+        ["the medium mesh", "M 9.1–13.5 M cells for a wing alone", "DPW-4: about 8 M (CRM wing-body), 10 M (wing-body-tail)", "as big as a whole aircraft's"]], "wide")
+    # 5. together
+    names5 = {"base": "today (rule set 2)", "A2": "A2: wall-normal growth 1.30 and station growth 1.25 at VC",
+              "B2_100": "A2 + tip gap 100 × s0", "B2_dpw": "<strong>A2 + tip gap 0.1 % of the semi-span at M (DPW)</strong>",
+              "C2": "A2 + DPW tip gap + band off (fully turbulent runs only)"}
+    ls_rows = []
+    for k, name in names5.items():
+        if k not in ls:
+            continue
+        a, b = ls[k]["M Re 3e+05"], ls[k]["M Re 4e+06"]
+        chk = "all pass" if k != "C2" else "<strong>fails:</strong> the BWB tip cap at M"
+        ls_rows.append([name, f"{a['cells']['median'] / 1e6:.2f} M" + (f" (× {a['vs_base']['median']:.2f})" if k != "base" else ""),
+                        f"{b['cells']['median'] / 1e6:.2f} M" + (f" (× {b['vs_base']['median']:.2f})" if k != "base" else ""), chk])
+    # 6. the ladder
+    levels = list(next(iter(ld["today"]["by_re"].values())))
+    src = l20 or ld
+    who = "the 20 reference wings" if l20 else "wing 0 of each type"
+    t3, l3 = src["today"]["by_re"]["3e+05"], src["light"]["by_re"]["3e+05"]
+    t4, l4 = ld["today"]["by_re"]["4e+06"], ld["light"]["by_re"]["4e+06"]
+    ram = lambda c: 2.69 + 7.23 * c / 1e6
+    fits = lambda g: "16 GB desktop" if g <= 13 else ("48 GB" if g <= 45 else "HPC")
+    lad_rows = []
+    for lev in levels:
+        a, b = t3[lev]["cells"], l3[lev]["cells"]
+        g3, g4 = ram(l3[lev]["cells"]["median"]), ram(l4[lev]["cells"]["median"])
+        lad_rows.append([f"<strong>{lev}</strong>" + (" (new: one step under VC)" if lev == "VVC" else ""),
+                         f"{Mc(a['median'])} M ({Mc(a['min'])}–{Mc(a['max'])})", f"{Mc(t4[lev]['cells']['median'])} M",
+                         f"<strong>{Mc(b['median'])} M</strong> ({Mc(b['min'])}–{Mc(b['max'])})", f"<strong>{Mc(l4[lev]['cells']['median'])} M</strong>",
+                         (f"{g3:.0f} GiB" if round(g3) == round(g4) else f"{g3:.0f}–{g4:.0f} GiB") + ": "
+                         + (fits(g3) if fits(g3) == fits(g4) else f"{fits(g3)} at Re 3 × 10⁵, {fits(g4)} at 4 × 10⁶")])
+    same = table(["about this many cells", "today's rules give", "the lighter rules give"], [
+        [f"{Mc(l3['VC']['cells']['median'])}–{Mc(l4['VC']['cells']['median'])} M", "VVC: y⁺ 1.3, nose 22° per cell, TE cell 0.22 % c, 7 cells per bubble", "<strong>VC</strong>: y⁺ 1, nose 16.9°, TE cell 0.17 % c, 9.1 cells per bubble"],
+        [f"{Mc(l3['C']['cells']['median'])}–{Mc(l4['C']['cells']['median'])} M", "VC: y⁺ 1, nose 16.9°, TE 0.17 % c, 9.1 per bubble", "<strong>C</strong>: y⁺ 0.77, nose 13°, TE 0.13 % c, 11.8 per bubble"],
+        [f"{Mc(l3['M']['cells']['median'])}–{Mc(l4['M']['cells']['median'])} M", "C: y⁺ 0.77, nose 13°, TE 0.13 % c, 11.8 per bubble", "<strong>M</strong>: y⁺ 0.59, nose 10°, TE 0.10 % c, 15.4 per bubble (DPW's medium values)"],
+        [f"{Mc(l3['F']['cells']['median'])}–{Mc(l4['F']['cells']['median'])} M", "M: y⁺ 0.59, nose 10°, TE 0.10 % c, 15.4 per bubble", "<strong>F</strong>: y⁺ 0.46, nose 7.7°, TE 0.077 % c, 20 per bubble (the transition guide)"]], "wide")
+    ok_s = all(v["surfaces"]["passed"] == v["surfaces"]["of"] for pk in (src, ld) for p_ in pk.values() for d in p_["by_re"].values() for v in d.values())
+    ok_b = all(v["built"]["passed"] == v["built"]["of"] for pk in (src, ld) for p_ in pk.values() for d in p_["by_re"].values() for v in d.values())
+    n_s = sum(v["surfaces"]["of"] for pk in ((l20, ld) if l20 else (ld,)) for p_ in pk.values() for d in p_["by_re"].values() for v in d.values())
+    n_b = sum(v["built"]["of"] for pk in ((l20, ld) if l20 else (ld,)) for p_ in pk.values() for d in p_["by_re"].values() for v in d.values())
+    n_bok = sum(v["built"]["passed"] for pk in ((l20, ld) if l20 else (ld,)) for p_ in pk.values() for d in p_["by_re"].values() for v in d.values())
+    b_fail = sorted({f"{lev}, {'the lighter rules' if pack == 'light' else 'today'}, Re {RE_WORDS.get(re, re)}: {', '.join(v['built']['failed'])}"
+                     for pk in ((l20, ld) if l20 else (ld,)) for pack, p_ in pk.items() for re, d in p_["by_re"].items()
+                     for lev, v in d.items() if v["built"]["passed"] < v["built"]["of"]})
+    fam_txt = ""
+    if fam:
+        c13 = fam["check13"]
+        fam_txt = ("<li><strong>Built as a family</strong> (BWB reference wing 0, Re 3 × 10⁵, the lighter rules): "
+                   + "; ".join(f"{lev} {d['cells'] / 1e6:.2f} M, {d['outcome']}" + (f" ({', '.join(d['failed'])})" if d["failed"] else "") for lev, d in fam["levels"].items())
+                   + f". Check 13 (every spacing 1.3 between neighbouring levels, within 3 %): {'passes' if c13['passed'] else '<strong>fails</strong>'}, worst {100 * c13['value']:.1f} % ({j_words(c13['where'])}).</li>")
+    lad_concl = (f"With the three too-strict rules loosened every level is about as big as the level below it is today: the new F ({Mc(l3['F']['cells']['median'])}–{Mc(l4['F']['cells']['median'])} M) is today's M ({Mc(t3['M']['cells']['median'])}–{Mc(t4['M']['cells']['median'])} M), "
+                 f"the new M ({Mc(l3['M']['cells']['median'])}–{Mc(l4['M']['cells']['median'])} M) is today's C, and VC starts at {Mc(l3['VC']['cells']['median'])}–{Mc(l4['VC']['cells']['median'])} M. No accuracy target moves: M keeps DPW's medium values and F the transition guide's. "
+                 "Renaming today's levels one step down would give the same sizes with every level one step coarser on the wing. What the lighter rules give up is the wall-resolved tip cap. Not decided (decision 114); not a solver result.")
+    return f"""
+<section id="size">
+  <h2>The size of the mesh: what drives it, and what can be loosened (10–11 Nov)</h2>
+  <p>Mike, 10–11 Nov: how big is the domain, what makes the mesh big, and what can be loosened without losing accuracy ("for a structured mesh, pre-stall, above 10 M is too much"). Every study here is a what-if: the rules files are copied and changed, the rules themselves are not (they stay frozen). They count cells and run the mesh checks; none is a solver result. The record: <code>decisions/volume_rules.md</code>, sections 18–21.</p>
+
+  <h3>1. The wing and the flow set every count</h3>
+  {drivers}
+  {figc("size_drivers.png", f"(a) The cells at VC against Re, one line per reference wing (band on). (b)–(d) A count of the mesh against the wing quantity its rule uses, one marker per wing: the {sd['wings']} built wings at VC, Re 3 × 10⁵.",
+        f"The mesh is set by the wing and the Re. Every count changes from wing to wing and follows what its rule computes it from; the counts multiplied give the cells (correlation {prod:.3f}). The aspect ratio alone hardly matters ({sg(c_of('cells ~ aspect'))}); the chords do. Each wing has its own Re curve (× {sd['re_ratio_4e6_over_1e5']['min']:.2f}–{sd['re_ratio_4e6_over_1e5']['max']:.2f} from Re 10⁵ to 4 × 10⁶). The angle of attack is not an input: one mesh serves −5° to +10°, and the fan for it costs no cells (a fan to +20° would add 13–17 %).")}
+
+  <h3>2. Re and the transition band</h3>
+  {figc("size_factors.png", "The cells at VC against Re, with the band (as every run has it) and without: the median of the 20 reference wings and their range.",
+        f"From Re 10⁵ to 4 × 10⁶ the mesh grows × {by(res[-1], True, 'cells') / by(res[0], True, 'cells'):.1f} with the band and × {by(res[-1], False, 'cells') / by(res[0], False, 'cells'):.1f} without it. The band costs × {on_off[0]:.2f} at 10⁵ and × {on_off[1]:.2f}–{on_off[-1]:.2f} from 3 × 10⁵ up (decision 81 keeps it on for every run).")}
+  {table(["median at VC, 20 reference wings", "Re 10⁵", "Re 3 × 10⁵", "Re 10⁶", "Re 4 × 10⁶"], re_rows)}
+  {cbox("Three counts grow with Re: the nodes around (the band switches on), the layers (a thinner first cell) and the stations, along the wing and past the tip. The stations grow only because the tip gap is 2 × the first wall cell, which shrinks with Re.")}
+
+  <h3>3. The domain: what a smaller far field saves</h3>
+  {figc("far_field.png", "The cells at M for five far-field sizes (ahead / behind the wing, in mean chords): the median of the 20 reference wings and their range, Re 3 × 10⁵. Today is 80 / 80. The VC meshes were also built and checked.",
+        f"The domain costs few cells, because the cells grow by up to 1.3 per cell away from the wing ({ff_txt}). At 10 / 20 {bad_ff['of'] - bad_ff['passed']} of {bad_ff['of']} VC meshes are refused (growth, wake). What a smaller domain costs in lift and drag is not measured: Stage 4's far-field study (40 / 80 / 160) does that. Keep 80.", warn=True)}
+
+  <h3>4. The general rules, one loosened at a time</h3>
+  {figc("knob_study.png", "One bar per rule: the change in cells at M when only that rule is loosened (the median of wing 0 of each type, Re 3 × 10⁵; today 9.07 M). Hatched: a mesh fails a check, named beside the rule. Checked: the 20 reference surfaces at VC, 4 at M, and 4 volume builds at VC per rule.",
+        "Three rules make most of the size: the tip gap (2 × the first wall cell), the band and the cells per bubble, 25–34 % each. The growth rates and the far field are worth 5–11 % each. Eight rules cost nothing, and a ninth only on the BWB: another rule sets their count. The tip cap is the weak place: the band off, a coarser trailing-edge cell or a faster growth around the section can push it below its limit.")}
+  {table(["rule, loosened alone", "cells at M", "checks"], kn_rows, "wide")}
+  <p>Against the published guides (DPW-4 and HiLiftPW-1 gridding guidelines, DLR's DPW-4 grids, the Ansys CFX guide for the transition model):</p>
+  {guides}
+  {cbox("One rule is far stricter than the guides: the station gap at the tip. Ours is 2 × the first wall cell, because the tip cap is a wall reached along the stations (the blocks past the tip), so its first wall cell sets the gap; in DPW's meshes the tip has its own wall layers. The wall-normal growth is one level stricter than DPW. The cells per bubble, the trailing edge, the first cell and the far field sit at the guides or below them: not to loosen.")}
+
+  <h3>5. The loosened rules together</h3>
+  {figc("light_set.png", "The cells at M of wing 0 of each type (median) at Re 3 × 10⁵ and 4 × 10⁶: today, and with rules loosened together. The dashed line is 10 M. Hatched: a check fails.",
+        f"Today M is {ls['base']['M Re 3e+05']['cells']['median'] / 1e6:.1f} M at Re 3 × 10⁵ but {ls['base']['M Re 4e+06']['cells']['median'] / 1e6:.1f} M at 4 × 10⁶. Two growth rates and the tip gap at DPW's value bring it to {ls['B2_dpw']['M Re 3e+05']['cells']['median'] / 1e6:.1f} and {ls['B2_dpw']['M Re 4e+06']['cells']['median'] / 1e6:.1f} M with the band kept and every check of that run passing (but see the negative finding below), and the stations stop growing with Re. Without the band it would be {ls['C2']['M Re 3e+05']['cells']['median'] / 1e6:.1f}–{ls['C2']['M Re 4e+06']['cells']['median'] / 1e6:.1f} M, but the BWB tip cap fails at M.")}
+  {table(["rules", "M at Re 3 × 10⁵", "M at Re 4 × 10⁶", "checks (every counted surface; 8 volume builds at VC)"], ls_rows, "wide")}
+  {cbox("Found later the same day, when all 20 reference wings were built at VC (part 6): with the wall-normal growth at 1.30 and the other two changes, BWB reference wing 3 is refused by the growth check (1.0105 × its limit; 1.01 is allowed). Each change alone and each pair pass. At 1.30 the wall growth equals the far limit, so nothing is left for the far-field blend. With 1.28 the mesh passes (0.992) and has 2 % more cells: part 6 uses 1.28.", "Negative finding", "warn")}
+  <p>The tip gap at DPW's value is 13–2,204 × the first wall cell, so the cap's first cell sits at about y⁺ 50–800 at M: the cap is then no longer a wall-resolved wall. It is a small part of the wall, but what that does to lift, drag and the tip vortex needs one solver check (the same wing with both tip gaps). The way without that cost is a tip wrapped by the wall-normal lines (an O-type cap): a large change to Stages 2 and 3.</p>
+
+  <h3>6. The ladder: today, lighter, and one more coarse level</h3>
+  <p>Mike, 11 Nov: change only the too-strict things, or make today's M the new F, and "start from 800k". The lighter rules here: wall-normal growth 1.28 at VC (1.21, 1.16, 1.12 at C, M, F), station growth 1.25 at VC, the tip gap at DPW's 0.1 % of the semi-span at M. Counted on {who} at Re 3 × 10⁵ and on wing 0 of each type at 4 × 10⁶, with five levels: VVC is one step (1.3) under VC, every anchor left where it is, so VVC is past the hard minimums (y⁺ 1.3).</p>
+  {figc("ladder.png", "Cells per level (log scale) at Re 3 × 10⁵ and 4 × 10⁶, the median of wing 0 of each type: today's rules (grey, dashed) and the three too-strict rules loosened (blue). Open markers: VVC, past the hard minimums. The dashed red line is 10 M.",
+        lad_concl)}
+  {table(["level", f"today, Re 3 × 10⁵ ({who}: median, range)", "today, Re 4 × 10⁶", "lighter rules, Re 3 × 10⁵", "lighter rules, Re 4 × 10⁶", "lighter rules: ADflow RAM (S8's ANK-only law) and where it fits"], lad_rows, "wide")}
+  <p>The same cells, spent differently:</p>
+  {same}
+  <ul>
+    <li><strong>Checks:</strong> {"every" if ok_s else "<strong>not every</strong>"} one of the {n_s} counted surfaces passes its checks; the volume was built at VVC and VC (both rule sets) and at C (lighter rules): {"all " + str(n_b) + " builds pass" if ok_b else f"{n_bok} of {n_b} builds pass; <strong>refused:</strong> " + "; ".join(b_fail) + " (VVC is past the hard minimums: y⁺ 1.3, wall growth 1.38)"}.</li>
+    {fam_txt}
+    <li><strong>Counted, not built, at M and F</strong> (and at C with today's rules): the count can run one layer high (today's built C median is 4.43 M against 4.46 M counted).</li>
+    <li><strong>Which level is the production mesh</strong> is not a naming choice: Stage 4's grid study gives the error of each level, and the coarsest level inside the Stage 0 error budget is the one to run.</li>
+  </ul>
+  {cbox("Proposed, not decided (decision 114): a rule set 3 with the three too-strict rules loosened (the tip gap needs a new Stage 2 law, so Mike's word and a re-screen), checked by one solver run on both meshes before it is frozen. Until then rule set 2 stands.", "Open", "warn")}
+</section>"""
+
+
 def build_page() -> tuple[str, str]:
     v1, v23, v4, v5, v6, co = (load(n) for n in ("v1.json", "v23.json", "v4.json", "v5_export.json", "v6.json",
                                                    "cost_options.json"))
@@ -224,7 +432,7 @@ def build_page() -> tuple[str, str]:
 
     head = f"""
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 3 · volume mesh · cfdauto {__version__} · 10 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 3 · volume mesh · cfdauto {__version__} · 11 Nov 2026</div>
   <h1>Volume Mesh</h1>
   <p class="lede">One matched C-H mesh per wing, Re and level (VC, C, M, F), on the frozen Stage 2 surface: structured
   CGNS for ADflow, the same cells as <code>.su2</code> for SU2. What it is, how one is built, every check, what was
@@ -232,10 +440,12 @@ def build_page() -> tuple[str, str]:
   none changed; the construction changed ten times, each after a check failed (<a href="#changes">What changed</a>).
   The first rule set worked but cost too much (M 20.8 M, F 45 M cells). On 9 Nov Mike set the target, M about 10 M
   with F above it, and rule set 2 (decision 107) meets it with the volume rules alone: its results come first, the
-  first rule set's follow as the record (<a href="#cost">Cost</a> has the packages that were counted).
+  first rule set's follow as the record (<a href="#cost">Cost</a> has the packages that were counted). On 10–11 Nov
+  the size was studied (<a href="#size">The size</a>): what drives it, which rules are stricter than the published
+  guides, and a lighter ladder that is not decided yet (decision 114).
   Step by step from a surface to its volume mesh, with the rule, the decision and the value per level: the
   <a href="https://claude.ai/artifact/EWgreAJioSL4yNMwoGFUpD" target="_blank" rel="noopener">flowchart</a>.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#r2">Rule set 2</a><a href="#what">What it is</a><a href="#how">How a plane is built</a><a href="#rules">The rules</a><a href="#checks">The checks</a><a href="#v0">V0</a><a href="#v1">V1</a><a href="#v2">V2</a><a href="#v3">V3</a><a href="#v4">V4</a><a href="#v5">V5</a><a href="#v6">V6</a><a href="#cost">Cost</a><a href="#v7">V7</a><a href="#v8">V8</a><a href="#changes">What changed</a><a href="#weak">Weak points</a><a href="#handover">Handover</a><a href="#files">Files</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#r2">Rule set 2</a><a href="#size">The size</a><a href="#what">What it is</a><a href="#how">How a plane is built</a><a href="#rules">The rules</a><a href="#checks">The checks</a><a href="#v0">V0</a><a href="#v1">V1</a><a href="#v2">V2</a><a href="#v3">V3</a><a href="#v4">V4</a><a href="#v5">V5</a><a href="#v6">V6</a><a href="#cost">Cost</a><a href="#v7">V7</a><a href="#v8">V8</a><a href="#changes">What changed</a><a href="#weak">Weak points</a><a href="#handover">Handover</a><a href="#files">Files</a></nav>
 </header>"""
 
     g23, g4, g6, g5 = load("r2_v23.json"), load("r2_v4.json"), load("r2_v6.json"), load("r2_v5_export.json")
@@ -252,6 +462,7 @@ def build_page() -> tuple[str, str]:
       above; and the angles: −5° to +10°. Rule set 2 (decisions 107, 111) meets it with the volume rules alone; the
       surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). In main
       on GitHub since 10 Nov, with an app to load or make a wing and look at its meshes (<code>CFD_Automation/app</code>).</p></div>
+    {size_glance()}
     <div class="box good"><h3>Rule set 2: the screens</h3><div class="big">{g23.get('outcomes', {}).get('passed', '—')} of {g23.get('meshes', '—')} reference · {f"{g6o.get('passed', 0)} of {g6.get('meshes', 0)} all sets" if g6 else "all sets: running"}</div>
       <p>V2/V3: the 20 reference wings × 4 Re at VC. V4: the family, check 13 {g13.get('passed', '—')} of {g13.get('of', '—')}.
       V6: every built set at VC (not the hold-outs){"; refused: " + "; ".join(f"{TYPE_NAME.get(r['type'], r['type'])} {r['set']} wing {r['index']} (cell quality {r['values'].get('cell_quality', 0):.3f}, limit 0.05)" for r in g6['refused']) if g6.get('refused') else ""}{"" if g6 else ", running when this page was built"}.</p></div>
@@ -274,7 +485,7 @@ def build_page() -> tuple[str, str]:
     <div class="box"><h3>Rules, checks, code</h3><div class="big">15 checks · {N_TESTS} tests</div>
       <p>Rules in <code>configs/volume.yaml</code> (rule set 1 kept in <code>configs/volume_rules1.yaml</code>); checks and
       limits in <code>decisions/volume_rules.md</code>; code in <code>cfdauto/volume/</code> (Stage 2's
-      <code>cfdauto/mesh/</code> untouched); decisions 84–113 in <code>OPEN_DECISIONS.md</code>.</p></div>
+      <code>cfdauto/mesh/</code> untouched); decisions 84–114 in <code>OPEN_DECISIONS.md</code>.</p></div>
   </div>
 </section>"""
 
@@ -287,7 +498,9 @@ def build_page() -> tuple[str, str]:
     <li><strong>One mesh for both solvers</strong> (decision 73): ADflow reads it as structured CGNS; SU2 reads the same cells as unstructured hexahedra.</li>
     <li><strong>Three outcomes:</strong> passed, refused (only <code>refusal.json</code> is written), needs review (every check passed, but the plane needed more smoothing). Failures stay in every count.</li>
   </ul>
-  {figc("v1_slices.png", "BWB reference wing 0 at VC, Re 3 × 10⁵: the station planes at the root, mid semi-span and the tip; the root's trailing edge close up; the root plane out to the far field; the wake in the y–z plane behind the wing.",
+  {figc("blocks.png", "The 13 blocks by name, on BWB reference wing 0 at VC, Re 3 × 10⁵ (rule set 2). (a) One station plane, the root: six blocks around the section. (b) The same plane out to the far field. (c) From above: every line is one station plane; the wing-station blocks (*_in) run root to tip, the outboard blocks (*_out) from the tip to the far field, and the CAP block sits on the tip cap.",
+        "Six blocks per station plane, twice (along the wing, past the tip), plus the cap block: 13. The station planes crowd at the tip, where the gap is 2 × the first wall cell: the place the size study found too strict.")}
+  {figc("v1_slices.png", "Rule set 1 (the first build). BWB reference wing 0 at VC, Re 3 × 10⁵: the station planes at the root, mid semi-span and the tip; the root's trailing edge close up; the root plane out to the far field; the wake in the y–z plane behind the wing.",
         f"One C per station, square to the wall, the wake band behind the trailing edge, the base block between the two wake lines, the outboard planes past the tip. {v1.get('cells', {}).get('total', 0):,} cells; every check passes (V1).")}
 </section>"""
 
@@ -336,7 +549,8 @@ def build_page() -> tuple[str, str]:
          [["march (chosen)", f"{m.get('planes_with_a_fold', '—')} of {m.get('station_planes', '—')}", f"{m.get('min_sj', 0):.3f} ({m.get('min_sj_median', 0):.3f})", f"{m.get('wall_angle_max_deg', 0):.2f}°", f"{m.get('growth_over_limit_max', 0):.3f}", f"{m.get('seconds', 0):.1f} s"],
           ["algebraic", f"{al.get('planes_with_a_fold', '—')} of {al.get('station_planes', '—')}", "folded", "—", "—", f"{al.get('seconds', 0):.1f} s"],
           ["elliptic (300 Winslow sweeps)", f"{el.get('planes_with_a_fold', '—')} of {el.get('station_planes', '—')}", "folded", "—", f"{el.get('growth_over_limit_max', 0):.1f}", f"{el.get('seconds', 0):.0f} s"]])}
-  {cbox("The march folds no plane; the other two fold every plane, at the concave trailing-edge corners. Not close, so Mike was not asked (decision 84).")}
+  {figc("plane_method.png", "The three ways to build a station plane, on the same 501 station planes of 8 wings at VC (V0), one dot per plane. Left: the smallest scaled Jacobian of the plane (below 0 is a folded cell; dashed: the limit 0.05). Right: the largest angle between the first line and the wall normal (dashed: the limit 5°).",
+        "The march folds no plane; the other two fold every plane, at the concave trailing-edge corners. Not close, so Mike was not asked (decision 84).")}
   <p>Layers at VC, median (largest) over the 20 reference wings, for five boundary-layer laws:</p>
   {table(["law", "Re 1e5", "Re 3e5", "Re 1e6", "Re 4e6"], b_rows)}
   {cbox("The turbulent layer at the trailing edge always fits 30 cells at VC; the mid-chord layers do not at Re 10⁵ (the small tips would need growth 1.000). Chosen: turbulent at the TE, 30 at VC (decision 86). Weak point: a laminar layer at mid-chord gets fewer cells at VC; the family gives it more at F.")}
@@ -515,6 +729,9 @@ def build_page() -> tuple[str, str]:
   <h2>Weak points and open items</h2>
   <ul>
     <li><strong>Cost and memory.</strong> Rule set 2: M about {gM.get('median', 0) / 1e6:.1f} M cells, F about {gF.get('median', 0) / 1e6:.0f} M (rule set 1: {f_med / 1e6:.0f} M at F). The plan assumed 10 M cells in 48 GB; by S8's laws 48 GB holds 4.6–5.9 M, so VC and C fit and M and F need the HPC. The laws are two-point fits at 0.57 and 1.11 M cells: V7 measures (decisions 112, 113).</li>
+    <li><strong>The mesh grows with Re, and the tip gap is why</strong> (11 Nov, <a href="#size">The size</a>): M is 9.1 M at Re 3 × 10⁵ and 13.5 M at 4 × 10⁶ on wing 0 of each type. The last station gap at the tip is 2 × the first wall cell (36–1,100 × finer than DPW's guide), because the tip cap is a wall reached along the stations; with the gap at 100 × the first wall cell a third of the cells go. A lighter rule set is proposed, not decided (decision 114).</li>
+    <li><strong>The tip cap is fragile to any change of the ring:</strong> with the band off, a coarser trailing-edge cell or a faster growth around the section, the BWB or flying-wing cap falls below its limit (0.05).</li>
+    <li><strong>The count runs one layer high</strong> on about a fifth of the meshes (<code>count_volume</code> against the built mesh: 1.5–1.8 % more cells, never fewer); the counted M and F cells can be that much high. Not fixed.</li>
     <li><strong>The fan ends at +10°</strong> (decision 111). Above it the wake leaves the fine cells; post-stall needs its own mesh. Where the wake really goes at −5° and +10° is not measured (V7).</li>
     <li><strong>Very close stations with fast-changing chords sit nearest the cell-quality limit</strong> (decision 110): steep BWB centre bodies, kinks, corner wings. One wing is refused: BWB corner2 wing 6 (0.032; limit 0.05), whose chord halves within 0.14 c of the semi-span; a fix would space the far wake by x for every station at once (a redesign, not built). {q_txt}</li>
     <li><strong>No solve yet</strong> on a Stage 3 mesh (V7 needs Mike's machine). Accepting the files is shown; converging is not.</li>
@@ -533,7 +750,7 @@ def build_page() -> tuple[str, str]:
 <section id="handover">
   <h2>Next, and the handover to Stage 4</h2>
   <ul>
-    <li><strong>Next:</strong> V7 on Mike's machine: the three solves, the memory (decision 113) and the wake at −5° and +10° (decision 111). Then the hold-outs (V8) when Mike says, with the rules frozen.</li>
+    <li><strong>Next:</strong> Mike's word on the lighter rule set (decision 114); V7 on Mike's machine: the three solves, the memory (decision 113), the wake at −5° and +10° (decision 111) and, if rule set 3 is built, the same wing on both meshes. Then the hold-outs (V8) when Mike says, with the rules frozen.</li>
     <li><strong>Stage 4 gets:</strong> per wing, Re and level, a folder <code>volume_&lt;level&gt;_&lt;hash8&gt;_re&lt;Re&gt;/</code> with <code>blocks.npz</code>, <code>quality.json</code> (every check, the info), <code>manifest.json</code> (hashes of the code, the rules and the nodes; the BCs; the interfaces), <code>volume.cgns</code>, <code>volume.su2</code>; a refused mesh only <code>refusal.json</code>.</li>
     <li><strong>Build:</strong> <code>build_volume(surface)</code> then <code>write(vm, wing, out, formats=("npz", "cgns", "su2"))</code>; cost first with <code>count_volume(surface)</code>.</li>
     <li><strong>First:</strong> run V7 and read it with <code>solve/read_results.py</code>; send back the memory numbers; then the hold-outs (V8) with the rules frozen.</li>
@@ -552,6 +769,8 @@ CFD_Automation/Stage_3_volume_mesh/
   scripts/one_mesh.py               one wing's volume mesh (any set, level, Re; --count)
   scripts/screen.py                 the screen (one JSON row per mesh)
   scripts/v23_study.py v4_study.py v6_study.py cost_options.py v5_export.py   the studies
+  scripts/far_field_study.py size_factors.py size_drivers.py knob_study.py light_set.py ladder_study.py
+                                    the size studies of 10-11 Nov; size_figures.py, blocks_figure.py: their figures
   solve/                            the V7 case, ADflow run, results reader, runbook
   tests/                            pytest (Stage_3_volume_mesh/tests)
 CFD_Automation/app/                the app: load or make a wing, build and look at its meshes
@@ -563,9 +782,9 @@ CFD_Automation/RUN_LOCAL.md        every command, Stage 1 to V7</pre>
            'and measured with rule set 1 (<code>configs/volume_rules1.yaml</code>). It works and passes its checks, '
            'but costs about twice what Mike asked for at M; its numbers stay here as the record and as the baseline '
            'of the cost study.</p></section>')
-    body = ('<div class="wrap">' + head + glance + r2 + rs1 + what + how + rules_s + checks_s + v0 + v1s + v2s + v3s + v4s + v5s +
+    body = ('<div class="wrap">' + head + glance + r2 + size_study() + rs1 + what + how + rules_s + checks_s + v0 + v1s + v2s + v3s + v4s + v5s +
             v6s + cost + v7 + v8 + changes + weak + handover + files +
-            f'<footer>CFD_Automation Stage 3 · built by scripts/make_stage3_page.py from configs/volume.yaml and data/studies/*.json · 10 Nov 2026</footer></div>')
+            f'<footer>CFD_Automation Stage 3 · built by scripts/make_stage3_page.py from configs/volume.yaml and data/studies/*.json · 11 Nov 2026</footer></div>')
     page = ('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<title>Volume Mesh: CFD_Automation Stage 3</title><style>{CSS}</style></head><body>{body}</body></html>')
     return page, f"<style>{CSS}</style>{body}"

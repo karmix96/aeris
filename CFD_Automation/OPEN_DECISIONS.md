@@ -651,4 +651,14 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     below 80 c̄ before Stage 4. The band off for the fully turbulent runs would give 3.5–4 M but breaks the BWB cap.
     To decide: take the package (a Stage 2 change: a new tip-gap law; then a re-screen), check it with one solver run
     first, or keep rule set 2.
+    **The same evening (section 21; Mike: "only the too strict things, or make the current M the Fine ... start from
+    800k"):** the ladder counted with five levels (VVC one step under VC) on the 20 reference wings and at the four Re.
+    (a) With the wall-normal growth at 1.30 the three changes together are refused on BWB reference wing 3 at VC (growth
+    check 1.0105 against 1.01): the package is taken with **1.28** (every mesh built passes: 180 of 180; the family
+    check 13 passes on BWB 0, VVC to M). (b) The light rules move every level one step down in size: 20 reference wings
+    at Re 3 × 10⁵, median: VC 2.08 → 1.25 M, C 4.46 → 2.63 M, M 9.53 → 5.53 M, F 20.7 → 12.0 M; at 4 × 10⁶ (wing 0 of
+    each type) M 13.5 → 6.4 M, F 29.4 → 13.9 M. (c) Renaming today's levels one step down gives the same sizes with
+    every level one step coarser on the wing: not advised. (d) VVC (0.4–0.7 M light) is past the hard minimums
+    (y⁺ 1.3): a preview level only. Proposed: rule set 3 = the light rules with levels VC, C, M, F; the production level
+    chosen by Stage 4's grid study. Still Mike's to decide.
 

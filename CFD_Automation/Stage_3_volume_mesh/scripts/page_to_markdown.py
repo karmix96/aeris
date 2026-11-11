@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
-HEAD = """# Stage_3 — Volume mesh page (text copy, 10 Nov 2026)
+HEAD = """# Stage_3 — Volume mesh page (text copy, 11 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_3_volume_mesh/docs/VOLUME_MESH.html` (repo karmix96/aeris,
 branch `main`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*

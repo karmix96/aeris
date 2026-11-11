@@ -1,6 +1,6 @@
 # Run it locally: Stage 1 to Stage 3, the app, and V7
 
-The commands to rebuild and check everything from Stage 1 to today (10 Nov 2026) on your machine. Times are measured
+The commands to rebuild and check everything from Stage 1 to today (11 Nov 2026) on your machine. Times are measured
 here (2 cores, 7 GB RAM, numpy loft); your machine is faster. Run each block from the folder it names.
 
 **Two rules first**
@@ -44,6 +44,13 @@ tar -xzf data/section_cache.tar.gz -C data && python -m cfdauto.flowmap.tables -
 ```
 
 The sets themselves (`data/sets/`) are in git: do not rerun `cfdauto.geometry.sample`.
+
+**The run still owed (open since 8 Nov):** `build --all` with pyGeo, then push the manifests. One script does the
+tests, the build and the comparison with git, and prints the three git commands (it commits nothing itself):
+
+```bash
+python CFD_Automation/Stage_1_geometry/scripts/pygeo_build_all.py    # from the repo root, in the AERIS .venv
+```
 
 ## 3. Stage 2: the surface meshes
 
@@ -98,6 +105,21 @@ python scripts/v23_study.py && python scripts/v4_study.py && python scripts/v6_s
 A screen stopped half way goes on with the same command plus `--resume`. What to expect: V2 80 of 80, V4 20 of 20,
 V6 721 of 722 (BWB corner2 wing 6 refused: cell quality 0.032). The results land in `data/studies/` (`r2_*`); `git
 diff` on them shows whether your machine gives the same numbers.
+
+The size studies of 10–11 Nov (what-if copies of the rules files; nothing is changed; `decisions/volume_rules.md`,
+sections 18–21). Times here, on 2 cores:
+
+```bash
+python scripts/far_field_study.py                 # smaller domains (section 18)
+python scripts/size_factors.py                    # the cells against Re, band on and off (section 19)
+python scripts/size_drivers.py                    # the counts against the wing (20.1; reads the V6 screen files)
+python scripts/knob_study.py                      # 21 rules loosened one at a time (20.2); about 50 min
+python scripts/light_set.py --packages A2,B2_100,B2_dpw,C2    # the loosened rules together (20.4); about 30 min
+python scripts/ladder_study.py                    # the ladder VVC to F, today and lighter (21); about 15 min
+python scripts/ladder_study.py --ref20            # the same on the 20 reference wings; about 30 min
+python scripts/ladder_study.py --family           # the lighter rules built on BWB 0, VVC to M, check 13; 2 min
+python scripts/size_figures.py && python scripts/blocks_figure.py   # their figures
+```
 
 ## 5. The app
 

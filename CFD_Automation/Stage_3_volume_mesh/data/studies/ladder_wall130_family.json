@@ -1,0 +1,319 @@
+{
+ "wing": "bwb reference 0",
+ "re": 300000.0,
+ "pack": "light",
+ "tip_gap_in_s0": 77.52048023253943,
+ "levels": {
+  "VVC": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 680830,
+   "checks": {
+    "wall_on_surface": {
+     "passed": true,
+     "value": 0.0
+    },
+    "no_folded_cell": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cell_quality": {
+     "passed": true,
+     "value": 0.11726192709904804
+    },
+    "wall_orthogonality": {
+     "passed": true,
+     "value": 0.024175115930311852
+    },
+    "first_cell": {
+     "passed": true,
+     "value": 0.0001741664056190695
+    },
+    "growth": {
+     "passed": true,
+     "value": 0.9871402640293568
+    },
+    "bl_cells": {
+     "passed": true,
+     "value": 14.03616180361597
+    },
+    "interfaces": {
+     "passed": true,
+     "value": 8.881784197001252e-16
+    },
+    "symmetry_plane": {
+     "passed": true,
+     "value": 0.0
+    },
+    "far_field": {
+     "passed": true,
+     "value": 80.0
+    },
+    "wake": {
+     "passed": true,
+     "value": 0.9921515293681245
+    },
+    "outboard": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cells_ram": {
+     "passed": true,
+     "value": 680830.0
+    }
+   },
+   "nose_family": "none",
+   "seconds": 4.5
+  },
+  "VC": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 1442688,
+   "checks": {
+    "wall_on_surface": {
+     "passed": true,
+     "value": 0.0
+    },
+    "no_folded_cell": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cell_quality": {
+     "passed": true,
+     "value": 0.09899074499682423
+    },
+    "wall_orthogonality": {
+     "passed": true,
+     "value": 0.021197965583515395
+    },
+    "first_cell": {
+     "passed": true,
+     "value": 0.00017424986956737776
+    },
+    "growth": {
+     "passed": true,
+     "value": 0.9959851426835443
+    },
+    "bl_cells": {
+     "passed": true,
+     "value": 18.037626632661688
+    },
+    "interfaces": {
+     "passed": true,
+     "value": 8.881784197001252e-16
+    },
+    "symmetry_plane": {
+     "passed": true,
+     "value": 0.0
+    },
+    "far_field": {
+     "passed": true,
+     "value": 80.0
+    },
+    "wake": {
+     "passed": true,
+     "value": 0.9920045413233175
+    },
+    "outboard": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cells_ram": {
+     "passed": true,
+     "value": 1442688.0
+    }
+   },
+   "nose_family": "none",
+   "seconds": 8.3
+  },
+  "C": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 3060850,
+   "checks": {
+    "wall_on_surface": {
+     "passed": true,
+     "value": 0.0
+    },
+    "no_folded_cell": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cell_quality": {
+     "passed": true,
+     "value": 0.10296143177146345
+    },
+    "wall_orthogonality": {
+     "passed": true,
+     "value": 0.015383701484607533
+    },
+    "first_cell": {
+     "passed": true,
+     "value": 0.00017431448713756126
+    },
+    "growth": {
+     "passed": true,
+     "value": 0.99496780901994
+    },
+    "bl_cells": {
+     "passed": true,
+     "value": 23.494482653972863
+    },
+    "interfaces": {
+     "passed": true,
+     "value": 8.881784197001252e-16
+    },
+    "symmetry_plane": {
+     "passed": true,
+     "value": 0.0
+    },
+    "far_field": {
+     "passed": true,
+     "value": 80.0
+    },
+    "wake": {
+     "passed": true,
+     "value": 0.9932838029762581
+    },
+    "outboard": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cells_ram": {
+     "passed": true,
+     "value": 3060850.0
+    }
+   },
+   "nose_family": "none",
+   "seconds": 15.0
+  },
+  "M": {
+   "outcome": "passed",
+   "failed": [],
+   "cells": 6419346,
+   "checks": {
+    "wall_on_surface": {
+     "passed": true,
+     "value": 0.0
+    },
+    "no_folded_cell": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cell_quality": {
+     "passed": true,
+     "value": 0.07747727024982598
+    },
+    "wall_orthogonality": {
+     "passed": true,
+     "value": 0.00999824897727427
+    },
+    "first_cell": {
+     "passed": true,
+     "value": 0.00017436450413954585
+    },
+    "growth": {
+     "passed": true,
+     "value": 0.9982148263612252
+    },
+    "bl_cells": {
+     "passed": true,
+     "value": 30.24224408701516
+    },
+    "interfaces": {
+     "passed": true,
+     "value": 8.881784197001252e-16
+    },
+    "symmetry_plane": {
+     "passed": true,
+     "value": 0.0
+    },
+    "far_field": {
+     "passed": true,
+     "value": 80.0
+    },
+    "wake": {
+     "passed": true,
+     "value": 0.997752662756123
+    },
+    "outboard": {
+     "passed": true,
+     "value": 0.0
+    },
+    "cells_ram": {
+     "passed": true,
+     "value": 6419346.0
+    }
+   },
+   "nose_family": "none",
+   "seconds": 27.1
+  }
+ },
+ "check13": {
+  "passed": true,
+  "value": 0.02018870479708479,
+  "where": "cell_1c_wake C/M = 1.2738",
+  "ratios": {
+   "VVC/VC": {
+    "s0": 1.3001143042240815,
+    "s0_min": 1.2999999999993739,
+    "s0_max": 1.3001143042240815,
+    "wall_growth": 1.3000000000000003,
+    "band_cell": 1.2944493444106246,
+    "outboard_first_gap": 1.305942787958526,
+    "first_wake_cell": 1.2999843167743228,
+    "cell_1c_wall": 1.2866139844762345,
+    "cell_1c_wake": 1.2998153156315695,
+    "counts": {
+     "n_layers": 1.2826086956521738,
+     "n_wake": 1.2894736842105263,
+     "n_out": 1.25,
+     "n_span": 1.3,
+     "n_c": 1.2823529411764707,
+     "n_base": 1.2857142857142858,
+     "cells": 2.119013556981919
+    }
+   },
+   "VC/C": {
+    "s0": 1.3000698319880062,
+    "s0_min": 1.2999999999996106,
+    "s0_max": 1.3000698319880062,
+    "wall_growth": 1.3,
+    "band_cell": 1.299998731276384,
+    "outboard_first_gap": 1.2946513605532606,
+    "first_wake_cell": 1.2997479877017537,
+    "cell_1c_wall": 1.3067921555501452,
+    "cell_1c_wake": 1.2923810460929126,
+    "counts": {
+     "n_layers": 1.305084745762712,
+     "n_wake": 1.2857142857142858,
+     "n_out": 1.2571428571428571,
+     "n_span": 1.2564102564102564,
+     "n_c": 1.2874617737003058,
+     "n_base": 1.2222222222222223,
+     "cells": 2.1216299019607843
+    }
+   },
+   "C/M": {
+    "s0": 1.3000473003554271,
+    "s0_min": 1.299999999999477,
+    "s0_max": 1.3000473003554271,
+    "wall_growth": 1.2999999999999998,
+    "band_cell": 1.2999873190425646,
+    "outboard_first_gap": 1.275084860593834,
+    "first_wake_cell": 1.299995350210284,
+    "cell_1c_wall": 1.2883390615749242,
+    "cell_1c_wake": 1.2737546837637899,
+    "counts": {
+     "n_layers": 1.2857142857142858,
+     "n_wake": 1.2698412698412698,
+     "n_out": 1.2954545454545454,
+     "n_span": 1.2244897959183674,
+     "n_c": 1.2850356294536818,
+     "n_base": 1.3636363636363635,
+     "cells": 2.097242922717546
+    }
+   }
+  }
+ }
+}

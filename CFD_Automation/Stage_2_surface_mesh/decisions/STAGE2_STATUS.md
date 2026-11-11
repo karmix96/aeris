@@ -1,4 +1,4 @@
-# Stage_2 — Surface mesh: status and handover (2 Nov 2026, updated 9 Nov 2026)
+# Stage_2 — Surface mesh: status and handover (2 Nov 2026, updated 11 Nov 2026)
 
 Text copy for chats in this project. Repo: karmix96/aeris, branch `stage2-surface-mesh`,
 `CFD_Automation/Stage_2_surface_mesh/` (configs, decisions, docs, tests, scripts, studies) and the code in
@@ -301,8 +301,9 @@ quads in the tip squeeze (0.08), the 1.25–1.26 growth on NACA 4415 noses and a
   starting value); the stations go on past the tip into outboard H blocks, growing from the tip gap; the tip
   vortex resolved there by clustering along its path (no tube); the cap is the wall of the first outboard block.
   Structured CGNS for ADflow; a converter to unstructured hexes (.su2) for SU2. Rough cost +30–60 % cells.
-- Before any solve: one pyGeo `build --all` on Mike's machine (new input hashes after the label fix; the same
-  surfaces) and the owner's word to close Stage 2. The band stays on for every run (81); the solver split (76) is
+- Before any solve: the pyGeo `build --all` after the label fix (done on Mike's machine on 11 Nov, commit de64aa57:
+  722 of 722, the same input hashes, pass flags and labels as the numpy build) and the owner's word to close Stage 2
+  (still open). The band stays on for every run (81); the solver split (76) is
   decided right before the runs; the surface rules are frozen (82). Decided on 8 Nov: 77 confirmed, the upper band 0–100 % c, a nose
   repair per family (80). The pyGeo run is done (8 Nov).
 - Stage 1's label fix (decision 79, 8 Nov) changed every wing's input hash, not its surface (the same surface hash on

@@ -116,6 +116,10 @@ today's M the F, starting from 800 k. What-if studies on copies of the rules fil
 ## Weak points (rule set 2)
 
 - **No solve yet** on a Stage 3 mesh. So the memory at these sizes and where the wake goes are not measured.
+- **Built here on the numpy twin of the loft** (the production loft is pyGeo). On the 20 reference wings the two
+  give the same surface meshes to round-off (Stage 2, 8 Nov); the pyGeo build of 11 Nov (Mike's machine, commit
+  de64aa57) has the same input hashes, pass flags and labels on all 722. No volume mesh has been built on pyGeo
+  yet: V7 on Mike's machine will be the first.
 - **Memory:** by S8's laws M (9.5 M cells) needs 72–92 GiB for ADflow. The plan assumed 10 M cells in 48 GB.
 - **The fan ends at +10°.** Above it the wake leaves the fine cells; post-stall needs its own mesh (decision 69).
 - **Very close stations with fast-changing chords** (steep BWB centre bodies, corner wings) sit nearest the

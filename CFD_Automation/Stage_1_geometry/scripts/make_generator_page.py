@@ -31,7 +31,7 @@ from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
 SETS = ROOT / "data" / "sets"
-TESTS_LINE = "181 pass, 13 skipped (12 need pyGeo, 1 needs gmsh; run 8 Nov 2026)"
+TESTS_LINE = ("181 pass, 13 skipped here (12 need pyGeo, 1 needs gmsh; 11 Nov 2026); on Mike's machine with pyGeo and gmsh 203 pass, 3 skipped (XFOIL not installed there; 11 Nov)")
 CHANGED = "7 Nov 2026"          # the date of the two changes (decisions 64 and 70) this page explains
 
 
@@ -188,7 +188,7 @@ DECISIONS = [
 FIXES = [
     ("Done (7 Nov 2026): the nose shape of the built sections (decision 64).",
      "Measured along the arc with one curvature method, the old rule made a curvature spike on one side of the nose and a flat spot on the other, and the built nose failed the 5 % turning-per-cell test on all ten suggested airfoils. The new rule (leading edge at the apex of one cubic spline, both sides from that spline, 201 points per side) passes on all ten and on 95.6 % of the database; a nose gate refuses the 14 files whose nose folds back. See <a href='#nose'>Nose study</a>.",
-     "nothing left for the nose. The pyGeo <code>build --all</code> ran on your machine on 8 Nov: 722 of 722 (the manifests now say pygeo)."),
+     "nothing left for the nose. The pyGeo <code>build --all</code> ran on your machine on 8 Nov: 722 of 722, and ran again on 11 Nov after the label fix: 722 of 722, the same input hashes, pass flags and labels as the numpy build; Stage 1 tests 203, 3 XFOIL tests skipped; commit de64aa57 (the manifests say pygeo)."),
 ]
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
@@ -214,7 +214,7 @@ OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a 
     ("Geometry", "Similarity checks C1–C4", "Similarity is built (7 Nov). Its four CFD checks are still to run: C1 scale (mean chord 0.3 m against 1 m), C2 Mach (0.05 / 0.1 / 0.2; CL and CM after Prandtl–Glauert), C3 trailing edge (0.1 / 0.2 / 0.3 % c and the real floor 0.42 % c), C4 Re levels (interpolation; done on 2-D data on 8 Nov, which added 1 × 10⁶). Limits: Re does not carry roughness or air turbulence; small real wings have thicker trailing edges.", "act"),
     ("Geometry", "Full-space edges", "At unit mean chord the full space reaches aspect ratio 20 and root chords up to " + f"{U['bwb']['root_chord'][1]:.2f}" + " mean chords (a BWB corner), so at the top level the local Re reaches " + _sci(U['bwb']['re_root_max']) + " at that root; at the lowest level the smallest tip (" + f"{U['bwb']['tip_chord'][0]:.3f}" + " mean chords) runs at " + _sci(U['bwb']['re_tip_min']) + ". The section tables cover 1.5 × 10⁴ – 6 × 10⁶. Keep, or narrow the full chord ratios?", "decide"),
     ("Geometry", "Airfoil search order", "Project folder → AERIS database → NACA formula; of 2,183 files, 23 cannot be read (not unit chord) and the nose gate refuses 14. Keep?", "decide"),
-    ("Geometry", "pyGeo run", "The nose is decided (64) and similarity is built (70). Every geometry hash changed on 7 Nov, and the sets were rebuilt with the numpy loft (722 of 722 built). pyGeo run on your machine (8 Nov): pyGeo tests 24 of 24 (pyGeo and the numpy loft agree within 10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), <code>build --all</code> with pyGeo 722 of 722, with the same input hashes and pass/fail as the numpy loft (the manifests now say pygeo); the Stage 2 meshes of the 20 reference wings on pyGeo equal the numpy ones (VC, old levels: every check value within 6 × 10⁻¹⁰; new levels, VC and F: the same ring nodes and stations, 80 of 80 each). One label differed: BWB corner1 #8 was cranked with pyGeo only (its sweep changes by exactly 5°, the kink threshold). Fixed on 8 Nov (decision 79): every input hash changed, the surfaces did not, so one more pyGeo <code>build --all</code> is owed. Without pyGeo, here: __TESTS__. Stage 2 has screened the 7 Nov wings at every set: 1,724 of 1,724 builds pass (every set at VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels), and on 8 Nov every set at every level: 3,128 of 3,128, with no nose repair (one factor per family, Stage 2 decision 80), with the numpy loft.", "act"),
+    ("Geometry", "pyGeo run", "The nose is decided (64) and similarity is built (70). Every geometry hash changed on 7 Nov, and the sets were rebuilt with the numpy loft (722 of 722 built). pyGeo run on your machine (8 Nov): pyGeo tests 24 of 24 (pyGeo and the numpy loft agree within 10⁻⁶ chord on the 7 published wings), Stage 1 tests 204 (1 skipped), <code>build --all</code> with pyGeo 722 of 722, with the same input hashes and pass/fail as the numpy loft (the manifests now say pygeo); the Stage 2 meshes of the 20 reference wings on pyGeo equal the numpy ones (VC, old levels: every check value within 6 × 10⁻¹⁰; new levels, VC and F: the same ring nodes and stations, 80 of 80 each). One label differed: BWB corner1 #8 was cranked with pyGeo only (its sweep changes by exactly 5°, the kink threshold). Fixed on 8 Nov (decision 79): every input hash changed, the surfaces did not; the pyGeo <code>build --all</code> ran again on 11 Nov after the label fix: 722 of 722, the same input hashes, pass flags and labels as the numpy build; Stage 1 tests 203, 3 XFOIL tests skipped; commit de64aa57. Tests: __TESTS__. Stage 2 has screened the 7 Nov wings at every set: 1,724 of 1,724 builds pass (every set at VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels), and on 8 Nov every set at every level: 3,128 of 3,128, with no nose repair (one factor per family, Stage 2 decision 80), with the numpy loft.", "done"),
     ("Sources", "Second-hand values", "Raymer's taper 0.4, washout 3° and 0° c/4 sweep come from a course page; PUL-10 and the flying-wing MAV were read by the agent only. Check in print.", "act"),
     ("Sources", "AUTh BWB papers", "Airfoils and station chords of their BWBs are in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Patras library or the authors.", "act"),
     ("Sources", "Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas cite unread Jane's-style data; the Hermes 450 entry is inconsistent. Confirm with Jane's.", "act"),
@@ -1657,10 +1657,10 @@ def change_table() -> str:
          "—", "not rebuilt"),
         ("Hashes, pyGeo, Stage 2",
          "Stored hashes stale since the 2 Nov rename; Stage 2 meshed the 730 first-approach wings (790 builds).",
-         "Every geometry hash changed on 7 Nov; the sets are rebuilt with the numpy loft, and on 8 Nov with pyGeo on your machine (722 of 722; the manifests now say pygeo). Stage 2 screened the 7 Nov wings at every set: 1,724 of 1,724 builds pass (every set at VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels), and on 8 Nov every set at every level: 3,128 of 3,128, with no nose repair (one factor per family).",
-         "—", "owed"),
+         "Every geometry hash changed on 7 Nov; the sets are rebuilt with the numpy loft, and on 8 Nov with pyGeo on your machine (722 of 722; the manifests now say pygeo). After the label fix of 8 Nov, again with pyGeo on your machine on 11 Nov (722 of 722, the same input hashes, pass flags and labels). Stage 2 screened the 7 Nov wings at every set: 1,724 of 1,724 builds pass (every set at VC and F at Re 3 × 10⁵; the 20 reference wings at all four levels and Re levels), and on 8 Nov every set at every level: 3,128 of 3,128, with no nose repair (one factor per family).",
+         "—", "rebuilt 11 Nov"),
     ]
-    flag = {"built 7 Nov": "ok", "rebuilt 7 Nov": "ok", "input of each solve": "ok", "corrected": "fix", "not rebuilt": "open", "owed": "open"}
+    flag = {"built 7 Nov": "ok", "rebuilt 7 Nov": "ok", "rebuilt 11 Nov": "ok", "input of each solve": "ok", "corrected": "fix", "not rebuilt": "open", "owed": "open"}
     out = ['<div class="tbl"><table class="wide"><thead><tr><th>What</th><th>First (30 Oct–6 Nov 2026)</th>'
            '<th>Now (7 Nov 2026)</th><th>Decided</th><th>Status</th></tr></thead><tbody>']
     for what, first, new, when, st in rows:
@@ -1713,7 +1713,8 @@ def glance(rows_: list[dict]) -> dict:
 # Page
 # --------------------------------------------------------------------------------------
 
-PAGE = """<meta charset="utf-8">
+PAGE = """<!DOCTYPE html>
+<meta charset="utf-8">
 <title>Wing Generator</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1844,7 +1845,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 </style>
 <div class="wrap">
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__ · updated 9 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__ · updated 11 Nov 2026</div>
   <h1>Wing Generator</h1>
   <p class="lede">Seventeen numbers and four airfoil names go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, shaped like real Class I and II UAVs. Since 7 Nov 2026 every wing is built at unit mean chord: it has no size, and size enters the CFD only as the Re on the mean chord. On the same day the nose rule changed, so the built nose now follows the airfoil file. Every later stage (mesh, solver, data) reads only this surface. The section <a href="#change">What was first, and what changes</a> and an amber <em>What changes</em> box in every section it touches say what the two changes changed.</p>
   <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes (7 Nov)</a><a href="#pipeline">The plan</a><a href="#runs">What was run</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Shapes</a><a href="#inputs">Parameters</a><a href="#nose">Nose study</a><a href="#reynolds">Re and Mach</a><a href="#greek">Greek UAVs</a><a href="#phenomena">Flow phenomena</a><a href="#flowmaps">Flow maps</a><a href="#flowdata">Flow dataset</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fixes</a><a href="#build">One wing, step by step</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
@@ -1857,7 +1858,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>In</h3><div class="big">17 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: the aspect ratio (the semi-span follows: AR / 2), panel shares, chord ratios, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, cranked, tapered, flying wing. No size: every wing at unit mean chord (the root chord left the vector on 7 Nov: 18 → 17).</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, focus and full space, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified (ONERA M6, RIBES, NASA CRM and four BlendedNet designs). Tests: __TESTS__.</p></div>
-    <div class="box verdict"><h3>Verdict</h3><div class="big">Stage 1 closed; Stage 2 under way</div><p>Fixes 1–3 done: panel dihedrals and code hash here; a mesh station on every break, made by the Stage 2 surface mesher (790 of 790 builds pass its 13 checks, on the first-approach wings). Done on 7 Nov: similarity (decision 70) and the nose fix (decision 64); every hash changed and the sets were rebuilt. Done on 8 Nov on your machine: the pyGeo tests (24 of 24) and <code>build --all</code> with pyGeo (722 of 722). Fixed on 8 Nov: the label rules at a threshold (decision 79; every input hash changed, no surface). Still owed in Stage 1: one more pyGeo <code>build --all</code> (the raw XFOIL data is in git since 9 Nov). Stage 2 has screened the 7 Nov wings: on 8 Nov every built set at every level, 3,128 of 3,128 builds pass with no nose repair (Study 12; the 20 reference wings at the four Re levels, the rest at 3 × 10⁵). Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
+    <div class="box verdict"><h3>Verdict</h3><div class="big">Stage 1 closed; Stage 2 under way</div><p>Fixes 1–3 done: panel dihedrals and code hash here; a mesh station on every break, made by the Stage 2 surface mesher (790 of 790 builds pass its 13 checks, on the first-approach wings). Done on 7 Nov: similarity (decision 70) and the nose fix (decision 64); every hash changed and the sets were rebuilt. Done on 8 Nov on your machine: the pyGeo tests (24 of 24) and <code>build --all</code> with pyGeo (722 of 722). Fixed on 8 Nov: the label rules at a threshold (decision 79; every input hash changed, no surface). Done on 11 Nov on your machine: the pyGeo <code>build --all</code> after the label fix (722 of 722, the same input hashes, pass flags and labels). The raw XFOIL data is in git since 9 Nov. Stage 2 has screened the 7 Nov wings: on 8 Nov every built set at every level, 3,128 of 3,128 builds pass with no nose repair (Study 12; the 20 reference wings at the four Re levels, the rest at 3 × 10⁵). Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
   </div>
   <div class="weak amber"><strong>What changed since 2 Nov 2026 (updated 9 Nov).</strong>
     <ul>
@@ -1884,7 +1885,6 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
         </ul></li>
       <li><strong>Open.</strong>
         <ul>
-          <li>One more <code>build --all</code> with pyGeo on your machine: the label fix of 8 Nov changed every input hash.</li>
           <li>Similarity checks C1–C4 (CFD): scale, Mach, trailing edge, Re levels.</li>
         </ul></li>
     </ul></div>
@@ -1894,7 +1894,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>What was first, and what changes (7 Nov 2026)</h2>
   <p>Stage 1 was built and studied with a first approach from 30 Oct to 6 Nov 2026: every wing at real size, in metres. On 7 Nov two changes went into the code. <strong>Similarity</strong> (decision 70, decided by you on 6 Nov): every wing is built at unit mean chord, so a wing has no size, and size enters each solve as the Re on the mean chord. <strong>The nose fix</strong> (decision 64, decided by you on 7 Nov): the built nose now follows the airfoil file at the size of a mesh cell. The code, the tests and the wing sets are done. This page keeps the first-approach content where it is still the record (what was built and studied 30 Oct–6 Nov), marks it <span class="fa">first approach</span>, and says in an amber <em>What changes</em> box in every section what changed there.</p>
   __CHANGE_TABLE__
-  <div class="cbox"><span class="ctag">Conclusion</span>Two changes, both built. Similarity takes size out of the geometry: one mesh family per shape serves every size, and the four Re levels (which cover the real wings) set the size of each solve. The nose fix makes the built nose turn like the airfoil within 5 % per mesh cell on all ten suggested airfoils (it failed on all ten before). Both changed every hash; the 722 wings are rebuilt and checked. Still first approach: the flow maps and the flow dataset (made at real size before 7 Nov). Stage 2 has screened the 7 Nov wings: on 8 Nov every built set at every level, 3,128 of 3,128 builds pass with no nose repair (Study 12). The pyGeo build ran on 8 Nov (722 of 722; the same meshes on the reference wings). Owed: the similarity checks C1–C4.</div>
+  <div class="cbox"><span class="ctag">Conclusion</span>Two changes, both built. Similarity takes size out of the geometry: one mesh family per shape serves every size, and the four Re levels (which cover the real wings) set the size of each solve. The nose fix makes the built nose turn like the airfoil within 5 % per mesh cell on all ten suggested airfoils (it failed on all ten before). Both changed every hash; the 722 wings are rebuilt and checked. Still first approach: the flow maps and the flow dataset (made at real size before 7 Nov). Stage 2 has screened the 7 Nov wings: on 8 Nov every built set at every level, 3,128 of 3,128 builds pass with no nose repair (Study 12). The pyGeo build ran on 8 Nov (722 of 722; the same meshes on the reference wings) and again on 11 Nov after the label fix (722 of 722, the same input hashes, pass flags and labels). Owed: the similarity checks C1–C4.</div>
 </section>
 
 <section id="pipeline">
@@ -2329,7 +2329,7 @@ python -m cfdauto.flowmap ... --method xfoil | --ncrit 5 | --no-induced | --stri
 
 <section id="fix" class="weak">
   <h2>Fixes: done and left</h2>
-  <p class="muted">Done on 29 Oct 2026: the unrealistic conventional set (tapered type and per-panel chords), the dihedral input (three panel values) and the hash (from the code itself). Done on 2 Nov 2026 (fix 3): a mesh station on every break. The Stage 2 surface mesher puts a station exactly on every loft station, so its flat faces never cut a kink; 790 of 790 builds passed its 13 checks on the first-approach wings, and 3,128 of 3,128 on the 7 Nov wings (8 Nov, numpy loft). Done on 7 Nov 2026: the nose shape (decision 64), below. Fixed on 8 Nov: the label rules at a threshold (decision 79); every input hash changed, no surface did. Left in Stage 1: one more pyGeo <code>build --all</code>.</p>
+  <p class="muted">Done on 29 Oct 2026: the unrealistic conventional set (tapered type and per-panel chords), the dihedral input (three panel values) and the hash (from the code itself). Done on 2 Nov 2026 (fix 3): a mesh station on every break. The Stage 2 surface mesher puts a station exactly on every loft station, so its flat faces never cut a kink; 790 of 790 builds passed its 13 checks on the first-approach wings, and 3,128 of 3,128 on the 7 Nov wings (8 Nov, numpy loft). Done on 7 Nov 2026: the nose shape (decision 64), below. Fixed on 8 Nov: the label rules at a threshold (decision 79); every input hash changed, no surface did. Done on 11 Nov: the pyGeo <code>build --all</code> after that fix (722 of 722, the same input hashes, pass flags and labels).</p>
   <ol>
 __FIXES__
   </ol>
@@ -2515,7 +2515,8 @@ def open_html() -> str:
             for a_, b_ in rep.items():
                 q = q.replace(a_, b_)
             flag = {"decide": "<span class='flag open'>decide</span>",
-                    "later": "<span class='flag later'>later stage</span>"}.get(k, "<span class='flag ok'>act</span>")
+                    "later": "<span class='flag later'>later stage</span>",
+                    "done": "<span class='flag ok'>done</span>"}.get(k, "<span class='flag ok'>act</span>")
             out.append(f"<li>{flag} <strong>{t}.</strong> {q}</li>")
         out.append("</ul>")
     return "\n".join(out)

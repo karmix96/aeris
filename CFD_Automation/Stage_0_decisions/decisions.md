@@ -126,7 +126,7 @@ The sections below are updated to match.
 - **Label rules at a threshold (decision 79): fixed on 8 Nov.** The kink tests had no tolerance and the aspect-ratio
   tests too small a one: BWB corner1 #8 was "cranked" with pyGeo only, and the flying-wing reference wing 0 (AR
   exactly 8) missed "high_aspect_ratio". Now every rule has the tolerance; 2 labels changed, no type, no surface, no
-  mesh; every input hash changed. Owed: one more pyGeo `build --all`.
+  mesh; every input hash changed. The pyGeo `build --all` after it ran on 11 Nov (Mike's machine, commit de64aa57): 722 of 722, the same input hashes, pass flags and labels as the numpy build.
 
 ---
 

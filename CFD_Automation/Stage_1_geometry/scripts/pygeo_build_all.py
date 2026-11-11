@@ -1,7 +1,8 @@
-"""The one run Mike's machine still owes Stage 1 (open since 8 Nov 2026): build every set wing with pyGeo after the
-label fix (decision 79), so that the manifests in git say "pygeo" with the new input hashes.
+"""Build every set wing with pyGeo and check the manifests against git. First run on Mike's machine on 11 Nov 2026
+(commit de64aa57; the run owed since the label fix of 8 Nov, decision 79): 722 of 722 built, 0 of 782 differ in input
+hash or pass flag. Run it again after any change to the geometry code.
 
-    source <your AERIS .venv>/bin/activate          # pyGeo 1.17.0, pySpline 1.5.4
+    conda activate <repo>/.venv                     # pyGeo 1.17.0, pySpline 1.5.4 (a conda env on Mike's machine)
     python CFD_Automation/Stage_1_geometry/scripts/pygeo_build_all.py
 
 It runs the Stage 1 tests, builds the 722 set wings (the hold-outs are not built), compares the new manifests with the

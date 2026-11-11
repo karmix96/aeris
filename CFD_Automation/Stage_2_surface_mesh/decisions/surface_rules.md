@@ -531,6 +531,12 @@ pyGeo, to round-off. The full sets were not meshed on pyGeo.
 aa6ccb5d → 51e670d2); no surface did (the same surface hash on all 722). The mesher reads only the loft, so every
 mesh and screen above stands; 5 builds re-meshed at VC (the two relabelled wings among them) have the same node hashes.
 
+**Then (11 Nov): pyGeo `build --all` after the label fix (Mike's machine, commit de64aa57).** 722 of 722 built;
+against the numpy manifests only the backend label and the surface hash changed (the hash includes the backend name):
+the input hashes, the pass flags and the labels are equal on all 722. Stage 1 tests 203 passed, 3 skipped (XFOIL not
+installed; every pyGeo test ran, the 7 published wings among them). No mesh was built in that run; the conclusion
+above stands: the same meshes on the reference wings, the full sets not meshed on pyGeo.
+
 
 ## 19. The family screen (8 Nov 2026; decision 80 and the upper band 0–100 % c)
 

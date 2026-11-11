@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
-HEAD = """# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 9 Nov 2026)
+HEAD = """# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 11 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs/SURFACE_MESH.html` (repo karmix96/aeris,
 branch `stage2-surface-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*

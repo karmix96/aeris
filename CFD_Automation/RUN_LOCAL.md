@@ -15,7 +15,8 @@ here (2 cores, 7 GB RAM, numpy loft); your machine is faster. Run each block fro
 
 ```bash
 git checkout main && git pull                  # main holds Stages 0-3 and the app (merged 10 Nov 2026)
-source <your AERIS .venv>/bin/activate          # pyGeo 1.17.0, pySpline 1.5.4
+conda activate <repo>/.venv                     # pyGeo 1.17.0, pySpline 1.5.4; on Mike's machine .venv is a conda
+                                                #   environment (no bin/activate; found 11 Nov)
 pip install -e CFD_Automation                   # the cfdauto package (every stage)
 pip install streamlit plotly pandas             # only for the app
 # pandoc is needed only to rebuild the pages (section 6)
@@ -24,7 +25,7 @@ pip install streamlit plotly pandas             # only for the app
 ## 1. The tests (about 2.5 min here: Stage 1 25 s without pyGeo, Stage 2 75 s, Stage 3 20 s, the app 20 s)
 
 ```bash
-cd CFD_Automation/Stage_1_geometry      && python -m pytest -q          # 178 + the pyGeo ones; without pyGeo: -m "not pygeo"
+cd CFD_Automation/Stage_1_geometry      && python -m pytest -q          # with pyGeo, gmsh, XFOIL: 206; Mike's 203 (no XFOIL)
 cd ../Stage_2_surface_mesh              && python -m pytest -q          # 45 tests
 cd ../Stage_3_volume_mesh               && python -m pytest -q          # 45 tests, about 20 s
 cd .. && python -m pytest app/tests -q                                   # the app, 7 tests, about 20 s
@@ -35,8 +36,8 @@ cd .. && python -m pytest app/tests -q                                   # the a
 ```bash
 cd CFD_Automation/Stage_1_geometry
 python -m cfdauto.geometry.build --type bwb --set reference --index 0   # one wing -> data/wings/...
-python -m cfdauto.geometry.build --all          # every set wing with pyGeo (722; open item of 9 Nov: new input
-                                                #   hashes after the label fix) -> commit only data/sets/*_manifest.json
+python -m cfdauto.geometry.build --all          # every set wing with pyGeo (722; last run 11 Nov, commit de64aa57)
+                                                #   -> commit only data/sets/*_manifest.json
 python -m cfdauto.geometry.published_wings --build all                   # M6, RIBES, CRM, BlendedNet (pyGeo)
 python scripts/verify_geometry.py               # is the surface the intended wing (published wings)
 # the flow data (no XFOIL run needed):
@@ -45,8 +46,12 @@ tar -xzf data/section_cache.tar.gz -C data && python -m cfdauto.flowmap.tables -
 
 The sets themselves (`data/sets/`) are in git: do not rerun `cfdauto.geometry.sample`.
 
-**The run still owed (open since 8 Nov):** `build --all` with pyGeo, then push the manifests. One script does the
-tests, the build and the comparison with git, and prints the three git commands (it commits nothing itself):
+**The pyGeo run, done on 11 Nov 2026 (commit de64aa57; it was open since 8 Nov).** Stage 1 tests 203 passed, 3
+skipped (the XFOIL ones; every pyGeo test ran, among them pyGeo against the numpy loft on the 7 published wings);
+`build --all` 722 of 722; against git, 782 wings, 0 differ in input hash or pass flag. Only the 28 manifests changed:
+the backend label (numpy to pygeo) and the surface hash of the 722 built wings (the hash includes the backend name).
+The hold-outs got the label only. To run it again (after any change to the geometry code), one script does the tests,
+the build and the comparison with git, and prints the three git commands (it commits nothing itself):
 
 ```bash
 python CFD_Automation/Stage_1_geometry/scripts/pygeo_build_all.py    # from the repo root, in the AERIS .venv

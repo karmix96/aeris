@@ -1210,8 +1210,10 @@ def build_page(d: dict) -> tuple[str, str]:
                        f'ready to close.</div><p>Every set at every level passed ({ok_f:,} of {n_f:,}, Study 12); both builder choices '
                        f'and the upper band were decided on 8 Nov and built. The pyGeo loft on Mike\'s machine gives the same '
                        f'meshes as the numpy loft on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 '
-                       f'each). Left: one pyGeo <code>build --all</code> on Mike\'s machine (new input hashes after the label fix; the '
-                       f'surfaces are the same) and Mike\'s word to close; then Stage 3, the matched C-H volume mesh.</p></div>')
+                       f'each). The pyGeo <code>build --all</code> after the label fix ran on Mike\'s machine on 11 Nov (722 of 722; '
+                       f'the same input hashes, pass flags and labels as the numpy build). Left: Mike\'s word to close. Stage 3, '
+                       f'the matched C-H volume mesh, is built on this surface; its open decision 114 (lighter rules) would change '
+                       f'one surface law, the tip gap.</p></div>')
         screen_box = (f'<div class="box good"><h3>The family screen (8 Nov)</h3><div class="big">{ok_f:,} of {n_f:,} builds passed</div>'
                       f'<p>Every set at VC, C, M and F: {fams_f} families ({vcx["wings"] - 20} wings at Re 3 × 10⁵; the 20 reference '
                       f'wings at all four Re levels) × 4 levels. {crash_f} crashes. One nose factor per family at every level: '
@@ -1230,8 +1232,8 @@ def build_page(d: dict) -> tuple[str, str]:
                     f'meshed on the numpy loft only. All in <a href="#open">Weak points</a>.</p></div>')
         done_f = f" the family screen (8 Nov): every set at every level, {ok_f:,} of {n_f:,} passed, one nose factor per family (Study 12);"
         not_done_box = (f'<div class="box verdict"><h3>Not finished</h3><div class="big">the close</div><p>Nothing is left in '
-                        f'Stage 2 but one pyGeo <code>build --all</code> on Mike\'s machine (new input hashes after the label fix, '
-                        f'the same surfaces) and the owner\'s word to close. Every mesh here is on the numpy loft; on Mike\'s machine (8 Nov) '
+                        f'Stage 2 but the owner\'s word to close (the pyGeo <code>build --all</code> after the label fix ran on '
+                        f'Mike\'s machine on 11 Nov: 722 of 722, the same input hashes, pass flags and labels). Every mesh here is on the numpy loft; on Mike\'s machine (8 Nov) '
                         f'the pyGeo loft gave the same meshes on the 20 reference wings (VC and F: the same ring nodes and stations '
                         f'on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). Both builder choices were confirmed and the '
                         f'upper band decided (8 Nov); the nose repair now belongs to the family. Then Stage 3 starts.</p></div>')
@@ -1245,7 +1247,7 @@ def build_page(d: dict) -> tuple[str, str]:
         verdict_box = screen_box = mesh_box = weak_box = not_done_box = band_s = None
     head = f"""
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 2 · surface mesh · cfdauto {__version__} · 2 Nov 2026 · updated 9 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 2 · surface mesh · cfdauto {__version__} · 2 Nov 2026 · updated 11 Nov 2026</div>
   <h1>Surface Mesh</h1>
   <p class="lede">What Stage 2 is, what was built and how it works, what was studied, what it assumes, what the primer asked, what is open, and whether it is finished. Stage 2 was first built and screened on 2–3 Nov (the <em>first approach</em>). A new approach was decided on 4–6 Nov and <strong>built on 7 Nov</strong>: the surface rules in Stage 2 (levels VC, C, M, F with each target at the level that needs it, the lighter rules, the lower band from the leading edge), and in Stage 1 the nose fix and similarity (every wing at unit mean chord). The new screen passed {ok_new:,} of {n_new:,} builds (<a href="#study9">Study 9</a>).{lede_f} The section <a href="#change">What was first, and what changes</a> says what changed; an amber <em>What changes</em> box in every section says what changed there. Studies 1–7 are first-approach evidence, drawn on the geometry of before 7 Nov; Studies 8–{14 if (STUDIES / 'holdout_screen.json').exists() else 13 if (STUDIES / 'band_option.json').exists() else (12 if sf else 11)} are new. Step by step from a wing to its surface mesh, with the decision and the law at each step: the <a href="https://claude.ai/artifact/KAFYcfZy9K8pPWQMp1M8it" target="_blank" rel="noopener">flowchart</a>.</p>
   <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#change">What changes</a><a href="#why">Why structured</a><a href="#what">What Stage 2 is</a><a href="#primer">What the primer asks</a><a href="#how">The steps, one by one</a><a href="#laws">The laws at a glance</a><a href="#rules">The rules</a><a href="#studies">Studies and conclusions</a><a href="#study9">Study 9: the new screen</a><a href="#study10">Study 10: similarity</a><a href="#study11">Study 11: refine map by Re</a><a href="#study12">Study 12: the family screen</a><a href="#study13">Study 13: the band option</a><a href="#study14">Study 14: the hold-outs</a><a href="#steps">What was done, step by step</a><a href="#assumptions">Assumptions</a><a href="#findings">Findings and decisions</a><a href="#open">Open, weak points, to do</a><a href="#handover">Handover to Stage 3</a><a href="#files">Files and commands</a></nav>
@@ -1672,7 +1674,7 @@ def build_page(d: dict) -> tuple[str, str]:
     <li><s>The nose at M (owner point 2)</s> <span class="flag ok">done 7 Nov: solved at every level, the strictest wins</span></li>
     <li><s>Mike: confirm or change the two builder choices left, and the upper band</s> — done 8 Nov: both builder choices confirmed (the growth limits by the family rule; the station growth 1.2 with at least 12 gaps per panel at M); the upper band written 0–100 % c; the nose repair belongs to the family (Study 12).</li>
     <li><strong>pyGeo run (Mike's machine): done on 8 Nov.</strong> pyGeo tests 24 of 24, Stage 1 tests 204 (1 skipped), <code>build --all</code> 722 of 722 (manifests pushed), Stage 2 tests 41; the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) (record: <code>data/studies/screen_VC_pygeo_oldlevels.json</code>; the new-level runs as printouts). Stage 1 then fixed its label rules (decision 79, 8 Nov): every wing's input hash changed, its surface did not (the same surface hash on all 722), so every mesh and screen here stands; re-meshed spot check: 5 builds, the same node hashes.</li>
-    <li><strong>pyGeo <code>build --all</code> once more (Mike's machine):</strong> new input hashes after the label fix; the surfaces are the same.</li>
+    <li><s>pyGeo <code>build --all</code> once more (Mike's machine)</s> <span class="flag ok">done 11 Nov: 722 of 722, the same input hashes, pass flags and labels as the numpy build (commit de64aa57)</span></li>
     <li><s>Fix the BWB tip cap for the band off</s> <span class="flag ok">not needed: the band stays on for every run (owner, 9 Nov)</span></li>
     <li><strong>Close Stage 2:</strong> the final page, summary and handover; notify. The surface rules are frozen (82). Right before the runs: the solver split (76).</li>
     <li><strong>Stage 3:</strong> the matched C-H volume mesh on one wing first (open-line march, wake lines to the far field, outboard blocks and the tip vortex, far field 80 c; CGNS for ADflow, a converter to .su2 for SU2), count its cells, then the first solves.</li>

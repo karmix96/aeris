@@ -62,8 +62,9 @@ https://claude.ai/artifact/3wwq8Fjj61ETYNzRFjMNw7. Repo: karmix96/aeris, `CFD_Au
 > the relaxed band (0.5 % c where local Re ≥ 4 × 10⁵, decision 72): fine level first estimated at 15.2 M cells
 > median, 10.9 M with the relaxed band; measured on 8 Nov (Stage 2 Study 12): 6.73 M median on the reference wings,
 > largest 10.21 M. Still proposals (pending): ADflow SA for mesh studies and fully turbulent data, SU2 SST + LM on
-> about 20 % of the wings (decision 76, chosen right before the runs); core Mach ≤ 0.2 now. Open: one more pyGeo `build --all` (the label fix of 8 Nov, decision 79, changed every input hash); push the raw
-> XFOIL data.
+> about 20 % of the wings (decision 76, chosen right before the runs); core Mach ≤ 0.2 now. The pyGeo `build --all` after the label fix of 8 Nov (decision 79) ran on 11 Nov (Mike's machine, commit
+> de64aa57: 722 of 722, the same input hashes, pass flags and labels as the numpy build; Stage 1 tests 203, 3 XFOIL
+> tests skipped). The raw XFOIL data is in git since 9 Nov.
 
 ## What the two changes mean for the mesh (Stage 2)
 
@@ -113,7 +114,8 @@ Older project docs (Wing Generator page, Executive summary) still show the old n
   7 Nov).
 - The rename changed the geometry code hash, so every input hash changed; on 7 Nov every hash changed again. The
   pyGeo `build --all` of 8 Nov (Mike's machine, 722 of 722) refreshed the manifests; the label fix of 8 Nov (decision 79)
-  changed every input hash again (no surface), so the manifests are the numpy rebuild until the next pyGeo build.
+  changed every input hash again (no surface); the pyGeo `build --all` of 11 Nov (commit de64aa57, 722 of 722) refreshed
+  the manifests again: they say pygeo, with the same input hashes, pass flags and labels as the numpy rebuild.
 
 ## The wings
 

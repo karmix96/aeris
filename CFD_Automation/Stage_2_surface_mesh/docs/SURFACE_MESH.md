@@ -1,4 +1,4 @@
-# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 9 Nov 2026)
+# Stage_2 — Surface mesh page (text copy, 2 Nov 2026, updated 11 Nov 2026)
 
 Text copy for chats in this project of `CFD_Automation/Stage_2_surface_mesh/docs/SURFACE_MESH.html` (repo karmix96/aeris,
 branch `stage2-surface-mesh`). The figures are in the HTML page and on the artifact; here each one is a *[Figure: ...]*
@@ -8,7 +8,7 @@ in every section it touches. Studies 1–7 are first-approach evidence; Studies 
 handover' (short), 'Stage_1 Handover to the surface mesh' (the input). If this copy and the repository ever differ,
 the repository wins.
 
-CFD_Automation · Stage 2 · surface mesh · cfdauto 0.7.0 · 2 Nov 2026 · updated 9 Nov 2026
+CFD_Automation · Stage 2 · surface mesh · cfdauto 0.7.0 · 2 Nov 2026 · updated 11 Nov 2026
 
 # Surface Mesh
 
@@ -20,7 +20,7 @@ What Stage 2 is, what was built and how it works, what was studied, what it assu
 
 **Yes, on the numpy loft: ready to close.**
 
-Every set at every level passed (3,128 of 3,128, Study 12); both builder choices and the upper band were decided on 8 Nov and built. The pyGeo loft on Mike's machine gives the same meshes as the numpy loft on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 each). Left: one pyGeo `build --all` on Mike's machine (new input hashes after the label fix; the surfaces are the same) and Mike's word to close; then Stage 3, the matched C-H volume mesh.
+Every set at every level passed (3,128 of 3,128, Study 12); both builder choices and the upper band were decided on 8 Nov and built. The pyGeo loft on Mike's machine gives the same meshes as the numpy loft on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 each). The pyGeo `build --all` after the label fix ran on Mike's machine on 11 Nov (722 of 722; the same input hashes, pass flags and labels as the numpy build). Left: Mike's word to close. Stage 3, the matched C-H volume mesh, is built on this surface; its open decision 114 (lighter rules) would change one surface law, the tip gap.
 
 ### The family screen (8 Nov)
 
@@ -1026,7 +1026,7 @@ The first approach (2–3 Nov): the mesher, its rules, its checks, the screen, t
 
 **the close**
 
-Nothing is left in Stage 2 but one pyGeo `build --all` on Mike's machine (new input hashes after the label fix, the same surfaces) and the owner's word to close. Every mesh here is on the numpy loft; on Mike's machine (8 Nov) the pyGeo loft gave the same meshes on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). Both builder choices were confirmed and the upper band decided (8 Nov); the nose repair now belongs to the family. Then Stage 3 starts.
+Nothing is left in Stage 2 but the owner's word to close (the pyGeo `build --all` after the label fix ran on Mike's machine on 11 Nov: 722 of 722, the same input hashes, pass flags and labels). Every mesh here is on the numpy loft; on Mike's machine (8 Nov) the pyGeo loft gave the same meshes on the 20 reference wings (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰). Both builder choices were confirmed and the upper band decided (8 Nov); the nose repair now belongs to the family. Then Stage 3 starts.
 
 ### Not known
 
@@ -1061,7 +1061,7 @@ No solve has been run. Whether the surface gives a good C-H volume mesh and a co
 7.  ~~The nose at M (owner point 2)~~ <span class="flag ok">done 7 Nov: solved at every level, the strictest wins</span>
 8.  ~~Mike: confirm or change the two builder choices left, and the upper band~~ — done 8 Nov: both builder choices confirmed (the growth limits by the family rule; the station growth 1.2 with at least 12 gaps per panel at M); the upper band written 0–100 % c; the nose repair belongs to the family (Study 12).
 9.  **pyGeo run (Mike's machine): done on 8 Nov.** pyGeo tests 24 of 24, Stage 1 tests 204 (1 skipped), `build --all` 722 of 722 (manifests pushed), Stage 2 tests 41; the 20 reference wings on the pyGeo loft gave the same meshes as the numpy loft (VC and F: the same ring nodes and stations on 80 of 80 each; VC: every check value within 6 × 10⁻¹⁰) (record: `data/studies/screen_VC_pygeo_oldlevels.json`; the new-level runs as printouts). Stage 1 then fixed its label rules (decision 79, 8 Nov): every wing's input hash changed, its surface did not (the same surface hash on all 722), so every mesh and screen here stands; re-meshed spot check: 5 builds, the same node hashes.
-10. **pyGeo `build --all` once more (Mike's machine):** new input hashes after the label fix; the surfaces are the same.
+10. ~~pyGeo `build --all` once more (Mike's machine)~~ <span class="flag ok">done 11 Nov: 722 of 722, the same input hashes, pass flags and labels as the numpy build (commit de64aa57)</span>
 11. ~~Fix the BWB tip cap for the band off~~ <span class="flag ok">not needed: the band stays on for every run (owner, 9 Nov)</span>
 12. **Close Stage 2:** the final page, summary and handover; notify. The surface rules are frozen (82). Right before the runs: the solver split (76).
 13. **Stage 3:** the matched C-H volume mesh on one wing first (open-line march, wake lines to the far field, outboard blocks and the tip vortex, far field 80 c; CGNS for ADflow, a converter to .su2 for SU2), count its cells, then the first solves.

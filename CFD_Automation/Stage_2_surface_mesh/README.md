@@ -13,9 +13,9 @@
 > repairs (`scripts/screen.py --family`). The pyGeo run is done (8 Nov): the same meshes as the numpy loft on the 20
 > reference wings. On 9 Nov the band was measured as a switch (decision 81, `--band on|off`; section 20): it nearly
 > doubles the cells at Re ≥ 3 × 10⁵, but it stays on for every run (owner), the switch unused (with it off the BWB tip
-> cap fails at M); the surface rules are frozen (decision 82). Still to come: one
-> pyGeo `build --all` after the label fix, the owner's word to close, then the
-> matched C-H volume mesh (Stage 3).
+> cap fails at M); the surface rules are frozen (decision 82). The pyGeo `build --all` after the
+> label fix ran on 11 Nov (Mike's machine, 722 of 722, the same input hashes, pass flags and labels). Left: the owner's
+> word to close. The matched C-H volume mesh (Stage 3) is built on this surface.
 
 One wing surface (the Stage 1 loft) in, one structured surface mesh out: a closed ring of points
 around the section at every spanwise station, root to tip, plus one patch that closes the flat tip.

@@ -124,8 +124,8 @@
     the 20 reference wings on the pyGeo loft: at VC, old levels, the same counts and every check value within
     6 × 10⁻¹⁰ (`Stage_2_surface_mesh/data/studies/screen_VC_pygeo_oldlevels.json`); at the new levels, VC and F,
     80 of 80 pass each with the same ring nodes and stations. The node hashes differ (round-off). One label differed
-    (79, fixed 8 Nov; that fix changed every input hash, so the manifests are the numpy rebuild until Mike's next
-    pyGeo `build --all`).
+    (79, fixed 8 Nov; that fix changed every input hash, so the manifests were the numpy rebuild until Mike's next
+    pyGeo `build --all`: done 11 Nov, see 79).
 45. **Shape ranges from sources (decided 29 Oct 2026).** Every shape range and airfoil now has its source
     (`Stage_1_geometry/decisions/shape_ranges.md`). BWB airfoils MH 104 / MH 61 (was MH 91 / E374 / NLF1015);
     tailed sweep −5…15°, washout ≤ 5°, dihedral 0–5°. Open: check Raymer's taper and washout values
@@ -411,7 +411,11 @@ screened (Stage 2 Study 9). Not built: 73 (Stage 3).
     with the numpy loft: 722 of 722; the code hash aa6ccb5d → 51e670d2, so every input hash changed; the surface
     hashes equal the 7 Nov build on all 722; the labels changed on exactly the 2 wings (now equal to pyGeo's on 721,
     and on the 722nd pyGeo gets the same new label). The meshes are the same: the mesher reads only the loft (5 builds
-    re-meshed at VC, both relabelled wings among them: the same node hashes). Owed: one pyGeo `build --all` (Mike).
+    re-meshed at VC, both relabelled wings among them: the same node hashes). **Done on Mike's machine, 11 Nov
+    (commit de64aa57):** pyGeo `build --all` 722 of 722; against the numpy manifests only two things changed, the
+    backend label and the surface hash (it includes the backend name): the input hashes, the pass flags and the labels
+    are equal on all 722, so the label fix holds on both lofts. Stage 1 tests 203 passed, 3 skipped (XFOIL not
+    installed; every pyGeo test ran). The hold-outs got the label only, none built.
 80. **The nose repair belongs to the family (owner, 8 Nov 2026).** The ratio between levels stays exactly 1.3, also
     when a nose repair is needed, and a repaired mesh is labelled. Built: a repair round (every station's nose spacing
     × 0.9) is needed only where a ring turns past its level's check limit (the angle + 0.2°; before, the solve's own

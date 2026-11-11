@@ -14,8 +14,9 @@ Mach 0.1 with a Prandtl–Glauert correction is on the solver side. **Same day (
 leading edge is the apex of one cubic spline through the raw points, both sides are sampled from it, 201 points
 per side, and a nose gate refuses a section whose nose folds back. Every geometry hash changed; the sets were
 rebuilt with the numpy loft (722 of 722) and, on 8 Nov, with pyGeo on Mike's machine (722 of 722). The label fix of
-8 Nov (decision 79) changed every input hash, not the surfaces: the sets were rebuilt (numpy loft, 722 of 722); one
-more pyGeo `build --all` is owed. What was first, and what
+8 Nov (decision 79) changed every input hash, not the surfaces: the sets were rebuilt (numpy loft, 722 of 722), and
+on 11 Nov with pyGeo on Mike's machine (722 of 722; commit de64aa57: the same input hashes, pass flags and labels on
+all 722; the manifests say pygeo). What was first, and what
 changed: `docs/GEOMETRY_GENERATOR.html` (section "What was first, and what changes") and
 `docs/STAGE1_HANDOVER.md`.
 

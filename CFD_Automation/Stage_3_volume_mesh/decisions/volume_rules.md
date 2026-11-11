@@ -1,6 +1,6 @@
 # Stage 3 — volume mesh: the plan, the rules and the checks (V0, 9 Nov 2026)
 
-Branch `stage3-volume-mesh` (from `stage2-surface-mesh`: Stage 2 is not merged into main yet). Code:
+Branch `stage3-volume-mesh` (from `stage2-surface-mesh`), in main since 10 Nov 2026. Code:
 `CFD_Automation/cfdauto/volume/`. Rules: `configs/volume.yaml` (rule set 2; rule set 1 in `configs/volume_rules1.yaml`).
 Decisions 84–113 in `CFD_Automation/OPEN_DECISIONS.md`.
 
@@ -975,3 +975,172 @@ band on and off (rule set 2, the 20 reference wings at VC, counts).
 
 **Conclusion.** The level and the Re set the size; the wing shape moves it by up to × 1.7; the band is the largest
 choice that is ours (× 1.5 at Re ≥ 3 × 10⁵); each growth or fan rule is worth 4–19 %; the domain matters least.
+
+## 20. The size on two axes, and what can be loosened (11 Nov 2026, Mike's question)
+
+Mike: show that the size follows the wing and the flow (axis 1); measure the general rules one by one (axis 2); find
+what can be loosened without losing accuracy ("for a structured mesh, pre-stall, above 10 M is too much"). What-if
+studies only: each change is made in a copy of the rules files; the rules themselves are unchanged (frozen).
+
+### 20.1 Axis 1: the wing and the flow set every count
+
+`scripts/size_drivers.py` → `data/studies/size_drivers.json`, `docs/page/size_drivers.png`. The 702 built wings at
+VC, Re 3 × 10⁵ (V6); the Re curves from `size_factors.json` (the 20 reference wings, band on).
+
+| Count (one per mesh: every station plane has it) | Range | What the rules compute it from | Follows | Correlation |
+| --- | --- | --- | --- | --- |
+| Stations along the semi-span | 52–84 | a gap of 0.25 local c, the ramp down to the tip gap, at least 12 gaps per panel at M | the semi-span in local chords (∫ dy / c) | +0.75 |
+| Nodes around the section | 269–347 | one ring for every station; at each place on it the hardest station wins | the taper (tip / root chord) | −0.91 |
+| Wake nodes, base to outflow | 46–60 | the first wake cell = the trailing-edge cell (0.1 % local c at M) | the smallest chord | −0.96 |
+| Wall-normal layers | 59–71 | the thinnest first cell (y⁺ at the highest local Re), the growth, 2 local chords | the largest chord | +0.62 |
+| Stations past the tip | 48–49 | the tip gap (2 × s0) out to 80 c̄ | the same on every wing at one Re | — |
+
+- (around + 2 × wake) × layers × (stations + past the tip) against the counted cells: correlation **0.995**.
+- The aspect ratio alone hardly matters (−0.16); the taper does (−0.84): the chords set the size, not the aspect ratio.
+- **The Re.** Each reference wing has its own curve: × 1.72–2.40 from 10⁵ to 4 × 10⁶. Median counts at VC for
+  Re 10⁵ → 3 × 10⁵ → 10⁶ → 4 × 10⁶: around 219 → 306 → 314 → 314 (the band switches on; the bubble floor stops it);
+  layers 58 → 60 → 65 → 71 (a thinner first cell); stations 56 → 61.5 → 68 → 75 and past the tip 45 → 48.5 → 53 → 58
+  (the tip gap is 2 × s0, and s0 shrinks with Re); wake 48 at every Re.
+- **The angle of attack** is not an input. One mesh serves −5° to +10° (decision 111); the fan for that range costs
+  **0 cells** against no fan on all 4 wings 0 at M (`r2_fan_options.json`): the layers already resolve the band. A
+  band to +20° would cost 11–16 %.
+
+**What `size_drivers.png` shows.** (a) The cells at VC against Re, one line per reference wing. (b)–(d) A count against
+the wing quantity its rule uses, one marker per wing type, 702 wings.
+**Conclusion.** The mesh is set by the wing and the Re: every count changes from wing to wing and follows the quantity
+its rule computes it from, and the counts give the cells (0.995). The angle of attack costs nothing up to +10°.
+
+### 20.2 Axis 2: the general rules, one loosened at a time
+
+`scripts/knob_study.py` → `data/studies/knob_study.json`, `docs/page/knob_study.png`. Re 3 × 10⁵, rule set 2.
+Counted: the 20 reference wings at VC and the 4 wings 0 at M. Built: the 4 wings 0 at VC with every change (the
+surface and the volume checks). Today: M 9.07 M (median of the 4 wings 0), VC 2.08 M (median of the 20).
+
+| Rule: today → loosened | Cells at M (VC, 20 wings) | The count it moves (× at M) | Checks: 20 surfaces at VC, 4 at M, 4 VC volume builds |
+| --- | --- | --- | --- |
+| Tip gap 2 → 100 × s0 | **−34 %** (−33 %) | stations 0.64, past the tip 0.69 | all pass |
+| Band on → off | **−31 %** (−31 %) | around 0.69 | **the BWB tip cap fails at M** (as decision 81 found) |
+| Cells per bubble at F 20 → 10 | **−25 %** (−24 %) | around 0.75 | all pass |
+| Tip gap 2 → 20 × s0 | **−20 %** (−19 %) | stations 0.78, past the tip 0.81 | all pass |
+| Far field 80 → 40 c̄ | −11 % (−9 %) | layers 0.94, wake 0.92, past the tip 0.94 | all pass |
+| Wall-normal growth 1.25 → 1.30 at VC (1.14 → 1.17 at M) | −10 % (−9 %) | layers 0.93, wake 0.91, around 0.97 | all pass |
+| Far growth built 1.22 → 1.28 at VC | −6 % (−7 %) | layers 0.95, wake 0.94 | **the wake growth fails** on 1 VC build (check 11) |
+| Station growth 1.20 → 1.25 at VC | −6 % (−5 %) | stations 0.89 | all pass |
+| Trailing-edge cell 0.1 → 0.2 % c at M | −4 % (−4 %) | around 0.96, wake 0.94 | **the BWB tip cap fails at M** |
+| Gaps per panel 12 → 8 at M | −4 % (−6 %) | stations 0.92 | **the station growth fails** on BWB 3 at VC |
+| Chordwise growth 1.20 → 1.25 at VC | −2 % (−1 %) | around 0.98 | all pass at Re 3 × 10⁵; at 10⁵ **the tip cap fails** (BWB 0 alone; 9 of the 20, BWB and flying wing, in package A of section 20.4) |
+| Nose turning 10° → 13° at M | −1 % (−1 %) | around 0.99 | all pass |
+| Boundary-layer cells 30 → 20 at M | 0 % (0 %); the BWB wings only: −4 % at M, −2 to −7 % at VC | layers, on the BWB | all pass |
+| Largest ring cell 2 → 3 % c; station gap 0.25 → 0.35 local c; fine zone 2 → 1 c (at the wall, past the tip); wake band cell 0.75 → 1.5 % c; fan 12 → 8 cells; fan 2 → 1 c long; band cell aspect 8 → 16 | **0 %** each | none | all pass |
+
+(Medians of each wing's ratio; over the 20 wings at VC every rule stays within 4 points of its median, but for the
+boundary-layer cells on the BWB.)
+
+**Findings.**
+
+1. **Three rules make most of the size:** the tip gap (2 × s0), the band (on for every run, decision 81) and the
+   cells per bubble. Each is worth 25–34 % alone.
+2. **The tip gap is why the stations grow with Re.** The last gap at the tip is 2 × s0, and s0 shrinks with Re, so
+   the ramp down to it gets longer: +19 stations and +13 past the tip from 10⁵ to 4 × 10⁶ (section 20.1).
+3. **Eight of the 21 rules cost nothing today, and a ninth only on the BWB**, because another rule sets their count:
+   the band sets the largest ring cell; the gaps per panel and the tip ramp set the stations; the wall growth sets
+   the boundary-layer cells (but on the BWB); the far growth as built (1.22) is below the wall growth (1.25), so where
+   the fine zone ends changes nothing; the wall layers already resolve the wake band.
+4. **Five changes break a check**, and the tip cap is the weak place: whatever changes the ring (the band off, a
+   coarser trailing-edge cell, a faster ring growth at Re 10⁵) can push the BWB or flying-wing cap below the cell
+   limit (0.05); the far growth at 1.28 breaks the wake growth; 8 gaps per panel break the station growth on one BWB.
+   The tip gap and the wall-normal growth break nothing.
+
+**What `knob_study.png` shows.** One bar per rule: the change in cells at M when only that rule is loosened; hatched
+where a mesh fails a check (named after the rule).
+**Conclusion.** Only 3 rules are worth more than 15 % each (the tip gap, the band, the cells per bubble); the growth
+rates and the far field are worth 5–11 % each; 8 rules are worth nothing (a ninth only on the BWB). Of the large ones
+the tip gap and the wall-normal growth break no check; the band off breaks the BWB cap.
+
+### 20.3 What the published guides ask, against ours
+
+| Rule | Ours: VC / C / M / F | The guides (their medium unless said) | Ours is |
+| --- | --- | --- | --- |
+| First cell | y⁺ 1 / 0.77 / 0.59 / 0.46 | DPW-4, HiLiftPW-1: y⁺ 1 / 2⁄3 / 4⁄9 (coarse / medium / fine) | the same |
+| Wall-normal growth | 1.25 / 1.19 / 1.14 / 1.11 | DPW-4, HiLiftPW-1: < 1.25 on every grid. DLR's DPW-4 family: 1.30 / 1.20 / 1.135 (coarse above 1.25 to keep the family). Ansys CFX, transition model: 1.05 and 1.1 no effect; 1.2 and 1.4 move transition a little upstream | about one level stricter than DPW, so that F meets the transition guide (decisions 57, 71) |
+| Leading and trailing edge | LE 0.04–0.26 % local c at M, median 0.06 % (set by the 10° turning); TE 0.1 % local c at M | DPW-4: ~0.1 % local chord at both | finer at the LE on most wings, the same at the TE |
+| Blunt trailing edge | 8 / 10 / 14 / 18 cells | DPW-4: at least 12 (medium), 16 (fine) | the same |
+| Station gap at the tip | 2 × s0: 0.0028 % of the semi-span at Re 10⁵, 0.0011 % at 3 × 10⁵, 0.00033 % at 10⁶, 0.00009 % at 4 × 10⁶ (medians at M, Stage 2's M screen) | DPW-4, HiLiftPW-1: ~0.1 % of the local semi-span at the tip (and at the root) | **36–1,100 × finer** (94 × at 3 × 10⁵) |
+| Far field | 80 c̄ + the wing | DPW-4, HiLiftPW-1: ~100 reference chords on every grid | a little closer |
+| Cells per bubble | 9.1 / 11.8 / 15.4 / 20 | Ansys CFX: at least 20 nodes over the bubble | meets it at F only |
+| Level ratio | × 1.3 per direction (× 2.1 cells) | DPW-4: ~× 1.5 per direction (× 3 cells) | a finer ladder |
+| The medium mesh | M 9.1–13.5 M cells (Re 3 × 10⁵ to 4 × 10⁶), a wing alone (half model) | DPW-4: CRM wing-body ~8 M, wing-body-tail ~10 M | as big as a whole aircraft's |
+
+Why the tip gap is 2 × s0 (decision 72): our tip cap is a wall reached along the stations (the H blocks past the tip),
+so the first gap past the tip is the cap's first wall cell, and the wing's last gap must match it. In the DPW meshes
+the tip gets its own wall layers (prism layers, or a cap grid in the overset meshes), so the station gap there need not
+be a wall cell. Sources: DPW-4 gridding guidelines (aiaa-dpw.larc.nasa.gov, Workshop4/gridding_guidelines_4.html, 3 Nov 2008);
+HiLiftPW-1 gridding guidelines (hiliftpw.larc.nasa.gov, 11 Jun 2009); DLR's DPW-4 Solar grids README
+(dpw.larc.nasa.gov/DPW4/DLR); Ansys CFX Modeling Guide 4.1.11.2 (grid requirements of the transition model).
+
+### 20.4 The loosened rules together
+
+`scripts/light_set.py` → `data/studies/light_set_A2_B2_100_B2_dpw_C2.json` (the final packages), `light_set.json`
+(the first packages, with the ring growth as well), `light_set_Bdpw.json`; `docs/page/light_set.png`. Counted: the 20
+reference wings at VC at the 4 Re, the 4 wings 0 at M at Re 3 × 10⁵ and 4 × 10⁶. Checked: the surface of every
+counted mesh, and the 4 wings 0 built at VC at both Re (8 volume builds). "Tip gap DPW" = 0.1 % of the semi-span at M
+(DPW's medium value), written in s0 of each wing and Re (13–2,204 × s0), the same number at every level so the family
+ratio holds; the cap's first cell is then about y⁺ 50–800 at M.
+
+| Package | M, Re 3 × 10⁵ | M, Re 4 × 10⁶ | VC at 10⁵ / 3 × 10⁵ / 10⁶ / 4 × 10⁶ (× today) | Checks |
+| --- | --- | --- | --- | --- |
+| Today | 9.07 M | 13.48 M (up to 14.7) | 1.33 / 2.08 / 2.53 / 3.03 M | all pass |
+| A2: wall-normal growth 1.30 and station growth 1.25 at VC | 7.67 M (× 0.85) | 11.20 M (× 0.83) | × 0.87 / 0.86 / 0.85 / 0.84 | all pass |
+| A2 + tip gap 100 × s0 | 5.11 M (× 0.57) | 8.12 M (× 0.60) | × 0.58 / 0.59 / 0.60 / 0.61 | all pass |
+| **A2 + tip gap DPW** | **5.07 M** (× 0.56; up to 6.5) | **6.17 M** (× 0.46; up to 7.0) | × 0.64 / 0.58 / 0.53 / 0.47 | all pass |
+| A2 + tip gap DPW + band off (fully turbulent runs only) | 3.47 M (× 0.38) | 4.02 M (× 0.30) | × 0.60 / 0.40 / 0.35 / 0.32 | **the BWB tip cap fails at M** (both Re) |
+
+The first packages also had the ring growth 1.25 at VC (A): A × 0.84 and 0.82 at M; + tip gap 20 × s0 6.04 and
+9.31 M; + 100 × s0 5.03 and 8.02 M; + DPW 4.99 and 6.10 M; + band off 3.36 and 5.08 M; + far field 40 c̄ 2.93 and
+4.52 M. With the ring growth **the tip cap fails at Re 10⁵ on 9 of the 20** (BWB, flying wing); with the band off as
+well, at every Re.
+
+**Findings.**
+
+1. **Today M is above 10 M at the high Re:** 9.1 M at Re 3 × 10⁵ but 13.5 M at 4 × 10⁶ (the 4 wings 0; up to 14.7 M),
+   because the stations and the layers grow with Re.
+2. **A2 and the DPW tip gap put M at 5–6 M at every Re** (5.07 and 6.17 M; at most 7.0 M), every check passing; F
+   would be about 11 and 13 M (× 2.2). The stations stop growing with Re: 57 at M and 54 past the tip at both Re
+   (today 99 → 121 and 80 → 95), 38.5 and 33 at VC at every Re. By S8's ANK-only law M would need about 39 GiB at
+   Re 3 × 10⁵ and 47 GiB at 4 × 10⁶ (today 68 and 100 GiB).
+3. **The savings multiply:** A2 × the tip gap alone ≈ the two together (0.85 × 0.66 = 0.56; measured 0.57 with
+   100 × s0).
+4. **The ring growth breaks the tip cap at Re 10⁵** (cap cell 0.044 against the limit 0.05) and saves only 1–2 %: it
+   is left out of A2.
+5. **The band off breaks the BWB tip cap at M** with or without the other changes (decision 81's weak point): the
+   band cannot go before the cap is fixed.
+6. **A fault in my what-if scripts, found and fixed:** the rules loaders keep a file by its name (`lru_cache` on
+   `_load`), so a file rewritten under the same name was read once and then reused; the first DPW run used one tip gap
+   per worker process (its numbers were thrown away). The variant files now carry a hash of their text in their name.
+   The other runs wrote one fixed text per name and are not affected.
+
+**What `light_set.png` shows.** The cells at M of the 4 wings 0 (median) at Re 3 × 10⁵ and 4 × 10⁶, today and with
+loosened rules together; the dashed line is 10 M; hatched where a check fails.
+**Conclusion.** Two growth rates and the tip gap at DPW's value bring M from 9–13.5 M to 5–6 M at every Re with every
+check passing; the band off would reach 3.5–4 M but breaks the BWB cap.
+
+### 20.5 Conclusion: what can be loosened (for Mike to decide; nothing is changed)
+
+1. **Loosen, inside the guides (low risk):** the wall-normal growth 1.30 at VC (1.22, 1.17, 1.13 at C, M, F; DLR's
+   DPW-4 family used 1.30 / 1.20 / 1.135) and the station growth 1.25 at VC (1.14 at M): −13 to −17 %. For the
+   transition model F's wall growth 1.13 sits between the guide's 1.1 (no effect) and 1.2 (a small upstream shift).
+2. **Loosen after one solver check — the biggest lever:** the tip gap, from 2 × s0 to DPW's 0.1 % of the semi-span at
+   M. With item 1: −44 to −54 % (M 5.1 and 6.2 M), and the stations stop growing with Re. The cost: the cap's first
+   cell is no longer a wall cell (y⁺ about 50–800 at M); the cap is a small part of the wall. The check: one wing,
+   2 × s0 against DPW's gap (and the cap as a slip wall as a third case): lift, drag, pitching moment, the tip vortex.
+   It needs a Stage 2 change (a new law: the tip gap from the semi-span, not from s0), so Mike's word, and a re-screen:
+   a rule set 3. The way without that cost is a tip wrapped by the wall-normal lines (an O-type cap): a large change
+   to Stages 2 and 3.
+3. **A choice, not accuracy:** the band for the fully turbulent runs (decision 81): −31 % alone, M 3.5–4 M with items
+   1–2. First the BWB cap must pass without the band.
+4. **Keep:** 20 cells per bubble at F (the guide's minimum); the trailing-edge cell (DPW's value; looser breaks the
+   cap); the nose (13° saves 1 %); the first cell (at the guides); the far field (already a little below DPW's ~100
+   chords; Stage 4 measures 40 / 80 / 160); the ring growth (breaks the cap at 10⁵).
+5. **Leave alone:** the 8 rules that cost nothing.
+6. **None of this proves accuracy:** these are counts and mesh checks. Stage 4 (V7, then the grid study) measures lift
+   and drag on the lighter meshes.

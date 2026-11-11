@@ -640,4 +640,15 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     run, ADflow with a leaner preconditioner, SU2) before any new cut. Not chosen: cutting M to 5–6 M cells now (it
     needs the surface band off and the tip cap not wall-resolved: decision 81 and the frozen surface).
     `solve/run_adflow.py` now writes the peak memory of every rank into `result.json`.
+114. **Lighter meshes: a rule set 3? Open, for Mike (11 Nov 2026, on Mike's question "above 10 M is too much").**
+    Measured (`Stage_3_volume_mesh/decisions/volume_rules.md`, section 20; what-if copies of the rules files, nothing
+    changed): today M is 9.1 M at Re 3 × 10⁵ and 13.5 M at 4 × 10⁶ (the 4 wings 0). Three changes bring it to 5.1 and
+    6.2 M with every check passing and the band kept: the wall-normal growth 1.30 at VC (1.17 at M) and the station
+    growth 1.25 at VC (both inside DPW's guides), and the tip gap at DPW's 0.1 % of the semi-span at M instead of
+    2 × s0 (36–1,100 × finer than DPW today; it makes the stations grow with Re). This sharpens 113: 5–6 M does not
+    need the band off, only the tip cap not wall-resolved (or a wrapped, O-type tip). Not advised: 10 cells per bubble
+    (half the transition guide), a coarser trailing-edge cell or ring growth (they break the tip cap), the far field
+    below 80 c̄ before Stage 4. The band off for the fully turbulent runs would give 3.5–4 M but breaks the BWB cap.
+    To decide: take the package (a Stage 2 change: a new tip-gap law; then a re-screen), check it with one solver run
+    first, or keep rule set 2.
 

@@ -1003,7 +1003,7 @@ VC, Re 3 × 10⁵ (V6); the Re curves from `size_factors.json` (the 20 reference
   (the tip gap is 2 × s0, and s0 shrinks with Re); wake 48 at every Re.
 - **The angle of attack** is not an input. One mesh serves −5° to +10° (decision 111); the fan for that range costs
   **0 cells** against no fan on all 4 wings 0 at M (`r2_fan_options.json`): the layers already resolve the band. A
-  band to +20° would cost 11–16 %.
+  band to +20° would cost 13–17 % (`r2_fan_options.json`, +20° against +10°).
 
 **What `size_drivers.png` shows.** (a) The cells at VC against Re, one line per reference wing. (b)–(d) A count against
 the wing quantity its rule uses, one marker per wing type, 702 wings.

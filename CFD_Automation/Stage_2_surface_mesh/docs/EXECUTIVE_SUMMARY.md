@@ -1,6 +1,6 @@
 # Stage_2 — Executive summary: the surface mesh
 
-6 Nov 2026, updated 9 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
+6 Nov 2026, updated 11 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch `stage2-surface-mesh`)
 
 > **What changed since 3 Nov (updated 9 Nov).** Sections 4–8 hold the details.
 >
@@ -353,7 +353,7 @@ Everything in sections 2 and studies 1–7 is first-approach evidence: it shows 
 8. ~~Mike: confirm or change the two builder choices left~~ — done 8 Nov: both confirmed (decision 77); the upper band written 0–100 % c; a nose repair belongs to the family (decision 80).
 9. ~~The family screen~~ — done 8 Nov (study 12): every set at every level, 3,128 of 3,128 pass, 0 nose repairs.
 10. **pyGeo run (Mike's machine): done on 8 Nov.** pyGeo tests 24, Stage 1 tests 204, `build --all` 722 of 722 (manifests pushed), Stage 2 tests 41; the reference meshes on pyGeo equal the numpy ones (VC and F). Stage 1's label fix (decision 79, 8 Nov) changed every input hash but no surface, so every mesh and screen here stands.
-11. **pyGeo `build --all` once more (Mike's machine):** new input hashes after the label fix; the surfaces are the same.
+11. ~~pyGeo `build --all` once more (Mike's machine)~~ — done 11 Nov (commit de64aa57): 722 of 722, the same input hashes, pass flags and labels as the numpy build.
 12. ~~Fix the BWB tip cap for the band off~~ — not needed (Mike, 9 Nov): the band stays on for every run; no cap change (study 13).
 13. **Close Stage 2 (Mike's word):** final page, summary and handover; notify. The surface rules are frozen (82). Right before the runs: the solver split (76).
 14. **Stage 3:** the matched C-H volume mesh on one wing first, count its cells, then the first solves.

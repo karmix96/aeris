@@ -44,7 +44,7 @@ th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing
 <body>
 <main>
 <h1 id="stage_2--executive-summary-the-surface-mesh">Stage_2 — Executive summary: the surface mesh</h1>
-<p>6 Nov 2026, updated 9 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch <code>stage2-surface-mesh</code>)</p>
+<p>6 Nov 2026, updated 11 Nov 2026 · Michail Karalis · CFD_Automation, Stage 2 (repo karmix96/aeris, branch <code>stage2-surface-mesh</code>)</p>
 <blockquote>
 <p><strong>What changed since 3 Nov (updated 9 Nov).</strong> Sections 4–8 hold the details.</p>
 <ul>
@@ -475,7 +475,7 @@ th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing
 <li><del>Mike: confirm or change the two builder choices left</del> — done 8 Nov: both confirmed (decision 77); the upper band written 0–100 % c; a nose repair belongs to the family (decision 80).</li>
 <li><del>The family screen</del> — done 8 Nov (study 12): every set at every level, 3,128 of 3,128 pass, 0 nose repairs.</li>
 <li><strong>pyGeo run (Mike's machine): done on 8 Nov.</strong> pyGeo tests 24, Stage 1 tests 204, <code>build --all</code> 722 of 722 (manifests pushed), Stage 2 tests 41; the reference meshes on pyGeo equal the numpy ones (VC and F). Stage 1's label fix (decision 79, 8 Nov) changed every input hash but no surface, so every mesh and screen here stands.</li>
-<li><strong>pyGeo <code>build --all</code> once more (Mike's machine):</strong> new input hashes after the label fix; the surfaces are the same.</li>
+<li><del>pyGeo <code>build --all</code> once more (Mike's machine)</del> — done 11 Nov (commit de64aa57): 722 of 722, the same input hashes, pass flags and labels as the numpy build.</li>
 <li><del>Fix the BWB tip cap for the band off</del> — not needed (Mike, 9 Nov): the band stays on for every run; no cap change (study 13).</li>
 <li><strong>Close Stage 2 (Mike's word):</strong> final page, summary and handover; notify. The surface rules are frozen (82). Right before the runs: the solver split (76).</li>
 <li><strong>Stage 3:</strong> the matched C-H volume mesh on one wing first, count its cells, then the first solves.</li>

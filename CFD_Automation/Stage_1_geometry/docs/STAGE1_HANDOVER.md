@@ -1,4 +1,4 @@
-# Stage_1 — Handover to the surface mesh (Stage 2 input; updated 9 Nov 2026)
+# Stage_1 — Handover to the surface mesh (Stage 2 input; updated 11 Nov 2026)
 
 Input for the surface/volume-mesh chat: where the baseline mesh must be fine, per family, before the whole mesh is
 refined by r ≥ 1.3, and what the two Stage 1 changes of 7 Nov 2026 change for the mesh. Source: Stage 1 (geometry +

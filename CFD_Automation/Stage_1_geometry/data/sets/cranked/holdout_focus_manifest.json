@@ -3,7 +3,7 @@
  "set": "holdout_focus",
  "code_version": "0.7.0",
  "code_hash": "51e670d22d2b05abc858bec563f038bdb96e6c74162628c2824c64d9979a29d3",
- "loft_backend": "numpy",
+ "loft_backend": "pygeo",
  "wings": [
   {
    "index": 0,

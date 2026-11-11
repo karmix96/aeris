@@ -3,7 +3,7 @@
  "set": "reference",
  "code_version": "0.7.0",
  "code_hash": "51e670d22d2b05abc858bec563f038bdb96e6c74162628c2824c64d9979a29d3",
- "loft_backend": "numpy",
+ "loft_backend": "pygeo",
  "wings": [
   {
    "index": 0,
@@ -11,7 +11,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "e32d995a0c39de7a3682b14290227874dbe52f9da12e7a7a9260fca4e18b6a5a",
-   "surface_hash": "5f4d71813854d5a620538a66229a962557bf7a4b48220c6c6f4847f45499825d",
+   "surface_hash": "bc86ab87bb72eac41ec7a1068d7ea09b2e920888233990e861cce35c8168834f",
    "labels": [
     "tailless",
     "bwb",
@@ -52,7 +52,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "5accb12579fbbd656d46eb949d46deafcd54610abfad933c2e4f5aa921aa29ad",
-   "surface_hash": "be1398133e51fcee4200231327e2d5a5929f53455195d610da1fecbc726ed3fe",
+   "surface_hash": "3d75e34879ed8dd2d2a16c47ec6abb0b0c6f22f6e4de714f89b3303c86bdce61",
    "labels": [
     "tailless",
     "bwb",
@@ -95,7 +95,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "8c5b4fa18d90f1cb978713a08900ab5723942910b7a9924245ab8e107192bc77",
-   "surface_hash": "d6be1b68b9606fb45a9c939f72aa32303eb21fa61d614683afc388377fee85ac",
+   "surface_hash": "f6aee0ebba9eceba0fa78834da0beeaa4635c81f8b0fe6d72da14397fb0b93d0",
    "labels": [
     "tailless",
     "flying_wing",
@@ -137,7 +137,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "c167ec3594952634635515968fa4fdb4f40b1174c7c0e5aee9ffe4dc2fe61515",
-   "surface_hash": "8f25a3c3ac8d609de6dbd662738b1ae81f4c138e422d6124dc33c986b3d5fd17",
+   "surface_hash": "cf89cb3eb0c851cec56c70c59ec5d8be71633ea0a1c6665eb374128baafb7d46",
    "labels": [
     "tailless",
     "bwb",
@@ -178,7 +178,7 @@
    "gate": null,
    "reason": "",
    "input_hash": "3a318a2b5e15786b5b40c4a5a422983ebe26a96d690a32d43d1b07147d0f6333",
-   "surface_hash": "55bc4feaadc21fd53a3852b9cf2ed7dc50b6938ecd5f1f2135634d498ef10dac",
+   "surface_hash": "f1cf3fc1f61d5e89a7ae87ae6b9e079533111e81dac4a73268feb96fa00593f2",
    "labels": [
     "tailless",
     "bwb",

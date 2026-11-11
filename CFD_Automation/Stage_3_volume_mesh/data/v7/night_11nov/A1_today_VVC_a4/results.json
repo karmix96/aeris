@@ -1,0 +1,28 @@
+{
+ "ADflow SA": {
+  "solver": "ADflow",
+  "iterations": 182,
+  "relative_residual": 6.134780391862603e-05,
+  "converged": false,
+  "coefficients": {
+   "cd": 0.01854663846187811,
+   "cdp": 0.006762813137123904,
+   "cdv": 0.011783825324754206,
+   "cl": 0.19064378497219847,
+   "cmy": 0.009836633081035323
+  },
+  "settled": false,
+  "reason": "no force history in result.json",
+  "verdict": "not accepted",
+  "why": [
+   "not converged",
+   "no force history in result.json"
+  ]
+ },
+ "SU2 SA": {
+  "verdict": "not run"
+ },
+ "SU2 SST+LM": {
+  "verdict": "not run"
+ }
+}

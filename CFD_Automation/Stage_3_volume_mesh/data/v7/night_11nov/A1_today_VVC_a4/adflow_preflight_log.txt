@@ -1,0 +1,374 @@
+#
+# ADflow, multiblock structured flow solver
+#
+# This code solves the 3D RANS, laminar NS or Euler equations
+# on multiblock structured hexahedral grids.
+# This is a parallel executable running on 6 processors.
+# It has been compiled with the following options:
+# - Optimized mode.
+# - Size of standard integers: 4 bytes.
+# - Size of standard floating point types: 8 bytes.
+# - With cgns support
+# - With support for signals.
+#
++----------------------------------------+
+|          All ADFLOW Options:           |
++----------------------------------------+
+{'ADPC': False,
+ 'ANKADPC': False,
+ 'ANKAMGLevels': 2,
+ 'ANKAMGNSmooth': 1,
+ 'ANKASMOverlap': 1,
+ 'ANKASMOverlapCoarse': 0,
+ 'ANKCFL0': 5.0,
+ 'ANKCFLCutback': 0.5,
+ 'ANKCFLExponent': 0.5,
+ 'ANKCFLFactor': 10.0,
+ 'ANKCFLLimit': 100000.0,
+ 'ANKCFLMin': 1.0,
+ 'ANKCFLReset': True,
+ 'ANKCharTimeStepType': 'None',
+ 'ANKConstCFLStep': 0.4,
+ 'ANKCoupledSwitchTol': 1e-16,
+ 'ANKGlobalPreconditioner': 'additive Schwarz',
+ 'ANKInnerPreconIts': 1,
+ 'ANKInnerPreconItsCoarse': 1,
+ 'ANKJacobianLag': 10,
+ 'ANKLinResMax': 0.1,
+ 'ANKLinearSolveBuffer': 0.01,
+ 'ANKLinearSolveTol': 0.05,
+ 'ANKMaxIter': 40,
+ 'ANKNSubiterTurb': 1,
+ 'ANKOuterPreconIts': 1,
+ 'ANKPCILUFill': 1,
+ 'ANKPCILUFillCoarse': 0,
+ 'ANKPCUpdateCutoff': 1e-16,
+ 'ANKPCUpdateTol': 0.5,
+ 'ANKPCUpdateTolAfterCutoff': 0.0001,
+ 'ANKPhysicalLSTol': 0.2,
+ 'ANKPhysicalLSTolTurb': 0.99,
+ 'ANKSecondOrdSwitchTol': 1e-16,
+ 'ANKStepFactor': 1.0,
+ 'ANKStepMin': 0.01,
+ 'ANKSubspaceSize': 10,
+ 'ANKSwitchTol': 1.0,
+ 'ANKTurbCFLScale': 1.0,
+ 'ANKTurbKSPDebug': False,
+ 'ANKUnsteadyLSTol': 1.0,
+ 'ANKUseApproxSA': False,
+ 'ANKUseFullVisc': True,
+ 'ANKUseMatrixFree': True,
+ 'ANKUseTurbDADI': True,
+ 'ASMOverlap': 1,
+ 'ASMOverlapCoarse': 0,
+ 'CFL': 1.7,
+ 'CFLCoarse': 1.0,
+ 'CFLLimit': 1.5,
+ 'GMRESOrthogonalizationType': 'modified Gram-Schmidt',
+ 'ILUFill': 2,
+ 'ILUFillCoarse': 0,
+ 'L2Convergence': 1e-06,
+ 'L2ConvergenceCoarse': 0.01,
+ 'L2ConvergenceRel': 1e-16,
+ 'MGCycle': 'sg',
+ 'MGStartLevel': -1,
+ 'NKADPC': False,
+ 'NKAMGLevels': 2,
+ 'NKAMGNSmooth': 1,
+ 'NKASMOverlap': 1,
+ 'NKASMOverlapCoarse': 0,
+ 'NKFixedStep': 0.25,
+ 'NKGlobalPreconditioner': 'additive Schwarz',
+ 'NKInnerPreconIts': 1,
+ 'NKInnerPreconItsCoarse': 1,
+ 'NKJacobianLag': 20,
+ 'NKLS': 'cubic',
+ 'NKLinearSolveTol': 0.3,
+ 'NKOuterPreconIts': 1,
+ 'NKPCILUFill': 2,
+ 'NKPCILUFillCoarse': 0,
+ 'NKSubspaceSize': 60,
+ 'NKSwitchTol': 1e-05,
+ 'NKUseEW': True,
+ 'NKViscPC': False,
+ 'RKReset': False,
+ 'SAKappa': 0.41,
+ 'SAcb1': 0.1355,
+ 'SAcb2': 0.622,
+ 'SAcrot': 2.0,
+ 'SAct1': 1.0,
+ 'SAct2': 2.0,
+ 'SAct3': 1.2,
+ 'SAct4': 0.5,
+ 'SAcv1': 7.1,
+ 'SAcw2': 0.3,
+ 'SAcw3': 2.0,
+ 'SAsigma': 0.66666666667,
+ 'TSStability': False,
+ 'acousticScaleFactor': 1.0,
+ 'adjointAMGLevels': 2,
+ 'adjointAMGNSmooth': 1,
+ 'adjointDivTol': 100000.0,
+ 'adjointL2Convergence': 1e-06,
+ 'adjointL2ConvergenceAbs': 1e-16,
+ 'adjointL2ConvergenceRel': 1e-16,
+ 'adjointMaxIter': 500,
+ 'adjointMaxL2DeviationFactor': 1.0,
+ 'adjointMonitorStep': 10,
+ 'adjointSolver': 'GMRES',
+ 'adjointSubspaceSize': 100,
+ 'alphaFollowing': True,
+ 'alphaMode': False,
+ 'altitudeMode': False,
+ 'applyAdjointPCSubspaceSize': 20,
+ 'applyPCSubspaceSize': 10,
+ 'approxPC': True,
+ 'backgroundVolScale': 1.0,
+ 'betaMode': False,
+ 'blockSplitting': True,
+ 'cavExponent': 0,
+ 'cavSensorOffset': 0.0,
+ 'cavSensorSharpness': 10.0,
+ 'cavitationNumber': 1.4,
+ 'closedSurfaceFamilies': None,
+ 'coarseDiscretization': 'central plus scalar dissipation',
+ 'computeCavitation': False,
+ 'computeSepSensorKs': False,
+ 'coupledSolution': False,
+ 'cpMinRho': 100.0,
+ 'cutCallback': None,
+ 'debugZipper': False,
+ 'deltaT': 0.01,
+ 'designSurfaceFamily': None,
+ 'discretization': 'central plus scalar dissipation',
+ 'dissContMagnitude': 1.0,
+ 'dissContMidpoint': 3.0,
+ 'dissContSharpness': 3.0,
+ 'dissipationLumpingParameter': 6.0,
+ 'dissipationScalingExponent': 0.67,
+ 'eddyVisInfRatio': 0.21,
+ 'equationMode': 'steady',
+ 'equationType': 'RANS',
+ 'eulerWallTreatment': 'linear pressure extrapolation',
+ 'explicitSurfaceCallback': None,
+ 'firstRun': True,
+ 'flowType': 'external',
+ 'forcesAsTractions': True,
+ 'frozenTurbulence': False,
+ 'globalPreconditioner': 'additive Schwarz',
+ 'gridFile': '/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_today_VVC_e32d995a_re3e5/volume.cgns',
+ 'gridPrecision': 'double',
+ 'gridPrecisionSurface': 'single',
+ 'infChangeCorrection': True,
+ 'infChangeCorrectionTol': 1e-12,
+ 'infChangeCorrectionType': 'offset',
+ 'innerPreconIts': 1,
+ 'innerPreconItsCoarse': 1,
+ 'isoVariables': [],
+ 'isosurface': {},
+ 'liftIndex': 3,
+ 'limiter': 'van Albada',
+ 'loadBalanceIter': 10,
+ 'loadImbalance': 0.1,
+ 'localPreconditioner': 'ILU',
+ 'lowSpeedPreconditioner': False,
+ 'machMode': False,
+ 'matrixOrdering': 'RCM',
+ 'maxL2DeviationFactor': 1.0,
+ 'meshMaxSkewness': 1.0,
+ 'meshSurfaceFamily': None,
+ 'monitorVariables': ['resrho',
+                      'resmom',
+                      'resrhoe',
+                      'resturb',
+                      'cl',
+                      'cd',
+                      'cmy',
+                      'cdp',
+                      'cdv'],
+ 'nCycles': 0,
+ 'nCyclesCoarse': 500,
+ 'nFloodIter': -1,
+ 'nRKReset': 5,
+ 'nRefine': 10,
+ 'nSaveSurface': 1,
+ 'nSaveVolume': 1,
+ 'nSubiter': 1,
+ 'nSubiterTurb': 3,
+ 'nTimeStepsCoarse': 48,
+ 'nTimeStepsFine': 400,
+ 'nearWallDist': 0.1,
+ 'numberSolutions': True,
+ 'outerPreconIts': 3,
+ 'outputDirectory': 'runs/n11_today_VVC_a4/adflow',
+ 'outputSurfaceFamily': 'allSurfaces',
+ 'overlapFactor': 0.9,
+ 'oversetDebugPrint': False,
+ 'oversetLoadBalance': True,
+ 'oversetPriority': {},
+ 'oversetProjTol': 1e-12,
+ 'oversetUpdateMode': 'frozen',
+ 'pMode': False,
+ 'partitionLikeNProc': -1,
+ 'partitionOnly': False,
+ 'preconditionerSide': 'right',
+ 'printAllOptions': True,
+ 'printBadlySkewedCells': False,
+ 'printIntro': True,
+ 'printIterations': False,
+ 'printNegativeVolumes': False,
+ 'printTiming': True,
+ 'printWarnings': True,
+ 'qMode': False,
+ 'rMode': False,
+ 'recomputeOverlapMatrix': True,
+ 'resAveraging': 'alternate',
+ 'restartAdjoint': True,
+ 'restartFile': None,
+ 'restrictionRelaxation': 0.8,
+ 'selfZipCutoff': 120.0,
+ 'sepSensorKsOffset': 0.0,
+ 'sepSensorKsPhi': 90.0,
+ 'sepSensorKsRho': 1000.0,
+ 'sepSensorKsSharpness': 25.0,
+ 'sepSensorOffset': 0.0,
+ 'sepSensorSharpness': 10.0,
+ 'setMonitor': True,
+ 'skipAfterFailedAdjoint': True,
+ 'smoothParameter': 1.5,
+ 'smoother': 'DADI',
+ 'solutionPrecision': 'single',
+ 'solutionPrecisionSurface': 'single',
+ 'storeConvHist': True,
+ 'storeRindLayer': True,
+ 'surfaceVariables': ['cp', 'cf', 'yplus', 'vx', 'vy', 'vz'],
+ 'timeAccuracy': 2,
+ 'timeIntegrationScheme': 'BDF',
+ 'timeIntervals': 1,
+ 'timeLimit': 86400.0,
+ 'turbResScale': 10000.0,
+ 'turbulenceModel': 'SA',
+ 'turbulenceOrder': 'first order',
+ 'turbulenceProduction': 'strain',
+ 'updateWallAssociations': False,
+ 'useALE': True,
+ 'useANKSolver': True,
+ 'useApproxWallDistance': True,
+ 'useBlockettes': True,
+ 'useDiagTSPC': True,
+ 'useDissContinuation': False,
+ 'useExternalDynamicMesh': False,
+ 'useGridMotion': False,
+ 'useLinResMonitor': False,
+ 'useMatrixFreedrdw': True,
+ 'useNKSolver': False,
+ 'useOversetWallScaling': False,
+ 'useQCR': False,
+ 'useRotationSA': False,
+ 'useSkewnessCheck': False,
+ 'useTSInterpolatedGridVelocity': False,
+ 'useWallFunctions': False,
+ 'useZipperMesh': True,
+ 'useft2SA': True,
+ 'verifyExtra': True,
+ 'verifySpatial': True,
+ 'verifyState': True,
+ 'vis2': 0.25,
+ 'vis2Coarse': 0.5,
+ 'vis4': 0.0156,
+ 'viscPC': False,
+ 'viscWallTreatment': 'constant pressure extrapolation',
+ 'viscousSurfaceVelocities': True,
+ 'volumeVariables': ['resrho'],
+ 'wallDistCutoff': 1e+20,
+ 'windAxis': False,
+ 'writeSolutionDigits': 3,
+ 'writeSolutionEachIter': False,
+ 'writeSurfaceSolution': False,
+ 'writeTecplotSurfaceSolution': False,
+ 'writeVolumeSolution': False,
+ 'zipperSurfaceFamily': None}
+#
+#                      Warning
+# It is assumed that the grid is given in meters.
+#
+#
+# Specified load imbalance tolerance 0.100 achieved.
+# Continuing with 0.072 load imbalance for the cells and 0.067 for the faces
+#
+#
+# Grid level: 1, Total number of cells: 1075074
+#
++--------------------------------------------------+
+  CGNS Surface Families by Boundary Condition Type
++--------------------------------------------------+
+| Wall Types           : wall 
+| Inflow Types         : 
+| Outflow Types        : 
+| Symmetry Types       : symmetry 
+| Farfield Types       : farfield 
+| Overset Types        : 
++--------------------------------------------------+
++--------------------------------------------------+
+|
+| Initialization Times:
+|
+| Library Load Time             :      0.013 sec
+| Set Defaults Time             :      0.000 sec
+| Base Class Init Time          :      0.001 sec
+| Introductory Time             :      0.006 sec
+| Partitioning Time             :      0.015 sec
+| Preprocessing Time            :      4.724 sec
+| Family Setup Time             :      0.012 sec
+| Cut Callback Time             :      0.000 sec
+| Explicit Surface Cut Time     :      0.000 sec
+| Overset Preprocessing Time    :      0.002 sec
+| Initialize Flow Time          :      0.073 sec
+|
+| Total Init Time               :      4.846 sec
++--------------------------------------------------+
++----------------------------------------------------------------------+
+|  Switching to Aero Problem: v7_a4                                    |
++----------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+| pyADFLOW Warning: 'zipperSurfaceFamily' option was not given. Using all wall |
+| boundary conditions for the zipper mesh.                                     |
++------------------------------------------------------------------------------+
+
+{
+ "accepted": true,
+ "families": [
+  "allSurfaces",
+  "allWalls",
+  "farfield",
+  "symmetry",
+  "wall"
+ ],
+ "directions": {
+  "lift_index": 3,
+  "velocity_direction": [
+   0.9975640502598242,
+   0.0,
+   0.0697564737441253
+  ],
+  "lift_direction": [
+   -0.0697564737441253,
+   0.0,
+   0.9975640502598242
+  ],
+  "velocity_error": 0.0,
+  "lift_error": 0.0
+ },
+ "seconds": 4.9,
+ "wall_surface_nodes": 329,
+ "memory": {
+  "ranks": 6,
+  "peak_rss_gib_sum": 0.9145736694335938,
+  "peak_rss_gib_largest_rank": 0.15668487548828125,
+  "cells": 1075074,
+  "gib_per_million_cells": 0.850707643784143,
+  "law_ank_only_gib": 10.462785020000002,
+  "law_ank_then_nk_gib": 11.68020004
+ }
+}

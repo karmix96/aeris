@@ -1,0 +1,72 @@
+{
+ "case": "whatif_today_VVC_e32d995a_re3e5",
+ "solver": "ADflow",
+ "model": "SA",
+ "alpha_deg": 4.0,
+ "converged": false,
+ "relative_residual": 6.134780391862603e-05,
+ "residual_source": "adflow.iteration.totalrfinal/totalr0",
+ "iterations": 182,
+ "routine_failed": false,
+ "implausible": null,
+ "coefficients": {
+  "cd": 0.01854663846187811,
+  "cdp": 0.006762813137123904,
+  "cdv": 0.011783825324754206,
+  "cl": 0.19064378497219847,
+  "cmy": 0.009836633081035323
+ },
+ "directions": {
+  "lift_index": 3,
+  "velocity_direction": [
+   0.9975640502598242,
+   0.0,
+   0.0697564737441253
+  ],
+  "lift_direction": [
+   -0.0697564737441253,
+   0.0,
+   0.9975640502598242
+  ],
+  "velocity_error": 0.0,
+  "lift_error": 0.0
+ },
+ "options_effective": {
+  "equationType": "RANS",
+  "turbulenceModel": "SA",
+  "eddyVisInfRatio": 0.21,
+  "liftIndex": 3,
+  "useANKSolver": true,
+  "useNKSolver": false,
+  "L2Convergence": 1e-06,
+  "nCycles": 30000,
+  "MGCycle": "sg",
+  "ANKSubspaceSize": 10,
+  "ANKPCILUFill": 1,
+  "ANKASMOverlap": 1
+ },
+ "overrides": {
+  "timeLimit": 10800.0
+ },
+ "seconds": 1813.4,
+ "memory": {
+  "ranks": 6,
+  "peak_rss_gib_sum": 10.284347534179688,
+  "peak_rss_gib_largest_rank": 1.8057174682617188,
+  "cells": 1075074,
+  "gib_per_million_cells": 9.566176406628461,
+  "law_ank_only_gib": 10.462785020000002,
+  "law_ank_then_nk_gib": 11.68020004
+ },
+ "history": {},
+ "extras": {
+  "slice_fractions": [
+   0.5,
+   0.8,
+   0.9,
+   0.95,
+   0.98
+  ],
+  "error": "ValueError: invalid literal for int() with base 10: 'allSurfaces'"
+ }
+}

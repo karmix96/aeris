@@ -1,0 +1,1 @@
+{"stopped_by": "Claude, SIGUSR2 (ADflow: write and quit)", "at": "2026-11-12 00:21:05", "why": "the SA residual stalled; projection past the 3 h cap; forces settled since iteration ~74"}

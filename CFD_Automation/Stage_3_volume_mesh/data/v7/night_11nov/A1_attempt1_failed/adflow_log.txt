@@ -1,0 +1,145 @@
+Traceback (most recent call last):
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 180, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 95, in main
+    solver = ADFLOW(options=opts)
+Traceback (most recent call last):
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 180, in <module>
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 147, in __init__
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 95, in main
+    solver = ADFLOW(options=opts)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 147, in __init__
+Traceback (most recent call last):
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 180, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 95, in main
+    solver = ADFLOW(options=opts)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 147, in __init__
+Traceback (most recent call last):
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 180, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 95, in main
+    solver = ADFLOW(options=opts)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 147, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/pyAero_solver.py", line 43, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/pyAero_solver.py", line 43, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/pyAero_solver.py", line 43, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/pyAero_solver.py", line 43, in __init__
+Traceback (most recent call last):
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 180, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 95, in main
+    solver = ADFLOW(options=opts)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 147, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/pyAero_solver.py", line 43, in __init__
+Traceback (most recent call last):
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 180, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/solve/run_adflow.py", line 95, in main
+    solver = ADFLOW(options=opts)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 147, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/pyAero_solver.py", line 43, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 91, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 91, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 91, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 91, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 91, in __init__
+    super().__init__(
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 91, in __init__
+    self.setOption(key, options[key])
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 5467, in setOption
+    self.setOption(key, options[key])
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 5467, in setOption
+    self.setOption(key, options[key])
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 5467, in setOption
+    self.setOption(key, options[key])
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 5467, in setOption
+    self.setOption(key, options[key])
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 5467, in setOption
+    self.setOption(key, options[key])
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py", line 5467, in setOption
+    super().setOption(name, value)
+    super().setOption(name, value)
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 149, in setOption
+    super().setOption(name, value)
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 149, in setOption
+    super().setOption(name, value)
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 149, in setOption
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 149, in setOption
+    raise Error(
+baseclasses.utils.error.Error: 
++------------------------------------------------------------------------------+
+| Error: Datatype for option timeLimit is not valid. Expected data type <class |
+| 'float'>. Received data type is <class 'int'>.                               |
++------------------------------------------------------------------------------+
+    raise Error(
+baseclasses.utils.error.Error: 
++------------------------------------------------------------------------------+
+| Error: Datatype for option timeLimit is not valid. Expected data type <class |
+| 'float'>. Received data type is <class 'int'>.                               |
++------------------------------------------------------------------------------+
+
+    raise Error(
+baseclasses.utils.error.Error: 
++------------------------------------------------------------------------------+
+| Error: Datatype for option timeLimit is not valid. Expected data type <class |
+| 'float'>. Received data type is <class 'int'>.                               |
++------------------------------------------------------------------------------+
+
+    raise Error(
+baseclasses.utils.error.Error: 
++------------------------------------------------------------------------------+
+| Error: Datatype for option timeLimit is not valid. Expected data type <class |
+| 'float'>. Received data type is <class 'int'>.                               |
++------------------------------------------------------------------------------+
+
+
+    super().setOption(name, value)
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 149, in setOption
+    super().setOption(name, value)
+  File "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/baseclasses/solvers/BaseSolver.py", line 149, in setOption
+    raise Error(
+baseclasses.utils.error.Error: 
++------------------------------------------------------------------------------+
+| Error: Datatype for option timeLimit is not valid. Expected data type <class |
+| 'float'>. Received data type is <class 'int'>.                               |
++------------------------------------------------------------------------------+
+
+    raise Error(
+baseclasses.utils.error.Error: 
++------------------------------------------------------------------------------+
+| Error: Datatype for option timeLimit is not valid. Expected data type <class |
+| 'float'>. Received data type is <class 'int'>.                               |
++------------------------------------------------------------------------------+
+
+--------------------------------------------------------------------------
+prterun detected that one or more processes exited with non-zero status,
+thus causing the job to be terminated. The first process to do so was:
+
+   Process name: [prterun-DESKTOP-ADGQCQ3-8885@1,2]
+   Exit code:    1
+--------------------------------------------------------------------------

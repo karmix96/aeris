@@ -1,0 +1,13 @@
+{
+ "match": "run_adflow.py",
+ "mem_total_gib": 13.65115737915039,
+ "swap_total_gib": 8.0,
+ "swap_used_at_start_gib": 0.0,
+ "peak_rss_sum_gib": 10.284683227539062,
+ "peak_ranks": 6,
+ "min_available_gib": 2.5363311767578125,
+ "killed": null,
+ "samples": 182,
+ "seconds": 1853,
+ "note": "summed VmRSS of the matching ranks (wrappers left out); sampled, so the true peak can be a little higher"
+}

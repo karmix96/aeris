@@ -1,0 +1,4 @@
+seconds,ranks,free_gib,pagefile_gib,vmmem_gib,compression_gib
+1,6,6.199,0.073,4.625,0.526
+61,6,2.417,2.024,9.202,0.279
+122,6,2.537,2.063,9.238,0.028

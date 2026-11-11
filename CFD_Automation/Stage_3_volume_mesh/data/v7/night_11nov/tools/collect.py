@@ -161,6 +161,9 @@ def summarise(d: Path) -> dict:
         if fb:
             row["forces_breakdown"] = fb
         row["yplus"] = jl(d / sub / "yplus.json")
+    if row.get("exit") not in (None, 0) and not row.get("iterations") and not row.get("verdict"):
+        row["verdict"] = f"failed to start (exit {row['exit']}; see REPORT.md section 4)"
+        row["watchdog_peak_gib"] = None                         # a start-up flash, not a run's memory
     peak = row.get("adflow_peak_gib_sum") or row.get("watchdog_peak_gib")
     if peak and cells:
         row["gib_per_million_cells"] = peak / (cells / 1e6)
@@ -171,6 +174,39 @@ def summarise(d: Path) -> dict:
     return row
 
 
+MESH_SHORT = {"whatif_today_VVC_e32d995a_re3e5": "today VVC", "volume_VC_e32d995a_re3e5": "today VC",
+              "whatif_light_VC_e32d995a_re3e5": "light VC"}
+
+
+def fmt(v, f="{:.3g}"):
+    return "" if v is None else (f.format(v) if isinstance(v, (int, float)) else str(v))
+
+
+def table(rows: list[dict]) -> str:
+    """The run table of REPORT.md section 2, from summary.json rows only."""
+    h = ("| Run | Mesh | Cells | Solver, model | α | Ranks | Wall time | Iterations | Residual drop | Verdict | Peak RAM "
+         "(GiB) | GiB per M cells | CL | CD (counts) | CDp | CDv | CMy | y⁺ largest, 99 % |")
+    out = [h, "|" + "|".join([" --- "] * (h.count("|") - 1)) + "|"]
+    for r in rows:
+        c = r.get("coefficients") or {}
+        fb = r.get("forces_breakdown") or {}
+        cdp, cdv = c.get("cdp", fb.get("cdp")), c.get("cdv", fb.get("cdv"))
+        peak = r.get("adflow_peak_gib_sum") or r.get("watchdog_peak_gib")
+        w = r.get("wall_seconds")
+        drop = r.get("residual_drop_orders")
+        yp = r.get("yplus") or {}
+        out.append("| " + " | ".join([
+            r["run"], MESH_SHORT.get(r.get("mesh"), r.get("mesh") or ""), f"{r['cells']:,}" if r.get("cells") else "",
+            f"{r.get('solver', '')} {r.get('model', '')}".strip(), fmt(r.get("alpha_deg"), "{:g}°"), "6",
+            "" if w is None else f"{w / 60:.1f} min", fmt(r.get("iterations"), "{:d}"),
+            "" if drop is None else f"{drop:.2f}", r.get("verdict") or "", fmt(peak, "{:.2f}"),
+            fmt(r.get("gib_per_million_cells"), "{:.2f}"), fmt(c.get("cl"), "{:.4f}"),
+            "" if c.get("cd") is None else f"{c['cd'] * 1e4:.1f}", fmt(cdp, "{:.5f}"), fmt(cdv, "{:.5f}"),
+            fmt(c.get("cmy"), "{:.5f}"),
+            "" if not yp.get("max") else f"{yp['max']:.2f}, {yp['p99']:.2f}"]) + " |")
+    return "\n".join(out)
+
+
 def main() -> int:
     if len(sys.argv) >= 5 and sys.argv[1] == "copy":
         print(copy(sys.argv[2], sys.argv[3], sys.argv[4]))
@@ -179,6 +215,7 @@ def main() -> int:
         rows = [summarise(d) for d in sorted(NIGHT.iterdir()) if d.is_dir() and (d / "source.json").exists()]
         extra = jl(NIGHT / "summary_extra.json") or {}
         (NIGHT / "summary.json").write_text(json.dumps({"runs": rows} | extra, indent=1))
+        (NIGHT / "run_table.md").write_text(table(rows) + "\n")
         for r in rows:
             c = r.get("coefficients") or {}
             print(r["run"], r.get("verdict"), r.get("iterations"), r.get("wall_seconds"), r.get("gib_per_million_cells"),

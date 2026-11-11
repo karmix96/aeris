@@ -73,6 +73,76 @@
     "error": "ValueError: invalid literal for int() with base 10: 'allSurfaces'"
    },
    "solver_seconds": 1813.4,
+   "yplus": {
+    "max": 2.9173529148101807,
+    "p99": 1.9190350770950317,
+    "median": 0.7383748292922974,
+    "share_above_design": 0.10555555555555556,
+    "design": 1.3,
+    "all_walls_max": 9.539013862609863,
+    "all_walls_p99": 3.0332047939300537,
+    "scope": "wing surface (upper, lower, nose); all_walls_* include the base and the tip cap",
+    "zones": [
+     {
+      "label": "trailing-edge base",
+      "max": 9.539013862609863,
+      "p99": 8.66738510131836,
+      "median": 2.123224973678589,
+      "share_above_design": 0.6702898550724637
+     },
+     {
+      "label": "tip cap",
+      "max": 3.7562942504882812,
+      "p99": 3.0791921615600586,
+      "median": 1.6160374879837036,
+      "share_above_design": 0.9980842911877394
+     },
+     {
+      "label": "lower side",
+      "max": 2.7341995239257812,
+      "p99": 1.833752155303955,
+      "median": 0.7228618264198303,
+      "share_above_design": 0.08995502248875563
+     },
+     {
+      "label": "nose",
+      "max": 2.915982246398926,
+      "p99": 2.658280849456787,
+      "median": 1.271289348602295,
+      "share_above_design": 0.4782608695652174
+     },
+     {
+      "label": "upper side",
+      "max": 2.9173529148101807,
+      "p99": 1.8254985809326172,
+      "median": 0.7433860898017883,
+      "share_above_design": 0.09545227386306847
+     }
+    ]
+   },
+   "log_history": {
+    "rows": 183,
+    "relative_residual_last": 6.134780391862603e-05,
+    "settled_rule": {
+     "settled": false,
+     "reason": "182 iterations: too short to judge",
+     "window": 182
+    },
+    "force_wander_since": {
+     "from_iter_50": {
+      "cd_wander_counts": 2.2578437388726114,
+      "cl_wander_rel": 0.00620396645443698
+     },
+     "from_iter_80": {
+      "cd_wander_counts": 0.13881467583271023,
+      "cl_wander_rel": 0.0003612190987153867
+     },
+     "from_iter_100": {
+      "cd_wander_counts": 0.04179895199088457,
+      "cl_wander_rel": 9.21926493856089e-05
+     }
+    }
+   },
    "verdict": "not accepted",
    "why": [
     "not converged",
@@ -84,6 +154,138 @@
    "gib_per_million_cells": 9.566176406628461,
    "seconds_per_iteration": 9.972527472527473,
    "minutes_per_million_cells": 28.137597970000204
+  },
+  {
+   "run": "A1b_today_VVC_a4_turbksp",
+   "case": "runs/n11_today_VVC_a4_turbksp",
+   "mesh": "whatif_today_VVC_e32d995a_re3e5",
+   "cells": 1075074,
+   "alpha_deg": 4.0,
+   "solver_folder": "adflow",
+   "wall_seconds": 1873.79,
+   "exit": 0,
+   "start": "2026-11-12 00:22:44",
+   "end": "2026-11-12 00:53:53",
+   "watchdog_peak_gib": 10.983783721923828,
+   "watchdog_min_available_gib": 1.8276100158691406,
+   "watchdog_killed": null,
+   "host_min_free_gib": 0.883,
+   "host_max_pagefile_gib": 1.553,
+   "host_pagefile_at_start_gib": 1.36,
+   "host_max_vmmem_gib": 11.406,
+   "host_killed": null,
+   "solver": "ADflow",
+   "model": "SA",
+   "iterations": 153,
+   "relative_residual": 9.759369916509343e-07,
+   "residual_drop_orders": 6.010578220306296,
+   "converged_flag": true,
+   "coefficients": {
+    "cd": 0.01854850905508489,
+    "cdp": 0.0067645689465704074,
+    "cdv": 0.01178394010851448,
+    "cl": 0.19065057970845242,
+    "cmy": 0.00983567443487367
+   },
+   "adflow_peak_gib_sum": 10.98537826538086,
+   "adflow_peak_largest_rank_gib": 1.9344100952148438,
+   "law_ank_only_gib": 10.462785020000002,
+   "law_ank_then_nk_gib": 11.68020004,
+   "overrides": {
+    "timeLimit": 10800.0,
+    "ANKUseTurbDADI": false
+   },
+   "extras": {
+    "slice_fractions": [
+     0.5,
+     0.8,
+     0.9,
+     0.95,
+     0.98
+    ],
+    "error": "ValueError: invalid literal for int() with base 10: 'allSurfaces'"
+   },
+   "solver_seconds": 1867.9,
+   "yplus": {
+    "max": 2.917383909225464,
+    "p99": 1.9190868139266968,
+    "median": 0.7384066581726074,
+    "share_above_design": 0.10555555555555556,
+    "design": 1.3,
+    "all_walls_max": 9.539981842041016,
+    "all_walls_p99": 3.0337488651275635,
+    "scope": "wing surface (upper, lower, nose); all_walls_* include the base and the tip cap",
+    "zones": [
+     {
+      "label": "trailing-edge base",
+      "max": 9.539981842041016,
+      "p99": 8.668701171875,
+      "median": 2.123645544052124,
+      "share_above_design": 0.6702898550724637
+     },
+     {
+      "label": "tip cap",
+      "max": 3.756352186203003,
+      "p99": 3.079261541366577,
+      "median": 1.616371512413025,
+      "share_above_design": 0.9980842911877394
+     },
+     {
+      "label": "lower side",
+      "max": 2.7342236042022705,
+      "p99": 1.833796739578247,
+      "median": 0.7229223251342773,
+      "share_above_design": 0.08995502248875563
+     },
+     {
+      "label": "nose",
+      "max": 2.916011095046997,
+      "p99": 2.6583142280578613,
+      "median": 1.2712832689285278,
+      "share_above_design": 0.4782608695652174
+     },
+     {
+      "label": "upper side",
+      "max": 2.917383909225464,
+      "p99": 1.8255016803741455,
+      "median": 0.7434747219085693,
+      "share_above_design": 0.09545227386306847
+     }
+    ]
+   },
+   "log_history": {
+    "rows": 154,
+    "relative_residual_last": 9.759369916509343e-07,
+    "settled_rule": {
+     "settled": false,
+     "reason": "153 iterations: too short to judge",
+     "window": 153
+    },
+    "force_wander_since": {
+     "from_iter_50": {
+      "cd_wander_counts": 2.098702366112627,
+      "cl_wander_rel": 0.007826301256742406
+     },
+     "from_iter_80": {
+      "cd_wander_counts": 0.10831465989152855,
+      "cl_wander_rel": 0.0004647784270794593
+     },
+     "from_iter_100": {
+      "cd_wander_counts": 0.009633192471769636,
+      "cl_wander_rel": 7.669779493342426e-05
+     }
+    }
+   },
+   "verdict": "not accepted",
+   "why": [
+    "no force history in result.json"
+   ],
+   "settled": false,
+   "cd_wander_counts": null,
+   "cl_wander_rel": null,
+   "gib_per_million_cells": 10.218253129906275,
+   "seconds_per_iteration": 12.246993464052288,
+   "minutes_per_million_cells": 29.049008099287427
   }
  ],
  "machine": {

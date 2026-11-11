@@ -1,0 +1,5 @@
+{
+ "run": "A1b_today_VVC_a4_turbksp",
+ "case_dir": "runs/n11_today_VVC_a4_turbksp",
+ "solver_folder": "adflow"
+}

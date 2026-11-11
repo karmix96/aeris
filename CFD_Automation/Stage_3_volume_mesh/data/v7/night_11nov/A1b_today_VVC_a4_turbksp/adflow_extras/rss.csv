@@ -1,0 +1,4 @@
+seconds,ranks,rss_sum_gib,available_gib,swap_used_gib
+2,6,0.280,12.509,0.019
+4,6,0.591,12.233,0.019
+6,6,0.642,12.203,0.019

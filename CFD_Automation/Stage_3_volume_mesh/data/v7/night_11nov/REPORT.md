@@ -1,7 +1,7 @@
 # V7 night run, 11–12 Nov 2026: the first solves on Stage 3 meshes
 
 Claude Code, alone on Mike's desktop, following `solve/NIGHT_11NOV.md`. **In progress.** This file is rewritten after
-every finished run. Last update: 12 Nov, 00:35 (A1 done; A1b, A1's first retry, running).
+every finished run. Last update: 12 Nov, 01:05 (A1 and A1b done; B1, SU2 SA, running since 00:57).
 
 One wing: BWB reference wing 0, Re 3 × 10⁵ on the mean chord, Mach 0.1, the transition band on.
 
@@ -27,37 +27,51 @@ The host has 16 GB, so the plan's side-by-side lines cannot run. Every run goes 
 ## 2. The runs
 
 All on 6 ranks, one at a time (nothing side by side). The table is `run_table.md`, built from the run folders by
-`tools/collect.py`; every number is read from the copied files.
+`tools/collect.py`; every number is read from the copied files. y⁺ is over the wing surface (upper, lower, nose),
+without the trailing-edge base and the tip cap (section 3, Q7).
 
-| Run | Mesh | Cells | Solver, model | α | Wall time | Iterations | Residual drop | Verdict | Peak RAM (GiB) | GiB per M cells | CL | CD (counts) | CDp | CDv | CMy |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| A1 | today VVC | 1,075,074 | ADflow SA | 4° | 30.2 min | 182 | 4.21 | not accepted: not converged (stopped, see 6) | 10.28 | 9.57 | 0.1906 | 185.5 | 0.00676 | 0.01178 | 0.00984 |
-| A1b | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | 4° | running since 00:22 | | | | | | | | | | |
+| Run | Mesh | Cells | Solver, model | α | Wall time | Iterations | Residual drop (orders) | Verdict of `read_results.py` | Peak RAM (GiB) | GiB per M cells | CL | CD (counts) | CDp | CDv | CMy | y⁺ largest, 99 % |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A1 | today VVC | 1,075,074 | ADflow SA, as written | 4° | 30.2 min | 182 | 4.21 | not accepted: not converged; stopped, see 6 | 10.28 | 9.57 | 0.1906 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
+| A1b | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | 4° | 31.2 min | 153 | 6.01 | **converged** (9.76 × 10⁻⁷); the rule says "not accepted": see below | 10.99 | 10.22 | 0.1907 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
+| B1 | today VVC | 1,075,074 | SU2 SA | 4° | running since 00:57 | | | | 7.13 (plateau) | 6.64 | | | | | | |
 
-A1's forces were steady long before the stop: since iteration 80, CD moved 0.14 counts and CL 0.036 %; since
-iteration 100, 0.04 counts and 0.009 %. The plan's settled rule could not judge A1: it needs at least 225
-iterations, and A1 has 182 (`A1_today_VVC_a4/adflow/history_from_log.json`).
+**A1b converged and its forces are settled, but the plan's rule cannot say so.** `read_results.py` needs at least
+225 iterations before it judges "settled" (the last 20 %, at least 200, plus 25); A1b converged in 153. Measured from
+ADflow's own log: since iteration 100, CD moved 0.0096 counts and CL 0.008 % (the rule allows 0.5 counts and
+0.1 %). A1: since iteration 100, 0.04 counts and 0.009 %. The rule is unchanged; Mike decides whether ADflow needs a
+shorter window. (A1 and A1b also lost their history from `result.json`: section 4.3. The numbers here are from
+`adflow/history_from_log.json`.)
 
 ## 3. The answers
 
-**Q1, ADflow (so far).** ADflow reads the Stage 3 CGNS, finds the families `wall`, `farfield` and `symmetry`, and
-builds the freestream exactly (velocity and lift direction errors 0.0). As written, it does not converge on VVC: the
-relative residual fell 4.2 orders in 182 iterations and was still falling only 0.0026 orders per iteration.
+**Q1, ADflow: yes, with one option.** ADflow reads the Stage 3 CGNS, finds the families `wall`, `farfield` and
+`symmetry`, and builds the freestream exactly (velocity and lift direction errors 0.0).
 
-The cause is measured: the turbulence equation. Between iterations 50 and 170 the density residual fell 2.3 orders
-(4.9 × 10⁻⁴ to 2.6 × 10⁻⁶) while the SA residual fell from 2.1 × 10⁻⁶ to 8.5 × 10⁻⁷. With the case's settings ADflow
-updates the turbulence by one DADI sweep per ANK step, and never switches to its coupled or second-order modes
-(both switch tolerances default to 10⁻¹⁶). A1b changes only that (`ANKUseTurbDADI=false`: a Krylov solve for the
-turbulence).
+- **As written (A1), it does not converge on VVC.** The relative residual fell 4.2 orders in 182 iterations and was
+  falling only 0.0026 orders per iteration, slower every 30 iterations. The cause is the turbulence equation:
+  between iterations 50 and 170 the density residual fell 2.3 orders, the SA residual from 2.1 × 10⁻⁶ to
+  8.5 × 10⁻⁷. With the case's settings ADflow updates the turbulence by one DADI sweep per ANK step.
+- **With `ANKUseTurbDADI=false` (A1b: the turbulence by its own Krylov solve), it converges:** 9.76 × 10⁻⁷ in 153
+  iterations, 31.2 min. The SA residual was 3.6 × 10⁻⁸ at iteration 29 and 1.8 × 10⁻¹⁰ at 150. The forces are the
+  same as A1's to 4 digits: CL 0.19065 against 0.19064, CD 185.49 against 185.47 counts.
+- **For the case files:** `ANKUseTurbDADI: False` is one line in `case.py`'s ADflow options. It costs 0.7 GiB on
+  VVC (6.8 %) and 22 % more time per iteration (12.2 s against 10.0 s), and saves the stall.
 
-**Q2, ADflow memory (one point).** A1 peaked at **10.28 GiB** over the 6 ranks (largest rank 1.81 GiB):
-**9.57 GiB per million cells**. S8's laws gave 10.46 GiB (ANK only) and 11.68 GiB (ANK then NK): the ANK-only law is
-1.7 % high. The watchdog's sampled peak agrees (10.285 GiB). WSL never swapped (0.001 GiB). The host's pagefile grew
-by 2.0 GiB in the first minute and then held; Windows stayed above 1.7 GiB free.
+**Q2, ADflow memory: one mesh size, and the law holds.**
 
-**Q2, ADflow time.** 10 s per iteration early, 15 s by iteration 180 as the linear solves grew from 20 to 33 inner
-iterations: 1,815 s for 182 iterations. In 30 min the run had not converged, so the plan's "time to converge" is not
-measured yet: it is more than 28 min per million cells (S8's law: 35.7).
+| | Cells | Peak (GiB, 6 ranks) | GiB per M cells | S8 law, ANK only | S8 law, ANK then NK |
+| --- | --- | --- | --- | --- | --- |
+| A1, as written | 1,075,074 | 10.28 | 9.57 | 10.46 (+1.7 %) | 11.68 |
+| A1b, turbulence by Krylov | 1,075,074 | 10.99 | 10.22 | 10.46 (−4.8 %) | 11.68 |
+
+The largest rank held 1.81 GiB (A1) and 1.93 GiB (A1b). The watchdog's sampled peaks agree to 0.01 GiB. WSL never
+swapped (0.019 GiB at most). The host paged up to 2.1 GiB into its pagefile and Windows went down to 0.88 GiB free;
+nothing slowed or failed.
+
+**Q2, ADflow time.** A1b converged in 31.2 min on 6 ranks: **29.0 min per million cells** (S8's law: 35.7). A1
+averaged 10.0 s per iteration and A1b 12.2 s; in both, the later iterations were slower as the linear solves grew
+(A1: 20 to 33 inner iterations per step).
 
 **Q6, the pyGeo meshes.** 20 of 20 meshes are the same on both lofts and pass on both. The largest node difference is
 4.2 × 10⁻¹¹ mean chords in the volume and 4.6 × 10⁻¹⁴ on the surface. The meshes on the pyGeo loft are the meshes
@@ -66,13 +80,27 @@ that were checked on the numpy loft.
 The three meshes of step 2 have exactly the plan's cell counts on pyGeo: 1,075,074 (VVC), 2,324,016 (VC) and
 1,475,376 (light VC). The what-if path gives today's VC to 5.0 × 10⁻¹² (`--check-production`).
 
+**Q7, y⁺ on ADflow (A1b, VVC, design 1.3).** Over the wing surface: largest 2.92, 99 % 1.92, median 0.74; 10.6 % of
+the faces above 1.3. By zone:
+
+| Zone | Largest | 99 % | Median | Faces above 1.3 |
+| --- | --- | --- | --- | --- |
+| upper side | 2.92 | 1.83 | 0.74 | 9.5 % |
+| lower side | 2.73 | 1.83 | 0.72 | 9.0 % |
+| nose | 2.92 | 2.66 | 1.27 | 48 % |
+| tip cap | 3.76 | 3.08 | 1.62 | 99.8 % |
+| trailing-edge base | 9.54 | 8.67 | 2.12 | 67 % |
+
+The wall rule holds on most of the wing. It is exceeded at the nose, where the skin friction peaks, and on the tip
+cap. The base is a separated region; its y⁺ is not a wall-resolution measure. SU2's y⁺ (B1) is the second reading.
+
 **A2, A3, X1, X2: they do not fit this machine.** The plan's rule for A2: A1's measured peak scaled by the cells
 must be below 80 % of `MemAvailable` (12.6 GiB, so 10.1 GiB). A2: 10.28 × 2,324,016 / 1,075,074 = 22.2 GiB. A3:
 10.28 × 1,475,376 / 1,075,074 = 14.1 GiB, more than all of WSL's 13.65 GiB. X2 (ADflow on VC with fill 0) and X1
 (SU2 on VC) are on the same 2.3 M-cell mesh. So **Q4 cannot be answered on this desktop**, and Q2 gets one ADflow mesh
 size, not two.
 
-Q3, Q5 and Q7: waiting for the runs.
+Q3 and Q5: waiting for the runs.
 
 ## 4. What failed
 
@@ -93,19 +121,20 @@ Q3, Q5 and Q7: waiting for the runs.
    writer, rank 0.
 3. **`run_adflow.py` kept no force history.** ADflow's history keys are its CGNS monitor names (`CoefLift`,
    `CoefDrag`, `CoefPressureDrag`, `CoefViscousDrag`, `CoefMomentY`, `RSDMassRMS`, `totalR`); the filter knew only
-   `cl`, `cd`, ... and kept nothing. So `read_results.py` said "no force history in result.json" for A1, and it would
-   call even a converged run "not accepted". Fixed after A1 (A1 and A1b were already running the old code): the
-   names are mapped. For A1 and A1b the history is read from ADflow's own log (`tools/adflow_log_history.py`).
-4. **`--lift-distribution` and `--slices` failed on ADflow** (A1; new on 11 Nov, untested until tonight):
+   `cl`, `cd`, ... and kept nothing. So `read_results.py` said "no force history in result.json" for A1 and A1b.
+   Fixed after A1 (A1 and A1b were already running the old code): the names are mapped. Tested at 00:57 on a
+   zero-iteration restart of A1b: the history has `cl`, `cd`, `cdp`, `cdv`, `cmy`, `resrho`, `totalres`, `iter`.
+4. **`--lift-distribution` and `--slices` failed on ADflow** (A1 and A1b; new on 11 Nov, untested until tonight):
    `ValueError: invalid literal for int() with base 10: 'allSurfaces'` (in `result.json["extras"]`). It is ADflow
    2.13.1's own bug: `writeLiftDistributionFile` and `writeSlicesFile` pass the group name `"allSurfaces"` where
    `tecplotio.writetecplot` wants the family list; `writeSolution` does it right. Fixed after A1 the way
-   `writeSolution` does it. The solve was not affected.
+   `writeSolution` does it. Tested on the same restart: `lift_distribution.dat` and `slices.dat` were written, and the
+   restart's forces equal A1b's to every printed digit. The solves were not affected.
 5. **SU2 under Open MPI runs as separate copies.** Found in a test before any SU2 run. `SU2_CFD` 8.5.0 here is a
    static MPICH build. Under the MACH-Aero `mpirun` (Open MPI), `-np 2` printed two banners, did no partitioning
    and exited 0. Under MPICH's `mpiexec.hydra` it printed one banner and partitioned with ParMETIS (136 edge cuts).
    S8's SU2 runs show the same two-banner signature (`runs/su2_validation/e387_sa_lm/run.log`), so they ran as
-   two serial copies.
+   two serial copies. B1 runs under `mpiexec.hydra`: one banner, ParMETIS, 38,022 edge cuts.
 
 The three `run_adflow.py` fixes are in `tools/run_adflow_night_fixes.patch`. The file is changed in this checkout
 and not committed: the plan names only this folder.
@@ -113,7 +142,8 @@ and not committed: the plan names only this folder.
 ## 5. Solver options changed from the case files
 
 - `timeLimit` as a float (4.1), the same value.
-- A1b (A1's first retry, of two allowed): `ANKUseTurbDADI=false`. Why: A1's turbulence residual stalled (3).
+- A1b, A1's first retry of two allowed: `ANKUseTurbDADI=false`. Why: A1's turbulence residual stalled (Q1). It worked;
+  no second try was needed.
 
 ## 6. Choices made tonight
 
@@ -136,8 +166,11 @@ and not committed: the plan names only this folder.
 - **The run wrappers** are `tools/run_adflow_night.sh` and `tools/run_su2_night.sh`: the plan's commands, the plan's
   watchdog, the host log and `timing.json` (start, end, exit code, and from 00:22 the monotonic clock: one `date`
   read at 23:53 came back 92 s ahead).
+- **`solve/wake_check.py` is written** (Q5) and was tested on A1b's 4° solution before B1 (in the run folder as
+  `wake_check_a4_test.*`): the wake centre leaves the trailing edge at 3.5° and bends down to 2.6° by 2 chords,
+  below the freestream as the downwash should make it, and inside the band at every line.
 - **Light work ran beside the solves** (copying files, git, this report). Nothing that reads a volume file ran beside
-  a solve: the memory margin was below 2 GiB.
+  an ADflow solve: the memory margin was below 2 GiB.
 
 ## 7. What this does not show
 

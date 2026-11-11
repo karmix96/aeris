@@ -1,0 +1,103 @@
+{
+ "case": "whatif_today_VVC_e32d995a_re3e5",
+ "solver": "ADflow",
+ "model": "SA",
+ "alpha_deg": 4.0,
+ "converged": false,
+ "relative_residual": 0.0,
+ "residual_source": "adflow.iteration.totalrfinal/totalr0",
+ "iterations": 0,
+ "routine_failed": false,
+ "implausible": null,
+ "coefficients": {
+  "cd": 0.018548532314919906,
+  "cdp": 0.0067645922056170545,
+  "cdv": 0.011783940109302853,
+  "cl": 0.19065060233727543,
+  "cmy": 0.009835619823117312
+ },
+ "directions": {
+  "lift_index": 3,
+  "velocity_direction": [
+   0.9975640502598242,
+   0.0,
+   0.0697564737441253
+  ],
+  "lift_direction": [
+   -0.0697564737441253,
+   0.0,
+   0.9975640502598242
+  ],
+  "velocity_error": 0.0,
+  "lift_error": 0.0
+ },
+ "options_effective": {
+  "equationType": "RANS",
+  "turbulenceModel": "SA",
+  "eddyVisInfRatio": 0.21,
+  "liftIndex": 3,
+  "useANKSolver": true,
+  "useNKSolver": false,
+  "L2Convergence": 1e-06,
+  "nCycles": 0,
+  "MGCycle": "sg",
+  "ANKSubspaceSize": 10,
+  "ANKPCILUFill": 1,
+  "ANKASMOverlap": 1
+ },
+ "overrides": {
+  "restartFile": "runs/n11_today_VVC_a4_turbksp/adflow/v7_a4_000_vol.cgns",
+  "nCycles": 0,
+  "writeVolumeSolution": false,
+  "writeSurfaceSolution": false,
+  "outputDirectory": "runs/n11_today_VVC_a4_turbksp/adflow_extras",
+  "ANKUseTurbDADI": false
+ },
+ "seconds": 6.1,
+ "memory": {
+  "ranks": 6,
+  "peak_rss_gib_sum": 1.3223724365234375,
+  "peak_rss_gib_largest_rank": 0.22707748413085938,
+  "cells": 1075074,
+  "gib_per_million_cells": 1.2300292226613585,
+  "law_ank_only_gib": 10.462785020000002,
+  "law_ank_then_nk_gib": 11.68020004
+ },
+ "history": {
+  "resrho": [
+   1.9964882306723424e-05
+  ],
+  "cl": [
+   0.19065060233727543
+  ],
+  "cd": [
+   0.018548532314919913
+  ],
+  "cdp": [
+   0.0067645922056170545
+  ],
+  "cdv": [
+   0.011783940109302855
+  ],
+  "cmy": [
+   0.009835619823117312
+  ],
+  "totalres": [
+   0.16845368214591663
+  ],
+  "iter": [
+   0
+  ]
+ },
+ "extras": {
+  "slice_fractions": [
+   0.5,
+   0.8,
+   0.9,
+   0.95,
+   0.98
+  ],
+  "lift_distribution": "150 segments along y: lift_distribution.dat",
+  "slices": "slices.dat"
+ }
+}

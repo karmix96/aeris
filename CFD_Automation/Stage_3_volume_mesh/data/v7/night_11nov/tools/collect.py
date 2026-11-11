@@ -143,6 +143,19 @@ def summarise(d: Path) -> dict:
                     "adflow_peak_gib_sum": m.get("peak_rss_gib_sum"), "adflow_peak_largest_rank_gib": m.get("peak_rss_gib_largest_rank"),
                     "law_ank_only_gib": m.get("law_ank_only_gib"), "law_ank_then_nk_gib": m.get("law_ank_then_nk_gib"),
                     "overrides": r.get("overrides"), "extras": r.get("extras"), "solver_seconds": r.get("seconds")}
+        yp = jl(d / sub / "yplus.json")
+        if yp:
+            row["yplus"] = {"max": yp["wing_surface"]["max"], "p99": yp["wing_surface"]["p99"],
+                            "median": yp["wing_surface"]["median"], "share_above_design": yp["wing_surface"]["share_above_design"],
+                            "design": yp.get("design"), "all_walls_max": yp["max"], "all_walls_p99": yp["p99"],
+                            "scope": "wing surface (upper, lower, nose); all_walls_* include the base and the tip cap",
+                            "zones": [{k: z[k] for k in ("label", "max", "p99", "median", "share_above_design")} for z in yp["zones"]]}
+        hl = jl(d / sub / "history_from_log.json")
+        if hl:
+            row["log_history"] = {"rows": hl["rows"], "relative_residual_last": hl["relative_residual_last"],
+                                  "settled_rule": hl["settled_rule"], "force_wander_since": hl["force_wander_since"]}
+        if t.get("wall_seconds_monotonic") is not None:
+            row["wall_seconds"] = t["wall_seconds_monotonic"]
         if sub == "adflow" and key in res:
             row |= {"verdict": res[key].get("verdict"), "why": res[key].get("why"),
                     "settled": res[key].get("settled"), "cd_wander_counts": res[key].get("cd_wander_counts"),

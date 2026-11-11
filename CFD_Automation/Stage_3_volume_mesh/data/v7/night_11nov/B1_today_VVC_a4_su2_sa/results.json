@@ -1,0 +1,47 @@
+{
+ "ADflow SA": {
+  "solver": "ADflow",
+  "iterations": 182,
+  "relative_residual": 6.134780391862603e-05,
+  "converged": false,
+  "coefficients": {
+   "cd": 0.01854663846187811,
+   "cdp": 0.006762813137123904,
+   "cdv": 0.011783825324754206,
+   "cl": 0.19064378497219847,
+   "cmy": 0.009836633081035323
+  },
+  "settled": false,
+  "reason": "no force history in result.json",
+  "verdict": "not accepted",
+  "why": [
+   "not converged",
+   "no force history in result.json"
+  ]
+ },
+ "SU2 SA": {
+  "solver": "SU2",
+  "iterations": 582,
+  "rms_rho_final": -8.562692582,
+  "orders_dropped": 2.8285942990000006,
+  "converged": false,
+  "coefficients": {
+   "cl": 0.1883408505,
+   "cd": 0.0067702949,
+   "cmy": 0.01245870253
+  },
+  "settled": false,
+  "window": 200,
+  "cd_wander_counts": 9.513230940000001,
+  "cl_wander_rel": 0.024925805992364783,
+  "forces_breakdown": "forces_breakdown.dat",
+  "verdict": "not accepted",
+  "why": [
+   "not converged",
+   "forces not settled"
+  ]
+ },
+ "SU2 SST+LM": {
+  "verdict": "not run"
+ }
+}

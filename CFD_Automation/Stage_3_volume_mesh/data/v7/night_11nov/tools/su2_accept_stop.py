@@ -5,7 +5,8 @@ solve/read_results.py (6 orders of density residual and settled forces) is usual
 would use its whole cap for nothing. This watcher reads history.csv every --every seconds and applies the rule with
 read_results.py's own code (imported, not copied). Once it holds, it waits for SU2's next output write (surface,
 restart and forces breakdown: OUTPUT_WRT_FREQ iterations), so the files on disk hold a state at or after acceptance,
-then sends SIGTERM to the SU2_CFD ranks. No solver setting changes. The record goes to <folder>/accept_stop.json.
+then sends SIGTERM to the SU2_CFD ranks; with --immediate it stops at once, since SU2 8.5.0 writes all its
+output files on SIGTERM. No solver setting changes. The record goes to <folder>/accept_stop.json.
 
     python su2_accept_stop.py --folder runs/<case>/su2_sa --write-every 500 &
 """
@@ -55,6 +56,9 @@ def main(argv=None) -> int:
     p.add_argument("--every", type=float, default=60.0)
     p.add_argument("--write-every", type=int, default=500, help="OUTPUT_WRT_FREQ of the case file")
     p.add_argument("--wait", type=float, default=600.0)
+    p.add_argument("--immediate", action="store_true",
+                   help="stop as soon as the rule holds: SU2 8.5.0 catches SIGTERM and writes all its output files "
+                        "('Interrupt signal (15) received, saving files and exiting', B1, 12 Nov 01:26)")
     a = p.parse_args(argv)
     hist = a.folder / "history.csv"
     rep = {"folder": str(a.folder), "rule": "solve/read_results.py: 6 orders of rms[Rho] (or 1e-12) and settled forces",
@@ -75,7 +79,7 @@ def main(argv=None) -> int:
             outs = [a.folder / f for f in OUTPUTS]
             fresh = all(f.exists() and f.stat().st_mtime > t_acc for f in outs)
             quiet = fresh and time.time() - max(f.stat().st_mtime for f in outs) > 30
-            if quiet:
+            if quiet or a.immediate:
                 last = state(hist) or s
                 for pid in ranks("SU2_CFD"):
                     try:

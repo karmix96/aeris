@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -55,9 +56,19 @@ def copy(run: str, case: str, sub: str) -> Path:
                 shutil.copy2(c / sub / f, d / sub / f)
         if (c / f"{sub}_read_results.txt").exists():
             shutil.copy2(c / f"{sub}_read_results.txt", d / f"{sub}_read_results.txt")
-        yp = yplus(c / sub / "surface_flow.csv", c / "case.json")
-        if yp:
-            (d / sub / "yplus.json").write_text(json.dumps(yp, indent=1))
+        # SU2 8.5.0's surface CSV holds only the conservative variables; Cp and Y_Plus are in the Tecplot file
+        if (c / sub / "surface_flow.dat").exists():
+            import subprocess
+            r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "su2_surface_forces.py"),
+                                str(c / sub / "surface_flow.dat"), str(c / "case.json"), str(d / sub / "surface_forces.json")],
+                               capture_output=True, text=True)
+            if r.returncode:
+                (d / sub / "surface_forces_error.txt").write_text(r.stdout + r.stderr)
+        for f in ("accept_stop.json",):
+            if (c / sub / f).exists():
+                shutil.copy2(c / sub / f, d / sub / f)
+        for f in sorted(c.glob(f"{sub}_*.json")) + sorted(c.glob(f"{sub}_*_log.txt")):
+            shutil.copy2(f, d / f.name)
     (d / "source.json").write_text(json.dumps({"run": run, "case_dir": case, "solver_folder": sub}, indent=1))
     return d
 
@@ -94,15 +105,10 @@ def forces_breakdown(p: Path) -> dict:
         s = line.strip()
         for key, name in (("Total CL:", "cl"), ("Total CD:", "cd"), ("Total CMy:", "cmy")):
             if s.startswith(key):
-                parts = s.replace("|", " ").split()
-                try:
-                    out[name] = float(parts[2])
-                    i = parts.index("Pressure")
-                    out[name + "p"] = float(parts[i + 2])
-                    j = parts.index("Friction")
-                    out[name + "v"] = float(parts[j + 2])
-                except (ValueError, IndexError):
-                    pass
+                # "Total CD:  0.006770 | Pressure (  -94%):  -0.006548 | Friction (  194%):  0.013483 | Momentum ..."
+                m = re.match(r"Total \w+:\s*(\S+)\s*\|\s*Pressure\s*\([^)]*\):\s*(\S+)\s*\|\s*Friction\s*\([^)]*\):\s*(\S+)", s)
+                if m:
+                    out[name], out[name + "p"], out[name + "v"] = (float(v) for v in m.groups())
     return {k: v for k, v in out.items() if k in ("cl", "cd", "cmy", "cdp", "cdv")}
 
 
@@ -154,8 +160,6 @@ def summarise(d: Path) -> dict:
         if hl:
             row["log_history"] = {"rows": hl["rows"], "relative_residual_last": hl["relative_residual_last"],
                                   "settled_rule": hl["settled_rule"], "force_wander_since": hl["force_wander_since"]}
-        if t.get("wall_seconds_monotonic") is not None:
-            row["wall_seconds"] = t["wall_seconds_monotonic"]
         if sub == "adflow" and key in res:
             row |= {"verdict": res[key].get("verdict"), "why": res[key].get("why"),
                     "settled": res[key].get("settled"), "cd_wander_counts": res[key].get("cd_wander_counts"),
@@ -173,7 +177,19 @@ def summarise(d: Path) -> dict:
                     "coefficients": v.get("coefficients")}
         if fb:
             row["forces_breakdown"] = fb
-        row["yplus"] = jl(d / sub / "yplus.json")
+        sf = jl(d / sub / "surface_forces.json")
+        if sf:
+            w = sf["yplus"]["wing surface"]
+            row["yplus"] = {"max": w["max"], "p99": w["p99"], "median": w["median"], "share_above_1.3": w["share_above_1.3"],
+                            "all_walls_max": sf["yplus"]["all wall nodes"]["max"], "all_walls_p99": sf["yplus"]["all wall nodes"]["p99"],
+                            "scope": "wing-surface nodes (without the base and the tip cap); SU2's y+ is at the first node "
+                                     "off the wall (ADflow's at the first cell centre: about half)"}
+            row["hand_integrated_pressure"] = {k: v["cdp_counts"] for k, v in sf["pressure_force"].items()}
+            row["surface_orientation"] = {"file": sf["file_orientation"], "xz_closure": sf["area_vector_sum_xz_over_total_area"]}
+        if (d / sub / "accept_stop.json").exists():
+            row["accept_stop"] = jl(d / sub / "accept_stop.json")
+    if t.get("wall_seconds_monotonic") is not None:             # the monotonic clock where the wrapper had it
+        row["wall_seconds"] = t["wall_seconds_monotonic"]
     if row.get("exit") not in (None, 0) and not row.get("iterations") and not row.get("verdict"):
         row["verdict"] = f"failed to start (exit {row['exit']}; see REPORT.md section 4)"
         row["watchdog_peak_gib"] = None                         # a start-up flash, not a run's memory

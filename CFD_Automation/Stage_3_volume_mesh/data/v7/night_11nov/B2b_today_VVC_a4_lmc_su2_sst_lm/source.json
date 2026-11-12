@@ -1,0 +1,5 @@
+{
+ "run": "B2b_today_VVC_a4_lmc_su2_sst_lm",
+ "case_dir": "runs/n11_today_VVC_a4_lmc",
+ "solver_folder": "su2_sst_lm"
+}

@@ -1,7 +1,8 @@
 # V7 night run, 11–12 Nov 2026: the first solves on Stage 3 meshes
 
 Claude Code, alone on Mike's desktop, following `solve/NIGHT_11NOV.md`. This file is rewritten after every finished
-run. Last update: 12 Nov, 04:50 (every run done but B2b, SU2 SST + LM, running since 04:18; it stops by 06:30).
+run. Last update: 12 Nov, 06:55, the final version: every run is done. The last, B2b (SU2 SST + LM), ended at its
+150-minute cap at 06:50; no run was started after 04:18.
 
 One wing: BWB reference wing 0, Re 3 × 10⁵ on the mean chord, Mach 0.1, the transition band on. One mesh level ran:
 today's VVC (1,075,074 cells). This desktop has 16 GB, not 48–52 GB, and VC does not fit.
@@ -15,11 +16,15 @@ today's VVC (1,075,074 cells). This desktop has 16 GB, not 48–52 GB, and VC do
   (2.1 to 2.8 orders). As written its compressible Roe scheme at Mach 0.1 overshoots the stagnation pressure
   (wall Cp to 2.3, isentropic 1.0025) and gives a negative pressure drag. **`LOW_MACH_CORR= YES` removes both**, and
   then SU2's Cp agrees with ADflow's (Q3).
+- **SU2 SST + LM (B2b) did not converge in its 150-minute cap either**: 2.7 orders in 2,119 iterations, the CFL cut
+  more than fivefold in one iteration 239 times, and CL still rising at the end (0.196 at iteration 1,107, 0.232 at
+  2,118). The upper side separates laminar from x/c ≈ 0.55 to the trailing edge over most of the span. The friction
+  drag is 48.9 counts, the laminar flat-plate value (49.7), against SA's 105 to 118 near the turbulent one (122) (Q1).
 - **The wake stays inside the fan at −5° and at +10°**, at least 0.067 local chords from its edges (Q5, decision 111).
 - **Memory at VVC: ADflow 9.6 to 10.2 GiB per million cells** (S8's ANK-only law within 5 %), SU2 6.8 to 8.7. The M
   level (9.5 M cells) needs 70 to 97 GiB for ADflow, so not 48 GB; the light M (5.5 M) 45 to 56 GiB (Q2).
-- **The first cell is 7 to 14 % taller than the y⁺ 1.3 design** in the median, more at the nose and on the tip cap
-  (Q7).
+- **The first cell is 7 to 14 % taller than the y⁺ 1.3 design** in the median with SA, more at the nose and on the
+  tip cap (Q7). With SST + LM, laminar over much of the wall, the median is 1.14.
 - **The pyGeo meshes are the numpy meshes**: 20 of 20, nodes 4 × 10⁻¹¹ apart (Q6).
 - **Q4 is not answered**: A2 and A3 (VC and light VC) do not fit 16 GB.
 - **The acceptance rule cannot accept a converged ADflow run here.** It needs at least 225 iterations to judge
@@ -66,7 +71,7 @@ ADflow's at the first cell centre (Q7).
 | B1b | SU2 SA, `LINEAR_SOLVER_ITER= 30` | 4° | 15.4 min | 117 | 2.07 | not accepted: not converged (stopped) | 9.25 | 8.60 | 0.1980 | 65.9 | −0.00479 | 0.01138 | 0.00831 | 4.81, 3.85 |
 | B1c | SU2 SA, 30 linear iterations + `LOW_MACH_CORR= YES` | 4° | 47.6 min | 436 | 2.16 | not accepted: not converged (stopped) | 9.37 | 8.72 | 0.1982 | 143.6 | 0.00388 | 0.01048 | 0.00766 | 4.61, 3.91 |
 | B2, try 1 | SU2 SST + LM, 30 linear iterations + low-Mach correction | 4° | 0.7 min | 3 | | **killed by the watchdog** at 32 s (4.5) | ≥ 11.96 | ≥ 11.1 | | | | | | |
-| B2b, try 2 | SU2 SST + LM, low-Mach correction | 4° | running since 04:18 | | | | 9.18 | 8.54 | | | | | | |
+| B2b, try 2 | SU2 SST + LM, low-Mach correction | 4° | 150.1 min (the cap) | 2119 | 2.72 | not accepted: not converged, forces not settled (ended at the cap) | 9.38 | 8.73 | 0.2322 | 109.5 | 0.00606 | 0.00489 | −0.00619 | 4.71, 3.90 |
 
 **The acceptance rule and ADflow.** `read_results.py` judges "settled" over the last 20 % of the record, at least
 200 iterations, and needs 25 more before it judges at all: 225. A1b (153 iterations) and A5 (136) are too short.
@@ -114,7 +119,22 @@ the freestream exactly (velocity and lift direction errors 0.0).
   (`VENKAT_LIMITER_COEFF= 0.05`); it was not tested, as B1's two tries went to the CFL and to the pressure field.
 - With the low-Mach correction as well (B1c): 2.2 orders in 436 iterations, the CFL still reset to 1 at times, CD
   still moving 0.8 counts per 100 iterations at the end.
-- SST + LM (B2b): see the run table; running.
+- SST + LM with the low-Mach correction (B2b) ran to its 150-minute cap: 2.7 orders in 2,119 iterations
+  (rms[Rho] from −5.73 to −8.45; the criterion is −12). The CFL cycled as in B1: it fell more than fivefold in one
+  iteration 239 times, down to 1 in every 500-iteration block, and the median of the average CFL was 7 to 32. The
+  residual fell slowest in the middle, 0.04 orders between iterations 500 and 1,000. At the end the forces were
+  still moving: CL +0.0043 per 100 iterations (0.196 at 1,107, 0.232 at 2,118), CMy falling (+0.0101 at 1,107,
+  −0.0062 at 2,118), CD back up from about 104 counts near iteration 1,500 to 109.5.
+- In that last state the upper side has reversed friction (`Skin_Friction_Coefficient_x` < 0) from x/c ≈ 0.55 to
+  the trailing edge at y/s 0.48 to 0.95, and from 0.37 to 0.71 at y/s 0.26: a laminar separation. LM's effective
+  intermittency (`LM_gamma_eff`) on the wall nodes stays below 0.5 at all five stations checked (y/s 0.26 to 0.95,
+  both sides). The friction drag agrees: 48.9 counts, where a laminar flat plate at Re 3 × 10⁵ with this wing's
+  wetted area (2.05 S_ref) gives 49.7 (1.328/√Re) and a turbulent one 121.9 (0.074/Re^0.2). SU2 SA (B1c) has 104.8
+  and ADflow SA 117.8. So in this state the wall is laminar almost everywhere. The largest wall Cp is 1.035 (5 nodes above the isentropic 1.0025), so the low-Mach correction holds here too. A
+  laminar separation still moving fits the rising lift and the falling moment, but the state is not converged, and
+  VVC under-resolves the bubble (section 6). Cp against ADflow SA:
+  `B2b_today_VVC_a4_lmc_su2_sst_lm/su2_sst_lm/cp_against_adflow_A1b.png` (the aft upper side scatters between
+  neighbouring nodes outboard of y/s 0.8).
 
 ### Q2. How much memory and time per million cells, really?
 
@@ -140,13 +160,14 @@ fixed), and S8's fixed part (2.69 GiB, the ANK-only law) with tonight's slope.
 | SU2 SA, as written (B1) | 6.81 | 44–65 GiB | 26–37 GiB |
 | SU2 SA, 30 linear iterations (B1b) | 8.60 | 61–82 GiB | 36–47 GiB |
 | SU2 SA, 30 linear iterations + low-Mach correction (B1c) | 8.71 | 62–83 GiB | 37–48 GiB |
-| SU2 SST + LM, low-Mach correction (B2b) | 8.54 | 60–81 GiB | 36–47 GiB |
+| SU2 SST + LM, low-Mach correction (B2b) | 8.73 | 62–83 GiB | 37–48 GiB |
 | SU2 SST + LM, 30 linear iterations (B2 try 1, killed: a lower bound) | ≥ 11.1 | ≥ 85 GiB | ≥ 50 GiB |
 | S8's laws (ANK only; ANK then NK) | | 71; 91 GiB | 43; 54 GiB |
 
 On 48 GB, ADflow's M does not fit by either bound, and the light M fits only by the lower bound, without margin.
-SU2 SA as written fits the light M; with 30 linear iterations it needs 37 to 48 GiB for it. SST + LM costs 25 % more
-than SA at the same settings (9.18 against 7.32 GiB). These are extrapolations from 1.08 M cells: the second point
+SU2 SA as written fits the light M; with 30 linear iterations it needs 37 to 48 GiB for it. SST + LM with the
+low-Mach correction peaked at 9.38 GiB, 28 % above SA as written (7.32 GiB); on SA the low-Mach correction itself
+added 0.12 GiB (B1b to B1c). B2b grew by 0.2 GiB after its start (9.18 GiB). These are extrapolations from 1.08 M cells: the second point
 (VC, 2.3 M cells) needs a machine with more than 16 GB.
 
 **ADflow time.** A1b converged in 31.2 min on 6 ranks: **29.0 min per million cells** (S8's law: 35.7). A4 at −5°
@@ -155,7 +176,8 @@ in practice: the iterations grow with the cells). A1 averaged 10.0 s per iterati
 iterations were slower as the linear solves grew (A1: from 20 to 33 inner iterations per step).
 
 **SU2 time.** No SU2 run converged, so there is no time to converge. Per iteration on 6 ranks: SA 3.0 s as written,
-about 8 s with 30 linear iterations (B1b) and 6.5 s with the low-Mach correction too (B1c); SST + LM 4.3 s (B2b).
+about 8 s with 30 linear iterations (B1b) and 6.5 s with the low-Mach correction too (B1c); SST + LM with the
+low-Mach correction and 10 linear iterations 4.25 s (B2b: 2,119 iterations in 150.1 min).
 
 ### Q3. Do ADflow SA and SU2 SA agree on one grid?
 
@@ -241,6 +263,7 @@ at the first node off the wall; ADflow at the first cell centre, half as far, so
 | | Largest | 99 % | Median | Above 1.3 |
 | --- | --- | --- | --- | --- |
 | SU2, B1c (physical pressure field, not converged), wing-surface nodes | 4.61 | 3.91 | 1.39 | 60 % |
+| SU2, B2b (SST + LM, not converged), wing-surface nodes | 4.71 | 3.90 | 1.14 | 42 % |
 | ADflow, A1b (converged), wing-surface faces, ×2 | 5.83 | 3.84 | 1.48 | |
 | ADflow, A1b, as reported (cell centre) | 2.92 | 1.92 | 0.74 | 10.6 % above 1.3 |
 
@@ -255,7 +278,9 @@ ADflow by zone (as reported, cell centre):
 | trailing-edge base | 9.54 | 8.67 | 2.12 | 67 % |
 
 The nose (where the friction peaks) and the tip cap are the zones above the rest. The base is a separated region;
-its y⁺ is not a wall-resolution measure. The largest SU2 value sits at the tip (y/s 1.0).
+its y⁺ is not a wall-resolution measure. The largest SU2 value sits at the tip (y/s 1.0), in B1c and in B2b. B2b's
+median is lower because its friction is lower: much of its wall is laminar or separated (Q1). So the y⁺ a cell
+gets depends on the model as well as the mesh.
 
 ## 4. What failed
 
@@ -302,6 +327,16 @@ its y⁺ is not a wall-resolution measure. The largest SU2 value sits at the tip
    the two-banner signature (`runs/su2_validation/e387_sa_lm/run.log`), so they ran as two serial copies.
 7. **Exit codes said nothing.** B1, B1b, B1c and the killed B2 all exited 0 (SU2 saves and exits on SIGTERM), and
    A1 exited 0 after SIGUSR2. Every verdict here is from the records, never from an exit code.
+8. **B2b, try 2, did not converge in its cap.** It ran to the plan's 150 minutes. `timeout` sent SIGTERM, SU2 wrote
+   all its files and printed "Exit Success", and the wrapper recorded `timeout`'s exit 124:
+
+   ```
+   timeout 150m mpiexec.hydra -np 6 SU2_CFD ../su2_sst_lm_lmc.cfg        (in runs/n11_today_VVC_a4_lmc/su2_sst_lm)
+   rms[Rho] -8.44917, criterion < -12: not converged (2,119 iterations, 2.72 orders)
+   read_results.py: SU2 SST+LM | not accepted | 2119 | 0.23217 | 0.01095 | -0.00619 | not converged; forces not settled
+   ```
+
+   Both of B2's tries are used, so the plan allows no third.
 
 ## 5. Every solver option changed from the case files
 
@@ -317,7 +352,10 @@ its y⁺ is not a wall-resolution measure. The largest SU2 value sits at the tip
 - **B2, try 1**: `su2_sst_lm_lin30_lmc.cfg`, the case file with `LINEAR_SOLVER_ITER= 30`, `LOW_MACH_CORR= YES` and
   `LINSOL`: B1's two lessons at once, two changes (as written it would have repeated B1's CFL collapse and B1's
   overshoot). Killed for memory.
-- **B2b, try 2**: `su2_sst_lm_lmc.cfg`, the case file with `LOW_MACH_CORR= YES` and `LINSOL`.
+- **B2b, try 2**: `su2_sst_lm_lmc.cfg`, the case file with `LOW_MACH_CORR= YES` and `LINSOL`. Why: try 1 was
+  killed for memory, and the 30 linear iterations were the part that costs memory (B1 to B1b: +1.9 GiB), so try 2
+  dropped them and kept the low-Mach correction. It removed the overshoot (largest Cp 1.035) and did not converge in
+  the cap.
 
 Each changed `.cfg` is in its run folder here, with a comment line at the top that says what changed and why.
 
@@ -343,6 +381,9 @@ Each changed `.cfg` is in its run folder here, with a comment line at the top th
   iteration), B1 at 29 min, B1b at 15 min, B1c at 48 min. ADflow was stopped with SIGUSR2, its own "write and quit"
   (it does not catch SIGTERM), so `result.json` and the solution files were written as at a normal end. SU2 8.5.0
   catches SIGTERM and writes all its files ("Interrupt signal (15) received, saving files and exiting").
+  B2b, the last run, was not stopped early: it started at 04:18, its residual was still falling (the lowest, −8.68,
+  came at iteration 2,081), and nothing else could use the machine (A2, A3, X1 and X2 do not fit). So it ran to its
+  cap at 06:50. The plan's 06:00 rule stops new runs, not running ones.
 - **B1's second try went after A4 and A5.** A4 and A5 (ADflow with A1b's option) answered Q5 for certain; B1's second
   try might not converge, so it waited.
 - **SU2 runs would end at the plan's acceptance rule** (`tools/su2_accept_stop.py`, applying `read_results.py`'s own
@@ -366,6 +407,9 @@ Each changed `.cfg` is in its run folder here, with a comment line at the top th
 - This folder: `REPORT.md`, `summary.json` (every number, by run), `run_table.md`, one folder per run with its small
   files, the step-1 and step-2 records (`pygeo_mesh_check_*.txt`, `v5_export_printout.txt`,
   `r2_v5_export_pygeo.json`, `whatif_*_printout.txt`), and `tools/`.
+- The SU2 runs' `history.csv` files (named in the plan's list) are in git from the last commit on: the repo's
+  `.gitignore` (line 57, `history.csv`) had kept them out of the earlier commits of the night, so they were
+  added with `git add -f`, as the PNGs were.
 - `solve/wake_check.py` (new, committed) and `data/studies/pygeo_mesh_check.json` (committed).
 - **Not committed:** `solve/run_adflow.py` with the three fixes (the plan names only this folder):
   `git apply data/v7/night_11nov/tools/run_adflow_night_fixes.patch` on a clean checkout, or keep this checkout's copy.

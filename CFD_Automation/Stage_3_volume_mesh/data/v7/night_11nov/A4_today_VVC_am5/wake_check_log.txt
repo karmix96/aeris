@@ -1,0 +1,87 @@
+{
+ "case": "runs/n11_today_VVC_am5",
+ "alpha_deg": -5.0,
+ "volume_file": "runs/n11_today_VVC_am5/adflow/v7_a-5_000_vol.cgns",
+ "station_k": 11,
+ "y": 1.4437500000000065,
+ "y_over_semispan": 0.4812500000000022,
+ "local_chord": 0.9407994280302282,
+ "x_te": 1.6557630729894701,
+ "z_te": 0.09258140055010478,
+ "band": {
+  "alpha_lo_deg": -5.0,
+  "alpha_hi_deg": 10.0,
+  "margin_c": 0.05,
+  "length_local_c": 2.0,
+  "source": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_today_VVC_e32d995a_re3e5/whatif_volume.yaml"
+ },
+ "speed": "|V| from VelocityX/Y/Z",
+ "v_inf_estimate": 0.11832010746002197,
+ "lines": [
+  {
+   "d_local_c": 0.25,
+   "x": 1.8909629299970272,
+   "z_wake": 0.08910014921285542,
+   "speed_min": 0.07538854385231364,
+   "deficit": 0.3628425001406803,
+   "band_lo": 0.023669263267112363,
+   "band_hi": 0.18370311712873244,
+   "inside": true,
+   "margin_to_band_edge_c": 0.06954817785416505,
+   "z_wake_minus_z_te_c": -0.0037003119193409037,
+   "wake_angle_deg": -0.8479871022535377,
+   "at_window_edge": false
+  },
+  {
+   "d_local_c": 0.5,
+   "x": 2.126162787004584,
+   "z_wake": 0.08620469361845418,
+   "speed_min": 0.08672127093098062,
+   "deficit": 0.2670622703729202,
+   "band_lo": 0.0017970973856313577,
+   "band_hi": 0.22778486230584868,
+   "inside": true,
+   "margin_to_band_edge_c": 0.08971901312647351,
+   "z_wake_minus_z_te_c": -0.006777966420538378,
+   "wake_angle_deg": -0.7766501682176349,
+   "at_window_edge": false
+  },
+  {
+   "d_local_c": 1.0,
+   "x": 2.596562501019698,
+   "z_wake": 0.08505275853866956,
+   "speed_min": 0.09688064835648907,
+   "deficit": 0.1811987798504736,
+   "band_lo": -0.041947234377330646,
+   "band_hi": 0.31594835266008114,
+   "inside": true,
+   "margin_to_band_edge_c": 0.13499157113849738,
+   "z_wake_minus_z_te_c": -0.00800238795552639,
+   "wake_angle_deg": -0.45849326901523985,
+   "at_window_edge": false
+  },
+  {
+   "d_local_c": 2.0,
+   "x": 3.5373619290499265,
+   "z_wake": 0.056418864988483475,
+   "speed_min": 0.10523923417558291,
+   "deficit": 0.1105549476352431,
+   "band_lo": -0.12943589790325466,
+   "band_hi": 0.4922753333685461,
+   "inside": true,
+   "margin_to_band_edge_c": 0.19754982555725636,
+   "z_wake_minus_z_te_c": -0.03843809263079121,
+   "wake_angle_deg": -1.1010346897887577,
+   "at_window_edge": false
+  }
+ ],
+ "all_inside": true,
+ "zones_matched": {
+  "WU_in": "WU_in",
+  "B_in": "B_in",
+  "WL_in": "WL_in"
+ },
+ "locations": [
+  "CellCenter"
+ ]
+}

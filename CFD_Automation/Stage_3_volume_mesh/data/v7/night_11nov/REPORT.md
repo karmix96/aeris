@@ -1,7 +1,7 @@
 # V7 night run, 11–12 Nov 2026: the first solves on Stage 3 meshes
 
 Claude Code, alone on Mike's desktop, following `solve/NIGHT_11NOV.md`. **In progress.** This file is rewritten after
-every finished run. Last update: 12 Nov, 01:55 (A1, A1b, B1, B1b done; A4 running since 01:46, then A5, then B1c and B2).
+every finished run. Last update: 12 Nov, 03:00 (A1, A1b, B1, B1b, A4 done; A5 running since 02:53, then B1c and B2).
 
 One wing: BWB reference wing 0, Re 3 × 10⁵ on the mean chord, Mach 0.1, the transition band on.
 
@@ -35,13 +35,17 @@ without the trailing-edge base and the tip cap (section 3, Q7).
 | A1 | today VVC | 1,075,074 | ADflow SA, as written | 4° | 30.2 min | 182 | 4.21 | not accepted: not converged; stopped, see 6 | 10.28 | 9.57 | 0.1906 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
 | A1b | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | 4° | 31.2 min | 153 | 6.01 | **converged** (9.76 × 10⁻⁷); the rule says "not accepted": see below | 10.99 | 10.22 | 0.1907 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
 | B1 | today VVC | 1,075,074 | SU2 SA, as written | 4° | 29.3 min | 582 | 2.83 | not accepted: not converged, forces not settled; stopped, see 6 | 7.32 | 6.81 | 0.1883 | 67.7 | −0.00621 | 0.01298 | 0.01246 | 4.82, 3.88 (first node) |
+| A4 | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | −5° | 63.4 min | 239 | 6.00 | **converged** (9.99 × 10⁻⁷); the rule says "forces not settled": see below | 10.99 | 10.23 | −0.4484 | 336.5 | 0.02422 | 0.00944 | 0.03344 | |
 | B1b | today VVC | 1,075,074 | SU2 SA, `LINEAR_SOLVER_ITER= 30` | 4° | 15.4 min | 117 | 2.4 | not accepted: not converged; stopped, see 6 | 9.25 | 8.60 | 0.1980 | 65.9 | −0.00479 | 0.01139 | 0.00831 | |
 
 **A1b converged and its forces are settled, but the plan's rule cannot say so.** `read_results.py` needs at least
 225 iterations before it judges "settled" (the last 20 %, at least 200, plus 25); A1b converged in 153. Measured from
 ADflow's own log: since iteration 100, CD moved 0.0096 counts and CL 0.008 % (the rule allows 0.5 counts and
-0.1 %). A1: since iteration 100, 0.04 counts and 0.009 %. The rule is unchanged; Mike decides whether ADflow needs a
-shorter window. (A1 and A1b also lost their history from `result.json`: section 4.3. The numbers here are from
+0.1 %). A1: since iteration 100, 0.04 counts and 0.009 %. A4 (239 iterations) is long enough to judge, and the rule says "forces not settled": its
+200-iteration window (iterations 40 to 239) still holds the start-up (CD moved 14.1 counts in it). Over its last 50
+iterations CD moved 0.12 counts and CL 0.044 %. So for a converged ADflow run the rule either cannot judge (fewer
+than 225 iterations) or judges the start-up. The rule is unchanged; Mike decides whether ADflow needs a shorter
+window (for example the last 20 % with no 200-iteration minimum). (A1 and A1b also lost their history from `result.json`: section 4.3. The numbers here are from
 `adflow/history_from_log.json`.)
 
 ## 3. The answers
@@ -70,7 +74,25 @@ The largest rank held 1.81 GiB (A1) and 1.93 GiB (A1b). The watchdog's sampled p
 swapped (0.019 GiB at most). The host paged up to 2.1 GiB into its pagefile and Windows went down to 0.88 GiB free;
 nothing slowed or failed.
 
-**Q2, ADflow time.** A1b converged in 31.2 min on 6 ranks: **29.0 min per million cells** (S8's law: 35.7). A1
+**Q2, what that gives for M and the light M (decision 113).** One mesh size cannot give the plan's straight line
+`GiB = a + b × M cells`. Two bounds instead: all memory proportional to the cells (an upper bound: some memory is
+fixed), and S8's fixed part (2.69 GiB, the ANK-only law) with tonight's slope.
+
+| Run | GiB per M cells | M, 9.5 M cells | light M, 5.5 M cells |
+| --- | --- | --- | --- |
+| ADflow, as written (A1) | 9.57 | 70–91 GiB | 42–53 GiB |
+| ADflow, `ANKUseTurbDADI=false` (A1b) | 10.22 | 76–97 GiB | 45–56 GiB |
+| SU2 SA, as written (B1) | 6.81 | 44–65 GiB | 26–37 GiB |
+| SU2 SA, 30 linear iterations (B1b) | 8.60 | 61–82 GiB | 36–47 GiB |
+| S8's laws (ANK only; ANK then NK) | | 71; 91 GiB | 43; 54 GiB |
+
+On 48 GB, ADflow's M does not fit by either bound; the light M fits only by the lower bound, without margin. SU2
+SA (as written) fits the light M; its M fits only by the lower bound. These are extrapolations from 1.08 M cells:
+the second point (VC, 2.3 M cells) needs a machine with more than 16 GB.
+
+**Q2, ADflow time.** A1b converged in 31.2 min on 6 ranks: **29.0 min per million cells** (S8's law: 35.7). Linear in
+the cells, that is about 4.6 h for M and 2.7 h for the light M on 6 ranks (more in practice: iterations grow with
+the cells). A1
 averaged 10.0 s per iteration and A1b 12.2 s; in both, the later iterations were slower as the linear solves grew
 (A1: 20 to 33 inner iterations per step).
 
@@ -138,7 +160,22 @@ alone is about +21 counts).
 ADflow's median 0.74 corresponds to about 1.48 at the first node. **Both say the first cell is about 20 % taller
 than the y⁺ 1.3 design over most of the wing**, more at the nose and the tip cap.
 
-Q5: waiting for A4 and A5.
+**Q5, the wake against the fan (−5° measured; +10° running).** On the station plane nearest mid semi-span (station 11,
+y/s 0.481, local chord 0.941), the wake centre is the lowest velocity magnitude on vertical lines behind the trailing
+edge (`solve/wake_check.py`). Heights are from the middle of the two trailing-edge corners, in local chords.
+
+| α | d behind the TE | Wake centre | Band (the mesh's fan) | Wake angle | Margin to the nearest edge | Velocity deficit |
+| --- | --- | --- | --- | --- | --- | --- |
+| −5° (A4) | 0.25 c | −0.004 c | −0.073 to +0.097 c | −0.9° | 0.070 c | 36 % |
+| −5° | 0.5 c | −0.007 c | −0.097 to +0.144 c | −0.8° | 0.090 c | 27 % |
+| −5° | 1 c | −0.008 c | −0.143 to +0.237 c | −0.5° | 0.135 c | 18 % |
+| −5° | 2 c | −0.038 c | −0.236 to +0.425 c | −1.1° | 0.198 c | 11 % |
+| 4° (A1b, a test of the script) | 0.25 / 0.5 / 1 / 2 c | +0.015 / +0.030 / +0.052 / +0.092 c | | 3.5° / 3.4° / 3.0° / 2.6° | ≥ 0.08 c | 22 % at 0.5 c |
+
+At −5° the wake does not follow the freestream: it leaves the trailing edge at about −1°, turned up by the upwash of
+the negative lift (CL −0.45). It is inside the fan everywhere, at least 0.07 c from its edge. At 4° it leaves at
+3.5° and bends down to 2.6°, below the freestream, as the downwash should make it. Figures:
+`A4_today_VVC_am5/adflow/wake_check.png`, `A1b_today_VVC_a4_turbksp/adflow/wake_check_a4_test.png`.
 
 ## 4. What failed
 
@@ -225,4 +262,12 @@ and not committed: the plan names only this folder.
 
 ## 7. What this does not show
 
-Written at the end.
+- **No grid convergence.** Only VVC ran (one level), not VVC and VC: VC needs about 22 GiB for ADflow.
+- **VVC is a preview level** (y⁺ 1.3 by design, wall-normal growth 1.34, past the hard minimums), and it measures
+  above its own design (Q7).
+- **One wing, one Re, one angle** for Q1–Q3 and Q7 (BWB reference wing 0, Re 3 × 10⁵, α 4°).
+- **Q4 (the light rules) is not answered:** A2 and A3 do not fit 16 GB. The light rules also change three things at
+  once, so even A2 against A3 would not say which one matters.
+- **Memory and time from one mesh size**: the M and light-M numbers are extrapolations (Q2).
+- **SU2 8.5.0, not 8.6.0**, and SA-noft2 against ADflow's SA with ft2.
+- **LM on VVC under-resolves the bubbles** (about 7 cells per bubble), so B2's drag is not a transition answer.

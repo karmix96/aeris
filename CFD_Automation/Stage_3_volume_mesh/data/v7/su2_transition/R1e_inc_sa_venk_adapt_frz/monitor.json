@@ -1,0 +1,35 @@
+{
+ "folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/su2t_VVC_a4/R1e_inc_sa_venk_adapt_frz",
+ "rule": "solve/read_results.py: 6 orders of the residual (or 1e-12) and settled forces",
+ "accepted_at": null,
+ "stopped": null,
+ "seconds": 540,
+ "last_state": {
+  "rows": 148,
+  "inner_iter": 147,
+  "residual": "rms[P]",
+  "res_first": -7.663476875,
+  "res_max": -7.663476875,
+  "res_ref": -4.734098,
+  "res_last": -9.265502996,
+  "res_min": -9.347983312,
+  "res_min_at": 126,
+  "orders_dropped": 4.531404996,
+  "rate_last200_orders_per_1000": -7.278154035411707,
+  "rate_last1000_orders_per_1000": -7.278154035411707,
+  "converged": false,
+  "settled": false,
+  "settled_detail": {
+   "settled": false,
+   "reason": "148 iterations: too short to judge",
+   "window": 148
+  },
+  "cl": 0.1958117691,
+  "cd_counts": 167.81082400000003,
+  "cmy": 0.007011709429,
+  "cd_moved_last500_counts": 0.03338880000001987,
+  "cl_moved_last500_rel": 6.402730570092158e-05,
+  "cfl_avg_median_last200": 24.605916205,
+  "linsol_res_median_last200": -4.060086976
+ }
+}

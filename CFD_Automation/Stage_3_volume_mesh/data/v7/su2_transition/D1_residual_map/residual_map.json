@@ -1,0 +1,529 @@
+{
+ "points": 1107836,
+ "residual_fields": {
+  "Residual_Pressure": {
+   "rms_log10": -8.386719141276533,
+   "share_of_sum_of_squares": {
+    "top_0.1%": 0.9893438710839231,
+    "top_1%": 0.9976938884964384,
+    "top_10%": 0.9999531510540458
+   },
+   "largest_1%_by_region": {
+    "wake (behind the TE)": 0.4605,
+    "far field (more than 10 chords)": 0.3038,
+    "around the wing": 0.2352,
+    "trailing-edge corner (5 % of the local chord)": 0.0005
+   },
+   "largest_1%_by_span_y/s_bins_0_.2_.4_.6_.8_.95_1_1.2": [
+    3100,
+    806,
+    1493,
+    605,
+    518,
+    1161,
+    3395
+   ],
+   "largest_10_points": [
+    {
+     "x": 0.1098983,
+     "y": 0.0,
+     "z": 0.1128457,
+     "region": "around the wing",
+     "value": 1.091165e-06
+    },
+    {
+     "x": 0.0409119,
+     "y": 0.0,
+     "z": 0.07288648,
+     "region": "around the wing",
+     "value": 1.05695e-06
+    },
+    {
+     "x": 0.1107002,
+     "y": 0.0,
+     "z": 0.1112328,
+     "region": "around the wing",
+     "value": 9.52436e-07
+    },
+    {
+     "x": 0.7899665,
+     "y": 1.575,
+     "z": 0.07202253,
+     "region": "around the wing",
+     "value": 9.254638e-07
+    },
+    {
+     "x": -0.001163639,
+     "y": 0.0,
+     "z": -0.001939013,
+     "region": "around the wing",
+     "value": 9.066859e-07
+    },
+    {
+     "x": 0.8091608,
+     "y": 1.575,
+     "z": 0.08419164,
+     "region": "around the wing",
+     "value": 8.261716e-07
+    },
+    {
+     "x": 0.1367672,
+     "y": 0.0,
+     "z": 0.1232699,
+     "region": "around the wing",
+     "value": 7.880912e-07
+    },
+    {
+     "x": -0.002283331,
+     "y": 0.0,
+     "z": 0.002007962,
+     "region": "around the wing",
+     "value": 7.500353e-07
+    },
+    {
+     "x": 0.162702,
+     "y": 0.0,
+     "z": 0.1357069,
+     "region": "around the wing",
+     "value": 7.089433e-07
+    },
+    {
+     "x": 0.8087282,
+     "y": 1.575,
+     "z": 0.08512966,
+     "region": "around the wing",
+     "value": 6.19229e-07
+    }
+   ]
+  },
+  "Residual_Velocity_x": {
+   "rms_log10": -7.324121684921173,
+   "share_of_sum_of_squares": {
+    "top_0.1%": 0.7130917960157307,
+    "top_1%": 0.9866264648558211,
+    "top_10%": 0.9998878599934788
+   },
+   "largest_1%_by_region": {
+    "wake (behind the TE)": 0.6525,
+    "far field (more than 10 chords)": 0.2369,
+    "around the wing": 0.1104,
+    "trailing-edge corner (5 % of the local chord)": 0.0003
+   },
+   "largest_1%_by_span_y/s_bins_0_.2_.4_.6_.8_.95_1_1.2": [
+    3163,
+    653,
+    299,
+    24,
+    149,
+    3792,
+    2998
+   ],
+   "largest_10_points": [
+    {
+     "x": 6.842883,
+     "y": 0.13125,
+     "z": 0.01432968,
+     "region": "wake (behind the TE)",
+     "value": 4.738743e-06
+    },
+    {
+     "x": 5.887677,
+     "y": 0.13125,
+     "z": 0.01429866,
+     "region": "wake (behind the TE)",
+     "value": 4.643413e-06
+    },
+    {
+     "x": 0.1367672,
+     "y": 0.0,
+     "z": 0.1232699,
+     "region": "around the wing",
+     "value": 4.499665e-06
+    },
+    {
+     "x": 5.887677,
+     "y": 0.13125,
+     "z": 0.01028902,
+     "region": "wake (behind the TE)",
+     "value": 4.356281e-06
+    },
+    {
+     "x": 6.842883,
+     "y": 0.13125,
+     "z": 0.01032004,
+     "region": "wake (behind the TE)",
+     "value": 4.325975e-06
+    },
+    {
+     "x": 0.8087282,
+     "y": 1.575,
+     "z": 0.08512966,
+     "region": "around the wing",
+     "value": 3.921941e-06
+    },
+    {
+     "x": 8.002139,
+     "y": 0.13125,
+     "z": 0.01434234,
+     "region": "wake (behind the TE)",
+     "value": 3.706864e-06
+    },
+    {
+     "x": 6.842883,
+     "y": 0.13125,
+     "z": 0.01445732,
+     "region": "wake (behind the TE)",
+     "value": 3.644685e-06
+    },
+    {
+     "x": 5.764602,
+     "y": 0.2625,
+     "z": 0.02649718,
+     "region": "wake (behind the TE)",
+     "value": 3.633021e-06
+    },
+    {
+     "x": 5.117714,
+     "y": 0.13125,
+     "z": 0.01423775,
+     "region": "wake (behind the TE)",
+     "value": 3.622767e-06
+    }
+   ]
+  },
+  "Residual_Velocity_y": {
+   "rms_log10": -7.751293464926846,
+   "share_of_sum_of_squares": {
+    "top_0.1%": 0.442105368166503,
+    "top_1%": 0.9253555645473381,
+    "top_10%": 0.9998518100922977
+   },
+   "largest_1%_by_region": {
+    "wake (behind the TE)": 0.5119,
+    "far field (more than 10 chords)": 0.4674,
+    "around the wing": 0.0207
+   },
+   "largest_1%_by_span_y/s_bins_0_.2_.4_.6_.8_.95_1_1.2": [
+    238,
+    214,
+    503,
+    508,
+    1073,
+    3234,
+    5308
+   ],
+   "largest_10_points": [
+    {
+     "x": 0.8194315,
+     "y": 1.575,
+     "z": 0.08972513,
+     "region": "around the wing",
+     "value": 1.191113e-06
+    },
+    {
+     "x": 0.8081617,
+     "y": 1.575,
+     "z": 0.08635571,
+     "region": "around the wing",
+     "value": 1.06102e-06
+    },
+    {
+     "x": 0.8310373,
+     "y": 1.575,
+     "z": 0.09300445,
+     "region": "around the wing",
+     "value": 1.026729e-06
+    },
+    {
+     "x": 0.8087282,
+     "y": 1.575,
+     "z": 0.08512966,
+     "region": "around the wing",
+     "value": 9.790489e-07
+    },
+    {
+     "x": 0.7995928,
+     "y": 1.575,
+     "z": 0.08213998,
+     "region": "around the wing",
+     "value": 9.722139e-07
+    },
+    {
+     "x": 0.785831,
+     "y": 1.575,
+     "z": 0.06977608,
+     "region": "around the wing",
+     "value": 8.844376e-07
+    },
+    {
+     "x": 0.782422,
+     "y": 1.575,
+     "z": 0.06799388,
+     "region": "around the wing",
+     "value": 8.40387e-07
+    },
+    {
+     "x": 65.88855,
+     "y": 3.082136,
+     "z": 1.0033,
+     "region": "far field (more than 10 chords)",
+     "value": 7.017486e-07
+    },
+    {
+     "x": 0.8007064,
+     "y": 1.575,
+     "z": 0.08003252,
+     "region": "around the wing",
+     "value": 6.957266e-07
+    },
+    {
+     "x": 65.88855,
+     "y": 3.114125,
+     "z": 1.0033,
+     "region": "far field (more than 10 chords)",
+     "value": 6.913717e-07
+    }
+   ]
+  },
+  "Residual_Velocity_z": {
+   "rms_log10": -6.804220202513925,
+   "share_of_sum_of_squares": {
+    "top_0.1%": 0.7881047640242907,
+    "top_1%": 0.9940496808306384,
+    "top_10%": 0.9999870734435962
+   },
+   "largest_1%_by_region": {
+    "wake (behind the TE)": 0.566,
+    "far field (more than 10 chords)": 0.4074,
+    "around the wing": 0.0266
+   },
+   "largest_1%_by_span_y/s_bins_0_.2_.4_.6_.8_.95_1_1.2": [
+    201,
+    138,
+    266,
+    309,
+    559,
+    4742,
+    4863
+   ],
+   "largest_10_points": [
+    {
+     "x": 65.9247,
+     "y": 2.834483,
+     "z": 9.037457,
+     "region": "wake (behind the TE)",
+     "value": 1.013088e-05
+    },
+    {
+     "x": 65.91189,
+     "y": 2.869467,
+     "z": 7.045358,
+     "region": "wake (behind the TE)",
+     "value": 9.602784e-06
+    },
+    {
+     "x": 65.92257,
+     "y": 2.869467,
+     "z": 9.026258,
+     "region": "wake (behind the TE)",
+     "value": 9.595434e-06
+    },
+    {
+     "x": 65.91429,
+     "y": 2.834483,
+     "z": 7.055844,
+     "region": "wake (behind the TE)",
+     "value": 9.477094e-06
+    },
+    {
+     "x": 65.92787,
+     "y": 2.790162,
+     "z": 9.053882,
+     "region": "wake (behind the TE)",
+     "value": 8.702109e-06
+    },
+    {
+     "x": 65.91022,
+     "y": 2.897081,
+     "z": 7.037984,
+     "region": "wake (behind the TE)",
+     "value": 8.572173e-06
+    },
+    {
+     "x": 52.08313,
+     "y": 2.897081,
+     "z": 7.037864,
+     "region": "wake (behind the TE)",
+     "value": 8.490433e-06
+    },
+    {
+     "x": 65.93718,
+     "y": 2.834483,
+     "z": 11.58348,
+     "region": "wake (behind the TE)",
+     "value": 8.405008e-06
+    },
+    {
+     "x": 52.04216,
+     "y": 2.918878,
+     "z": 5.494465,
+     "region": "wake (behind the TE)",
+     "value": 8.354374e-06
+    },
+    {
+     "x": 52.07791,
+     "y": 2.918878,
+     "z": 7.032545,
+     "region": "wake (behind the TE)",
+     "value": 8.295125e-06
+    }
+   ]
+  },
+  "Residual_Nu_Tilde": {
+   "rms_log10": -9.524183765372516,
+   "share_of_sum_of_squares": {
+    "top_0.1%": 0.8026347318757915,
+    "top_1%": 0.9979175118584156,
+    "top_10%": 0.9999997299749803
+   },
+   "largest_1%_by_region": {
+    "wake (behind the TE)": 0.7593,
+    "far field (more than 10 chords)": 0.2407
+   },
+   "largest_1%_by_span_y/s_bins_0_.2_.4_.6_.8_.95_1_1.2": [
+    3136,
+    1230,
+    236,
+    41,
+    108,
+    3473,
+    2854
+   ],
+   "largest_10_points": [
+    {
+     "x": 66.24959,
+     "y": 0.65625,
+     "z": 2.711288,
+     "region": "wake (behind the TE)",
+     "value": 2.477388e-08
+    },
+    {
+     "x": 66.24803,
+     "y": 0.65625,
+     "z": 3.517293,
+     "region": "wake (behind the TE)",
+     "value": 2.451931e-08
+    },
+    {
+     "x": 66.23482,
+     "y": 0.7875,
+     "z": 3.545523,
+     "region": "wake (behind the TE)",
+     "value": 2.437083e-08
+    },
+    {
+     "x": 66.23697,
+     "y": 0.7875,
+     "z": 2.734967,
+     "region": "wake (behind the TE)",
+     "value": 2.428633e-08
+    },
+    {
+     "x": 66.26132,
+     "y": 0.525,
+     "z": 2.685001,
+     "region": "wake (behind the TE)",
+     "value": 2.398494e-08
+    },
+    {
+     "x": 66.26044,
+     "y": 0.525,
+     "z": 3.485548,
+     "region": "wake (behind the TE)",
+     "value": 2.318598e-08
+    },
+    {
+     "x": 66.22352,
+     "y": 0.91875,
+     "z": 3.557376,
+     "region": "wake (behind the TE)",
+     "value": 2.280184e-08
+    },
+    {
+     "x": 66.22573,
+     "y": 0.91875,
+     "z": 2.748379,
+     "region": "wake (behind the TE)",
+     "value": 2.25661e-08
+    },
+    {
+     "x": 66.27211,
+     "y": 0.39375,
+     "z": 2.661392,
+     "region": "wake (behind the TE)",
+     "value": 2.248088e-08
+    },
+    {
+     "x": 8.002139,
+     "y": 0.13125,
+     "z": 0.01434234,
+     "region": "wake (behind the TE)",
+     "value": 2.223028e-08
+    }
+   ]
+  }
+ },
+ "limiter_fields": {
+  "Limiter_Pressure": {
+   "acting_share_all_points": 0.12068031730328316,
+   "acting_share_at_largest_1%_of_Residual_Pressure": 0.20301498465426973,
+   "acting_share_by_region": {
+    "around the wing": 0.17197275101177845,
+    "far field (more than 10 chords)": 0.0,
+    "tip (outside y = s)": 0.2351485743111773,
+    "trailing-edge corner (5 % of the local chord)": 0.26222626460505144,
+    "wake (behind the TE)": 0.06311239193083573
+   }
+  },
+  "Limiter_Velocity_x": {
+   "acting_share_all_points": 0.217001433425164,
+   "acting_share_at_largest_1%_of_Residual_Pressure": 0.3041162664740928,
+   "acting_share_by_region": {
+    "around the wing": 0.2824203002595517,
+    "far field (more than 10 chords)": 0.0,
+    "tip (outside y = s)": 0.3352150343910896,
+    "trailing-edge corner (5 % of the local chord)": 0.8198068984817743,
+    "wake (behind the TE)": 0.2089861147498035
+   }
+  },
+  "Limiter_Velocity_y": {
+   "acting_share_all_points": 0.169682155120433,
+   "acting_share_at_largest_1%_of_Residual_Pressure": 0.19064813143166637,
+   "acting_share_by_region": {
+    "around the wing": 0.1966341109366741,
+    "far field (more than 10 chords)": 0.0012557058254568903,
+    "tip (outside y = s)": 0.46999287355769614,
+    "trailing-edge corner (5 % of the local chord)": 0.40519834884209055,
+    "wake (behind the TE)": 0.11548336389834948
+   }
+  },
+  "Limiter_Velocity_z": {
+   "acting_share_all_points": 0.1860663491708159,
+   "acting_share_at_largest_1%_of_Residual_Pressure": 0.2124029608232533,
+   "acting_share_by_region": {
+    "around the wing": 0.2335650102163983,
+    "far field (more than 10 chords)": 0.0005396141249936366,
+    "tip (outside y = s)": 0.4334398296059638,
+    "trailing-edge corner (5 % of the local chord)": 0.516441614776464,
+    "wake (behind the TE)": 0.12217710243646843
+   }
+  }
+ },
+ "region_points": {
+  "around the wing": 507028,
+  "far field (more than 10 chords)": 294655,
+  "tip (outside y = s)": 124887,
+  "trailing-edge corner (5 % of the local chord)": 28586,
+  "wake (behind the TE)": 152680
+ }
+}

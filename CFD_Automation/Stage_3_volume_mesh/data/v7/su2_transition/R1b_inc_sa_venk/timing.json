@@ -1,0 +1,2 @@
+{"run": "R1b", "command": "/home/mike_kara/miniconda3/pkgs/mpich-5.0.1-hfbb40bb_4/bin/mpiexec.hydra -np 6 /home/mike_kara/aeris/AERIS_MESH_STUDY/tools/su2_8.5.0/bin/SU2_CFD case.cfg", "cwd": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/su2t_VVC_a4/R1b_inc_sa_venk", "start": "2026-11-12 08:11:13", "end": "2026-11-12 09:13:48",
+ "wall_seconds_monotonic": 3770.98, "exit": 0, "ranks": 6, "time_limit": "none"}

@@ -1,0 +1,29 @@
+{
+ "rows": 63,
+ "inner_iter": 62,
+ "residual": "rms[P]",
+ "res_first": -4.734098283,
+ "res_max": 3.856674144,
+ "res_last": 3.856674144,
+ "res_min": -5.973551456,
+ "res_min_at": 37,
+ "orders_dropped": 0.0,
+ "rate_last200_orders_per_1000": 122.34409459740056,
+ "rate_last1000_orders_per_1000": 122.34409459740056,
+ "converged": false,
+ "settled": false,
+ "settled_detail": {
+  "settled": false,
+  "reason": "63 iterations: too short to judge",
+  "window": 63
+ },
+ "cl": -2008906209000000.0,
+ "cd_counts": 1.641663535e+19,
+ "cmy": 11445540580000.0,
+ "cd_moved_last500_counts": 1.6416635350000003e+19,
+ "cl_moved_last500_rel": 1.0000000000000804,
+ "cfl_avg_median_last200": 53.68541183,
+ "linsol_res_median_last200": -3.860442476,
+ "seconds": 244,
+ "wall": "2026-11-12 08:06:35"
+}

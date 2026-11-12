@@ -1,0 +1,5 @@
+{
+ "run": "A5_today_VVC_a10",
+ "case_dir": "runs/n11_today_VVC_a10",
+ "solver_folder": "adflow"
+}

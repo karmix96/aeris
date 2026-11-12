@@ -365,6 +365,82 @@
    "minutes_per_million_cells": 59.34227163277442
   },
   {
+   "run": "A5_today_VVC_a10",
+   "case": "runs/n11_today_VVC_a10",
+   "mesh": "whatif_today_VVC_e32d995a_re3e5",
+   "cells": 1075074,
+   "alpha_deg": 10.0,
+   "solver_folder": "adflow",
+   "wall_seconds": 1651.61,
+   "exit": 0,
+   "start": "2026-11-12 02:52:54",
+   "end": "2026-11-12 03:20:18",
+   "watchdog_peak_gib": 10.994232177734375,
+   "watchdog_min_available_gib": 1.9429817199707031,
+   "watchdog_killed": null,
+   "host_min_free_gib": 0.411,
+   "host_max_pagefile_gib": 1.462,
+   "host_pagefile_at_start_gib": 1.345,
+   "host_max_vmmem_gib": 11.765,
+   "host_killed": null,
+   "solver": "ADflow",
+   "model": "SA",
+   "iterations": 136,
+   "relative_residual": 9.654237856827578e-07,
+   "residual_drop_orders": 6.015282005430818,
+   "converged_flag": true,
+   "coefficients": {
+    "cd": 0.04168942184291536,
+    "cdp": 0.0305370743727379,
+    "cdv": 0.011152347470177461,
+    "cl": 0.6253389041434695,
+    "cmy": -0.014593672041414192
+   },
+   "adflow_peak_gib_sum": 10.994014739990234,
+   "adflow_peak_largest_rank_gib": 1.9355812072753906,
+   "law_ank_only_gib": 10.462785020000002,
+   "law_ank_then_nk_gib": 11.68020004,
+   "overrides": {
+    "timeLimit": 7200.0,
+    "ANKUseTurbDADI": false
+   },
+   "extras": null,
+   "solver_seconds": 1642.9,
+   "log_history": {
+    "rows": 137,
+    "relative_residual_last": 9.654237856827578e-07,
+    "settled_rule": {
+     "settled": false,
+     "reason": "136 iterations: too short to judge",
+     "window": 136
+    },
+    "force_wander_since": {
+     "from_iter_50": {
+      "cd_wander_counts": 0.894885993839023,
+      "cl_wander_rel": 0.0033440517204089766
+     },
+     "from_iter_80": {
+      "cd_wander_counts": 0.2610563489854195,
+      "cl_wander_rel": 0.000847857389063117
+     },
+     "from_iter_100": {
+      "cd_wander_counts": 0.08754576040527484,
+      "cl_wander_rel": 0.0002259335093544953
+     }
+    }
+   },
+   "verdict": "not accepted",
+   "why": [
+    "137 iterations: too short to judge"
+   ],
+   "settled": false,
+   "cd_wander_counts": null,
+   "cl_wander_rel": null,
+   "gib_per_million_cells": 10.226286506780216,
+   "seconds_per_iteration": 12.144191176470587,
+   "minutes_per_million_cells": 25.60459404034823
+  },
+  {
    "run": "B1_today_VVC_a4_su2_sa",
    "case": "runs/n11_today_VVC_a4",
    "mesh": "whatif_today_VVC_e32d995a_re3e5",

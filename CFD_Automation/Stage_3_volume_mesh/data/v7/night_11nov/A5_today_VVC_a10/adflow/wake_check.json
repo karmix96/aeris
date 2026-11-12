@@ -1,0 +1,99 @@
+{
+ "case": "runs/n11_today_VVC_a10",
+ "alpha_deg": 10.0,
+ "volume_file": "runs/n11_today_VVC_a10/adflow/v7_a10_000_vol.cgns",
+ "station_k": 11,
+ "y": 1.4437500000000065,
+ "y_over_semispan": 0.4812500000000022,
+ "local_chord": 0.9407994280302282,
+ "x_te": 1.6557630729894701,
+ "z_te": 0.09258140055010478,
+ "te_corners": {
+  "upper": [
+   1.6557197654959395,
+   1.4437500000000065,
+   0.09352120267012053
+  ],
+  "lower": [
+   1.6558063804830008,
+   1.4437500000000065,
+   0.09164159843008904
+  ]
+ },
+ "band": {
+  "alpha_lo_deg": -5.0,
+  "alpha_hi_deg": 10.0,
+  "margin_c": 0.05,
+  "length_local_c": 2.0,
+  "source": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_today_VVC_e32d995a_re3e5/whatif_volume.yaml"
+ },
+ "speed": "|V| from VelocityX/Y/Z",
+ "v_inf_estimate": 0.11831848323345184,
+ "lines": [
+  {
+   "d_local_c": 0.25,
+   "x": 1.8909629299970272,
+   "z_wake": 0.12102431438771905,
+   "speed_min": 0.08063179523668648,
+   "deficit": 0.3185190256572721,
+   "band_lo": 0.023669263267112363,
+   "band_hi": 0.18370311712873244,
+   "inside": true,
+   "margin_to_band_edge_c": 0.06662291756729204,
+   "z_wake_minus_z_te_c": 0.030232707408385445,
+   "wake_angle_deg": 6.895343131151951,
+   "at_window_edge": false
+  },
+  {
+   "d_local_c": 0.5,
+   "x": 2.126162787004584,
+   "z_wake": 0.138126723704749,
+   "speed_min": 0.09441424744130693,
+   "deficit": 0.20203298029928207,
+   "band_lo": 0.0017970973856313577,
+   "band_hi": 0.22778486230584868,
+   "inside": true,
+   "margin_to_band_edge_c": 0.09529995015921602,
+   "z_wake_minus_z_te_c": 0.04841129979213893,
+   "wake_angle_deg": 5.5302878673129525,
+   "at_window_edge": false
+  },
+  {
+   "d_local_c": 1.0,
+   "x": 2.596562501019698,
+   "z_wake": 0.1788834733773066,
+   "speed_min": 0.10590530720308894,
+   "deficit": 0.10491324509181477,
+   "band_lo": -0.041947234377330646,
+   "band_hi": 0.31594835266008114,
+   "inside": true,
+   "margin_to_band_edge_c": 0.1456897986957222,
+   "z_wake_minus_z_te_c": 0.09173270120698766,
+   "wake_angle_deg": 5.241228017748454,
+   "at_window_edge": false
+  },
+  {
+   "d_local_c": 2.0,
+   "x": 3.5373619290499265,
+   "z_wake": 0.302514293828553,
+   "speed_min": 0.11277997452019987,
+   "deficit": 0.04681017337184801,
+   "band_lo": -0.12943589790325466,
+   "band_hi": 0.4922753333685461,
+   "inside": true,
+   "margin_to_band_edge_c": 0.20170190785223993,
+   "z_wake_minus_z_te_c": 0.22314309195317986,
+   "wake_angle_deg": 6.366249682592457,
+   "at_window_edge": false
+  }
+ ],
+ "all_inside": true,
+ "zones_matched": {
+  "WU_in": "WU_in",
+  "B_in": "B_in",
+  "WL_in": "WL_in"
+ },
+ "locations": [
+  "CellCenter"
+ ]
+}

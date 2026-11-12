@@ -1,7 +1,7 @@
 # V7 night run, 11–12 Nov 2026: the first solves on Stage 3 meshes
 
 Claude Code, alone on Mike's desktop, following `solve/NIGHT_11NOV.md`. **In progress.** This file is rewritten after
-every finished run. Last update: 12 Nov, 03:00 (A1, A1b, B1, B1b, A4 done; A5 running since 02:53, then B1c and B2).
+every finished run. Last update: 12 Nov, 03:35 (A1, A1b, B1, B1b, A4, A5 done; B1c running since 03:23, then B2).
 
 One wing: BWB reference wing 0, Re 3 × 10⁵ on the mean chord, Mach 0.1, the transition band on.
 
@@ -35,13 +35,15 @@ without the trailing-edge base and the tip cap (section 3, Q7).
 | A1 | today VVC | 1,075,074 | ADflow SA, as written | 4° | 30.2 min | 182 | 4.21 | not accepted: not converged; stopped, see 6 | 10.28 | 9.57 | 0.1906 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
 | A1b | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | 4° | 31.2 min | 153 | 6.01 | **converged** (9.76 × 10⁻⁷); the rule says "not accepted": see below | 10.99 | 10.22 | 0.1907 | 185.5 | 0.00676 | 0.01178 | 0.00984 | 2.92, 1.92 |
 | B1 | today VVC | 1,075,074 | SU2 SA, as written | 4° | 29.3 min | 582 | 2.83 | not accepted: not converged, forces not settled; stopped, see 6 | 7.32 | 6.81 | 0.1883 | 67.7 | −0.00621 | 0.01298 | 0.01246 | 4.82, 3.88 (first node) |
-| A4 | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | −5° | 63.4 min | 239 | 6.00 | **converged** (9.99 × 10⁻⁷); the rule says "forces not settled": see below | 10.99 | 10.23 | −0.4484 | 336.5 | 0.02422 | 0.00944 | 0.03344 | |
+| A4 | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | −5° | 63.8 min | 239 | 6.00 | **converged** (9.99 × 10⁻⁷); the rule says "forces not settled": see below | 10.99 | 10.23 | −0.4484 | 336.5 | 0.02422 | 0.00944 | 0.03344 | |
+| A5 | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | +10° | 27.5 min | 136 | 6.02 | **converged** (9.65 × 10⁻⁷); the rule: "too short to judge" | 10.99 | 10.23 | 0.6253 | 416.9 | 0.03054 | 0.01115 | −0.01459 | |
 | B1b | today VVC | 1,075,074 | SU2 SA, `LINEAR_SOLVER_ITER= 30` | 4° | 15.4 min | 117 | 2.4 | not accepted: not converged; stopped, see 6 | 9.25 | 8.60 | 0.1980 | 65.9 | −0.00479 | 0.01139 | 0.00831 | |
 
 **A1b converged and its forces are settled, but the plan's rule cannot say so.** `read_results.py` needs at least
 225 iterations before it judges "settled" (the last 20 %, at least 200, plus 25); A1b converged in 153. Measured from
 ADflow's own log: since iteration 100, CD moved 0.0096 counts and CL 0.008 % (the rule allows 0.5 counts and
-0.1 %). A1: since iteration 100, 0.04 counts and 0.009 %. A4 (239 iterations) is long enough to judge, and the rule says "forces not settled": its
+0.1 %). A1: since iteration 100, 0.04 counts and 0.009 %. A5 converged in 136 iterations, too short again; its forces moved 0.09 counts and 0.023 % since iteration 100.
+A4 (239 iterations) is long enough to judge, and the rule says "forces not settled": its
 200-iteration window (iterations 40 to 239) still holds the start-up (CD moved 14.1 counts in it). Over its last 50
 iterations CD moved 0.12 counts and CL 0.044 %. So for a converged ADflow run the rule either cannot judge (fewer
 than 225 iterations) or judges the start-up. The rule is unchanged; Mike decides whether ADflow needs a shorter
@@ -160,7 +162,7 @@ alone is about +21 counts).
 ADflow's median 0.74 corresponds to about 1.48 at the first node. **Both say the first cell is about 20 % taller
 than the y⁺ 1.3 design over most of the wing**, more at the nose and the tip cap.
 
-**Q5, the wake against the fan (−5° measured; +10° running).** On the station plane nearest mid semi-span (station 11,
+**Q5, the wake against the fan: inside it at −5° and at +10°, with at least 0.067 c to spare.** On the station plane nearest mid semi-span (station 11,
 y/s 0.481, local chord 0.941), the wake centre is the lowest velocity magnitude on vertical lines behind the trailing
 edge (`solve/wake_check.py`). Heights are from the middle of the two trailing-edge corners, in local chords.
 
@@ -170,12 +172,19 @@ edge (`solve/wake_check.py`). Heights are from the middle of the two trailing-ed
 | −5° | 0.5 c | −0.007 c | −0.097 to +0.144 c | −0.8° | 0.090 c | 27 % |
 | −5° | 1 c | −0.008 c | −0.143 to +0.237 c | −0.5° | 0.135 c | 18 % |
 | −5° | 2 c | −0.038 c | −0.236 to +0.425 c | −1.1° | 0.198 c | 11 % |
+| +10° (A5) | 0.25 c | +0.030 c | −0.073 to +0.097 c | 6.9° | 0.067 c | 32 % |
+| +10° | 0.5 c | +0.048 c | −0.097 to +0.144 c | 5.5° | 0.095 c | 20 % |
+| +10° | 1 c | +0.092 c | −0.143 to +0.237 c | 5.2° | 0.146 c | 11 % |
+| +10° | 2 c | +0.223 c | −0.236 to +0.425 c | 6.4° | 0.202 c | 5 % |
 | 4° (A1b, a test of the script) | 0.25 / 0.5 / 1 / 2 c | +0.015 / +0.030 / +0.052 / +0.092 c | | 3.5° / 3.4° / 3.0° / 2.6° | ≥ 0.08 c | 22 % at 0.5 c |
 
 At −5° the wake does not follow the freestream: it leaves the trailing edge at about −1°, turned up by the upwash of
-the negative lift (CL −0.45). It is inside the fan everywhere, at least 0.07 c from its edge. At 4° it leaves at
-3.5° and bends down to 2.6°, below the freestream, as the downwash should make it. Figures:
-`A4_today_VVC_am5/adflow/wake_check.png`, `A1b_today_VVC_a4_turbksp/adflow/wake_check_a4_test.png`.
+the negative lift (CL −0.45). It is inside the fan everywhere, at least 0.07 c from its edge. At +10° it leaves at 5 to 7°, held below the
+freestream by the downwash of CL 0.63, at least 0.067 c below the fan's upper edge. At 4° it leaves at 3.5° and
+bends down to 2.6°. **The fan's +10° edge is not reached at +10°** (decision 111): the closest the wake comes to an
+edge is 0.067 c, at 0.25 c behind the trailing edge at +10°. One station only (y/s 0.48); the wake check reads any
+station (`--y-frac`). Figures:
+`A4_today_VVC_am5/adflow/wake_check.png`, `A5_today_VVC_a10/adflow/wake_check.png`, `A1b_today_VVC_a4_turbksp/adflow/wake_check_a4_test.png`.
 
 ## 4. What failed
 

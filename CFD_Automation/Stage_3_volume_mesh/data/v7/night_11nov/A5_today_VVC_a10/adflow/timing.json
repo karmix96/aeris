@@ -1,0 +1,2 @@
+{"run": "A5", "command": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun -np 6 /home/mike_kara/miniconda3/envs/mach-aero/bin/python solve/run_adflow.py --case runs/n11_today_VVC_a10 --set-option timeLimit=7200.0 --set-option ANKUseTurbDADI=false", "cwd": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh", "start": "2026-11-12 02:52:54", "end": "2026-11-12 03:20:18",
+ "wall_seconds": 1644, "wall_seconds_monotonic": 1651.61, "exit": 0, "hard_stop_seconds": 9000, "ranks": 6}

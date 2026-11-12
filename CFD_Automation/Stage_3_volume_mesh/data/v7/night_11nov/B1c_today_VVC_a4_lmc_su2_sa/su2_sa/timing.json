@@ -1,0 +1,2 @@
+{"run": "B1c", "command": "timeout 150m /home/mike_kara/miniconda3/pkgs/mpich-5.0.1-hfbb40bb_4/bin/mpiexec.hydra -np 6 /home/mike_kara/aeris/AERIS_MESH_STUDY/tools/su2_8.5.0/bin/SU2_CFD ../su2_sa_lin30_lmc.cfg", "cwd": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/n11_today_VVC_a4_lmc/su2_sa", "start": "2026-11-12 03:22:53", "end": "2026-11-12 04:10:11",
+ "wall_seconds": 2838, "wall_seconds_monotonic": 2856.82, "exit": 0, "note": "exit 124 = stopped by timeout at the cap", "ranks": 6}

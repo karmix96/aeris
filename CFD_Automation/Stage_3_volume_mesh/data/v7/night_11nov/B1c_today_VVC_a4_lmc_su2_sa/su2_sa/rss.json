@@ -1,0 +1,13 @@
+{
+ "match": "SU2_CFD",
+ "mem_total_gib": 13.65115737915039,
+ "swap_total_gib": 8.0,
+ "swap_used_at_start_gib": 0.02143096923828125,
+ "peak_rss_sum_gib": 9.369270324707031,
+ "peak_ranks": 6,
+ "min_available_gib": 3.2318687438964844,
+ "killed": null,
+ "samples": 285,
+ "seconds": 2882,
+ "note": "summed VmRSS of the matching ranks (wrappers left out); sampled, so the true peak can be a little higher"
+}

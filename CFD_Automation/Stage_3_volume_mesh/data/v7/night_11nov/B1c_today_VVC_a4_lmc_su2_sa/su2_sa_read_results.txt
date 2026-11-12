@@ -1,0 +1,5 @@
+| run | verdict | iterations | CL | CD | CMy | why |
+|---|---|---|---|---|---|---|
+| ADflow SA | not run |  |  |  |  |  |
+| SU2 SA | not accepted | 436 | 0.19824 | 0.01436 | 0.00766 | not converged; forces not settled |
+| SU2 SST+LM | not run |  |  |  |  |  |

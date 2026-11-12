@@ -1,0 +1,73 @@
+{
+ "file": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/n11_today_VVC_a4_lmc/su2_sst_lm_attempt1_killed/surface_flow.dat",
+ "nodes": 9172,
+ "quads": 9078,
+ "area_vector_sum": [
+  2.450772538669458e-16,
+  0.3850137117931291,
+  -3.796237688481961e-15
+ ],
+ "area_vector_sum_xz_over_total_area": 6.169776910629982e-16,
+ "faces_pointing_outward_share": 0.9586956521739131,
+ "file_orientation": "outward",
+ "pressure_force": {
+  "wing surface": {
+   "faces": 8280,
+   "area": 6.15517526356196,
+   "cdp": 1.5606611245440474,
+   "clp": 2.0930309548095303,
+   "cdp_counts": 15606.611245440474
+  },
+  "trailing-edge base": {
+   "faces": 276,
+   "area": 0.006168863352312382,
+   "cdp": 0.015166836491713473,
+   "clp": -0.0005772936458999911,
+   "cdp_counts": 151.66836491713474
+  },
+  "tip cap": {
+   "faces": 522,
+   "area": 0.0044222508417999995,
+   "cdp": 0.0,
+   "clp": 0.0,
+   "cdp_counts": 0.0
+  },
+  "all": {
+   "faces": 9078,
+   "area": 6.165766377756071,
+   "cdp": 1.5758279610357617,
+   "clp": 2.092453661163631,
+   "cdp_counts": 15758.279610357617
+  }
+ },
+ "yplus": {
+  "all wall nodes": {
+   "nodes": 9172,
+   "max": 26.8922,
+   "p99": 7.12874623,
+   "median": 5.0425225000000005,
+   "max_at_xyz": [
+    2.016125,
+    0.0,
+    -0.001344083
+   ],
+   "max_at_y_over_semispan": 0.0,
+   "share_above_1.3": 1.0,
+   "share_above_1.0": 1.0
+  },
+  "wing surface": {
+   "nodes": 8234,
+   "max": 5.41426,
+   "p99": 5.3983060300000005,
+   "median": 5.0411475,
+   "max_at_xyz": [
+    0.6046958,
+    0.0,
+    -0.1132887
+   ],
+   "max_at_y_over_semispan": 0.0,
+   "share_above_1.3": 1.0,
+   "share_above_1.0": 1.0
+  }
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "ADflow SA": {
+  "verdict": "not run"
+ },
+ "SU2 SA": {
+  "solver": "SU2",
+  "iterations": 436,
+  "rms_rho_final": -7.892286389,
+  "orders_dropped": 2.158188106,
+  "converged": false,
+  "coefficients": {
+   "cl": 0.1982404992,
+   "cd": 0.01435873095,
+   "cmy": 0.007655316694
+  },
+  "settled": false,
+  "window": 200,
+  "cd_wander_counts": 3.234376899999992,
+  "cl_wander_rel": 0.0036296382570853362,
+  "forces_breakdown": "forces_breakdown.dat",
+  "verdict": "not accepted",
+  "why": [
+   "not converged",
+   "forces not settled"
+  ]
+ },
+ "SU2 SST+LM": {
+  "solver": "SU2",
+  "iterations": 3,
+  "rms_rho_final": -5.930106687,
+  "orders_dropped": 0.19600840400000052,
+  "converged": false,
+  "coefficients": {
+   "cl": 2.092291798,
+   "cd": 1.720580715,
+   "cmy": -0.9366345513
+  },
+  "settled": false,
+  "reason": "3 iterations: too short to judge",
+  "window": 3,
+  "forces_breakdown": "forces_breakdown.dat",
+  "verdict": "not accepted",
+  "why": [
+   "not converged",
+   "3 iterations: too short to judge"
+  ]
+ }
+}

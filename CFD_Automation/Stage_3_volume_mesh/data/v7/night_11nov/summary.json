@@ -589,6 +589,149 @@
    "gib_per_million_cells": 8.604676289561665,
    "seconds_per_iteration": 7.920854700854701,
    "minutes_per_million_cells": 14.367073026290901
+  },
+  {
+   "run": "B1c_today_VVC_a4_lmc_su2_sa",
+   "case": "runs/n11_today_VVC_a4_lmc",
+   "mesh": "whatif_today_VVC_e32d995a_re3e5",
+   "cells": 1075074,
+   "alpha_deg": 4.0,
+   "solver_folder": "su2_sa",
+   "wall_seconds": 2856.82,
+   "exit": 0,
+   "start": "2026-11-12 03:22:53",
+   "end": "2026-11-12 04:10:11",
+   "watchdog_peak_gib": 9.369270324707031,
+   "watchdog_min_available_gib": 3.2318687438964844,
+   "watchdog_killed": null,
+   "host_min_free_gib": 1.061,
+   "host_max_pagefile_gib": 1.378,
+   "host_pagefile_at_start_gib": 1.378,
+   "host_max_vmmem_gib": 11.211,
+   "host_killed": null,
+   "solver": "SU2",
+   "model": "SA",
+   "iterations": 436,
+   "residual_drop_orders": 2.158188106,
+   "rms_rho_final": -7.892286389,
+   "converged_flag": false,
+   "verdict": "not accepted",
+   "why": [
+    "not converged",
+    "forces not settled"
+   ],
+   "settled": false,
+   "cd_wander_counts": 3.234376899999992,
+   "cl_wander_rel": 0.0036296382570853362,
+   "coefficients": {
+    "cl": 0.1982404992,
+    "cd": 0.01435873095,
+    "cmy": 0.007655316694
+   },
+   "forces_breakdown": {
+    "cl": 0.19824,
+    "cd": 0.014359,
+    "cdp": 0.003879,
+    "cdv": 0.01048,
+    "cmy": 0.007655
+   },
+   "yplus": {
+    "max": 4.609441,
+    "p99": 3.90533935,
+    "median": 1.3905995,
+    "share_above_1.3": 0.6000728685936362,
+    "all_walls_max": 10.99494,
+    "all_walls_p99": 4.5273385999999975,
+    "scope": "wing-surface nodes (without the base and the tip cap); SU2's y+ is at the first node off the wall (ADflow's at the first cell centre: about half)"
+   },
+   "hand_integrated_pressure": {
+    "wing surface": 40.27262988843171,
+    "trailing-edge base": -1.6847897774577105,
+    "tip cap": 0.0,
+    "all": 38.587840110974085
+   },
+   "surface_orientation": {
+    "file": "outward",
+    "xz_closure": 6.169776910629982e-16
+   },
+   "accept_stop": {
+    "folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/n11_today_VVC_a4_lmc/su2_sa",
+    "rule": "solve/read_results.py: 6 orders of rms[Rho] (or 1e-12) and settled forces",
+    "accepted_at": null,
+    "stopped": null,
+    "seconds": 2862
+   },
+   "gib_per_million_cells": 8.715000385747429,
+   "seconds_per_iteration": 6.552339449541285,
+   "minutes_per_million_cells": 44.28873423286831
+  },
+  {
+   "run": "B2_attempt1_killed",
+   "case": "runs/n11_today_VVC_a4_lmc",
+   "mesh": "whatif_today_VVC_e32d995a_re3e5",
+   "cells": 1075074,
+   "alpha_deg": 4.0,
+   "solver_folder": "su2_sst_lm_attempt1_killed",
+   "wall_seconds": 42.8,
+   "exit": 0,
+   "start": "2026-11-12 04:13:13",
+   "end": "2026-11-12 04:13:55",
+   "watchdog_peak_gib": 11.95553970336914,
+   "watchdog_min_available_gib": 0.9217338562011719,
+   "watchdog_killed": {
+    "at_seconds": 32,
+    "why": "available 0.9 GiB < 8% of 13.7",
+    "pids": [
+     34421,
+     34422,
+     34423,
+     34424,
+     34425,
+     34426
+    ]
+   },
+   "host_min_free_gib": 7.428,
+   "host_max_pagefile_gib": 1.291,
+   "host_pagefile_at_start_gib": 1.291,
+   "host_max_vmmem_gib": 4.998,
+   "host_killed": null,
+   "solver": "SU2",
+   "model": "SST+LM",
+   "forces_breakdown": {
+    "cl": 2.092292,
+    "cd": 1.720581,
+    "cdp": 1.576194,
+    "cdv": 0.144387,
+    "cmy": -0.936635
+   },
+   "yplus": {
+    "max": 5.41426,
+    "p99": 5.3983060300000005,
+    "median": 5.0411475,
+    "share_above_1.3": 1.0,
+    "all_walls_max": 26.8922,
+    "all_walls_p99": 7.12874623,
+    "scope": "wing-surface nodes (without the base and the tip cap); SU2's y+ is at the first node off the wall (ADflow's at the first cell centre: about half)"
+   },
+   "hand_integrated_pressure": {
+    "wing surface": 15606.611245440474,
+    "trailing-edge base": 151.66836491713474,
+    "tip cap": 0.0,
+    "all": 15758.279610357617
+   },
+   "surface_orientation": {
+    "file": "outward",
+    "xz_closure": 6.169776910629982e-16
+   },
+   "accept_stop": {
+    "folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/n11_today_VVC_a4_lmc/su2_sst_lm",
+    "rule": "solve/read_results.py: 6 orders of rms[Rho] (or 1e-12) and settled forces",
+    "accepted_at": null,
+    "stopped": null,
+    "seconds": 60
+   },
+   "gib_per_million_cells": 11.120666766538061,
+   "minutes_per_million_cells": 0.6635202165928422
   }
  ],
  "machine": {

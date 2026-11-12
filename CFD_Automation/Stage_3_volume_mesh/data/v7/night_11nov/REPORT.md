@@ -1,7 +1,7 @@
 # V7 night run, 11–12 Nov 2026: the first solves on Stage 3 meshes
 
 Claude Code, alone on Mike's desktop, following `solve/NIGHT_11NOV.md`. **In progress.** This file is rewritten after
-every finished run. Last update: 12 Nov, 03:35 (A1, A1b, B1, B1b, A4, A5 done; B1c running since 03:23, then B2).
+every finished run. Last update: 12 Nov, 04:35 (all runs done but B2b, SU2 SST + LM, running since 04:18; it stops by 06:30).
 
 One wing: BWB reference wing 0, Re 3 × 10⁵ on the mean chord, Mach 0.1, the transition band on.
 
@@ -38,6 +38,9 @@ without the trailing-edge base and the tip cap (section 3, Q7).
 | A4 | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | −5° | 63.8 min | 239 | 6.00 | **converged** (9.99 × 10⁻⁷); the rule says "forces not settled": see below | 10.99 | 10.23 | −0.4484 | 336.5 | 0.02422 | 0.00944 | 0.03344 | |
 | A5 | today VVC | 1,075,074 | ADflow SA, `ANKUseTurbDADI=false` | +10° | 27.5 min | 136 | 6.02 | **converged** (9.65 × 10⁻⁷); the rule: "too short to judge" | 10.99 | 10.23 | 0.6253 | 416.9 | 0.03054 | 0.01115 | −0.01459 | |
 | B1b | today VVC | 1,075,074 | SU2 SA, `LINEAR_SOLVER_ITER= 30` | 4° | 15.4 min | 117 | 2.4 | not accepted: not converged; stopped, see 6 | 9.25 | 8.60 | 0.1980 | 65.9 | −0.00479 | 0.01139 | 0.00831 | |
+| B1c | today VVC | 1,075,074 | SU2 SA, 30 linear iterations + `LOW_MACH_CORR= YES` | 4° | 47.3 min | 434 | 2.28 | not accepted: not converged; stopped, see 6 | 9.37 | 8.72 | 0.1982 | 143.6 | 0.00388 | 0.01048 | 0.00766 | 4.61, 3.91 (first node) |
+| B2, try 1 | today VVC | 1,075,074 | SU2 SST + LM, 30 linear iterations + low-Mach correction | 4° | 0.7 min | 3 | | **killed by the watchdog** at 32 s: 11.96 GiB, 0.92 GiB available, swap +0.64 GiB | ≥ 11.96 | ≥ 11.1 | | | | | | |
+| B2b, try 2 | today VVC | 1,075,074 | SU2 SST + LM, low-Mach correction, 10 linear iterations | 4° | running since 04:18 | | | | 9.18 (plateau) | 8.54 | | | | | | |
 
 **A1b converged and its forces are settled, but the plan's rule cannot say so.** `read_results.py` needs at least
 225 iterations before it judges "settled" (the last 20 %, at least 200, plus 25); A1b converged in 153. Measured from
@@ -86,10 +89,15 @@ fixed), and S8's fixed part (2.69 GiB, the ANK-only law) with tonight's slope.
 | ADflow, `ANKUseTurbDADI=false` (A1b) | 10.22 | 76–97 GiB | 45–56 GiB |
 | SU2 SA, as written (B1) | 6.81 | 44–65 GiB | 26–37 GiB |
 | SU2 SA, 30 linear iterations (B1b) | 8.60 | 61–82 GiB | 36–47 GiB |
+| SU2 SA, 30 linear iterations + low-Mach correction (B1c) | 8.71 | 62–83 GiB | 37–48 GiB |
+| SU2 SST + LM, low-Mach correction, 10 linear iterations (B2b) | 8.54 | 60–81 GiB | 36–47 GiB |
+| SU2 SST + LM, 30 linear iterations (B2 try 1, killed: a lower bound) | ≥ 11.1 | ≥ 85 GiB | ≥ 50 GiB |
 | S8's laws (ANK only; ANK then NK) | | 71; 91 GiB | 43; 54 GiB |
 
 On 48 GB, ADflow's M does not fit by either bound; the light M fits only by the lower bound, without margin. SU2
-SA (as written) fits the light M; its M fits only by the lower bound. These are extrapolations from 1.08 M cells:
+SA as written fits the light M; with the linear-solver fix it needs 37–48 GiB for the light M and 62–83 GiB for M.
+SST + LM costs 25 % more than SA at the same settings (9.18 against 7.32 GiB) and with 30 linear iterations did not
+fit 16 GB at VVC. These are extrapolations from 1.08 M cells:
 the second point (VC, 2.3 M cells) needs a machine with more than 16 GB.
 
 **Q2, ADflow time.** A1b converged in 31.2 min on 6 ranks: **29.0 min per million cells** (S8's law: 35.7). Linear in
@@ -136,31 +144,46 @@ then the density residual stayed at 10⁻⁸·¹ from iteration 25 to 117, the C
 iterations, and the forces drifted (CL +0.0003 per iteration). So the stall is not the linear solver: it is the
 nonlinear iteration (the slope limiter is the usual cause) or the pressure field below.
 
-**Q3, ADflow SA against SU2 SA (provisional: SU2 not converged).** At B1's last iteration the lift agrees within
-1.2 % (0.1883 against 0.1907) and the friction drag is 10 % higher (SU2 129.8 counts, ADflow 117.8), but the
-pressure drag does not agree: **SU2 −62.1 counts, ADflow +67.6.** A negative pressure drag is not physical here (the induced drag
-alone is about +21 counts).
+**Q3, ADflow SA against SU2 SA on one grid: they agree in Cp once SU2 has its low-Mach correction; SU2 does not
+converge here, so the drag comparison stays open.**
 
-- It is not SU2's integration and not the face orientation: integrating SU2's own wall Cp by hand over its quads
-  gives the same number (−65.7 against SU2's −65.5 counts at iteration 500), and the wall's area vectors close to
-  6 × 10⁻¹⁶ in x and z (`tools/su2_surface_forces.py`).
-- It is the leading edge. SU2's suction peak is about 30 % higher than ADflow's at mid-span
-  (`B1_today_VVC_a4_su2_sa/su2_sa/cp_against_adflow_A1b_it500.png`), and its stagnation pressure overshoots: wall
-  Cp up to 1.9 along the whole leading edge and 2.25 at the tip, against the isentropic 1.0025 at Mach 0.1 (195 nodes
-  above it, all at x/c ≤ 0.004). ADflow overshoots too, but to 1.17 (20 cells, all at the nose).
-- It is systematic, not B1's transient: B1b, on a different CFL path, has the same overshoot (wall Cp to 2.26,
-  192 nodes above 1.0025) and again a negative pressure drag (−47.9 counts at iteration 117; friction 113.9).
-- Two readings: SU2 is far from converged; and SU2's compressible Roe scheme at Mach 0.1,
-  without a low-Mach correction, overshoots the stagnation pressure (a known property of upwind schemes at low Mach).
-  S8's SU2 report already says the incompressible solver is the one for this regime ("AERIS flies at Mach 0.084 —
-  effectively incompressible — so the INC_RANS cases are the ones in our regime"). The case files use `SOLVER= RANS`.
+| | ADflow SA (A1b, converged) | SU2 SA as written (B1, 582 it.) | + 30 linear its (B1b, 117 it.) | + low-Mach correction (B1c, 434 it.) |
+| --- | --- | --- | --- | --- |
+| CL | 0.1907 | 0.1883 | 0.1980 | 0.1982 (+3.9 %) |
+| CD (counts) | 185.5 | 67.7 | 65.9 | 143.6 (−41.9) |
+| CDp (counts) | 67.6 | −62.1 | −47.9 | +38.8 (−28.8) |
+| CDv (counts) | 117.8 | 129.8 | 113.9 | 104.8 (−13.0) |
+| CMy | 0.00984 | 0.01246 | 0.00831 | 0.00766 (−0.0022) |
+| largest wall Cp (isentropic: 1.0025) | 1.17 (20 cells at the nose) | 1.94 at mid-span, 2.25 at the tip | 2.26 (192 nodes) | **1.03 (6 nodes)** |
+| density residual drop | 6.0 orders | 2.8 | 2.4 | 2.3 |
+
+- **As written, SU2's pressure field is wrong**, and wrong the same way on two CFL paths (B1, B1b): the stagnation
+  pressure overshoots along the whole leading edge, the suction peak is about 30 % too high, and the pressure drag
+  comes out negative (a thrust), which a wing in steady subsonic flow cannot have. It is not SU2's force integration
+  and not the face orientation: integrating SU2's own wall Cp by hand gives the same number (−65.7 against −65.5
+  counts at iteration 500), and the wall's area vectors close to 6 × 10⁻¹⁶ in x and z
+  (`tools/su2_surface_forces.py`).
+- **The cause is the compressible Roe scheme at Mach 0.1.** B1c changes only `LOW_MACH_CORR= YES` (Rieper's
+  correction for Roe at low Mach) against B1b: the overshoot is gone (largest Cp 1.03), the pressure drag is
+  positive (+38.8 counts; by hand +38.6), and the Cp agrees with ADflow's along the span
+  (`B1c_today_VVC_a4_lmc_su2_sa/su2_sa/cp_against_adflow_A1b.png`; B1b's is beside it in its folder). S8's SU2 report
+  already said that the incompressible solver is the one for this regime ("AERIS flies at Mach 0.084 — effectively
+  incompressible — so the INC_RANS cases are the ones in our regime"). The case files use `SOLVER= RANS` without it.
+- **SU2 does not converge on this mesh** with the case's numerics, nor with either fix: 2.3 to 2.8 orders, the CFL
+  still reset to 1 every few dozen iterations, the forces still drifting (B1c: CD −2 counts per 100 iterations at
+  the end). So the remaining 42-count drag difference (29 pressure, 13 friction) is not a measurement of the codes;
+  ADflow's 185.5 is a converged number, SU2's 143.6 is not.
 - The two codes also run different SA variants: ADflow's default `useft2SA = True`, SU2's log says
   "Spalart-Allmaras-noft2".
+- **For the case files (decision 76):** `case.py`'s SU2 configurations need the low-Mach correction (or `INC_RANS`),
+  and more than 10 linear iterations; and SU2 still needs a convergence fix on these meshes (the slope limiter is
+  the usual cause of such a stall; untested tonight: two tries per run).
 
-**Q7, y⁺ on SU2 (B1, not converged; design 1.3 at VVC).** Wing-surface nodes: largest 4.82, 99 % 3.88, median 1.55;
-91 % above 1.3. SU2 reports y⁺ at the first node off the wall, ADflow at the first cell centre, half as far, so
-ADflow's median 0.74 corresponds to about 1.48 at the first node. **Both say the first cell is about 20 % taller
-than the y⁺ 1.3 design over most of the wing**, more at the nose and the tip cap.
+**Q7, y⁺ on SU2 (design 1.3 at VVC).** B1c, the physical SU2 solution (not converged): wing-surface nodes largest
+4.61, 99 % 3.91, median 1.39; 60 % above 1.3. B1 (the overshooting one): largest 4.82, 99 % 3.88, median 1.55. SU2 reports y⁺ at the first node off the wall, ADflow at the first cell centre, half as far, so
+ADflow's median 0.74 corresponds to about 1.48 at the first node. **Both say the first cell is 7 to 14 % taller than
+the y⁺ 1.3 design in the median (1.39 SU2, 1.48 ADflow), and up to 3.9 at the 99th percentile**: more at the nose
+and on the tip cap, where the friction is highest.
 
 **Q5, the wake against the fan: inside it at −5° and at +10°, with at least 0.067 c to spare.** On the station plane nearest mid semi-span (station 11,
 y/s 0.481, local chord 0.941), the wake centre is the lowest velocity magnitude on vertical lines behind the trailing
@@ -214,7 +237,18 @@ station (`--y-frac`). Figures:
    `tecplotio.writetecplot` wants the family list; `writeSolution` does it right. Fixed after A1 the way
    `writeSolution` does it. Tested on the same restart: `lift_distribution.dat` and `slices.dat` were written, and the
    restart's forces equal A1b's to every printed digit. The solves were not affected.
-5. **SU2 under Open MPI runs as separate copies.** Found in a test before any SU2 run. `SU2_CFD` 8.5.0 here is a
+5. **B2, try 1: killed by the watchdog**, as the plan's rule says. SU2 SST + LM with 30 linear iterations and the
+   low-Mach correction grew to 11.96 GiB in 32 s; `MemAvailable` fell to 0.92 GiB, below the watchdog's 8 % of
+   13.7 GiB, and the swap grew by 0.64 GiB. Command and the watchdog's line:
+
+   ```
+   timeout 150m mpiexec.hydra -np 6 SU2_CFD ../su2_sst_lm_lin30_lmc.cfg
+   rss_watch: killed SU2_CFD (available 0.9 GiB < 8% of 13.7)
+   ```
+
+   SU2 caught the SIGTERM, saved its files and printed "Exit Success": exit 0 again. Try 2 (B2b) keeps the low-Mach
+   correction and goes back to the case's 10 linear iterations (9.18 GiB).
+6. **SU2 under Open MPI runs as separate copies.** Found in a test before any SU2 run. `SU2_CFD` 8.5.0 here is a
    static MPICH build. Under the MACH-Aero `mpirun` (Open MPI), `-np 2` printed two banners, did no partitioning
    and exited 0. Under MPICH's `mpiexec.hydra` it printed one banner and partitioned with ParMETIS (136 edge cuts).
    S8's SU2 runs show the same two-banner signature (`runs/su2_validation/e387_sa_lm/run.log`), so they ran as
@@ -234,6 +268,12 @@ and not committed: the plan names only this folder.
 - B1b, B1's first retry of two allowed: `su2_sa_lin30.cfg`, a copy of `su2_sa.cfg` with `LINEAR_SOLVER_ITER= 30`
   (was 10) and `LINSOL` added to `HISTORY_OUTPUT` (output only: the linear residual in the history). Why: B1's
   adaptive CFL collapsed (Q1). Cost: 1.9 GiB more (9.25 GiB) and about 5.5 s per iteration instead of 3.0 s.
+- B1c, B1's second and last retry: `su2_sa_lin30_lmc.cfg`, B1b's file with `LOW_MACH_CORR= YES`. Why: the stagnation
+  overshoot and the negative pressure drag (Q3). It removed both; it did not make SU2 converge.
+- B2 (SST + LM), try 1: `su2_sst_lm_lin30_lmc.cfg`, the case file with `LINEAR_SOLVER_ITER= 30`, `LOW_MACH_CORR= YES`
+  and `LINSOL` in the history: B1's two lessons applied at once (two changes; running the case file as written would
+  have repeated B1's CFL collapse and B1's overshoot). Killed for memory (section 4).
+- B2b, try 2: `su2_sst_lm_lmc.cfg`, the case file with `LOW_MACH_CORR= YES` and `LINSOL` only.
 
 ## 6. Choices made tonight
 

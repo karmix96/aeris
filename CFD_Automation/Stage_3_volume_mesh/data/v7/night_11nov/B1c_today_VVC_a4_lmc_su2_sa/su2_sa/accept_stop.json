@@ -1,0 +1,7 @@
+{
+ "folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/n11_today_VVC_a4_lmc/su2_sa",
+ "rule": "solve/read_results.py: 6 orders of rms[Rho] (or 1e-12) and settled forces",
+ "accepted_at": null,
+ "stopped": null,
+ "seconds": 2862
+}

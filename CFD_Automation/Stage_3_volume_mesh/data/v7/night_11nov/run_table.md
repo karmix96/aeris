@@ -8,4 +8,4 @@
 | B1_today_VVC_a4_su2_sa | today VVC | 1,075,074 | SU2 SA | 4° | 6 | 29.3 min | 582 | 2.83 | not accepted | 7.32 | 6.81 | 0.1883 | 67.7 | -0.00621 | 0.01298 | 0.01246 | 4.82, 3.88 |
 | B1b_today_VVC_a4_lin30_su2_sa | today VVC | 1,075,074 | SU2 SA | 4° | 6 | 15.4 min | 117 | 2.07 | not accepted | 9.25 | 8.60 | 0.1980 | 65.9 | -0.00479 | 0.01138 | 0.00831 | 4.81, 3.85 |
 | B1c_today_VVC_a4_lmc_su2_sa | today VVC | 1,075,074 | SU2 SA | 4° | 6 | 47.6 min | 436 | 2.16 | not accepted | 9.37 | 8.72 | 0.1982 | 143.6 | 0.00388 | 0.01048 | 0.00766 | 4.61, 3.91 |
-| B2_attempt1_killed | today VVC | 1,075,074 | SU2 SST+LM | 4° | 6 | 0.7 min |  |  |  | 11.96 | 11.12 |  |  | 1.57619 | 0.14439 |  | 5.41, 5.40 |
+| B2_attempt1_killed | today VVC | 1,075,074 | SU2 SST+LM | 4° | 6 | 0.7 min |  |  | killed by the watchdog at 32 s (available 0.9 GiB < 8% of 13.7) | 11.96 | 11.12 |  |  |  |  |  |  |

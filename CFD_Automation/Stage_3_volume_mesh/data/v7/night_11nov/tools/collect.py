@@ -190,6 +190,11 @@ def summarise(d: Path) -> dict:
             row["accept_stop"] = jl(d / sub / "accept_stop.json")
     if t.get("wall_seconds_monotonic") is not None:             # the monotonic clock where the wrapper had it
         row["wall_seconds"] = t["wall_seconds_monotonic"]
+    k = row.get("watchdog_killed") or row.get("host_killed")
+    if k:                                                        # a kill is the verdict; its forces are start-up only
+        row["verdict"] = f"killed by the watchdog at {k['at_seconds']} s ({k['why']})"
+        for f in ("coefficients", "forces_breakdown", "yplus", "hand_integrated_pressure"):
+            row.pop(f, None)
     if row.get("exit") not in (None, 0) and not row.get("iterations") and not row.get("verdict"):
         row["verdict"] = f"failed to start (exit {row['exit']}; see REPORT.md section 4)"
         row["watchdog_peak_gib"] = None                         # a start-up flash, not a run's memory

@@ -1,0 +1,45 @@
+{
+ "mesh": "whatif_today_VVC_1c2c23c5_re3e5",
+ "mesh_folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_today_VVC_1c2c23c5_re3e5",
+ "mesh_node_hash": "0cce1b401c031ad24869e2df25a12773bd214f7d28a40d4a3ee8545a94788ffd",
+ "wing": "flying_wing reference 0",
+ "level": "VVC",
+ "cells": 940974,
+ "alpha_deg": 4.0,
+ "beta_deg": 0.0,
+ "mach": 0.1,
+ "reynolds": 300000.0,
+ "reynolds_length": 1.0,
+ "temperature_K": 288.15,
+ "references": {
+  "area_ref_half": 4.000003993388616,
+  "semi_span": 4.0,
+  "chord_ref": 1.0,
+  "mac": 1.020943729192859,
+  "y_mac": 1.8324741324604628,
+  "x_le_mac": 0.8544967213372511,
+  "moment_ref": [
+   1.109732653635466,
+   0.0,
+   0.0
+  ],
+  "note": "mean chord 1 by similarity, so the half area equals the semi-span to the area integration error"
+ },
+ "adflow": {
+  "model": "SA",
+  "eddyVisInfRatio": 0.21,
+  "ram_gib_law": 10.41161404
+ },
+ "su2": {
+  "version": "8.5.0",
+  "solver": "INC_RANS (the recipe, DECISIONS O3)",
+  "models": [
+   "SA",
+   "SST_LM"
+  ],
+  "sa_nu_factor": 3.0,
+  "turbulence_intensity": 0.0007,
+  "turb2lam_visc_ratio": 10.0
+ },
+ "surface_band": "on (decision 81: the band stays on for every run)"
+}

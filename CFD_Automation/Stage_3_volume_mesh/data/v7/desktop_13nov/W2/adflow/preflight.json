@@ -1,0 +1,36 @@
+{
+ "accepted": true,
+ "families": [
+  "allSurfaces",
+  "allWalls",
+  "farfield",
+  "symmetry",
+  "wall"
+ ],
+ "directions": {
+  "lift_index": 3,
+  "velocity_direction": [
+   0.9975640502598242,
+   0.0,
+   0.0697564737441253
+  ],
+  "lift_direction": [
+   -0.0697564737441253,
+   0.0,
+   0.9975640502598242
+  ],
+  "velocity_error": 0.0,
+  "lift_error": 0.0
+ },
+ "seconds": 5.4,
+ "wall_surface_nodes": 322,
+ "memory": {
+  "ranks": 6,
+  "peak_rss_gib_sum": 0.8455696105957031,
+  "peak_rss_gib_largest_rank": 0.14529037475585938,
+  "cells": 940974,
+  "gib_per_million_cells": 0.8986110249546779,
+  "law_ank_only_gib": 9.49324202,
+  "law_ank_then_nk_gib": 10.41161404
+ }
+}

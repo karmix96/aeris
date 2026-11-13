@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 (E387, SA + LM) running since 21:37; E2 queued.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (and it corrects the SU2 study's stall verdicts); E2 (E387, SA-BCM) running since 22:16.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -26,6 +26,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | G1 | today VVC, `vis4=0.0078` | 1,075,074 | ADflow SA | 106 | 6.03 | **accepted** | 26.7 min | 10.99 GiB | 0.1910 | 176.9 | 63.0 | 113.8 | 0.00995 | 1.45, 4.09 (× 2) |
 | M1 | tip gap only (`--tip-dpw`) | 738,612 | ADflow SA | 93 | 6.01 | not accepted: CL moved 0.14 % in the last 30 iterations (limit 0.1 %) | 15.6 min | 7.72 GiB | 0.1908 | 185.7 | 68.0 | 117.8 | 0.00979 | 1.45, 3.52 (× 2) |
 | M2 | light (`--pack light`: tip gap, wall growth 1.28, station growth 1.25) | 700,654 | ADflow SA | 94 | 6.03 | not accepted: CD moved 0.56 counts in the last 30 iterations (rule label "oscillating"; in fact a monotonic creep, below) | 15.3 min | 7.38 GiB | 0.1908 | 186.9 | 68.6 | 118.3 | 0.00971 | 1.46, 3.54 (× 2) |
+| E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 
 ## 2. The blocks
 
@@ -84,6 +85,29 @@ Reference (NASA TM-4062, as S8 recorded it, `S8_oh_structured/reports/s8_su2_val
 negative), laminar separation at x/c 0.43, turbulent reattachment at 0.67 (oil flow, table III). Freestream turbulence:
 S8's value, 0.1 %, the SU2 tutorial's, not a measured value for the tunnel. Grid: S8's (SU2's tutorial O-grid,
 147,496 points). Mach 0.06 as S8, on the incompressible solver.
+
+| | E1: SU2 SA + LM (recipe) | McGhee, TM-4062 | E1 − McGhee |
+| --- | --- | --- | --- |
+| verdict | **accepted**: 6.15 orders, momentum 5.5, transition equations 4.0 and 4.8 orders; CD within 0.14 counts and CL within 0.09 % over the last 1,565 iterations | | |
+| CL | 0.5906 | 0.574 (at α 2.04°; the run is at 2.0°) | +0.017 (+2.9 %; about +3.7 % at matched α, the lift slope being about 0.11 per degree) |
+| CD (counts) | 112.8 (pressure 51.2, friction 61.5) | 118 ± 2.6 | **−5.2**, twice the measurement uncertainty |
+| CM about c/4 (nose down negative) | −0.0776 | −0.0794 | +0.0018 (2.3 % less nose down) |
+| bubble, upper side | separation 0.463; reattachment 0.707 with gaps of up to 2 nodes bridged (length 0.244), 0.608 strictly contiguous (0.146) | 0.43 to 0.67 (0.240, oil flow) | separation 0.033 c late; length 0.244 against 0.240 (bridged) |
+
+**SA + LM on the recipe converges on E387 and comes within 5 counts of the drag, 3 % of the lift and 2 % of the
+moment, with a bubble of the measured length starting 0.03 c late.** S8's compressible runs of the same case never
+converged (an 85-count swing over 40,000 iterations). The bubble's aft part, where the friction is near zero,
+alternates in sign node to node, so its end is 0.61 (contiguous) or 0.71 (bridged); the measured 0.67 lies between.
+
+**E1 corrects the SU2 study's verdict on SA + LM and SST + LM.** E1's residual stood still at 3.8 to 4.0 orders from
+iteration 1,000 to 4,000 while its drag moved 104 → 121 → 113 counts, then fell to 6 orders by 7,000. The stall rule
+of the SU2 study (no new low by 0.1 orders in 500 iterations, slower than 1 order per 1,000) would have stopped E1 at
+iteration 1,425, at 3.9 orders and CD 104.5 counts, 8 counts away from its converged value; it did not only because
+the first watch on E1 did not apply it. The 3-D transition runs were stopped by that rule at the same stage: R2 (SA +
+LM, VVC) at 1,423, R6 (light VC) at 1,604, R4 (SST + LM) at 1,606 iterations. **So "SA + LM and SST + LM oscillate;
+only SA-BCM converges" is not established: those runs may have been in the long transient E1 went through.** The
+500-iteration stall window is too short for transition runs; their restarts are on disk (`runs/su2t_VVC_a4/R2_sa_lm/
+restart.dat`, R4, R6), so they can be continued. For Mike.
 
 ### From files already on the desktop (plan section 3, no solver)
 

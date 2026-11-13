@@ -1,0 +1,61 @@
+{
+ "reference": {
+  "CL": 0.574,
+  "CD": 0.0118,
+  "CD_uncertainty": 0.00026,
+  "CM": -0.0794,
+  "sep": 0.43,
+  "reatt": 0.67,
+  "source": "NASA TM-4062 table B1 runs 9, 10, 13; bubble table III (oil flow); alpha 2.04 measured, run at 2.0"
+ },
+ "iterations": 7827,
+ "window_from_iter": 6261,
+ "forces": {
+  "CL": {
+   "last": 0.5906357397,
+   "mean": 0.5904917914139847,
+   "min": 0.5900831319,
+   "max": 0.5906357397,
+   "mean_minus_ref": 0.016491791413984713
+  },
+  "CD": {
+   "last": 0.0112751921,
+   "mean": 0.011279184470070243,
+   "min": 0.0112747645,
+   "max": 0.01128848386,
+   "mean_minus_ref": -0.0005208155299297572,
+   "mean_minus_ref_counts": -5.208155299297572
+  },
+  "CM": {
+   "last": -0.07756031722,
+   "mean": -0.07754465750497445,
+   "min": -0.07756366825,
+   "max": -0.07749519962,
+   "mean_minus_ref": 0.0018553424950255443
+  }
+ },
+ "bubble": {
+  "main": [
+   0.4626275525905632,
+   0.7068285487908874
+  ],
+  "length": 0.2442009962003242,
+  "all_reversed_runs": [
+   [
+    0.4626275525905632,
+    0.7068285487908874
+   ]
+  ],
+  "main_contiguous": [
+   0.4626275525905632,
+   0.6082087957648568
+  ],
+  "length_contiguous": 0.14558124317429355,
+  "measured": [
+   0.43,
+   0.67
+  ],
+  "measured_length": 0.24000000000000005,
+  "note": "from the wall file at the run's end (SU2 writes it at the stop)"
+ }
+}

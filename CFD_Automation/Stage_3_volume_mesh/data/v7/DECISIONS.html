@@ -52,10 +52,7 @@ in this folder.</p>
   <span><span class="chip open">open</span> waiting for Mike</span>
 </div>
 
-<div class="result"><strong>Where it stands (13 Nov, 08:00).</strong> ADflow SA converges with one option changed.
-SU2 now converges too: incompressible solver, limiter frozen after the start-up, CFL capped at 50 (SA: CL 0.19580,
-CD 167.79 counts, accepted). The acceptance rule is now 4 orders of residual plus flat forces. Running: SU2 SA + LM
-(R2); queued: SA with ft2 (R5), SA-BCM (R3), SST + LM (R4).</div>
+<div class="result"><strong>Where it stands (13 Nov, 17:30).</strong> SU2 converges on the Stage 3 mesh (incompressible solver, limiter frozen after the start-up, CFL capped at 50): SA gives CL 0.1958, CD 167.8 counts. The ft2 term changes nothing (0.03 counts), so it is not the 18-count gap to ADflow. Of the transition models, <strong>only SA-BCM converges</strong> (CL 0.2061, CD 129.95 counts); SA + LM (CD 137&ndash;143, and 128&ndash;132 on light VC) and SST + LM (CD 146&ndash;152) oscillate. All three put the same laminar separation bubbles on the upper side and lower the drag by 18&ndash;38 counts against fully turbulent SA, but disagree by 20 counts on CD and in the sign of CMy. Records: <code>su2_transition/REPORT.md</code>, figure <code>su2_transition/walls_all_models.png</code>.</div>
 
 <h2>1. The V7 night run, 11–12 Nov</h2>
 <p class="note">Claude alone, following <code>solve/NIGHT_11NOV.md</code>, with Mike's hard rules (no
@@ -151,6 +148,21 @@ limiter, just monitor the convergence."</p>
 <tr><td class="id">S16</td><td class="when">13 Nov, morning</td><td><span class="chip mike">Mike</span></td>
 <td>Test SU2's SA with the ft2 term (R5, <code>SA_OPTIONS= WITHFT2</code>), after R2.</td>
 <td>SU2 against ADflow at 4°: CL +2.7 %, CD −17.7 counts, almost all friction (104.0 against 117.8). SU2 runs "SA-noft2", ADflow SA with ft2: one change shows whether the SA form is the cause.</td></tr>
+<tr><td class="id">S17</td><td class="when">13 Nov, 09:21</td><td><span class="chip claude">Claude</span></td>
+<td>Stop SA + LM (R2) under the stall rule; report it as oscillating, mean and band.</td>
+<td>Residual flat at 3.8&ndash;3.9 orders; forces wandering since iteration 600: CL 0.216&ndash;0.227, CD 137.4&ndash;143.2 counts. Closed laminar bubbles at every station.</td></tr>
+<tr><td class="id">S18</td><td class="when">13 Nov, 09:10</td><td><span class="chip mike">Mike</span></td>
+<td>Run SA + LM on the light VC mesh (R6) to see whether the swing is numerical.</td>
+<td>Done: the swing stayed (4.3 against 5.8 counts peak to peak), the bubbles sat in the same places, the drag level fell 10 counts (130.5 against 140.0). Light VC peaked at 11.27 GiB, 1.5 GiB from the watchdog: the largest SA + LM mesh this machine runs.</td></tr>
+<tr><td class="id">S19</td><td class="when">13 Nov, 10:20</td><td><span class="chip claude">Claude</span></td>
+<td>Record that ft2 is not the SU2&ndash;ADflow difference (R5 accepted).</td>
+<td>SA with ft2: CD 167.76 against 167.79 counts without it; the gap to ADflow is 17.7 counts, 13.8 of them friction. The rest lies in the discretisation, the wall treatment, compressibility and dissipation.</td></tr>
+<tr><td class="id">S20</td><td class="when">13 Nov, 15:10</td><td><span class="chip claude">Claude</span></td>
+<td>Accept SA-BCM (R3): the only transition model that converges here.</td>
+<td>4.93 orders, momentum 2.51, CD within 0.06 counts and CL within 0.09 % over 328 iterations: CL 0.2061, CD 129.95, CMy +0.0065; 7.1 GiB, 2 h.</td></tr>
+<tr><td class="id">S21</td><td class="when">13 Nov, 17:22</td><td><span class="chip claude">Claude</span></td>
+<td>Stop SST + LM (R4) under the stall rule; oscillating.</td>
+<td>CD 146.3&ndash;152.1 counts, CL 0.229&ndash;0.236, the Re&theta; equation never below &minus;0.65. On the working numerics it closes its bubbles (the night's open separation was the compressible numerics), but they are the longest: most pressure drag.</td></tr>
 </table></div>
 
 <h2>3. Decisions still open for Mike</h2>
@@ -166,17 +178,20 @@ limiter, just monitor the convergence."</p>
 <td>Make SU2's configuration in <code>case.py</code> the recipe: <code>INC_RANS</code>, Venkatakrishnan 0.05 with <code>LIMITER_ITER</code>, CFL capped at 50?</td>
 <td>R1f converged from the freestream with it; the compressible files never converged.</td></tr>
 <tr><td class="id">O4</td><td><span class="chip open">open</span></td>
-<td>Which transition model?</td>
-<td>Waiting for R2 (SA + LM), R3 (SA-BCM), R4 (SST + LM). Night's SST + LM had an open laminar separation that shed waves outboard; S8 favours SA + LM.</td></tr>
+<td>Which transition model for production? Recommended: SA-BCM for steady runs, after checking it on S8's E387 case against McGhee's measurement (2-D, hours); SA + LM as the cross-check, reported as a band; SST + LM dropped from <code>case.py</code>.</td>
+<td>SA-BCM is the only one that converges, at the cost of fully turbulent SA. SA + LM is the one with a measured validation (S8, E387) but gives a band. SST + LM oscillates, has the most drag and failed S8's validation. The three disagree by 20 counts on CD and in the sign of CMy, so a measured check decides between them, not this wing.</td></tr>
 <tr><td class="id">O5</td><td><span class="chip open">open</span></td>
 <td>A two-level SU2 trend, VVC plus light VC (1.48 M cells)?</td>
 <td>SU2 incompressible needs about 6.6 GiB per million cells, about 9.8 GiB at light VC: it fits here; ADflow (14 GiB) does not. A trend, not a grid-convergence study.</td></tr>
 <tr><td class="id">O6</td><td><span class="chip open">open</span></td>
 <td>Hold Windows and WSL updates while runs go?</td>
 <td>An update most likely restarted WSL at 11:57 on 12 Nov and killed R1f; nothing inside WSL can prevent it.</td></tr>
+<tr><td class="id">O7</td><td><span class="chip open">open</span></td>
+<td>Chase the 18-count SU2&ndash;ADflow gap in fully turbulent SA?</td>
+<td>Not the SA form (R5). Candidates, one change each: SU2 compressible with the recipe's limiter and CFL (compressibility at Mach 0.1), and ADflow's dissipation and wall settings. Matters if SU2 is used to correct ADflow's data.</td></tr>
 </table></div>
 
-<footer>Written 13 Nov 2026 by Claude Code from the run records; times are the WSL clock (it steps by about 90 s).
+<footer>Written 13 Nov 2026 (updated 17:30) by Claude Code from the run records; times are the WSL clock (it steps by about 90 s).
 Kept next to <code>night_11nov/</code> and <code>su2_transition/</code> in <code>CFD_Automation/Stage_3_volume_mesh/data/v7/</code>.</footer>
 </main>
 </body>

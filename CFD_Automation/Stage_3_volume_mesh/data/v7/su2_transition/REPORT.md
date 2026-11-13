@@ -7,7 +7,7 @@ Case: BWB reference wing 0, today's VVC mesh (`whatif_today_VVC_e32d995a_re3e5`,
 mean chord, Mach 0.1, α 4°: the case of the night's A1b (ADflow SA, converged: CL 0.1907, CD 185.5 counts) and of
 B1–B2b (SU2, none converged). SU2 8.5.0, 6 ranks under MPICH's `mpiexec.hydra`.
 
-Status at 15:11 on 13 Nov: SU2 SA converged (R1f); ft2 changes nothing (R5); SA + LM oscillates (R2, R6); SA-BCM converged (R3); R4 (SST + LM) running
+Status at 17:27 on 13 Nov: done. SU2 SA converges; SA-BCM is the only transition model that converges; SA + LM and SST + LM oscillate (Conclusions, at the end)
 
 ## Why these runs, in this order
 
@@ -301,3 +301,52 @@ layer without the extra equations that keep LM's bubbles breathing.
 | pressure / friction | 63.8 / 104.0 | 92.1 / 45.3 at the stop | 80.2 / 47.6 at the stop | 76.7 / 53.3 |
 | CMy | 0.0070 | −0.0007 | −0.0017 | 0.0065 |
 | peak memory | 7.14 GiB | 8.37 GiB | 11.27 GiB | 7.14 GiB |
+
+| Run | Setup | Iterations | Wall time | Outcome | Peak memory |
+| --- | --- | --- | --- | --- | --- |
+| R4 | SST + LM on the recipe (one change from R2: SA → SST, the case file's SST settings) | 1,606 | 132.3 min | **stalled by the rule and oscillating**: stopped 17:22 | 9.07 GiB |
+
+**R4: on the working numerics SST + LM closes its bubbles too, but they are the longest and it does not settle.**
+Since iteration 800: CL 0.2289 to 0.2361 (mean 0.2327), CD 146.3 to 152.1 counts (mean 149.7), CMy −0.0084 to
+−0.0041 (mean −0.0070); at the stop pressure 101.3, friction 45.0 counts; residual flat at 3.8 to 3.9 orders, the
+transition-onset (Reθ) equation never below −0.65. Its bubbles separate where the others' do (x/c 0.34 to 0.53) and
+reattach later (0.51 to 0.96), hence the most pressure drag. The night's B2b (compressible, the same model) had an
+open separation shedding waves outboard: that was the compressible numerics, not the model.
+
+## Conclusions (13 Nov 2026)
+
+Case: BWB reference wing 0, VVC mesh, α 4°, Re 3 × 10⁵ on the mean chord, Tu 0.1 %. Figure of all four:
+`walls_all_models.png`.
+
+| Model | Verdict | CL | CD, counts (mean, band) | pressure / friction | CMy | Memory | Wall time |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SA, fully turbulent (R1f) | **accepted** | 0.1958 | 167.8 | 63.8 / 104.0 | +0.0070 | 7.1 GiB | 1.6 h |
+| SA with ft2 (R5) | **accepted** | 0.1958 | 167.8 | 63.8 / 104.0 | +0.0070 | 7.1 GiB | 54 min |
+| SA + LM (R2) | oscillating | 0.2219 (0.216–0.227) | 140.0 (137.4–143.2) | 92 / 45 | −0.0007 | 8.4 GiB | stalled at 1.9 h |
+| SA + LM on light VC (R6) | oscillating | 0.2230 (0.219–0.226) | 130.5 (127.8–132.1) | 80 / 48 | −0.0017 | 11.3 GiB | stalled at 2.8 h |
+| **SA-BCM (R3)** | **accepted** | **0.2061** | **129.95** | **76.7 / 53.3** | **+0.0065** | **7.1 GiB** | **2.0 h** |
+| SST + LM (R4) | oscillating | 0.2327 (0.229–0.236) | 149.7 (146.3–152.1) | 101 / 45 | −0.0070 | 9.1 GiB | stalled at 2.2 h |
+
+1. **SU2 works on the Stage 3 mesh** with the recipe: incompressible solver, FDS, Venkatakrishnan 0.05 frozen after
+   the start-up, adaptive CFL capped at 50, the case file's linear solver. Fully turbulent SA converges from the
+   freestream and is accepted.
+2. **The SA form is not the SU2-ADflow difference** (ft2: 0.03 counts against an 18-count gap, 14 of it friction).
+3. **The transition mechanism is the same in every model and on both meshes:** laminar separation bubbles on the
+   upper side (separation x/c 0.34 to 0.53, reattachment 0.4 to 0.96, longer outboard) and a laminar lower side.
+   Transition lowers the drag by 18 to 38 counts against fully turbulent SA, mostly in friction (45 to 53 counts
+   against 104, near the laminar flat-plate 50).
+4. **Only SA-BCM converges.** SA + LM and SST + LM oscillate slowly (4 to 6 counts peak to peak) on both meshes
+   tried; the swing did not shrink on light VC, which points to the bubbles themselves, though two meshes that both
+   under-resolve them could share it.
+5. **The models disagree on the numbers by more than the swing:** CD 130 to 150 counts (20 counts), CL 0.206 to
+   0.233 (13 %), CMy from +0.0065 to −0.0070 (the sign changes). The longer the bubble, the more pressure drag and
+   the more nose-down moment. Without a measurement on this wing no model can be called right; the only measured
+   case on file is S8's E387, where SA + LM matched McGhee's drag and SST + LM did not; BCM was not tested there.
+6. **The transitional drag level is mesh-sensitive:** SA + LM moved 10 counts (7 %) from VVC to light VC.
+
+**Which transition model works in our cases:** SA-BCM is the only one that gives a steady, accepted answer; it costs
+no more than fully turbulent SA (7.1 GiB, about 2 h on VVC) and places the bubbles where LM does. SA + LM is the one
+with a measured validation (S8, E387) but gives a band, not a number; SST + LM has the most drag, oscillates, and
+failed S8's validation. Recommended (Mike's decision): SA-BCM for steady production runs, after checking it on S8's
+E387 case against McGhee's measurement (2-D, hours, not days); SA + LM as the cross-check, reported as a band; SST +
+LM dropped from `case.py`.

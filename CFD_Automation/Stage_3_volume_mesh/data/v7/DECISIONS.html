@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V7 CFD decisions</title>
+<style>
+:root {
+  --bg: #fcfcfb; --surface: #ffffff; --ink: #0b0b0b; --ink2: #52514e; --muted: #7a7974; --line: #e4e3df;
+  --accent: #2a78d6; --mike: #eb6834; --claude: #2a78d6; --open: #eda100; --chip-bg: #f2f1ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1a19; --surface: #222220; --ink: #f0efec; --ink2: #c3c2b7; --muted: #9a998f; --line: #3a3a37;
+    --accent: #3987e5; --mike: #d95926; --claude: #3987e5; --open: #c98500; --chip-bg: #2c2c2a;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1a19; --surface: #222220; --ink: #f0efec; --ink2: #c3c2b7; --muted: #9a998f; --line: #3a3a37;
+  --accent: #3987e5; --mike: #d95926; --claude: #3987e5; --open: #c98500; --chip-bg: #2c2c2a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 26px; margin: 0 0 6px; }
+h2 { font-size: 19px; margin: 40px 0 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+p.lead, p.note { color: var(--ink2); margin: 6px 0 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--ink2); font-size: 13px; margin: 10px 0 0; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--chip-bg); border-left: 4px solid var(--muted); white-space: nowrap; }
+.chip.mike { border-color: var(--mike); } .chip.claude { border-color: var(--claude); } .chip.open { border-color: var(--open); }
+.wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--ink2); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+td.id { font-weight: 600; white-space: nowrap; color: var(--ink2); }
+td.when { white-space: nowrap; color: var(--ink2); font-size: 13px; }
+code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--chip-bg); padding: 0 4px; border-radius: 4px; }
+.result { margin: 10px 0 0; padding: 12px 14px; background: var(--surface); border-left: 4px solid var(--accent); }
+footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+<h1>V7 CFD decisions: what was decided, by whom, and why</h1>
+<p class="lead">BWB reference wing 0, today's VVC mesh (1,075,074 cells), Re 3 × 10<sup>5</sup> on the mean chord,
+Mach 0.1. The V7 night run (11–12 Nov 2026) and the SU2 study that followed (12–13 Nov). Every number is from a run
+on this desktop; the full records are <code>night_11nov/REPORT.md</code> and <code>su2_transition/REPORT.md</code>
+in this folder.</p>
+<div class="legend">
+  <span><span class="chip mike">Mike</span> decided by Mike</span>
+  <span><span class="chip claude">Claude</span> decided by Claude, inside the plan's rules</span>
+  <span><span class="chip open">open</span> waiting for Mike</span>
+</div>
+
+<div class="result"><strong>Where it stands (13 Nov, 08:00).</strong> ADflow SA converges with one option changed.
+SU2 now converges too: incompressible solver, limiter frozen after the start-up, CFL capped at 50 (SA: CL 0.19580,
+CD 167.79 counts, accepted). The acceptance rule is now 4 orders of residual plus flat forces. Running: SU2 SA + LM
+(R2); queued: SA with ft2 (R5), SA-BCM (R3), SST + LM (R4).</div>
+
+<h2>1. The V7 night run, 11–12 Nov</h2>
+<p class="note">Claude alone, following <code>solve/NIGHT_11NOV.md</code>, with Mike's hard rules (no
+<code>--open-holdouts</code>, no edits to <code>cfdauto/</code> or <code>configs/*.yaml</code>, the memory watchdog
+with every solve, at most two option changes per run).</p>
+<div class="wrap"><table>
+<tr><th>#</th><th>When</th><th>Who</th><th>Decision</th><th>Why (the evidence)</th></tr>
+<tr><td class="id">N1</td><td class="when">11 Nov, evening</td><td><span class="chip claude">Claude</span></td>
+<td>One run at a time, never the plan's two lines side by side.</td>
+<td>The desktop has 6 physical cores and 15.9 GiB, not the 48–52 GB of the plan; one ADflow VVC run peaks at 10–11 GiB.</td></tr>
+<tr><td class="id">N2</td><td class="when">11 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>Pass <code>timeLimit=10800.0</code> instead of the plan's <code>10800</code>.</td>
+<td>ADflow refused the int ("Expected data type float"); the run never started. Same value.</td></tr>
+<tr><td class="id">N3</td><td class="when">11–12 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>Fix three faults in <code>solve/run_adflow.py</code> (one writer, rank 0; the CGNS history names; ADflow's own lift-distribution writer bug), kept uncommitted as a patch.</td>
+<td>Every rank wrote the records (a corrupt <code>preflight.json</code>); the force history was silently empty; ADflow 2.13.1 passes "allSurfaces" where it needs the family list. The plan names only the night folder for commits.</td></tr>
+<tr><td class="id">N4</td><td class="when">12 Nov, night</td><td><span class="chip claude">Claude</span></td>
+<td>Stop A1 (ADflow as written) at 30 min with SIGUSR2, before its cap.</td>
+<td>Its decay rate fell every 30 iterations (0.0048 → 0.0029 orders per iteration): measured, it could not converge in its cap.</td></tr>
+<tr><td class="id">N5</td><td class="when">12 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>ADflow with <code>ANKUseTurbDADI=false</code> (A1b), and A4 (−5°) and A5 (+10°) with it directly.</td>
+<td>A1's SA residual stalled under the one-sweep DADI turbulence update; with the turbulence by Krylov, 6 orders in 136–239 iterations at three angles. Running A4 and A5 as written would have cost two stalled runs.</td></tr>
+<tr><td class="id">N6</td><td class="when">12 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>Launch SU2 with MPICH's <code>mpiexec.hydra</code>, never Open MPI's <code>mpirun</code>.</td>
+<td>The SU2 8.5.0 binary is a static MPICH build: under Open MPI it ran as separate 1-rank copies (two banners, no partitioning, exit 0). S8's SU2 logs show the same signature.</td></tr>
+<tr><td class="id">N7</td><td class="when">12 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>B1's two tries: 30 linear iterations (B1b), then the low-Mach correction (B1c).</td>
+<td>B1's CFL collapsed (cycling 1–86); the compressible Roe scheme at Mach 0.1 overshot the stagnation pressure (Cp 2.25) and gave a negative pressure drag. The correction removed the overshoot; neither try converged.</td></tr>
+<tr><td class="id">N8</td><td class="when">12 Nov, 04:1x</td><td><span class="chip claude">Claude</span></td>
+<td>B2's second try dropped the 30 linear iterations and kept the low-Mach correction.</td>
+<td>Try 1 was killed by the watchdog at 11.96 GiB in 32 s; the linear iterations were the part that cost memory (+1.9 GiB on SA).</td></tr>
+<tr><td class="id">N9</td><td class="when">11 Nov, 23:53</td><td><span class="chip claude">Claude</span></td>
+<td>Host-side kill rule raised to the pagefile 2.5 GiB over its start.</td>
+<td>The first rule (2 GiB) would have killed A1 at its third sample while WSL's swap stayed at 0.001 GiB. It never acted.</td></tr>
+<tr><td class="id">N10</td><td class="when">12 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>Keep the plan's acceptance rule unchanged through the night, and report its flaw.</td>
+<td>The plan forbade changing it. It needs 225 iterations to judge "settled", so it could not accept ADflow's converged runs (136–239 iterations).</td></tr>
+<tr><td class="id">N11</td><td class="when">12 Nov</td><td><span class="chip claude">Claude</span></td>
+<td>Do not run A2, A3, X1, X2 (VC and light VC).</td>
+<td>The plan's own memory test: A1's peak scaled to VC is 22 GiB, to light VC 14 GiB, above WSL's 13.65 GiB.</td></tr>
+</table></div>
+
+<h2>2. The SU2 study, 12–13 Nov</h2>
+<p class="note">Mike, 12 Nov: "make SU2 work. Find the transition model that works in our cases. Remove the time
+limiter, just monitor the convergence."</p>
+<div class="wrap"><table>
+<tr><th>#</th><th>When</th><th>Who</th><th>Decision</th><th>Why (the evidence)</th></tr>
+<tr><td class="id">S1</td><td class="when">12 Nov, morning</td><td><span class="chip mike">Mike</span></td>
+<td>No time limit on any run; convergence is watched, not timed.</td>
+<td>B2b ended at its 150-min cap unconverged with its lift still moving.</td></tr>
+<tr><td class="id">S2</td><td class="when">12 Nov, before 08:02</td><td><span class="chip claude">Claude</span></td>
+<td>Move SU2 to its incompressible solver (<code>INC_RANS</code>, FDS).</td>
+<td>Mach 0.1 is incompressible; four compressible tries stalled at 2.1–2.8 orders; S8's verified low-speed cases (TMR NACA 0012, flat plates) all ran incompressible. Memory: 7.1 GiB against 9.4 for the compressible SST + LM.</td></tr>
+<tr><td class="id">S3</td><td class="when">12 Nov, before 08:02</td><td><span class="chip claude">Claude</span></td>
+<td>Transition models in this order: SA + LM, SA-BCM, SST + LM.</td>
+<td>S8's E387 (Re 2 × 10<sup>5</sup>, measured bubble): SA + LM within the measurement on drag with a bubble in the measured region; SST + LM no bubble, 37 counts high, diverging. Our case files use SST + LM.</td></tr>
+<tr><td class="id">S4</td><td class="when">12 Nov, 08:10</td><td><span class="chip claude">Claude</span></td>
+<td>Put the case file's limiter back (R1b), one change.</td>
+<td>R1, without a limiter, diverged in its start-up at iteration 41–64.</td></tr>
+<tr><td class="id">S5</td><td class="when">12 Nov, 08:45</td><td><span class="chip claude">Claude</span></td>
+<td>A stall rule fixed before it was applied: no new residual low by 0.1 orders in 500 iterations and slower than 1 order per 1,000.</td>
+<td>Without a time limit, stopping a run had to rest on a rule written in advance, not on judgement after the fact.</td></tr>
+<tr><td class="id">S6</td><td class="when">12 Nov, 09:13</td><td><span class="chip mike">Mike</span></td>
+<td>Stop R1b and continue it at a fixed CFL of 25 (R1c).</td>
+<td>R1b's forces had settled but its residual crawled (3.2 orders, under 1 order per 1,000) with the CFL pinned at 1; about 3 more hours.</td></tr>
+<tr><td class="id">S7</td><td class="when">12 Nov, 10:00</td><td><span class="chip claude">Claude</span></td>
+<td>Stop R1c under the stall rule and map the residual of every point (D1).</td>
+<td>Fixed CFL did not help (−0.06 orders per 1,000). D1: 90 % of the pressure residual on about 100 points at two leading-edge corners, the root on the symmetry plane and the planform kink at y/s 0.525.</td></tr>
+<tr><td class="id">S8</td><td class="when">12 Nov, 10:12</td><td><span class="chip claude">Claude</span></td>
+<td>Freeze the limiter after the start-up (<code>LIMITER_ITER</code>).</td>
+<td>R1d: the residual dropped an order in 40 iterations after the freeze and then fell smoothly; the forces did not move (CD 167.78 → 167.79).</td></tr>
+<tr><td class="id">S9</td><td class="when">12 Nov, 10:34</td><td><span class="chip claude">Claude</span></td>
+<td>Cap the adaptive CFL at 50.</td>
+<td>R1e: with 10 linear iterations SU2 cannot hold a CFL above about 50; it doubled to 100–220 and was cut by 10 every 4–5 iterations, each cut kicking the residual.</td></tr>
+<tr><td class="id">S10</td><td class="when">12 Nov, 10:37</td><td><span class="chip claude">Claude</span></td>
+<td>Prove the recipe on SA from the freestream (R1f) before any transition run.</td>
+<td>R1b–R1e were hand-steered continuations; a recipe has to work alone, and R1f is the one-change baseline of every transition run.</td></tr>
+<tr><td class="id">S11</td><td class="when">12 Nov, 09:20</td><td><span class="chip claude">Claude</span></td>
+<td>Keep SU2 restart paths under 100 characters.</td>
+<td>A 101-character restart path made all six ranks abort ("buffer overflow detected"); a short name loaded the same file.</td></tr>
+<tr><td class="id">S12</td><td class="when">13 Nov, 07:09</td><td><span class="chip mike">Mike</span></td>
+<td>Continue R1f from its last restart; run the rest as a detached queue.</td>
+<td>WSL shut down at 11:57 on 12 Nov (kernel 6.18.54 → 6.18.58; every process SIGTERM at once; memory fine), killing R1f at 4.69 orders.</td></tr>
+<tr><td class="id">S13</td><td class="when">13 Nov, 07:25</td><td><span class="chip mike">Mike</span></td>
+<td><strong>New acceptance rule</strong> (<code>solve/read_results.py</code>): continuity residual 4 orders down (ADflow 10<sup>−4</sup>); momentum 2 orders; turbulence and transition not rising; forces flat over the last 20 % (at least 30 iterations): CD 0.5 counts, CL 0.1 %, CMy 0.0005, no drift; oscillating forces never pass.</td>
+<td>Measured on R1f: CD 9.5 counts from final at 2 orders, 0.46 at 3, 0.07 at 4. ADflow A1 at 4.2 orders: CD within 0.02 counts of its 6-order value. Momentum residuals fall about half as far as continuity. A Fluent/CFX good-practice analogue. Applied to all runs: the converged ADflow runs and R1d–R1f pass; every wrong compressible SU2 run still fails.</td></tr>
+<tr><td class="id">S14</td><td class="when">13 Nov, 07:22</td><td><span class="chip claude">Claude</span></td>
+<td>The rule's force window has a 30-iteration minimum, not 100.</td>
+<td>With 100, ADflow's converged runs (137–240 iterations) failed: their window still held the start-up (CD range 1.4–2.2 counts); with 30 it moves 0.002–0.12 counts.</td></tr>
+<tr><td class="id">S15</td><td class="when">13 Nov, 07:27</td><td><span class="chip claude">Claude</span></td>
+<td>Stop R1f-cont as accepted on its whole record.</td>
+<td>4.83 orders, momentum 2.31, CD within 0.035 counts over the last 253 iterations, no drift. <strong>SU2 SA: CL 0.19580, CD 167.79 counts, CMy 0.00702.</strong></td></tr>
+<tr><td class="id">S16</td><td class="when">13 Nov, morning</td><td><span class="chip mike">Mike</span></td>
+<td>Test SU2's SA with the ft2 term (R5, <code>SA_OPTIONS= WITHFT2</code>), after R2.</td>
+<td>SU2 against ADflow at 4°: CL +2.7 %, CD −17.7 counts, almost all friction (104.0 against 117.8). SU2 runs "SA-noft2", ADflow SA with ft2: one change shows whether the SA form is the cause.</td></tr>
+</table></div>
+
+<h2>3. Decisions still open for Mike</h2>
+<div class="wrap"><table>
+<tr><th>#</th><th>Status</th><th>Question</th><th>What the record says</th></tr>
+<tr><td class="id">O1</td><td><span class="chip open">open</span></td>
+<td>Put <code>"ANKUseTurbDADI": False</code> into <code>case.py</code>'s ADflow options?</td>
+<td>Removes the SA stall; +0.7 GiB on VVC and 22 % more time per iteration.</td></tr>
+<tr><td class="id">O2</td><td><span class="chip open">open</span></td>
+<td>Commit the three <code>run_adflow.py</code> fixes?</td>
+<td><code>night_11nov/tools/run_adflow_night_fixes.patch</code>; tested on the night's runs.</td></tr>
+<tr><td class="id">O3</td><td><span class="chip open">open</span></td>
+<td>Make SU2's configuration in <code>case.py</code> the recipe: <code>INC_RANS</code>, Venkatakrishnan 0.05 with <code>LIMITER_ITER</code>, CFL capped at 50?</td>
+<td>R1f converged from the freestream with it; the compressible files never converged.</td></tr>
+<tr><td class="id">O4</td><td><span class="chip open">open</span></td>
+<td>Which transition model?</td>
+<td>Waiting for R2 (SA + LM), R3 (SA-BCM), R4 (SST + LM). Night's SST + LM had an open laminar separation that shed waves outboard; S8 favours SA + LM.</td></tr>
+<tr><td class="id">O5</td><td><span class="chip open">open</span></td>
+<td>A two-level SU2 trend, VVC plus light VC (1.48 M cells)?</td>
+<td>SU2 incompressible needs about 6.6 GiB per million cells, about 9.8 GiB at light VC: it fits here; ADflow (14 GiB) does not. A trend, not a grid-convergence study.</td></tr>
+<tr><td class="id">O6</td><td><span class="chip open">open</span></td>
+<td>Hold Windows and WSL updates while runs go?</td>
+<td>An update most likely restarted WSL at 11:57 on 12 Nov and killed R1f; nothing inside WSL can prevent it.</td></tr>
+</table></div>
+
+<footer>Written 13 Nov 2026 by Claude Code from the run records; times are the WSL clock (it steps by about 90 s).
+Kept next to <code>night_11nov/</code> and <code>su2_transition/</code> in <code>CFD_Automation/Stage_3_volume_mesh/data/v7/</code>.</footer>
+</main>
+</body>
+</html>

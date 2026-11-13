@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted) and M1 done; M2 running since 21:19; E1, E2 queued.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 (E387, SA + LM) running since 21:37; E2 queued.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -25,6 +25,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | A1b (night, baseline) | today VVC | 1,075,074 | ADflow SA | 153 | 6.01 | converged | 31.2 min | 10.99 GiB | 0.1907 | 185.5 | 67.6 | 117.8 | 0.00984 | 1.48, 3.84 (× 2) |
 | G1 | today VVC, `vis4=0.0078` | 1,075,074 | ADflow SA | 106 | 6.03 | **accepted** | 26.7 min | 10.99 GiB | 0.1910 | 176.9 | 63.0 | 113.8 | 0.00995 | 1.45, 4.09 (× 2) |
 | M1 | tip gap only (`--tip-dpw`) | 738,612 | ADflow SA | 93 | 6.01 | not accepted: CL moved 0.14 % in the last 30 iterations (limit 0.1 %) | 15.6 min | 7.72 GiB | 0.1908 | 185.7 | 68.0 | 117.8 | 0.00979 | 1.45, 3.52 (× 2) |
+| M2 | light (`--pack light`: tip gap, wall growth 1.28, station growth 1.25) | 700,654 | ADflow SA | 94 | 6.03 | not accepted: CD moved 0.56 counts in the last 30 iterations (rule label "oscillating"; in fact a monotonic creep, below) | 15.3 min | 7.38 GiB | 0.1908 | 186.9 | 68.6 | 118.3 | 0.00971 | 1.46, 3.54 (× 2) |
 
 ## 2. The blocks
 
@@ -53,6 +54,8 @@ Against A1b (today VVC, 1,075,074 cells), ADflow SA, α 4°. "Outer 10 %": the s
 | Rule | Run | Cells saved | ΔCL | ΔCD (counts) | ΔCMy | Outer 10 % lift | Largest Δ normalised lift (where) | Cp at y/s 0.9–0.98 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | tip gap 0.1 % (DPW) | M1 | 336,462 (31.3 %) | +0.07 % | +0.26 (p +0.32, f −0.06) | −0.00005 | +8.0 % | 0.093 at η 1.000 (A1b 0.010) | largest \|ΔCp\| 0.008 (upper, x/c 0.92, y/s 0.98) |
+| all three (light) | M2 | 374,420 (34.8 %) | +0.07 % | +1.44 (p +0.95, f +0.49) | −0.00013 | +8.5 % | 0.093 at η 1.000 (A1b 0.010) | largest \|ΔCp\| 0.007 |
+| wall + station growth (M2 − M1) | | 37,958 more (5.1 % of M1) | +0.00 % | +1.18 (p +0.63, f +0.55) | −0.00008 | +0.5 % | 0.003 at η 0.906 | |
 
 M1 converged (relative residual 9.7 × 10⁻⁷ in 93 iterations) but is not accepted by the rule: CL still moved 0.14 % in
 its last 30 iterations and CD 0.43 counts (drift 0.39); ADflow stops on its residual (10⁻⁶, the case file's) before
@@ -60,6 +63,19 @@ the forces are flat to the rule. So M1's +0.26 counts are inside its own remaini
 of the cells and moves neither the lift (0.07 %) nor the drag (under its 0.4-count drift); it changes the load on
 the last segment at the tip** (the normalised sectional lift at η = 1 goes from 0.010 to about 0.10), which adds
 8 % to the outer 10 % of the lift, with Cp at the tip slices unchanged to 0.008. `M1/m1_vs_a1b.png`, `.json`.
+
+**M2: the light pack saves 35 % of the cells for about 1.4 counts of drag and nothing in the lift**; of it, the tip gap
+is 31 of the 35 % and next to nothing in drag; the wall and station growth together add the 1.2 counts (pressure
++0.6, friction +0.55) for 5 % more cells saved. `M2/m2_vs_a1b.png`, `M2/m2_vs_m1.png`.
+
+**The limit of these differences: ADflow's 10⁻⁶ stop leaves M1's and M2's forces still creeping.** In their last 30
+iterations CD rose in 29 of 29 steps, by 0.43 (M1) and 0.56 counts (M2), and CL by 0.13 and 0.20 %; the rule fails
+them on that, and labels M2 "oscillating" because its range (0.56) exceeds 0.5 counts while its fitted drift (0.48)
+does not: the label misfires on a monotonic creep (rule 4 as adopted; not changed here). A1b, on the today mesh,
+was flat to 0.008 counts already at 10⁻⁵. So M1's +0.26 and M2's +1.44 counts are lower bounds by a few tenths,
+and a difference below about 1 count is not resolved by a 10⁻⁶ stop on these meshes. For the far-field block (its
+budget is 0.3 counts) that matters: those runs would need to run on until the forces are flat (one option,
+`L2Convergence` 10⁻⁷), which the plan has at the case file's 10⁻⁶. For Mike.
 
 ### E: Eppler 387 against McGhee (2-D)
 

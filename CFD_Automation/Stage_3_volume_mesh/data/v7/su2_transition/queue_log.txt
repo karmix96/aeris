@@ -1,0 +1,6 @@
+2026-11-13 07:09:14 start /home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/v7/su2_transition/tools/run_su2.sh
+[R1f-cont] solve 2026-11-13 07:09:14: /home/mike_kara/miniconda3/pkgs/mpich-5.0.1-hfbb40bb_4/bin/mpiexec.hydra -np 6 /home/mike_kara/aeris/AERIS_MESH_STUDY/tools/su2_8.5.0/bin/SU2_CFD case.cfg (in /home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/su2t_VVC_a4/R1f_cont)
+[R1f-cont] done 2026-11-13 07:29:21 exit=0 wall=1115.62 s
+2026-11-13 07:29:21 end R1f-cont
+2026-11-13 07:29:21 start /home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/v7/su2_transition/tools/run_su2.sh
+[R2] solve 2026-11-13 07:29:21: /home/mike_kara/miniconda3/pkgs/mpich-5.0.1-hfbb40bb_4/bin/mpiexec.hydra -np 6 /home/mike_kara/aeris/AERIS_MESH_STUDY/tools/su2_8.5.0/bin/SU2_CFD case.cfg (in /home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/su2t_VVC_a4/R2_sa_lm)

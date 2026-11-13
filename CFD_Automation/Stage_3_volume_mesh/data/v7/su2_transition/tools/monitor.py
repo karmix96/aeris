@@ -9,7 +9,8 @@ last 200 and 1,000 iterations, the forces and how much they moved in the last 50
 --log-every seconds it appends one line to monitor_log.txt.
 
 It stops the run only when solve/read_results.py's acceptance rule holds, with that file's own code (imported, not
-copied): 6 orders of the residual (or an absolute 1e-12) and settled forces. SU2 8.5.0 catches SIGTERM and writes
+copied): since 13 Nov, continuity 4 orders down, momentum 2, turbulence and transition not rising, and forces flat
+over the last 20 % (CD 0.5 counts, CL 0.1 %, CMy 0.0005, no drift). SU2 8.5.0 catches SIGTERM and writes
 all its files at the current iteration, so the stop loses nothing. A stall is reported in the status ("stalled":
 no new residual minimum by 0.25 orders in the last 1,000 iterations), never acted on: that is decided by hand.
 """
@@ -26,7 +27,7 @@ from pathlib import Path
 
 STAGE = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(STAGE / "solve"))
-from read_results import settled                               # noqa: E402  the acceptance rule, as written
+from read_results import judge_su2_history                     # noqa: E402  the acceptance rule, as adopted
 from rss_watch import ranks                                     # noqa: E402  the same process matching
 
 
@@ -60,16 +61,16 @@ def state(hist: Path, res_ref: float | None = None) -> dict | None:
     r = df[res].to_numpy(float)
     it = df["Inner_Iter"].to_numpy(float) if "Inner_Iter" in df else np.arange(len(df), dtype=float)
     cl, cd = df["CL"].to_numpy(float), df["CD"].to_numpy(float)
-    top = max(float(r.max()), res_ref) if res_ref is not None else float(r.max())
-    drop = float(top - r[-1])
-    st = settled(cl, cd)
+    jr = judge_su2_history(df, res_ref)
+    drop = jr["orders_dropped"]
+    st = {k: v for k, v in jr.items() if k not in ("converged",)}
     t5 = slice(-500, None)
     out = {"rows": int(len(df)), "inner_iter": int(it[-1]), "residual": res, "res_first": float(r[0]),
            "res_max": float(r.max()), "res_ref": res_ref, "res_last": float(r[-1]), "res_min": float(r.min()),
            "res_min_at": int(it[int(r.argmin())]), "orders_dropped": drop,
            "rate_last200_orders_per_1000": slope(it[-200:], r[-200:]),
            "rate_last1000_orders_per_1000": slope(it[-1000:], r[-1000:]),
-           "converged": bool(drop >= 6.0 or r[-1] <= -12.0), "settled": bool(st.get("settled")), "settled_detail": st,
+           "converged": bool(jr["converged"]), "settled": bool(jr["settled"]), "settled_detail": st,
            "cl": float(cl[-1]), "cd_counts": float(cd[-1]) * 1e4,
            "cmy": float(df["CMy"].iloc[-1]) if "CMy" in df else None,
            "cd_moved_last500_counts": float((cd[t5].max() - cd[t5].min()) * 1e4),
@@ -96,7 +97,7 @@ def main(argv=None) -> int:
                    help="a continuation: the largest residual of the first leg, the base of the orders dropped")
     a = p.parse_args(argv)
     hist, st_path, log = a.folder / "history.csv", a.folder / "monitor_status.json", a.folder / "monitor_log.txt"
-    rep = {"folder": str(a.folder), "rule": "solve/read_results.py: 6 orders of the residual (or 1e-12) and settled forces",
+    rep = {"folder": str(a.folder), "rule": "solve/read_results.py as adopted 13 Nov: continuity 4 orders, momentum 2, turbulence not rising, forces flat",
            "accepted_at": None, "stopped": None}
     t0, seen, last_log = uptime(), False, -1e9
     while True:

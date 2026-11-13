@@ -1,0 +1,2 @@
+2026-11-13 07:10:14 t=60s it=10 rms[P]=-8.229 drop=3.50 rate200=None rate1000=None CL=0.19580 CD=167.79 dCD500=0.01 dCL500=1.11e-05 CFL=50.0 stalled=None settled=False
+2026-11-13 07:21:52 t=661s it=155 rms[P]=-9.460 drop=4.73 rate200=-7.836649704822108 rate1000=-7.836649704822108 CL=0.19580 CD=167.79 dCD500=0.03 dCL500=7.94e-05 CFL=50.0 stalled=None settled=False

@@ -1,0 +1,353 @@
+{
+ "A1 ADflow SA as written (stopped)": {
+  "iterations": 183,
+  "continuity_orders": 4.21,
+  "momentum_orders_min": 5.49,
+  "turbulence_rising": null,
+  "window": 36,
+  "cd_range_counts": 0.01,
+  "cl_range_pct": 0.0021,
+  "cmy_range": 1e-06,
+  "cd_drift_counts": 0.011,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.19064,
+   "CD_counts": 185.47,
+   "CMy": 0.00984
+  }
+ },
+ "A1b ADflow SA 4 deg": {
+  "iterations": 154,
+  "continuity_orders": 6.01,
+  "momentum_orders_min": 4.89,
+  "turbulence_rising": null,
+  "window": 30,
+  "cd_range_counts": 0.002,
+  "cl_range_pct": 0.002,
+  "cmy_range": 1e-06,
+  "cd_drift_counts": 0.001,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.19065,
+   "CD_counts": 185.49,
+   "CMy": 0.00984
+  }
+ },
+ "A4 ADflow SA -5 deg": {
+  "iterations": 240,
+  "continuity_orders": 6.0,
+  "momentum_orders_min": 4.84,
+  "turbulence_rising": null,
+  "window": 48,
+  "cd_range_counts": 0.124,
+  "cl_range_pct": 0.0385,
+  "cmy_range": 4.1e-05,
+  "cd_drift_counts": 0.122,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": -0.4484,
+   "CD_counts": 336.54,
+   "CMy": 0.03344
+  }
+ },
+ "A5 ADflow SA +10 deg": {
+  "iterations": 137,
+  "continuity_orders": 6.02,
+  "momentum_orders_min": 4.72,
+  "turbulence_rising": null,
+  "window": 30,
+  "cd_range_counts": 0.038,
+  "cl_range_pct": 0.0116,
+  "cmy_range": 1.9e-05,
+  "cd_drift_counts": 0.043,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.62534,
+   "CD_counts": 416.89,
+   "CMy": -0.01459
+  }
+ },
+ "B1 SU2 comp. SA": {
+  "iterations": 582,
+  "continuity_orders": 2.83,
+  "momentum_orders_min": 0.8,
+  "turbulence_rising": null,
+  "window": 116,
+  "cd_range_counts": 4.359,
+  "cl_range_pct": 1.4136,
+  "cmy_range": 0.000565,
+  "cd_drift_counts": 4.036,
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": false,
+   "2_turb_not_rising": true,
+   "3_forces": "False"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": 0.18834,
+   "CD_counts": 67.7,
+   "CMy": 0.01246
+  }
+ },
+ "B1b SU2 comp. SA lin30": {
+  "iterations": 117,
+  "continuity_orders": 2.07,
+  "momentum_orders_min": 0.66,
+  "turbulence_rising": null,
+  "window": 30,
+  "cd_range_counts": 1.166,
+  "cl_range_pct": 2.9558,
+  "cmy_range": 0.002664,
+  "cd_drift_counts": 0.694,
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": false,
+   "2_turb_not_rising": true,
+   "3_forces": "False"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": 0.19796,
+   "CD_counts": 65.94,
+   "CMy": 0.00831
+  }
+ },
+ "B1c SU2 comp. SA lin30+LMC": {
+  "iterations": 436,
+  "continuity_orders": 2.16,
+  "momentum_orders_min": 0.58,
+  "turbulence_rising": null,
+  "window": 87,
+  "cd_range_counts": 0.501,
+  "cl_range_pct": 0.0432,
+  "cmy_range": 7.2e-05,
+  "cd_drift_counts": 0.395,
+  "oscillating": "CD mean 143.69 counts, band 143.59-144.09",
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": false,
+   "2_turb_not_rising": true,
+   "3_forces": "False"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": 0.19824,
+   "CD_counts": 143.59,
+   "CMy": 0.00766
+  }
+ },
+ "B2b SU2 comp. SST+LM": {
+  "iterations": 2119,
+  "continuity_orders": 2.72,
+  "momentum_orders_min": 1.19,
+  "turbulence_rising": [
+   "rms[k] +0.56",
+   "rms[w] +0.31"
+  ],
+  "window": 423,
+  "cd_range_counts": 4.917,
+  "cl_range_pct": 5.2682,
+  "cmy_range": 0.00569,
+  "cd_drift_counts": 5.094,
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": false,
+   "2_turb_not_rising": false,
+   "3_forces": "False"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": 0.23217,
+   "CD_counts": 109.49,
+   "CMy": -0.00619
+  }
+ },
+ "R1 SU2 inc. SA no limiter (diverged)": {
+  "iterations": 65,
+  "continuity_orders": 0.0,
+  "momentum_orders_min": 0.0,
+  "turbulence_rising": [
+   "rms[nu] +11.90"
+  ],
+  "window": 30,
+  "cd_range_counts": 1.913249827e+20,
+  "cl_range_pct": 100.0,
+  "cmy_range": 1.513817949e+16,
+  "cd_drift_counts": 5.390862891209482e+19,
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": false,
+   "2_turb_not_rising": false,
+   "3_forces": "False"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": -4.290299256e+16,
+   "CD_counts": 1.913249827e+20,
+   "CMy": 1.21864834e+16
+  }
+ },
+ "R1b SU2 inc. SA + limiter": {
+  "iterations": 1150,
+  "continuity_orders": 3.45,
+  "momentum_orders_min": 1.78,
+  "turbulence_rising": null,
+  "window": 230,
+  "cd_range_counts": 0.166,
+  "cl_range_pct": 0.0167,
+  "cmy_range": 2.4e-05,
+  "cd_drift_counts": 0.162,
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": false,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": 0.19581,
+   "CD_counts": 167.86,
+   "CMy": 0.00702
+  }
+ },
+ "R1c = R1b + R1c (CFL 25)": {
+  "iterations": 1747,
+  "continuity_orders": 3.69,
+  "momentum_orders_min": 2.1,
+  "turbulence_rising": null,
+  "window": 349,
+  "cd_range_counts": 0.063,
+  "cl_range_pct": 0.0148,
+  "cmy_range": 2.5e-05,
+  "cd_drift_counts": 0.004,
+  "checks": {
+   "1_continuity": false,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "not accepted",
+  "final": {
+   "CL": 0.19581,
+   "CD_counts": 167.79,
+   "CMy": 0.00702
+  }
+ },
+ "R1d = R1b + R1c + R1d (frozen)": {
+  "iterations": 1936,
+  "continuity_orders": 4.74,
+  "momentum_orders_min": 2.15,
+  "turbulence_rising": null,
+  "window": 387,
+  "cd_range_counts": 0.063,
+  "cl_range_pct": 0.0143,
+  "cmy_range": 2.5e-05,
+  "cd_drift_counts": 0.029,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.19581,
+   "CD_counts": 167.79,
+   "CMy": 0.00702
+  }
+ },
+ "R1e = ... + R1e (adaptive)": {
+  "iterations": 2084,
+  "continuity_orders": 4.53,
+  "momentum_orders_min": 2.22,
+  "turbulence_rising": null,
+  "window": 416,
+  "cd_range_counts": 0.051,
+  "cl_range_pct": 0.0123,
+  "cmy_range": 2.5e-05,
+  "cd_drift_counts": 0.011,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.19581,
+   "CD_counts": 167.81,
+   "CMy": 0.00701
+  }
+ },
+ "R1f SU2 inc. SA recipe (killed at 1132)": {
+  "iterations": 1133,
+  "continuity_orders": 4.69,
+  "momentum_orders_min": 2.24,
+  "turbulence_rising": null,
+  "window": 226,
+  "cd_range_counts": 0.008,
+  "cl_range_pct": 0.0004,
+  "cmy_range": 0.0,
+  "cd_drift_counts": 0.007,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.1958,
+   "CD_counts": 167.81,
+   "CMy": 0.00701
+  }
+ },
+ "R1f + R1f-cont (current)": {
+  "iterations": 1195,
+  "continuity_orders": 4.76,
+  "momentum_orders_min": 2.27,
+  "turbulence_rising": null,
+  "window": 239,
+  "cd_range_counts": 0.035,
+  "cl_range_pct": 0.0079,
+  "cmy_range": 1.1e-05,
+  "cd_drift_counts": 0.029,
+  "checks": {
+   "1_continuity": true,
+   "2_momentum": true,
+   "2_turb_not_rising": true,
+   "3_forces": "True"
+  },
+  "verdict": "ACCEPTED",
+  "final": {
+   "CL": 0.1958,
+   "CD_counts": 167.79,
+   "CMy": 0.00702
+  }
+ }
+}

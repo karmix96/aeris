@@ -7,8 +7,7 @@ Case: BWB reference wing 0, today's VVC mesh (`whatif_today_VVC_e32d995a_re3e5`,
 mean chord, Mach 0.1, α 4°: the case of the night's A1b (ADflow SA, converged: CL 0.1907, CD 185.5 counts) and of
 B1–B2b (SU2, none converged). SU2 8.5.0, 6 ranks under MPICH's `mpiexec.hydra`.
 
-Status at 11:32: R1, R1b to R1e and the diagnostic D1 done; R1f (SA, the recipe, from the freestream) running since 10:37,
-4.2 orders down at iteration 751 with its forces settled. R2 to R4 (the transition models) wait for it.
+Status at 07:35 on 13 Nov: SU2 converges (R1f, SA, accepted); the acceptance rule changed (below); R2 (SA + LM) running
 
 ## Why these runs, in this order
 
@@ -135,6 +134,53 @@ gained nothing in 100 iterations.
 **The recipe, from these measurements** (R1f tests it from the freestream, before any transition run):
 incompressible solver, FDS, MUSCL, Venkatakrishnan 0.05 **frozen after the start-up** (`LIMITER_ITER= 500`),
 adaptive CFL from 1 **capped at 50** (`CFL_ADAPT_PARAM= ( 0.1, 2.0, 1.0, 50 )`), the case file's linear solver.
+
+| Run | Setup | Iterations | Wall time | Outcome | Peak memory |
+| --- | --- | --- | --- | --- | --- |
+| R1f | SA, the recipe, from the freestream | 1,133 | 80 min | killed at 11:57 on 12 Nov with everything else in WSL (below) at 4.69 orders | 7.14 GiB |
+| R1f-cont | R1f continued from its restart at iteration 1,000 (`LIMITER_ITER= 20`: a restart counts from 0) | 266 | 18.6 min | **accepted** under the adopted rule (whole record); stopped 07:27 on 13 Nov | 7.14 GiB |
+
+**R1f: the recipe converges SU2 from the freestream, without hand-steering.** The CFL sat at its cap of 50 with no
+cuts after the start-up (5 in the first 100 iterations). The pressure residual fell 1.8 orders by iteration 99, 3.3
+by 500 (the freeze), 4.1 by 702, 4.7 by 1,132, with no plateau; it ran ahead of R1b at every iteration (−7.08
+against −6.55 at 200). CL reached its final value by iteration 400 and CD was within 0.5 counts of it by 400.
+
+**WSL shut down at 11:57:54 on 12 Nov.** Every process received SIGTERM at once (SU2's six ranks logged "Interrupt
+signal (15)"); the watchdogs died before writing their records. Memory was not the cause: SU2 at 7.14 GiB with 5.6
+GiB available and no swap at the last sample. The WSL kernel was 6.18.54 before and 6.18.58 after, so a WSL or
+Windows update most likely restarted the Linux VM. SU2's save on SIGTERM did not finish; its last restart was the
+regular one at iteration 1,000, from which R1f-cont continued at 07:09 on 13 Nov.
+
+**The SU2 SA answer on the VVC mesh (R1f + R1f-cont, 4.83 orders, accepted): CL 0.19580, CD 167.79 counts, CMy
+0.00702.** The hand-steered chain R1b to R1e gave the same to 0.02 counts.
+
+## The acceptance rule, changed on 13 Nov (Mike's decision)
+
+The rule of the V7 plan (6 orders; forces settled over the last 20 % with at least 200 iterations) was replaced in
+`solve/read_results.py`, after the evidence below, by a Fluent/CFX good-practice analogue:
+
+1. continuity residual at least 4 orders down (SU2 rms[P] or rms[Rho]; ADflow relative total residual 10⁻⁴);
+2. every momentum residual at least 2 orders down; turbulence and transition residuals not rising;
+3. forces flat over the last 20 % of the record, at least 30 iterations: CD within 0.5 counts, CL within 0.1 %,
+   CMy within 0.0005, and no drift (fitted CD drift over the window, carried over one more, under 0.5 counts);
+4. forces that swing without drifting never pass: labelled oscillating, mean and band reported.
+
+Why 4 orders: on R1f, CD was 9.5 counts from its final value at 2 orders, 0.46 at 3, 0.18 at 3.5, **0.07 at 4**, 0.02
+at 4.5; ADflow A1, stopped at 4.2 orders, had CD within 0.02 counts of its 6-order value. The momentum residuals
+fall about half as far as the continuity one (2.4 orders when it reached 4), so a per-equation 3-order test, as
+Fluent's default, would reject converged runs. The 30-iteration minimum: with 100, ADflow's converged runs (137 to 240
+iterations) fail because their window still holds the start-up.
+
+The new rule applied to every run so far (`tools/accept_v2.py`, `accept_v2_applied.json`): accepted are ADflow A1,
+A1b, A4, A5 and SU2 R1d, R1e, R1f (whole records); not accepted are every compressible SU2 run of the night (B1, B1b,
+B1c, B2b: 2.1 to 2.8 orders, momentum under 1.2, B2b's turbulence residuals rising), R1 (diverged), R1b and R1c
+(3.45 and 3.7 orders, forces already final to 0.05 counts: the rule is conservative there). The run monitor
+(`tools/monitor.py`) uses the same code.
+
+## The transition runs
+
+Queue (`queue.sh`, detached, one run at a time, no time limit): R2 SA + LM, R3 SA-BCM, R4 SST + LM, each one change
+from R1f's recipe. R2 started 07:29 on 13 Nov.
 
 ## What failed
 

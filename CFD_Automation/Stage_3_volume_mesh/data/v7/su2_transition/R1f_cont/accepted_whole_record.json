@@ -1,0 +1,18 @@
+{
+ "record": "R1f rows 0-1000 (its restart point) + R1f-cont",
+ "rows": 1266,
+ "R1f_cont_last_iter": 265,
+ "CL": 0.1958043565,
+ "CD_counts": 167.7922275,
+ "CMy": 0.007016680165,
+ "verdict": "accepted",
+ "why": [],
+ "orders_dropped": 4.830508107,
+ "momentum_orders_min": 2.307536798,
+ "turbulence_rising": null,
+ "window": 253,
+ "cd_wander_counts": 0.03456110000001067,
+ "cl_wander_rel": 8.259060364677531e-05,
+ "cmy_wander": 1.0805707999999789e-05,
+ "cd_drift_counts": 0.010438861417335346
+}

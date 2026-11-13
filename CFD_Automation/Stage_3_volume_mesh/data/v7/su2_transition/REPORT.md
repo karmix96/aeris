@@ -237,3 +237,18 @@ Queue from 09:24 (`queue2b.sh`): R5 SA with ft2 (asked by Mike: is the SA form t
 on light VC (asked by Mike: does the swing change with the mesh? light VC is finer but not a pure refinement: y⁺ 1.0
 against 1.3, wall growth 1.28 against 1.34; SA + LM there needs about 11.5 GiB by scaling, a measured try under the
 watchdog), then R3 SA-BCM and R4 SST + LM.
+
+| Run | Setup | Iterations | Wall time | Outcome | Peak memory |
+| --- | --- | --- | --- | --- | --- |
+| R5 | SA with ft2 (`SA_OPTIONS= WITHFT2`; one change from R1f) | 753 | 54.1 min | **accepted** at iteration 752 (4.18 orders, momentum 2.01, CD within 0.06 counts over 150 iterations) | see `R5_sa_ft2/rss.json` |
+
+**R5: the SA form is not the SU2-ADflow difference.** With ft2 ("Turbulence model: Spalart-Allmaras", against R1f's
+"Spalart-Allmaras-noft2"): CL 0.195801, CD 167.76 counts (pressure 63.81, friction 103.95), CMy 0.00701; R1f without
+it: 0.195804, 167.79 (63.82, 103.97), 0.00702. ft2 moves CD by 0.03 counts; the gap to ADflow A1b (185.5 counts:
+pressure 67.6, friction 117.8) is 17.7 counts, 13.8 of them friction. What remains between the two codes is the
+discretisation and the wall treatment (SU2 vertex-based, the wall at the nodes; ADflow cell-centred), SU2's
+incompressible solver against ADflow's compressible one at Mach 0.1, and their dissipation; each would need its own
+one-change test.
+
+R6 (SA + LM on light VC) started 10:20; at its start it held 11.25 GiB with 1.50 GiB available (the watchdog acts
+below 1.09 GiB).

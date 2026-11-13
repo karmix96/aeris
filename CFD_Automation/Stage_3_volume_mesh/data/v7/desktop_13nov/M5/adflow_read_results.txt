@@ -1,0 +1,5 @@
+| run | verdict | iterations | CL | CD | CMy | why |
+|---|---|---|---|---|---|---|
+| ADflow SA | accepted | 200 | 0.19033 | 0.01897 | 0.00966 |  |
+| SU2 SA | not run |  |  |  |  |  |
+| SU2 SST+LM | not run |  |  |  |  |  |

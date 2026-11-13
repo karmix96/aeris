@@ -53,6 +53,7 @@ b { font-weight: 600; }
   <h1>Solvers and transition models: what works on the Stage 3 mesh</h1>
 </header>
 
+<p class="lead" style="border-left-color: var(--warn)"><b>Correction, 13 Nov 22:20.</b> On the E387 airfoil SU2 SA + LM converged to 6 orders (CL 0.591, CD 112.8 counts against McGhee's 0.574 and 118 &plusmn; 2.6; bubble of the measured length), but only after a 3,000-iteration plateau that the stall rule used below would have stopped at 1,425 iterations. The 3-D SA + LM and SST + LM runs were stopped by that rule at 1,423&ndash;1,606 iterations, so &ldquo;they oscillate, only SA-BCM converges&rdquo; is not established yet.</p>
 <ul class="lead">
   <li><b>Both solvers converge on our mesh now,</b> each with one fix. ADflow gives fully turbulent SA only; SU2 adds the transition models.</li>
   <li><b>Transition is a first-order effect at this Re:</b> 18 to 38 drag counts below fully turbulent SA (11 to 23 %), almost all of it friction.</li>

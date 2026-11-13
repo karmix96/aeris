@@ -1,0 +1,108 @@
+{
+ "case": "whatif_today_VVC_e32d995a_re3e5",
+ "solver": "ADflow",
+ "model": "SA",
+ "alpha_deg": 4.0,
+ "converged": false,
+ "relative_residual": 0.3058424790331888,
+ "residual_source": "adflow.iteration.totalrfinal/totalr0",
+ "iterations": 1,
+ "routine_failed": false,
+ "implausible": {
+  "cd": 1.7148529727648865,
+  "cdp": 1.4625888764460628,
+  "cdv": 0.25226409631882357
+ },
+ "coefficients": {
+  "cd": 1.7148529727648865,
+  "cdp": 1.4625888764460628,
+  "cdv": 0.25226409631882357,
+  "cl": 1.5461519831129482,
+  "cmy": -0.6897040950480465
+ },
+ "directions": {
+  "lift_index": 3,
+  "velocity_direction": [
+   0.9975640502598242,
+   0.0,
+   0.0697564737441253
+  ],
+  "lift_direction": [
+   -0.0697564737441253,
+   0.0,
+   0.9975640502598242
+  ],
+  "velocity_error": 0.0,
+  "lift_error": 0.0
+ },
+ "options_effective": {
+  "equationType": "RANS",
+  "turbulenceModel": "SA",
+  "eddyVisInfRatio": 0.21,
+  "liftIndex": 3,
+  "useANKSolver": true,
+  "useNKSolver": false,
+  "L2Convergence": 1e-06,
+  "nCycles": 3,
+  "MGCycle": "sg",
+  "ANKSubspaceSize": 10,
+  "ANKPCILUFill": 1,
+  "ANKASMOverlap": 1
+ },
+ "overrides": {
+  "nCycles": 3,
+  "writeVolumeSolution": false
+ },
+ "seconds": 21.4,
+ "memory": {
+  "ranks": 6,
+  "peak_rss_gib_sum": 10.214244842529297,
+  "peak_rss_gib_largest_rank": 1.7986602783203125,
+  "cells": 1075074,
+  "gib_per_million_cells": 9.500969089131814,
+  "law_ank_only_gib": 10.462785020000002,
+  "law_ank_then_nk_gib": 11.68020004
+ },
+ "history": {
+  "resrho": [
+   35.42209347735649,
+   10.319123215574683
+  ],
+  "cl": [
+   0.0037427978177928863,
+   1.5461519831129484
+  ],
+  "cd": [
+   0.2949164011864104,
+   1.7148529727648862
+  ],
+  "cdp": [
+   0.0,
+   1.4625888764460626
+  ],
+  "cdv": [
+   0.2949164011864104,
+   0.25226409631882357
+  ],
+  "cmy": [
+   0.010620401549674046,
+   -0.6897040950480465
+  ],
+  "totalres": [
+   134280.42685359262,
+   41068.65863453754
+  ],
+  "iter": [
+   0,
+   1
+  ]
+ },
+ "extras": {
+  "slice_fractions": [
+   0.5,
+   0.9
+  ],
+  "lift_distribution": "150 segments along y: lift_distribution.dat",
+  "slices": "slices.dat"
+ }
+}

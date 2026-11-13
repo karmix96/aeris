@@ -23,6 +23,11 @@ from pathlib import Path
 DIRECTION_TOLERANCE = 1.0e-9
 MIN_ITERATIONS = 10
 BOUNDS = {"cl": (-3.0, 3.0), "cd": (0.0, 0.5), "cdp": (-0.05, 0.5), "cdv": (0.0, 0.1), "cmy": (-3.0, 3.0)}
+#: ADflow's history keys are its CGNS monitor names (cgnsNames.f90): CoefLift, CoefDrag, ..., RSDMassRMS, totalR.
+#: 11 Nov night: the filter knew only cl, cd, ... and kept nothing, so read_results.py saw no force history.
+HISTORY_KEYS = {"coeflift": "cl", "coefdrag": "cd", "coefpressuredrag": "cdp", "coefviscousdrag": "cdv",
+                "coefmomenty": "cmy", "rsdmassrms": "resrho", "totalr": "totalres", "cl": "cl", "cd": "cd",
+                "cdp": "cdp", "cdv": "cdv", "cmy": "cmy", "resrho": "resrho", "totalres": "totalres"}
 
 
 def verify_flow_directions(solver, alpha_deg: float, lift_index: int = 3) -> dict:
@@ -108,8 +113,9 @@ def main() -> int:
         except Exception as e:                                 # reported, not swallowed
             rep["wall_surface_nodes"] = f"unavailable: {e}"
         rep["memory"] = peak_memory(solver.comm, case.get("cells"))
-        (out / "preflight.json").write_text(json.dumps(rep, indent=1))
-        print(json.dumps(rep, indent=1))
+        if solver.comm.rank == 0:                              # 11 Nov night: one writer (every rank wrote the file)
+            (out / "preflight.json").write_text(json.dumps(rep, indent=1))
+            print(json.dumps(rep, indent=1))
         return 0
     solver(ap_)
     funcs = {}
@@ -145,12 +151,15 @@ def main() -> int:
            "memory": peak_memory(solver.comm, case.get("cells"))}
     try:
         hist = solver.getConvergenceHistory()
-        res["history"] = {k: [float(x) for x in v] for k, v in hist.items()
-                          if k.lower() in ("iter", "totalres", "resrho", "cl", "cd", "cmy", "cdp", "cdv")}
+        res["history"] = {HISTORY_KEYS[k.lower()]: [float(x) for x in v] for k, v in hist.items()
+                          if k.lower() in HISTORY_KEYS}
+        if res["history"]:
+            res["history"]["iter"] = list(range(len(next(iter(res["history"].values())))))
     except Exception as e:
         res["history"] = f"unavailable: {e}"
-    (out / "result.json").write_text(json.dumps(res, indent=1))
-    print(json.dumps({k: v for k, v in res.items() if k != "history"}, indent=1))
+    if solver.comm.rank == 0:                                  # 11 Nov night: one writer (see the preflight)
+        (out / "result.json").write_text(json.dumps(res, indent=1))
+        print(json.dumps({k: v for k, v in res.items() if k != "history"}, indent=1))
     if a.lift_distribution or a.slices:
         # Added 11 Nov 2026 for the tip comparison of decision 114; not tested on ADflow when written. It runs after
         # result.json is on disk, so a failure here cannot lose the solve: it is recorded in result.json["extras"].
@@ -162,17 +171,23 @@ def main() -> int:
                 fr = [float(f) for f in a.slices.split(",") if f.strip()]
                 solver.addSlices("y", [f * r["semi_span"] for f in fr])
                 extras["slice_fractions"] = fr
+            # 11 Nov night: ADflow 2.13.1's writeLiftDistributionFile and writeSlicesFile pass the group name
+            # "allSurfaces" where writetecplot wants the family list ("ValueError: invalid literal for int() with
+            # base 10: 'allSurfaces'" on A1). writeSolution does it right; this is its call, with its family list.
+            fam = solver._getFamilyList(solver.allFamilies)
+            lift_f = str(out / "lift_distribution.dat") if a.lift_distribution else ""
+            slice_f = str(out / "slices.dat") if a.slices else ""
+            solver.adflow.tecplotio.writetecplot(slice_f, bool(a.slices), lift_f, bool(a.lift_distribution), "", False, fam)
             if a.lift_distribution:
-                solver.writeLiftDistributionFile(str(out / "lift_distribution.dat"))
                 extras["lift_distribution"] = f"{a.lift_distribution} segments along y: lift_distribution.dat"
             if a.slices:
-                solver.writeSlicesFile(str(out / "slices.dat"))
                 extras["slices"] = "slices.dat"
         except Exception as e:                                 # recorded, the solve stands
             extras["error"] = f"{type(e).__name__}: {e}"
         res["extras"] = extras
-        (out / "result.json").write_text(json.dumps(res, indent=1))
-        print(json.dumps({"extras": extras}, indent=1))
+        if solver.comm.rank == 0:
+            (out / "result.json").write_text(json.dumps(res, indent=1))
+            print(json.dumps({"extras": extras}, indent=1))
     return 0
 
 

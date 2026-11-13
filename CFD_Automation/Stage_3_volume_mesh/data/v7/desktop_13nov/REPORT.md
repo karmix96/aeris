@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3 done (accepted), Q1 running.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 running.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -44,6 +44,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | W1 | cranked 0, today VVC | 900,168 | ADflow SA | 156 | 6.00 | **accepted** | 35.7 min | 9.33 GiB | 0.6319 | 318.8 | 198.0 | 120.7 | −0.07430 | 1.55, 3.28 (× 2) |
 | W2 | flying wing 0, today VVC | 940,974 | ADflow SA | 154 | 6.01 | **accepted** | 25.1 min | 9.72 GiB | 0.2997 | 190.6 | 71.6 | 119.0 | 0.02821 | 1.50, 3.75 (× 2) |
 | W3 | tapered 0, today VVC | 899,886 | ADflow SA | 157 | 6.01 | **accepted** | 32.8 min | 9.35 GiB | 0.6274 | 318.9 | 197.9 | 121.0 | −0.06995 | 1.55, 3.26 (× 2) |
+| Q1 | light, Re 10⁵ | 559,578 | ADflow SA | 118 | 6.00 | **accepted** | 16.8 min | 5.97 GiB | 0.1986 | 220.6 | 82.8 | 137.9 | 0.00553 | 1.44, 3.86 (× 2) |
 | E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 | E2 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA-BCM (recipe) | 13,077 | 6.08 | **accepted** | 51.1 min | 0.71 GiB | 0.5921 | 112.9 | 53.5 | 59.4 | CM −0.0781 (c/4) | |
 
@@ -104,6 +105,22 @@ was flat to 0.008 counts already at 10⁻⁵. So M1's +0.26 and M2's +1.44 count
 and a difference below about 1 count is not resolved by a 10⁻⁶ stop on these meshes. For the far-field block (its
 budget is 0.3 counts) that matters: those runs would need to run on until the forces are flat (one option,
 `L2Convergence` 10⁻⁷), which the plan has at the case file's 10⁻⁶. For Mike.
+
+### Q: do ADflow and the mesh hold at the four Re levels, and what y⁺ does the first cell get?
+
+Light VVC at each Re (M2 is Re 3 × 10⁵), ADflow SA, α 4°. y⁺ at ADflow's first cell centre × 2 (the first node's
+height, comparable to the design 1.3), median by zone.
+
+| Re | Run | Cells | Verdict | Iterations | CL | CD (counts) | friction | upper | lower | nose | tip cap | trailing-edge base |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 10⁵ | Q1 | 559,578 | **accepted** | 118 | 0.1986 | 220.6 | 137.9 | 1.43 | 1.39 | 2.38 | **19.0** | 2.25 |
+| 3 × 10⁵ | M2 | 700,654 | not accepted (creep, block M) | 94 | 0.1908 | 186.9 | 118.3 | 1.48 | 1.43 | 2.13 | **32.8** | 5.04 |
+
+**The tip-gap rule leaves the tip cap without a resolved first cell.** With the light pack's tip gap (DPW, 0.1 %) the
+cap's median y⁺ is 32.8 (M2) and 33.0 (M1, the tip gap alone) at Re 3 × 10⁵, 19.0 at 10⁵; with today's tip it is 3.2
+(A1b, M5). The cap is a small area, so the total forces hardly see it (M1: CL +0.07 %, CD within its drift), but it
+is the likely reason the tip gap changes the load on the last segment (block M: the normalised sectional lift at
+η = 1 from 0.010 to 0.10). For decision 114: the tip gap's cap needs the wall's first-cell spacing.
 
 ### W: do ADflow and the mesh hold on the other three wing types?
 

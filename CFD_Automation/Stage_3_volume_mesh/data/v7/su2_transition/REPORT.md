@@ -315,6 +315,13 @@ open separation shedding waves outboard: that was the compressible numerics, not
 
 ## Conclusions (13 Nov 2026)
 
+**Correction, 13 Nov 22:20 (desktop run E1, `../desktop_13nov/REPORT.md` block E):** on E387 (2-D, the recipe) SU2 SA + LM
+converged to 6.15 orders and was accepted, but only after a 3,000-iteration plateau (3.8 to 4.0 orders, iterations
+1,000 to 4,000, drag moving 104 → 121 → 113 counts). The stall rule used here (500 iterations) would have stopped it
+at 1,425. R2, R6 and R4 were stopped by that rule at 1,423 to 1,606 iterations, so their "oscillating" verdicts are not
+established: they may have been in the same transient. Conclusion 4 and the recommendation below stand only as
+"SA-BCM converged within the window the rule allowed".
+
 Case: BWB reference wing 0, VVC mesh, α 4°, Re 3 × 10⁵ on the mean chord, Tu 0.1 %. Figure of all four:
 `walls_all_models.png`.
 

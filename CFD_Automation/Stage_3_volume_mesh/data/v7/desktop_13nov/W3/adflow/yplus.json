@@ -1,0 +1,73 @@
+{
+ "file": "runs/d13_W3/adflow/v7_a4_000_surf.cgns",
+ "wall_zones": 5,
+ "faces": 7864,
+ "max": 9.584887504577637,
+ "p99": 4.4384846687316895,
+ "median": 0.8054348230361938,
+ "max_at_x_over_c": 1.0,
+ "max_at_y_over_semispan": 0.9999829246884301,
+ "share_above_1": 0.24923702950152593,
+ "design": 1.3,
+ "wing_surface": {
+  "faces": 7144,
+  "max": 2.5460779666900635,
+  "p99": 1.632144808769226,
+  "median": 0.7733342051506042,
+  "share_above_design": 0.03737402015677491,
+  "note": "upper side, lower side and nose: without the trailing-edge base and the tip cap"
+ },
+ "zones": [
+  {
+   "zone": "NSWallAdiabaticBCZone2",
+   "label": "trailing-edge base",
+   "faces": 282,
+   "max": 9.584887504577637,
+   "p99": 9.116781234741211,
+   "median": 3.8006234169006348,
+   "share_above_design": 0.900709219858156,
+   "mean_z": 0.19295433163642883
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone6",
+   "label": "tip cap",
+   "faces": 438,
+   "max": 2.0219781398773193,
+   "p99": 2.018278121948242,
+   "median": 1.4511396884918213,
+   "share_above_design": 0.6940639269406392,
+   "mean_z": 0.25906097888946533
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone9",
+   "label": "lower side",
+   "faces": 3431,
+   "max": 2.2732038497924805,
+   "p99": 1.354298710823059,
+   "median": 0.7301437854766846,
+   "share_above_design": 0.016030311862430778,
+   "mean_z": 0.17168177664279938
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone14",
+   "label": "nose",
+   "faces": 282,
+   "max": 2.5460779666900635,
+   "p99": 2.3675453662872314,
+   "median": 1.2416125535964966,
+   "share_above_design": 0.4078014184397163,
+   "mean_z": 0.18071483075618744
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone19",
+   "label": "upper side",
+   "faces": 3431,
+   "max": 2.4369924068450928,
+   "p99": 1.4257240295410156,
+   "median": 0.8058704733848572,
+   "share_above_design": 0.028271640921014283,
+   "mean_z": 0.24254120886325836
+  }
+ ],
+ "note": "cell-centred, rind stripped, unweighted over wall faces"
+}

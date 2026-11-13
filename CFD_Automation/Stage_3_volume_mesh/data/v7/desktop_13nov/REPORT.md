@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 running since 20:32; M1, M2, then E1, E2 queued.
+Status: step 0 done; G1 done (accepted); M1 running since 21:02; M2, then E1, E2 queued.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -23,10 +23,26 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | Run | Mesh | Cells | Solver | Iterations | Residual drop | Verdict | Wall time | Peak RAM | CL | CD (counts) | Pressure | Friction | CMy | y⁺ median, 99 % |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | A1b (night, baseline) | today VVC | 1,075,074 | ADflow SA | 153 | 6.01 | converged | 31.2 min | 10.99 GiB | 0.1907 | 185.5 | 67.6 | 117.8 | 0.00984 | 1.48, 3.84 (× 2) |
+| G1 | today VVC, `vis4=0.0078` | 1,075,074 | ADflow SA | 106 | 6.03 | **accepted** | 26.7 min | 10.99 GiB | 0.1910 | 176.9 | 63.0 | 113.8 | 0.00995 | 1.45, 4.09 (× 2) |
 
 ## 2. The blocks
 
 ### G: is the 18-count ADflow-SU2 gap ADflow's own dissipation?
+
+| | ADflow A1b (vis4 0.0156, the default) | ADflow G1 (vis4 0.0078) | G1 − A1b | SU2 R1f (the recipe) |
+| --- | --- | --- | --- | --- |
+| CL | 0.19065 | 0.19096 | +0.00031 (+0.16 %) | 0.19580 |
+| CD (counts) | 185.49 | 176.86 | **−8.63** | 167.79 |
+| pressure drag | 67.65 | 63.02 | −4.63 | 63.82 |
+| friction drag | 117.84 | 113.84 | −4.00 | 103.97 |
+| CMy | 0.00984 | 0.00995 | +0.00012 | 0.00702 |
+| iterations, residual | 153, 9.76 × 10⁻⁷ | 106, 9.30 × 10⁻⁷ | | 4.83 orders |
+
+**Half of the gap is ADflow's dissipation: halving vis4 takes 8.6 of the 17.7 counts away, all of the pressure part
+(G1's pressure drag is 0.8 counts below SU2's) and 4.0 of the 13.9 counts of friction.** Friction stays 9.9 counts
+(9.5 %) above SU2's, and the lift gap (SU2 2.5 % higher) does not move. S8 measured the same direction on its own
+coarse level (−20.6 counts for the same halving). One mesh only: whether vis4 = 0.0078 is closer to the grid-converged
+answer, or only to SU2, needs a finer level, which does not fit this machine for ADflow.
 
 ### M: what each light rule changes in the answer
 

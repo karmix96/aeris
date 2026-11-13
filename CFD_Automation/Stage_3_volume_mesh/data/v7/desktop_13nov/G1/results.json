@@ -1,0 +1,30 @@
+{
+ "ADflow SA": {
+  "solver": "ADflow",
+  "iterations": 106,
+  "relative_residual": 9.299305980183105e-07,
+  "orders_dropped": 6.031549462222818,
+  "converged": true,
+  "coefficients": {
+   "cd": 0.017685921452347625,
+   "cdp": 0.00630151148015365,
+   "cdv": 0.011384409972193974,
+   "cl": 0.19096251768537859,
+   "cmy": 0.009951340736608923
+  },
+  "window": 30,
+  "cd_wander_counts": 0.0014594798298031564,
+  "cl_wander_rel": 1.1315493392705944e-05,
+  "cd_drift_counts": 0.0011571674372201609,
+  "cmy_wander": 7.743214477592963e-07,
+  "settled": true,
+  "verdict": "accepted",
+  "why": []
+ },
+ "SU2 SA": {
+  "verdict": "not run"
+ },
+ "SU2 SST+LM": {
+  "verdict": "not run"
+ }
+}

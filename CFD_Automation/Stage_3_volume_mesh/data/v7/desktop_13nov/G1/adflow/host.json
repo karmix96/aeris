@@ -1,0 +1,19 @@
+{
+ "match": "run_adflow.py",
+ "at_start": {
+  "free_gib": 8.872,
+  "pagefile_gib": 0.912,
+  "vmmem_gib": 2.992,
+  "compression_gib": 0.144
+ },
+ "min_free_gib": 0.49,
+ "max_pagefile_gib": 1.905,
+ "max_vmmem_gib": 11.589,
+ "max_compression_gib": 0.255,
+ "killed": null,
+ "samples": 27,
+ "failed_samples": 0,
+ "stopped_from_outside": true,
+ "seconds": 1753,
+ "note": "Windows host, sampled through powershell.exe; WSL's own view is in rss.json"
+}

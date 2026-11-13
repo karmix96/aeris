@@ -1,0 +1,2 @@
+{"run": "G1", "command": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun -np 6 /home/mike_kara/miniconda3/envs/mach-aero/bin/python solve/run_adflow.py --case runs/d13_G1 --set-option timeLimit=86400.0 --set-option vis4=0.0078 --lift-distribution 150 --slices 0.5,0.8,0.9,0.95,0.98", "cwd": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh", "start": "2026-11-13 20:32:54", "end": "2026-11-13 20:59:39",
+ "wall_seconds": 1605, "wall_seconds_monotonic": 1606.67, "exit": 0, "hard_stop_seconds": 88200, "ranks": 6}

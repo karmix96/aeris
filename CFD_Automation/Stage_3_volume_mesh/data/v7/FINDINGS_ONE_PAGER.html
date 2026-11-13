@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stage 3 Solver Findings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column memo, max 920px; a two-column solver block that stacks on phones */
+:root {
+  --bg: #fbfbfa; --paper: #ffffff; --ink: #14171a; --ink2: #4d5359; --rule: #e2e4e6;
+  --accent: #1f5fa8; --good: #1c7c4a; --good-bg: #e5f3ea; --warn: #9a5b00; --warn-bg: #fbefd9;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15181b; --paper: #1c2024; --ink: #eceef0; --ink2: #a9b0b7; --rule: #2e3439;
+  --accent: #6aa5e8; --good: #6fd19b; --good-bg: #173426; --warn: #f0b75c; --warn-bg: #3a2c12; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #15181b; --paper: #1c2024; --ink: #eceef0; --ink2: #a9b0b7; --rule: #2e3439;
+  --accent: #6aa5e8; --good: #6fd19b; --good-bg: #173426; --warn: #f0b75c; --warn-bg: #3a2c12; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font: 14.5px/1.5 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 40px; }
+main { max-width: 920px; margin: 0 auto; display: grid; gap: 22px; }
+header { display: grid; gap: 4px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; }
+.eyebrow { font: 500 11.5px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); }
+h1 { font-size: 26px; line-height: 1.2; margin: 0; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 15px; margin: 0 0 8px; font-weight: 600; letter-spacing: .01em; }
+p, li { margin: 0; max-width: 72ch; }
+.lead { display: grid; gap: 6px; padding: 14px 16px; background: var(--paper); border-left: 3px solid var(--accent); }
+.lead li { list-style: none; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 680px) { .cols { grid-template-columns: 1fr; } }
+.card { background: var(--paper); border: 1px solid var(--rule); padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+.card h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.card ul, ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.wrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th { font: 500 11px/1.3 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink2); }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.pill { font: 500 11.5px/1 var(--mono); padding: 3px 7px; border-radius: 3px; }
+.ok { color: var(--good); background: var(--good-bg); } .osc { color: var(--warn); background: var(--warn-bg); }
+.rec { display: grid; gap: 7px; padding-left: 20px; }
+.rec li::marker { font-family: var(--mono); color: var(--accent); }
+.note { font-size: 12.5px; color: var(--ink2); }
+code { font: 12.5px var(--mono); }
+b { font-weight: 600; }
+</style>
+</head><body>
+<main>
+<header>
+  <div class="eyebrow">AERIS Stage 3 CFD · BWB reference wing 0 · VVC mesh 1.08 M cells · Re 3×10⁵ · Mach 0.1 · α 4° · 11–13 Nov 2026</div>
+  <h1>Solvers and transition models: what works on the Stage 3 mesh</h1>
+</header>
+
+<ul class="lead">
+  <li><b>Both solvers converge on our mesh now,</b> each with one fix. ADflow gives fully turbulent SA only; SU2 adds the transition models.</li>
+  <li><b>Transition is a first-order effect at this Re:</b> 18 to 38 drag counts below fully turbulent SA (11 to 23 %), almost all of it friction.</li>
+  <li><b>Of the transition models, only SA-BCM gives a steady, converged answer.</b> The models agree on the flow (laminar bubbles on the upper side) but not on the numbers.</li>
+</ul>
+
+<section>
+  <h2>Solvers</h2>
+  <div class="cols">
+    <div class="card">
+      <h3>ADflow 2.13.1</h3>
+      <ul>
+        <li>As written the SA residual stalls. With <code>ANKUseTurbDADI=False</code>: 6 orders in 136–239 iterations at −5°, 4°, +10° (31 min at 4°).</li>
+        <li>4°: CL 0.1907, CD 185.5 counts (pressure 67.6, friction 117.8).</li>
+        <li>No transition model: it can only answer the fully turbulent question.</li>
+        <li>Memory 9.6–10.2 GiB per million cells: the M level needs 70–97 GiB.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>SU2 8.5.0</h3>
+      <ul>
+        <li>The case files' compressible solver never converged (4 tries, 2.1–2.8 orders) and gave a wrong pressure field at Mach 0.1.</li>
+        <li>Fix: incompressible solver, limiter frozen after the start-up, CFL capped at 50. SA converges from the freestream: CL 0.1958, CD 167.8.</li>
+        <li>Cheapest: 6.6 GiB per million cells; 1.6 h on VVC. Has transition models.</li>
+        <li>Against ADflow: CL +2.7 %, CD −17.7 counts (friction −12 %). The SA ft2 term is not the cause (0.03 counts).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Transition models (SU2, same mesh and settings, one change each)</h2>
+  <div class="wrap"><table>
+    <tr><th>Model</th><th>Verdict</th><th>CL</th><th>CD, counts</th><th>CMy</th><th>Memory</th></tr>
+    <tr><td>SA, fully turbulent</td><td><span class="pill ok">converged</span></td><td class="n">0.1958</td><td class="n">167.8</td><td class="n">+0.0070</td><td class="n">7.1 GiB</td></tr>
+    <tr><td><b>SA-BCM</b></td><td><span class="pill ok">converged</span></td><td class="n">0.2061</td><td class="n">130.0</td><td class="n">+0.0065</td><td class="n">7.1 GiB</td></tr>
+    <tr><td>SA + LM</td><td><span class="pill osc">oscillates</span></td><td class="n">0.216–0.227</td><td class="n">137–143</td><td class="n">−0.0007</td><td class="n">8.4 GiB</td></tr>
+    <tr><td>SA + LM, light VC mesh</td><td><span class="pill osc">oscillates</span></td><td class="n">0.219–0.226</td><td class="n">128–132</td><td class="n">−0.0017</td><td class="n">11.3 GiB</td></tr>
+    <tr><td>SST + LM (in our case files)</td><td><span class="pill osc">oscillates</span></td><td class="n">0.229–0.236</td><td class="n">146–152</td><td class="n">−0.0070</td><td class="n">9.1 GiB</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:8px">All three put laminar separation bubbles on the upper side at x/c 0.34–0.53, reattaching turbulent at 0.4–0.96, and keep the lower side laminar. They differ by 20 counts on CD and in the sign of CMy. The SA + LM swing stayed on the finer mesh, which points to the bubbles themselves; its drag level moved 10 counts with the mesh. There is no measurement on this wing, so no model can be called right from these runs.</p>
+</section>
+
+<section>
+  <h2>Recommendation</h2>
+  <ol class="rec">
+    <li><b>ADflow stays the fully turbulent production solver.</b> Put <code>ANKUseTurbDADI: False</code> into <code>case.py</code> and commit the three <code>run_adflow.py</code> fixes.</li>
+    <li><b>SU2 becomes the transition solver.</b> Put the working recipe into <code>case.py</code>: incompressible solver, frozen limiter, CFL cap 50.</li>
+    <li><b>Use SA-BCM for steady transitional runs,</b> after one check against measurement: S8's E387 airfoil case with McGhee's wind-tunnel data. It's 2-D and takes hours. SA + LM is the model that passed that test before, so keep it as the cross-check and report it as a band. Drop SST + LM.</li>
+    <li><b>Treat transitional drag as model- and mesh-dependent to about ±10 counts</b> until the E387 check is done. That is far smaller than the 18–38-count transition effect, but larger than fine design differences.</li>
+    <li><b>Accept runs on the adopted rule:</b> residual 4 orders down, momentum 2 orders, turbulence and transition equations not rising, forces flat over the last 20 % of iterations. A run whose forces swing is reported as its mean and band.</li>
+  </ol>
+  <p class="note" style="margin-top:8px">Open: the 18-count fully turbulent gap between SU2 and ADflow (it is not the SA form). This machine (16 GB) holds VVC and light VC only; M-level runs need more than 48 GB. Records: <code>data/v7/su2_transition/REPORT.md</code>, <code>data/v7/DECISIONS.html</code>, figure <code>data/v7/su2_transition/walls_all_models.png</code>.</p>
+</section>
+</main>
+</body></html>

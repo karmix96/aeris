@@ -42,9 +42,12 @@ def slope(it, r) -> float | None:
     return float(np.polyfit(it, r, 1)[0] * 1000.0)              # orders per 1,000 iterations (negative = falling)
 
 
-def state(hist: Path, res_ref: float | None = None) -> dict | None:
+def state(hist: Path, res_ref: float | None = None, prev: Path | None = None, stall_window: int | None = None) -> dict | None:
     """res_ref: for a continuation, the largest residual of the whole record (the first leg's), so the orders are
-    counted from the start of the solve and not from the restart (S8 defect: "continuations invisible")."""
+    counted from the start of the solve and not from the restart (S8 defect: "continuations invisible").
+    prev: the first leg's history.csv; the continuation is judged on the two records joined (13 Nov), its momentum
+    and force windows included. stall_window: the stall rule on the joined record with this window (no new residual
+    low by 0.1 orders in it, and slower than 1 order per 1,000 iterations over it)."""
     import numpy as np
     import pandas as pd
     try:
@@ -52,6 +55,14 @@ def state(hist: Path, res_ref: float | None = None) -> dict | None:
     except Exception:
         return None
     df.columns = [c.strip().strip('"') for c in df.columns]
+    if prev is not None:
+        p0 = pd.read_csv(prev)
+        p0.columns = [c.strip().strip('"') for c in p0.columns]
+        n0 = len(p0)
+        df = pd.concat([p0, df], ignore_index=True)
+        df["Inner_Iter"] = np.arange(len(df))
+    else:
+        n0 = 0
     res = "rms[P]" if "rms[P]" in df else "rms[Rho]" if "rms[Rho]" in df else None
     if res is None or len(df) < 2:
         return None
@@ -78,6 +89,13 @@ def state(hist: Path, res_ref: float | None = None) -> dict | None:
     # stalled: the best residual of the last 1,000 iterations is not 0.25 orders below the best before them
     if len(r) > 1500:
         out["stalled"] = bool(r[-1000:].min() > r[:-1000].min() - 0.25)
+    out["first_leg_rows"] = n0
+    if stall_window and len(r) > stall_window + 100:
+        w, b = r[-stall_window:], r[:-stall_window]
+        rate = float(np.polyfit(np.arange(stall_window), w, 1)[0] * 1000)
+        out["stall_rule"] = {"window": stall_window, "best_in_window": float(w.min()), "best_before": float(b.min()),
+                             "rate_orders_per_1000": rate,
+                             "stalled": bool(w.min() > b.min() - 0.1 and rate > -1.0)}
     for c in ("Avg CFL", "Avg_CFL"):
         if c in df:
             out["cfl_avg_median_last200"] = float(np.median(df[c].to_numpy(float)[-200:]))
@@ -95,6 +113,10 @@ def main(argv=None) -> int:
     p.add_argument("--no-stop", action="store_true", help="report only, never stop the run")
     p.add_argument("--res-ref", type=float, default=None,
                    help="a continuation: the largest residual of the first leg, the base of the orders dropped")
+    p.add_argument("--prev-history", type=Path, default=None,
+                   help="a continuation: the first leg's history.csv; judged on the joined record")
+    p.add_argument("--stall-window", type=int, default=None,
+                   help="stop the run (SIGTERM) when the stall rule holds on this many iterations of the joined record")
     a = p.parse_args(argv)
     hist, st_path, log = a.folder / "history.csv", a.folder / "monitor_status.json", a.folder / "monitor_log.txt"
     rep = {"folder": str(a.folder), "rule": "solve/read_results.py as adopted 13 Nov: continuity 4 orders, momentum 2, turbulence not rising, forces flat",
@@ -106,7 +128,7 @@ def main(argv=None) -> int:
             seen = True
         elif seen or uptime() - t0 > a.wait:
             break
-        s = state(hist, a.res_ref) if hist.exists() else None
+        s = state(hist, a.res_ref, a.prev_history, a.stall_window) if hist.exists() else None
         if s:
             s |= {"seconds": round(uptime() - t0), "wall": time.strftime("%F %T")}
             st_path.write_text(json.dumps(s, indent=1))
@@ -128,9 +150,19 @@ def main(argv=None) -> int:
                 rep["stopped"] = {"wall": time.strftime("%F %T"), "pids": sorted(alive)}
                 print(f"monitor: the rule holds at inner iteration {s['inner_iter']}; SU2 stopped (SIGTERM)", flush=True)
                 break
+            if s.get("stall_rule", {}).get("stalled") and not a.no_stop:
+                rep["stalled_at"] = s
+                for pid in ranks("SU2_CFD"):
+                    try:
+                        os.kill(pid, signal.SIGTERM)
+                    except OSError:
+                        pass
+                rep["stopped"] = {"wall": time.strftime("%F %T"), "pids": sorted(alive), "why": f"stall rule, {a.stall_window}-iteration window"}
+                print(f"monitor: stalled by the {a.stall_window}-iteration rule at iteration {s['inner_iter']}; SU2 stopped (SIGTERM)", flush=True)
+                break
         time.sleep(a.every)
     rep["seconds"] = round(uptime() - t0)
-    rep["last_state"] = state(hist, a.res_ref) if hist.exists() else None
+    rep["last_state"] = state(hist, a.res_ref, a.prev_history, a.stall_window) if hist.exists() else None
     (a.folder / "monitor.json").write_text(json.dumps(rep, indent=1, default=str))
     print(json.dumps({k: v for k, v in rep.items() if k != "last_state"}, indent=1, default=str), flush=True)
     return 0

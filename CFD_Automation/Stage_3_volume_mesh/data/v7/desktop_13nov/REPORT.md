@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (and it corrects the SU2 study's stall verdicts); E2 (E387, SA-BCM) running since 22:16.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 (E387, SA-BCM) running since 22:16; then queue B (section 0b).
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -17,6 +17,20 @@ Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (and it corrects th
 | O3 | edbbcf6d | `case.py`: the SU2 recipe (incompressible, FDS, Venkatakrishnan 0.05 frozen after 500 iterations, CFL capped at 50); Tu 0.07 % (decision 70); the V7 compressible template kept, unused | the SA file equals R1f's `inc_sa_recipe.cfg` line for line (comments aside); SA and SST + LM files ran 3 iterations; SA's first iterations equal R1f's (rms[P] −4.734098, CL 0.122551) |
 
 Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the case file, not from the command line.
+
+## 0b. Three decisions, 13 Nov 22:30 (Mike: "I leave it up to you all 3 decisions. Implement them all")
+
+1. **The 3-D transition runs are continued** from their restarts at their stops (R2 SA + LM VVC → R2c, R4 SST + LM →
+   R4c, R6 SA + LM light VC → R6c), `LIMITER_ITER= 20` (a restart counts iterations from 0), otherwise unchanged;
+   judged on the joined record (first leg + continuation: `monitor.py --prev-history`), stopped by the acceptance rule
+   or by **the stall rule with a 4,000-iteration window** (`--stall-window 4000`). Why 4,000: on E1's record a
+   500-iteration window fires at iteration 1,425, 2,000 at 3,809, 3,000 and 4,000 never; E1's plateau lasted 3,000.
+2. **ADflow stops at `L2Convergence` 10⁻⁷ where runs are compared below a count**: M3, M4, M5, F1, F2, and M2b, a
+   rerun of M2 as F's baseline at the same stop. W, Q and G2 keep the case file's 10⁻⁶. Why: M1 and M2 stopped at
+   10⁻⁶ with CD still rising 0.4 to 0.6 counts per 30 iterations; F's budget is 0.3 counts.
+3. **The rest of the plan is queued** (`tools/d13_queue_B.sh`) after E2, in this order: M5, W1–W3, Q1–Q3 (the plan's
+   next by worth, about 3 hours), R2c (it decides the transition model), S1, S2, R4c, M3, M4, M2b, F1, F2, G2, R6c,
+   E3. All meshes are built and match the plan's cell counts.
 
 ## 1. The run table
 

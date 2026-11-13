@@ -57,6 +57,10 @@ def adflow_options(case: dict, grid: Path, out: Path) -> dict:
         "eddyVisInfRatio": SA_EDDY_VIS_INF_RATIO,
         "MGCycle": "sg", "useANKSolver": True, "ANKSwitchTol": 1.0, "useNKSolver": False,
         "ANKSubspaceSize": 10, "ANKPCILUFill": 1,
+        # DECISIONS O1 (Mike, 13 Nov 2026): the turbulence by its own Krylov solve, not one DADI sweep per ANK step.
+        # As written the SA residual stalled (V7 night A1: 4.2 orders in 182 iterations); with it 6 orders in 136-239
+        # iterations at -5, 4 and +10 deg (A1b, A4, A5). Cost on VVC: +0.7 GiB, +22 % time per iteration.
+        "ANKUseTurbDADI": False,
         "L2Convergence": 1.0e-6, "nCycles": 30000, "timeLimit": 86400.0,
         "storeConvHist": True, "writeVolumeSolution": True, "writeSurfaceSolution": True,
         "monitorVariables": ["resrho", "resmom", "resrhoe", "resturb", "cl", "cd", "cmy", "cdp", "cdv"],

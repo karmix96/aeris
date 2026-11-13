@@ -7,7 +7,7 @@ Case: BWB reference wing 0, today's VVC mesh (`whatif_today_VVC_e32d995a_re3e5`,
 mean chord, Mach 0.1, α 4°: the case of the night's A1b (ADflow SA, converged: CL 0.1907, CD 185.5 counts) and of
 B1–B2b (SU2, none converged). SU2 8.5.0, 6 ranks under MPICH's `mpiexec.hydra`.
 
-Status at 09:25 on 13 Nov: SU2 SA converged (R1f); SA + LM (R2) oscillates (CD 137.6-143.2); R5 (SA with ft2) running
+Status at 13:13 on 13 Nov: SU2 SA converged (R1f); ft2 changes nothing (R5); SA + LM oscillates on VVC (R2) and light VC (R6); R3 (SA-BCM) running
 
 ## Why these runs, in this order
 
@@ -252,3 +252,30 @@ one-change test.
 
 R6 (SA + LM on light VC) started 10:20; at its start it held 11.25 GiB with 1.50 GiB available (the watchdog acts
 below 1.09 GiB).
+
+| Run | Setup | Iterations | Wall time | Outcome | Peak memory |
+| --- | --- | --- | --- | --- | --- |
+| R6 | SA + LM on light VC (1,475,376 cells; one change from R2: the mesh) | 1,604 | 170.6 min | **stalled by the rule and oscillating**: stopped 13:10 | 11.27 GiB (1.5 GiB left) |
+
+**R6: the swing does not go away on the finer mesh; the drag level moves by 10 counts.** Since iteration 800:
+
+| | R2, VVC (1.08 M cells) | R6, light VC (1.48 M cells) |
+| --- | --- | --- |
+| CL band (mean) | 0.2157 to 0.2266 (0.2219) | 0.2187 to 0.2261 (0.2230) |
+| CD band (mean), counts | 137.4 to 143.2 (140.0) | 127.8 to 132.1 (130.5) |
+| CD swing, peak to peak | 5.8 counts | 4.3 counts |
+| CMy mean | −0.0007 | −0.0017 |
+| pressure / friction drag at the stop | 92.1 / 45.3 | 80.2 / 47.6 |
+| residual | 3.9 orders, flat | 3.6 orders, flat |
+
+The wall (`R6_sa_lm_lightvc/walls_sa_r2_r6.png`, `wall_map.json`): the same laminar bubbles in the same places
+(separation x/c 0.33 to 0.51 on both); light VC reattaches more fully turbulent at y/s 0.26 (friction back to about
+0.0025 against 0.001) and a little earlier at 0.82; its bubbles are a little shorter, hence about 12 counts less
+pressure drag. The light VC mesh is finer but not a pure refinement (y⁺ 1.0 against 1.3, wall growth 1.28 against
+1.34, station growth 1.25, tip gap), so the 10-count shift belongs to those rules together.
+
+What this says: the swing survives a finer mesh with about the same amplitude, so it is not simply a coarse-mesh
+artefact of VVC; that points to the bubbles themselves (unsteady laminar separation, as S8 found on E387), though two
+meshes that both under-resolve the bubbles could also share it. The mechanism and the lift are mesh-stable (CL means
+0.5 % apart); the drag level of a transitional solution is not (10 counts, 7 %), against about 28 counts of
+transition effect. Light VC is the largest SA + LM mesh this machine can run (1.5 GiB left at 11.27 GiB).

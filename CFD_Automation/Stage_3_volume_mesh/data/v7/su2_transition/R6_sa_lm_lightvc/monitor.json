@@ -1,0 +1,47 @@
+{
+ "folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/su2t_VVC_a4/R6_sa_lm_lightvc",
+ "rule": "solve/read_results.py as adopted 13 Nov: continuity 4 orders, momentum 2, turbulence not rising, forces flat",
+ "accepted_at": null,
+ "stopped": null,
+ "seconds": 10268,
+ "last_state": {
+  "rows": 1604,
+  "inner_iter": 1603,
+  "residual": "rms[P]",
+  "res_first": -4.91443492,
+  "res_max": -4.91443492,
+  "res_ref": null,
+  "res_last": -8.467308558,
+  "res_min": -8.558375603,
+  "res_min_at": 1289,
+  "orders_dropped": 3.5528736379999994,
+  "rate_last200_orders_per_1000": 0.4689359338123426,
+  "rate_last1000_orders_per_1000": -0.5582986272691991,
+  "converged": false,
+  "settled": false,
+  "settled_detail": {
+   "residual": "rms[P]",
+   "residual_final": -8.467308558,
+   "orders_dropped": 3.5528736379999994,
+   "momentum_orders_min": 2.232154669,
+   "turbulence_rising": [
+    "rms[nu] +0.17 orders"
+   ],
+   "window": 320,
+   "cd_wander_counts": 3.996226000000016,
+   "cl_wander_rel": 0.030544974215594455,
+   "cd_drift_counts": 4.382645493088786,
+   "cmy_wander": 0.0032241037320000004,
+   "settled": false,
+   "reason": "forces not settled"
+  },
+  "cl": 0.2186830525,
+  "cd_counts": 127.7660365,
+  "cmy": 0.001488070727,
+  "cd_moved_last500_counts": 4.304758900000004,
+  "cl_moved_last500_rel": 0.03374686111078501,
+  "stalled": false,
+  "cfl_avg_median_last200": 50.0,
+  "linsol_res_median_last200": -3.5901275124999996
+ }
+}

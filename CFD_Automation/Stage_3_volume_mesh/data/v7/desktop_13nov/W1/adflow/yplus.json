@@ -1,0 +1,73 @@
+{
+ "file": "runs/d13_W1/adflow/v7_a4_000_surf.cgns",
+ "wall_zones": 5,
+ "faces": 7764,
+ "max": 9.201667785644531,
+ "p99": 3.858125686645508,
+ "median": 0.8102167844772339,
+ "max_at_x_over_c": 0.999972052045594,
+ "max_at_y_over_semispan": 0.027083334468659907,
+ "share_above_1": 0.26378155589902114,
+ "design": 1.3,
+ "wing_surface": {
+  "faces": 7050,
+  "max": 2.527427911758423,
+  "p99": 1.6379759311676025,
+  "median": 0.7763255834579468,
+  "share_above_design": 0.04865248226950355,
+  "note": "upper side, lower side and nose: without the trailing-edge base and the tip cap"
+ },
+ "zones": [
+  {
+   "zone": "NSWallAdiabaticBCZone2",
+   "label": "trailing-edge base",
+   "faces": 282,
+   "max": 9.201667785644531,
+   "p99": 9.050737380981445,
+   "median": 3.2323901653289795,
+   "share_above_design": 0.9078014184397163,
+   "mean_z": 0.1905149668455124
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone6",
+   "label": "tip cap",
+   "faces": 432,
+   "max": 2.1697425842285156,
+   "p99": 2.0647923946380615,
+   "median": 1.4575670957565308,
+   "share_above_design": 0.7037037037037037,
+   "mean_z": 0.2535889446735382
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone9",
+   "label": "lower side",
+   "faces": 3384,
+   "max": 2.292579412460327,
+   "p99": 1.3926873207092285,
+   "median": 0.7276068329811096,
+   "share_above_design": 0.024822695035460994,
+   "mean_z": 0.17165465652942657
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone14",
+   "label": "nose",
+   "faces": 282,
+   "max": 2.527427911758423,
+   "p99": 2.3608100414276123,
+   "median": 1.2766234874725342,
+   "share_above_design": 0.4787234042553192,
+   "mean_z": 0.18069370090961456
+  },
+  {
+   "zone": "NSWallAdiabaticBCZone19",
+   "label": "upper side",
+   "faces": 3384,
+   "max": 2.4168293476104736,
+   "p99": 1.426906704902649,
+   "median": 0.8118205070495605,
+   "share_above_design": 0.03664302600472813,
+   "mean_z": 0.23605705797672272
+  }
+ ],
+ "note": "cell-centred, rind stripped, unweighted over wall faces"
+}

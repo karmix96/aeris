@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5 done (accepted), W1 running.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1 done (accepted), W2 running.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -41,6 +41,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | M1 | tip gap only (`--tip-dpw`) | 738,612 | ADflow SA | 93 | 6.01 | not accepted: CL moved 0.14 % in the last 30 iterations (limit 0.1 %) | 15.6 min | 7.72 GiB | 0.1908 | 185.7 | 68.0 | 117.8 | 0.00979 | 1.45, 3.52 (× 2) |
 | M2 | light (`--pack light`: tip gap, wall growth 1.28, station growth 1.25) | 700,654 | ADflow SA | 94 | 6.03 | not accepted: CD moved 0.56 counts in the last 30 iterations (rule label "oscillating"; in fact a monotonic creep, below) | 15.3 min | 7.38 GiB | 0.1908 | 186.9 | 68.6 | 118.3 | 0.00971 | 1.46, 3.54 (× 2) |
 | M5 | band off (`--knobs band_off`) | 747,474 | ADflow SA, `L2Convergence` 10⁻⁷ | 200 | 7.01 | **accepted** | 37.6 min | 7.89 GiB | 0.1903 | 189.7 | 71.7 | 118.0 | 0.00966 | 1.58, 4.15 (× 2) |
+| W1 | cranked 0, today VVC | 900,168 | ADflow SA | 156 | 6.00 | **accepted** | 35.7 min | 9.33 GiB | 0.6319 | 318.8 | 198.0 | 120.7 | −0.07430 | 1.55, 3.28 (× 2) |
 | E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 | E2 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA-BCM (recipe) | 13,077 | 6.08 | **accepted** | 51.1 min | 0.71 GiB | 0.5921 | 112.9 | 53.5 | 59.4 | CM −0.0781 (c/4) | |
 
@@ -101,6 +102,16 @@ was flat to 0.008 counts already at 10⁻⁵. So M1's +0.26 and M2's +1.44 count
 and a difference below about 1 count is not resolved by a 10⁻⁶ stop on these meshes. For the far-field block (its
 budget is 0.3 counts) that matters: those runs would need to run on until the forces are flat (one option,
 `L2Convergence` 10⁻⁷), which the plan has at the case file's 10⁻⁶. For Mike.
+
+### W: do ADflow and the mesh hold on the other three wing types?
+
+ADflow SA, α 4°, Re 3 × 10⁵, today VVC, `ANKUseTurbDADI=False` from the case file, nothing else changed.
+"Residual last": the largest 100 cells of ResDensity in the volume file (`tools/adflow_residual_where.py`).
+
+| Wing | Cells | Verdict | Iterations | CL | CD (counts) | y⁺ median, 99 % (× 2) | Residual last (largest 100 cells hold) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BWB 0 (A1b, night) | 1,075,074 | converged | 153 | 0.1907 | 185.5 | 1.48, 3.84 | the tip near its trailing edge (42 %) |
+| cranked 0 (W1) | 900,168 | **accepted** | 156 | 0.6319 | 318.8 | 1.55, 3.28 | the tip, y/s 1.0, x 0.32 to 0.99 (51 %) |
 
 ### E: Eppler 387 against McGhee (2-D)
 

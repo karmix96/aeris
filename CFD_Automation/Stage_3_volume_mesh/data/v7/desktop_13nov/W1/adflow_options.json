@@ -1,0 +1,40 @@
+{
+ "gridFile": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/data/meshes/whatif_today_VVC_16e322f1_re3e5/volume.cgns",
+ "outputDirectory": "runs/d13_W1/adflow",
+ "equationType": "RANS",
+ "turbulenceModel": "SA",
+ "liftIndex": 3,
+ "eddyVisInfRatio": 0.21,
+ "MGCycle": "sg",
+ "useANKSolver": true,
+ "ANKSwitchTol": 1.0,
+ "useNKSolver": false,
+ "ANKSubspaceSize": 10,
+ "ANKPCILUFill": 1,
+ "ANKUseTurbDADI": false,
+ "L2Convergence": 1e-06,
+ "nCycles": 30000,
+ "timeLimit": 86400.0,
+ "storeConvHist": true,
+ "writeVolumeSolution": true,
+ "writeSurfaceSolution": true,
+ "monitorVariables": [
+  "resrho",
+  "resmom",
+  "resrhoe",
+  "resturb",
+  "cl",
+  "cd",
+  "cmy",
+  "cdp",
+  "cdv"
+ ],
+ "surfaceVariables": [
+  "cp",
+  "cf",
+  "yplus",
+  "vx",
+  "vy",
+  "vz"
+ ]
+}

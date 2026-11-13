@@ -7,7 +7,7 @@ Case: BWB reference wing 0, today's VVC mesh (`whatif_today_VVC_e32d995a_re3e5`,
 mean chord, Mach 0.1, α 4°: the case of the night's A1b (ADflow SA, converged: CL 0.1907, CD 185.5 counts) and of
 B1–B2b (SU2, none converged). SU2 8.5.0, 6 ranks under MPICH's `mpiexec.hydra`.
 
-Status at 07:35 on 13 Nov: SU2 converges (R1f, SA, accepted); the acceptance rule changed (below); R2 (SA + LM) running
+Status at 09:25 on 13 Nov: SU2 SA converged (R1f); SA + LM (R2) oscillates (CD 137.6-143.2); R5 (SA with ft2) running
 
 ## Why these runs, in this order
 
@@ -213,3 +213,27 @@ from R1f's recipe. R2 started 07:29 on 13 Nov.
    mesh path (111 characters) is read by other code and works.
 
 ## Files
+
+| Run | Setup | Iterations | Wall time | Outcome | Peak memory |
+| --- | --- | --- | --- | --- | --- |
+| R2 | SA + LM on the recipe (one change from R1f) | 1,423 | 112.9 min | **stalled by the rule and oscillating**: stopped 09:21 on 13 Nov | 8.37 GiB |
+
+**R2: SA + LM gives the right mechanism but no steady answer on VVC.** The residual fell like R1f's to 3.8 orders by
+iteration 900 (best −8.64 at 1,342, 3.9 orders) and then stopped: the stall rule held at 1,420 (the best of the last
+500 iterations 0.07 orders below the best before them, rate −0.10 orders per 1,000). The forces did not settle; from
+iteration 600 to 1,423 they wandered slowly: **CL 0.2159 to 0.2266 (mean 0.2215), CD 137.6 to 143.2 counts (mean
+139.8), CMy −0.0027 to +0.0015.** Under rule 4 that is "oscillating": not accepted, reported as mean and band.
+
+The wall at the stop (`R2_sa_lm/walls_sa_vs_sa_lm.png`, `R2_sa_lm/wall_map.json`) shows laminar separation bubbles on
+the upper side at every station, each with the plateau in Cp, reversed friction and a turbulent reattachment:
+separation at x/c 0.34 to 0.50, reattachment at 0.65 to 0.95, longer outboard (about 0.10 c at y/s 0.26, 0.25 c at
+0.48, 0.30 to 0.45 c at 0.82 to 0.95). The lower side stays laminar to the trailing edge. No shedding waves, unlike
+the night's compressible SST + LM, whose separation stayed open. CD 137.4 counts at the stop: pressure 92.1, friction
+45.3 (fully turbulent SA: 63.8 and 104.0), so transition lowers the drag by about 28 counts on this mesh, much more
+than the swing. Long bubbles near the trailing edge are the likely source of the slow swing; whether it is physical
+or numerical is what R6 (the same run on light VC) tests.
+
+Queue from 09:24 (`queue2b.sh`): R5 SA with ft2 (asked by Mike: is the SA form the SU2-ADflow difference?), R6 SA + LM
+on light VC (asked by Mike: does the swing change with the mesh? light VC is finer but not a pure refinement: y⁺ 1.0
+against 1.3, wall growth 1.28 against 1.34; SA + LM there needs about 11.5 GiB by scaling, a measured try under the
+watchdog), then R3 SA-BCM and R4 SST + LM.

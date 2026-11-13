@@ -240,7 +240,7 @@ watchdog), then R3 SA-BCM and R4 SST + LM.
 
 | Run | Setup | Iterations | Wall time | Outcome | Peak memory |
 | --- | --- | --- | --- | --- | --- |
-| R5 | SA with ft2 (`SA_OPTIONS= WITHFT2`; one change from R1f) | 753 | 54.1 min | **accepted** at iteration 752 (4.18 orders, momentum 2.01, CD within 0.06 counts over 150 iterations) | see `R5_sa_ft2/rss.json` |
+| R5 | SA with ft2 (`SA_OPTIONS= WITHFT2`; one change from R1f) | 753 | 54.1 min | **accepted** at iteration 752 (4.18 orders, momentum 2.01, CD within 0.06 counts over 150 iterations) | 7.14 GiB |
 
 **R5: the SA form is not the SU2-ADflow difference.** With ft2 ("Turbulence model: Spalart-Allmaras", against R1f's
 "Spalart-Allmaras-noft2"): CL 0.195801, CD 167.76 counts (pressure 63.81, friction 103.95), CMy 0.00701; R1f without

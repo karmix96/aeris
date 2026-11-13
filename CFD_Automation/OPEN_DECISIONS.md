@@ -666,3 +666,22 @@ Rules, checks and the measurements behind them: `Stage_3_volume_mesh/decisions/v
     (y⁺ 1.3): a preview level only. Proposed: rule set 3 = the light rules with levels VC, C, M, F; the production level
     chosen by Stage 4's grid study. Still Mike's to decide.
 
+115. **The first solves (V7 at VVC, 11–13 Nov 2026, Mike's desktop): what was decided, and what is open.** The full
+    record with who decided what and why: `Stage_3_volume_mesh/data/v7/DECISIONS.html` (N1–N11 the night run, S1–S21
+    the SU2 study, O1–O7 open; written by the Claude Code agent on the desktop); the reading of the results:
+    `Stage_3_volume_mesh/decisions/volume_rules.md`, section 22. **Decided by Mike:** no time limit on a run, the
+    convergence is watched (12 Nov); the acceptance rule of `solve/read_results.py` is 4 orders of the continuity
+    residual, 2 of the momentum residuals, turbulence residuals not rising, and flat forces (CD 0.5 counts, CL 0.1 %,
+    CMy 0.0005 over the last 20 %, no drift); oscillating forces never pass (13 Nov; it replaces "6 orders and a
+    200-iteration window", which could not judge a converged ADflow run). **Found:** the desktop has 16 GB, so only
+    VVC runs there (this sharpens 103 and 113); ADflow needs `ANKUseTurbDADI=false`; SU2 needs its incompressible
+    solver with the limiter frozen after the start-up and the CFL capped at 50; the two codes differ by 17.7 counts
+    of CD and 2.7 % of CL on the same mesh with the same model (not the ft2 term); the transition models differ by 20
+    counts and in the sign of the moment, and only SA-BCM converges. **Open, for Mike** (advice of 13 Nov in
+    brackets): O1 `ANKUseTurbDADI` into `case.py` (yes); O2 commit the `run_adflow.py` fixes (yes); O3 the SU2 recipe
+    into `case.py` (yes for the numerics, with Tu 0.07 % as decision 70 says); O4 the transition model (not yet:
+    converged is not correct, and S8's E387 runs were compressible and not converged, so E387 is rerun on the recipe
+    first); O5 one family step in SU2, light VVC to light VC (yes: SU2 SA needs about 9.8 GiB there); O6 hold Windows
+    updates during runs (yes); O7 the code gap (yes, starting with ADflow's `vis4`: S8 measured −20.6 counts for half
+    of it on its coarse level). The solver split (76) waits on O7: the transition effect (18–38 counts) is the size
+    of the gap, so the two codes must not be mixed in one difference. The next runs: `solve/DESKTOP_13NOV.md`.

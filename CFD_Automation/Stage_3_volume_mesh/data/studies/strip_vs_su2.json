@@ -1,0 +1,387 @@
+{
+ "case": {
+  "wing": "bwb reference 0",
+  "re_mean_chord": 300000.0,
+  "alpha_deg": 4.0,
+  "strips": "XFOIL e^N tables, N_crit 9 (Tu 0.07 %), Mach 0.1, uniform induced angle; cfdauto.mesh.refine_map.strip_map",
+  "su2": "incompressible RANS on the Stage 3 mesh, Tu 0.1 %; data/v7/su2_transition/*/wall_map.json",
+  "strip_cl_wing": 0.2651,
+  "strip_induced_angle_deg": 0.8058
+ },
+ "lower_side": {
+  "xfoil_transition_xc": [
+   0.9619,
+   0.9585,
+   0.954,
+   0.9497,
+   0.9441,
+   0.939,
+   0.9334,
+   0.9282,
+   0.9331,
+   0.9353,
+   0.9419,
+   0.9495,
+   0.9614,
+   0.9773,
+   0.998,
+   0.9949,
+   0.9865,
+   0.9793,
+   0.9748,
+   0.9651,
+   0.9648,
+   0.962
+  ],
+  "y_over_s": [
+   0.0,
+   0.0375,
+   0.075,
+   0.1125,
+   0.15,
+   0.1875,
+   0.225,
+   0.2625,
+   0.3,
+   0.33749999999999997,
+   0.375,
+   0.41250000000000003,
+   0.45,
+   0.4875,
+   0.525,
+   0.592857142857,
+   0.6607142857143333,
+   0.7285714285713333,
+   0.7964285714286666,
+   0.8642857142856667,
+   0.9321428571429999,
+   0.9700000000000001
+  ],
+  "note": "XFOIL: laminar to 0.93-1.00 c; every SU2 transition run: laminar to the trailing edge"
+ },
+ "summary": {
+  "SA + LM, VVC (R2)": {
+   "stations": 6,
+   "separation_minus_xfoil_c": {
+    "mean": -0.03214940721957416,
+    "min": -0.07177226532923858,
+    "max": 0.042015386254351084
+   },
+   "friction_rise_minus_xfoil_transition_c": {
+    "mean": 0.010382596482575853,
+    "min": -0.0095588974493368,
+    "max": 0.031009231077422927,
+    "mean_abs": 0.014659677031888085
+   }
+  },
+  "SA + LM, light VC (R6)": {
+   "stations": 6,
+   "separation_minus_xfoil_c": {
+    "mean": -0.03416295955487225,
+    "min": -0.05818535285391213,
+    "max": 0.002289771376665861
+   },
+   "friction_rise_minus_xfoil_transition_c": {
+    "mean": 0.0007607528885514395,
+    "min": -0.03708340012057243,
+    "max": 0.029290248247797523,
+    "mean_abs": 0.023742186700228308
+   }
+  },
+  "SA-BCM, VVC (R3)": {
+   "stations": 6,
+   "separation_minus_xfoil_c": {
+    "mean": -0.01129013893771937,
+    "min": -0.04628963188965546,
+    "max": 0.030811779808113948
+   },
+   "friction_rise_minus_xfoil_transition_c": {
+    "mean": -0.0059116951126848465,
+    "min": -0.06290195091614803,
+    "max": 0.10034334190769523,
+    "mean_abs": 0.039359475748583256
+   }
+  },
+  "SST + LM, VVC (R4)": {
+   "stations": 6,
+   "separation_minus_xfoil_c": {
+    "mean": -0.03679517640705124,
+    "min": -0.08315286433946117,
+    "max": 0.027964958901974257
+   },
+   "friction_rise_minus_xfoil_transition_c": {
+    "mean": 0.10264022671784402,
+    "min": 0.010563979876114571,
+    "max": 0.2164325532349326,
+    "mean_abs": 0.10264022671784402
+   }
+  }
+ },
+ "rows": [
+  {
+   "run": "SA + LM, VVC (R2)",
+   "y_over_s": 0.08750000000000001,
+   "chord": 1.7975681000000001,
+   "su2_separation_xc": 0.3736153862543511,
+   "su2_friction_rise_xc": 0.44369879505538623,
+   "xfoil_separation_xc": 0.3316,
+   "xfoil_transition_xc": 0.42236666666666667,
+   "xfoil_reattachment_xc": 0.43723333333333336,
+   "xfoil_local_re": 539313.4851333332
+  },
+  {
+   "run": "SA + LM, VVC (R2)",
+   "y_over_s": 0.2625,
+   "chord": 1.3604534,
+   "su2_separation_xc": 0.34365535783879114,
+   "su2_friction_rise_xc": 0.4700810773819962,
+   "xfoil_separation_xc": 0.341,
+   "xfoil_transition_xc": 0.4538,
+   "xfoil_reattachment_xc": 0.4764,
+   "xfoil_local_re": 408265.3486
+  },
+  {
+   "run": "SA + LM, VVC (R2)",
+   "y_over_s": 0.48125,
+   "chord": 0.9398449999999999,
+   "su2_separation_xc": 0.446819422351558,
+   "su2_friction_rise_xc": 0.6687943224680667,
+   "xfoil_separation_xc": 0.5070166666666667,
+   "xfoil_transition_xc": 0.6720666666666666,
+   "xfoil_reattachment_xc": 0.6951333333333334,
+   "xfoil_local_re": 282257.52493333333
+  },
+  {
+   "run": "SA + LM, VVC (R2)",
+   "y_over_s": 0.7102369999999999,
+   "chord": 0.6238448000000001,
+   "su2_separation_xc": 0.5033989222960581,
+   "su2_friction_rise_xc": 0.766223906971734,
+   "xfoil_separation_xc": 0.553597501894739,
+   "xfoil_transition_xc": 0.7757828044210708,
+   "xfoil_reattachment_xc": 0.8179399231579167,
+   "xfoil_local_re": 187474.28296938213
+  },
+  {
+   "run": "SA + LM, VVC (R2)",
+   "y_over_s": 0.8195306666666666,
+   "chord": 0.4870329999999998,
+   "su2_separation_xc": 0.5030583143236699,
+   "su2_friction_rise_xc": 0.8491293197791528,
+   "xfoil_separation_xc": 0.5584574124912289,
+   "xfoil_transition_xc": 0.8181200887017299,
+   "xfoil_reattachment_xc": 0.8654264954385714,
+   "xfoil_local_re": 146419.65221342494
+  },
+  {
+   "run": "SA + LM, VVC (R2)",
+   "y_over_s": 0.9448276666666667,
+   "chord": 0.3301860000000001,
+   "su2_separation_xc": 0.48842773467076145,
+   "su2_friction_rise_xc": 0.9045235109907749,
+   "xfoil_separation_xc": 0.5602,
+   "xfoil_transition_xc": 0.8980191272955218,
+   "xfoil_reattachment_xc": 0.9351119860377185,
+   "xfoil_local_re": 99353.59406415641
+  },
+  {
+   "run": "SA + LM, light VC (R6)",
+   "y_over_s": 0.09843733333333334,
+   "chord": 1.770248,
+   "su2_separation_xc": 0.33388977137666587,
+   "su2_friction_rise_xc": 0.453465220692242,
+   "xfoil_separation_xc": 0.3316,
+   "xfoil_transition_xc": 0.42417497244444446,
+   "xfoil_reattachment_xc": 0.4393624675555556,
+   "xfoil_local_re": 531123.1014202489
+  },
+  {
+   "run": "SA + LM, light VC (R6)",
+   "y_over_s": 0.2625,
+   "chord": 1.3604534,
+   "su2_separation_xc": 0.3430326242707027,
+   "su2_friction_rise_xc": 0.4736313643672029,
+   "xfoil_separation_xc": 0.341,
+   "xfoil_transition_xc": 0.4538,
+   "xfoil_reattachment_xc": 0.4764,
+   "xfoil_local_re": 408265.3486
+  },
+  {
+   "run": "SA + LM, light VC (R6)",
+   "y_over_s": 0.4921873333333333,
+   "chord": 0.9188153,
+   "su2_separation_xc": 0.4677113017164604,
+   "su2_friction_rise_xc": 0.6824965801070139,
+   "xfoil_separation_xc": 0.5157623662222223,
+   "xfoil_transition_xc": 0.6841873119999999,
+   "xfoil_reattachment_xc": 0.7082247857777778,
+   "xfoil_local_re": 275957.22975596087
+  },
+  {
+   "run": "SA + LM, light VC (R6)",
+   "y_over_s": 0.7151643333333334,
+   "chord": 0.6176771,
+   "su2_separation_xc": 0.5006565728274531,
+   "su2_friction_rise_xc": 0.7472028669996021,
+   "xfoil_separation_xc": 0.5537862965614061,
+   "xfoil_transition_xc": 0.7773730364210742,
+   "xfoil_reattachment_xc": 0.8198641764912542,
+   "xfoil_local_re": 185623.39941151682
+  },
+  {
+   "run": "SA + LM, light VC (R6)",
+   "y_over_s": 0.8160453333333333,
+   "chord": 0.491395,
+   "su2_separation_xc": 0.5003388312864397,
+   "su2_friction_rise_xc": 0.7792081726513291,
+   "xfoil_separation_xc": 0.5585241841403519,
+   "xfoil_transition_xc": 0.8162915727719016,
+   "xfoil_reattachment_xc": 0.863551752982427,
+   "xfoil_local_re": 147728.86872546925
+  },
+  {
+   "run": "SA + LM, light VC (R6)",
+   "y_over_s": 0.9536743333333333,
+   "chord": 0.31911200000000006,
+   "su2_separation_xc": 0.510265988117025,
+   "su2_friction_rise_xc": 0.9294636365915412,
+   "xfoil_separation_xc": 0.5602,
+   "xfoil_transition_xc": 0.9050764304402024,
+   "xfoil_reattachment_xc": 0.9367244162264038,
+   "xfoil_local_re": 96030.4679847477
+  },
+  {
+   "run": "SA-BCM, VVC (R3)",
+   "y_over_s": 0.08750000000000001,
+   "chord": 1.7975681000000001,
+   "su2_separation_xc": 0.35956495890197426,
+   "su2_friction_rise_xc": 0.41569885446899063,
+   "xfoil_separation_xc": 0.3316,
+   "xfoil_transition_xc": 0.42236666666666667,
+   "xfoil_reattachment_xc": 0.43723333333333336,
+   "xfoil_local_re": 539313.4851333332
+  },
+  {
+   "run": "SA-BCM, VVC (R3)",
+   "y_over_s": 0.2625,
+   "chord": 1.3604534,
+   "su2_separation_xc": 0.371811779808114,
+   "su2_friction_rise_xc": 0.4280193647206145,
+   "xfoil_separation_xc": 0.341,
+   "xfoil_transition_xc": 0.4538,
+   "xfoil_reattachment_xc": 0.4764,
+   "xfoil_local_re": 408265.3486
+  },
+  {
+   "run": "SA-BCM, VVC (R3)",
+   "y_over_s": 0.48125,
+   "chord": 0.9398449999999999,
+   "su2_separation_xc": 0.4607270347770112,
+   "su2_friction_rise_xc": 0.6687943224680667,
+   "xfoil_separation_xc": 0.5070166666666667,
+   "xfoil_transition_xc": 0.6720666666666666,
+   "xfoil_reattachment_xc": 0.6951333333333334,
+   "xfoil_local_re": 282257.52493333333
+  },
+  {
+   "run": "SA-BCM, VVC (R3)",
+   "y_over_s": 0.7102369999999999,
+   "chord": 0.6238448000000001,
+   "su2_separation_xc": 0.531126972606007,
+   "su2_friction_rise_xc": 0.738592034429076,
+   "xfoil_separation_xc": 0.553597501894739,
+   "xfoil_transition_xc": 0.7757828044210708,
+   "xfoil_reattachment_xc": 0.8179399231579167,
+   "xfoil_local_re": 187474.28296938213
+  },
+  {
+   "run": "SA-BCM, VVC (R3)",
+   "y_over_s": 0.8195306666666666,
+   "chord": 0.4870329999999998,
+   "su2_separation_xc": 0.53080181425078,
+   "su2_friction_rise_xc": 0.9184634306094251,
+   "xfoil_separation_xc": 0.5584574124912289,
+   "xfoil_transition_xc": 0.8181200887017299,
+   "xfoil_reattachment_xc": 0.8654264954385714,
+   "xfoil_local_re": 146419.65221342494
+  },
+  {
+   "run": "SA-BCM, VVC (R3)",
+   "y_over_s": 0.9448276666666667,
+   "chord": 0.3301860000000001,
+   "su2_separation_xc": 0.530098187082432,
+   "su2_friction_rise_xc": 0.8351171763793738,
+   "xfoil_separation_xc": 0.5602,
+   "xfoil_transition_xc": 0.8980191272955218,
+   "xfoil_reattachment_xc": 0.9351119860377185,
+   "xfoil_local_re": 99353.59406415641
+  },
+  {
+   "run": "SST + LM, VVC (R4)",
+   "y_over_s": 0.08750000000000001,
+   "chord": 1.7975681000000001,
+   "su2_separation_xc": 0.35956495890197426,
+   "su2_friction_rise_xc": 0.6387992199015993,
+   "xfoil_separation_xc": 0.3316,
+   "xfoil_transition_xc": 0.42236666666666667,
+   "xfoil_reattachment_xc": 0.43723333333333336,
+   "xfoil_local_re": 539313.4851333332
+  },
+  {
+   "run": "SST + LM, VVC (R4)",
+   "y_over_s": 0.2625,
+   "chord": 1.3604534,
+   "su2_separation_xc": 0.34365535783879114,
+   "su2_friction_rise_xc": 0.4980805663758861,
+   "xfoil_separation_xc": 0.341,
+   "xfoil_transition_xc": 0.4538,
+   "xfoil_reattachment_xc": 0.4764,
+   "xfoil_local_re": 408265.3486
+  },
+  {
+   "run": "SST + LM, VVC (R4)",
+   "y_over_s": 0.48125,
+   "chord": 0.9398449999999999,
+   "su2_separation_xc": 0.446819422351558,
+   "su2_friction_rise_xc": 0.6826306465427812,
+   "xfoil_separation_xc": 0.5070166666666667,
+   "xfoil_transition_xc": 0.6720666666666666,
+   "xfoil_reattachment_xc": 0.6951333333333334,
+   "xfoil_local_re": 282257.52493333333
+  },
+  {
+   "run": "SST + LM, VVC (R4)",
+   "y_over_s": 0.7102369999999999,
+   "chord": 0.6238448000000001,
+   "su2_separation_xc": 0.4756580482838041,
+   "su2_friction_rise_xc": 0.9184845333326493,
+   "xfoil_separation_xc": 0.553597501894739,
+   "xfoil_transition_xc": 0.7757828044210708,
+   "xfoil_reattachment_xc": 0.8179399231579167,
+   "xfoil_local_re": 187474.28296938213
+  },
+  {
+   "run": "SST + LM, VVC (R4)",
+   "y_over_s": 0.8195306666666666,
+   "chord": 0.4870329999999998,
+   "su2_separation_xc": 0.47530454815176776,
+   "su2_friction_rise_xc": 0.9590089377927166,
+   "xfoil_separation_xc": 0.5584574124912289,
+   "xfoil_transition_xc": 0.8181200887017299,
+   "xfoil_reattachment_xc": 0.8654264954385714,
+   "xfoil_local_re": 146419.65221342494
+  },
+  {
+   "run": "SST + LM, VVC (R4)",
+   "y_over_s": 0.9448276666666667,
+   "chord": 0.3301860000000001,
+   "su2_separation_xc": 0.530098187082432,
+   "su2_friction_rise_xc": 0.9589928101130875,
+   "xfoil_separation_xc": 0.5602,
+   "xfoil_transition_xc": 0.8980191272955218,
+   "xfoil_reattachment_xc": 0.9351119860377185,
+   "xfoil_local_re": 99353.59406415641
+  }
+ ],
+ "limits": "one wing, one Re, one angle; both sides are models (e^N strips against correlation-based RANS), not a measurement; neither has crossflow transition; SA + LM and SST + LM were oscillating, not converged; VVC and light VC put about 7 to 9 cells in a bubble; the SU2 runs used Tu 0.1 %, the strips N_crit 9 (0.07 %)"
+}

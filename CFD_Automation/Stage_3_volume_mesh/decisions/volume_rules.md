@@ -1236,3 +1236,95 @@ today's rules and the light rules; open markers: VVC; the dashed line is 10 M.
 the wall-resolved tip cap. The wall-normal growth goes to 1.28, not 1.30 (21.1). Which level then becomes the production
 mesh is for Stage 4's grid study: the coarsest level inside the Stage 0 error budget. Not decided (decision 114); no
 rule is changed.
+
+## 22. The first solves (11–13 Nov 2026, Mike's desktop) and what they say about the mesh
+
+The solves were run and recorded by the Claude Code agent on Mike's desktop: `data/v7/night_11nov/REPORT.md` (the V7
+night), `data/v7/su2_transition/REPORT.md` (the SU2 study), `data/v7/DECISIONS.html` (who decided what). This section
+is the reading of them here, with two things added: Stage 1's strips against the 3-D runs (22.3) and what S8 already
+knew (22.4). One wing throughout: BWB reference wing 0, Re 3 × 10⁵, Mach 0.1, α 4° unless said.
+
+### 22.1 What ran
+
+The desktop has **16 GB** (14 GB for WSL) and 6 cores, not the 48–52 GB of the record. So only VVC fits (today's
+rules: 1,075,074 cells; one level under VC, past the hard minimums), one run at a time. VC needs about 22 GiB.
+
+| Solver, model | Verdict | CL | CD (counts) | pressure / friction | CMy | Peak RAM | Time |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ADflow SA, `ANKUseTurbDADI=false` (A1b) | converged, 6 orders | 0.1907 | 185.5 | 67.6 / 117.8 | +0.0098 | 11.0 GiB | 31 min |
+| ADflow SA at −5° and +10° (A4, A5) | converged, 6 orders | −0.448, 0.625 | 336.5, 416.9 | | | 11.0 GiB | 64, 28 min |
+| SU2 SA, incompressible recipe (R1f) | accepted, 4.8 orders | 0.1958 | 167.8 | 63.8 / 104.0 | +0.0070 | 7.1 GiB | 1.6 h |
+| SU2 SA with ft2 (R5) | accepted | 0.1958 | 167.8 | 63.8 / 104.0 | +0.0070 | 7.1 GiB | 54 min |
+| SU2 SA + LM (R2) | oscillating | 0.216–0.227 | 137.4–143.2 | 92 / 45 | −0.0007 | 8.4 GiB | stalled, 1.9 h |
+| SU2 SA + LM on the light VC, 1,475,376 cells (R6) | oscillating | 0.219–0.226 | 127.8–132.1 | 80 / 48 | −0.0017 | 11.3 GiB | stalled, 2.8 h |
+| SU2 SA-BCM (R3) | accepted, 4.9 orders | 0.2061 | 129.95 | 76.7 / 53.3 | +0.0065 | 7.1 GiB | 2.0 h |
+| SU2 SST + LM (R4) | oscillating | 0.229–0.236 | 146.3–152.1 | 101 / 45 | −0.0070 | 9.1 GiB | stalled, 2.2 h |
+
+- ADflow as written stalled (its SA residual); with `ANKUseTurbDADI=false` it converges at three angles.
+- SU2's compressible solver (the case files of `solve/case.py`) never converged and, without a low-Mach correction,
+  gave a wrong pressure field (a negative pressure drag). The recipe that works: the incompressible solver, FDS, the
+  Venkatakrishnan limiter frozen after the start-up, the CFL capped at 50.
+- The acceptance rule changed on 13 Nov (Mike; `solve/read_results.py`): continuity 4 orders down, momentum 2,
+  turbulence residuals not rising, forces flat over the last 20 % (CD 0.5 counts, CL 0.1 %, CMy 0.0005, no drift);
+  oscillating forces never pass. Measured on R1f: at 4 orders CD was 0.07 counts from its final value. The first rule
+  (6 orders, a 200-iteration window) could not judge a converged ADflow run (136–239 iterations).
+
+### 22.2 What it says about the mesh
+
+| Finding | Number | For the rules |
+| --- | --- | --- |
+| Both solvers read the files and converge on the mesh | ADflow 6 orders; SU2 SA 4.8 | the C-H topology, the CGNS and the `.su2` hold |
+| The wake stays inside the fan | at −5° and +10° at least 0.067 local chords from its edges (one station) | decision 111 holds |
+| The pyGeo meshes are the numpy meshes | 20 of 20 reference wings at VC, nodes 4.2 × 10⁻¹¹ apart | the weak point of 11 Nov is closed for the reference wings |
+| The first cell is taller than designed | y⁺ median 1.39–1.48 against 1.3 (+7 to +14 %); about 2 × at the nose; 2.5 × on the tip cap | the flat-plate first-cell law is optimistic: at VC (design 1.0) much of the wall would sit above 1 |
+| SU2's residual hangs on two leading-edge corners | 90 % of the pressure residual on about 100 points: the root on the symmetry plane, and the planform kink at y/s 0.525 (sweep 25° to 15°, the station spacing changes with it) | a mesh signal: the loft's sharp kink (straight panels, D33) with a station on it. The frozen limiter hides it; the corner stays |
+| Memory per million cells | ADflow 10.2 GiB (S8's ANK-only law within 5 %); SU2 SA 6.6, SA + LM 7.6–7.8, SST + LM 8.4 | on 16 GB: about 1.1 M cells for ADflow, 1.5 M for SU2 SA. Today's M (9.5 M) needs 76–97 GiB for ADflow, the light M (5.5 M) 45–56 |
+| Time | ADflow 29 min per million cells to 6 orders; SU2 SA about 2 to 3 × that | |
+| A transitional drag moves with the mesh | SA + LM: 140.0 to 130.5 counts (mean) from today's VVC to the light VC | not a pure refinement (the level and the three light rules differ), so it does not judge decision 114 |
+
+### 22.3 Stage 1's 2-D strips against the 3-D transition runs (added here, 13 Nov)
+
+`scripts/strip_vs_su2.py`, `data/studies/strip_vs_su2.json`, `docs/page/strip_vs_su2.png`. The strips: the refine
+map's Re mode (`cfdauto.mesh.refine_map.strip_map`: XFOIL e^N tables, N_crit 9, a uniform induced angle) for this
+wing at Re 3 × 10⁵ and 4°. The 3-D side: per station, where SU2's wall friction first turns negative (separation)
+and where it rises steeply (the flow turns turbulent), from the agent's `wall_map.json` files, six stations from y/s
+0.09 to 0.94, upper side.
+
+| SU2 run | Separation, 3-D minus strips (mean; range) | Turbulent rise minus the strips' transition (mean; range; mean size) |
+| --- | --- | --- |
+| SA + LM, VVC (R2) | −0.032 c; −0.07 to +0.04 | **+0.010 c**; −0.01 to +0.03; 0.015 |
+| SA + LM, light VC (R6) | −0.034 c; −0.06 to 0.00 | **+0.001 c**; −0.04 to +0.03; 0.024 |
+| SA-BCM, VVC (R3) | −0.011 c; −0.05 to +0.03 | −0.006 c; −0.06 to +0.10; 0.039 |
+| SST + LM, VVC (R4) | −0.037 c; −0.08 to +0.03 | +0.103 c; +0.01 to +0.22; 0.103 |
+
+Lower side: the strips say laminar to 0.93–1.00 c; every SU2 transition run stays laminar to the trailing edge. The
+strips' lift is too high (wing CL 0.265 against 0.21–0.23 with transition in 3-D).
+
+**What `strip_vs_su2.png` shows.** Left: where the upper side separates laminar, along the semi-span; right: where it
+turns turbulent. The line is the strips; the grey band is the strips' bubble (separation to reattachment); the markers
+are the four SU2 runs.
+**Conclusion.** On this wing Stage 1's strips put the upper transition where SU2's SA + LM puts it: within 0.03 c at
+every station on VVC and within 0.04 c on the light VC, 0.01 c apart on average. The 3-D separation starts 0.03 c
+earlier on average (0.05 to 0.07 c earlier from mid semi-span outboard). SST + LM turns turbulent 0.10 c later on average (up to 0.22 c). This is the first 3-D
+check of the Stage 1 flow maps and of the refine map (decision 65 waited on one), and it supports them. Limits: one
+wing, one Re, one angle; two models against each other, not a measurement; neither models crossflow transition; the
+LM runs were oscillating; the SU2 runs used Tu 0.1 % and the strips N_crit 9 (0.07 %).
+
+### 22.4 Reading the agent's conclusions
+
+| Conclusion of the reports | Here | Why |
+| --- | --- | --- |
+| SU2 works with the recipe | agreed | R1f converges from the freestream; the hand-steered chain gave the same forces to 0.02 counts |
+| The SA form (ft2) is not the gap to ADflow | agreed | 0.03 counts against 17.7; with an inflow ν̃/ν of 3 the term does nothing |
+| The gap (CL +2.7 %, CD −17.7 counts, 13.8 of it friction) is unexplained | **S8 measured a cause**: ADflow's scalar dissipation on a coarse mesh | S8, `settings_decision` (16 Sep): halving `vis4` moved drag −20.6 counts on its coarse level and −12.0 on its medium one, close to second order, so S8 kept the default and let the grid family remove it. On VVC that error is the size of the gap. Not measured here yet: run G1 of `solve/DESKTOP_13NOV.md` |
+| All three transition models show the same flow | agreed | and it is the flow Stage 1 predicted (22.3) |
+| Only SA-BCM converges, so SA-BCM for production | **not yet** | converged is not correct. BCM's lift and moment sit near the fully turbulent ones (CMy +0.0065 against +0.0070) while both LM runs change the moment's sign; BCM takes the freestream turbulence as uniform and is calibrated on few cases. It may converge because it ends the bubble early |
+| SA + LM is the model S8 validated on E387 | **does not stand** | S8's own report (section 5.2, corrected 19 Sep): neither E387 run converged; SA + LM swung over 84.7 counts with a mean 4.3 counts below the measurement and a bubble 3.5 × too short; and those runs used the compressible solver. The measured case has to be rerun on the recipe (block E) |
+| The models disagree by 20 counts and the moment changes sign | agreed, and it matters more here | a tailless wing trims on its moment: until a model is checked against a measurement, no transitional CMy can be used |
+| ADflow for fully turbulent data, SU2 for transition | **not as a mix** | the transition effect (18 to 38 counts) is the size of the code gap (18). A difference "with and without transition" must come from one code |
+
+**Conclusion.** The first solves support the mesh: both solvers converge on it, the wake fan holds, the pyGeo meshes
+are the same, and Stage 1's transition prediction agrees with the best 3-D model to about 0.02 c. They also show
+four things to act on: the machine (16 GB: only VVC fits, so decision 114 and where Stage 4 runs matter more), the
+first cell (7–14 % too tall), the two leading-edge corners, and a code gap as large as the transition effect, whose
+likely cause S8 already measured. No rule is changed. Next: `solve/DESKTOP_13NOV.md`.

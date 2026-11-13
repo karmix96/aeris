@@ -196,7 +196,7 @@ def rule_set_2() -> str:
     <li><strong>One mesh serves every steady angle,</strong> so it has no refinement per angle. Each station plane has a fixed fan of fine cells behind the trailing edge: from −5° to +10°, 0.05 c above and below at the trailing edge, 2 local chords long.</li>
     <li><strong>Why one mesh for all angles:</strong> one mesh instead of about eight per wing and Re; the same mesh error at every angle, so the lift slope and the polar shape are clean; one family check per wing.</li>
     <li><strong>Why +10° and no more:</strong> steady RANS serves −5° to +10° here; post-stall is a separate study with its own mesh from the same code (the two angles are inputs of the mesher). The fan to +20° cost 11–14 % of the cells; at +10° the fan costs none (the same count as no fan: {fan_txt}).</li>
-    <li><strong>No extra angle on top of the 0.05 c:</strong> the downwash turns the wake below the freestream direction; the cells do not jump at the fan's edge. Not measured yet: where the wake goes in a solution (V7 checks −5° and +10°).</li>
+    <li><strong>No extra angle on top of the 0.05 c:</strong> the downwash turns the wake below the freestream direction; the cells do not jump at the fan's edge. Measured on 12 Nov (V7, ADflow at −5° and +10°): the wake stays inside the fan, at least 0.067 local chords from its edges.</li>
   </ul>
   {figc("r2_wake_fan.png", "BWB reference wing 0 at VC, Re 3 × 10⁵, rule set 2. (a) One station plane: the fan (blue), its edges at −5° and +10°, its end 2 local chords behind the trailing edge; dashed: the freestream directions at −5°, 0°, 5°, 10°. (b) The trailing edge close up. (c) The cell height along the vertical line 1 local chord behind the trailing edge; red: the band cell there. (d) Top view: the fan behind every station.",
         "Every freestream direction from −5° to +10° lies inside the fan, and every cell inside it is no larger than the band cell.")}
@@ -432,7 +432,7 @@ def build_page() -> tuple[str, str]:
 
     head = f"""
 <header>
-  <div class="eyebrow">CFD_Automation · Stage 3 · volume mesh · cfdauto {__version__} · 11 Nov 2026</div>
+  <div class="eyebrow">CFD_Automation · Stage 3 · volume mesh · cfdauto {__version__} · 13 Nov 2026</div>
   <h1>Volume Mesh</h1>
   <p class="lede">One matched C-H mesh per wing, Re and level (VC, C, M, F), on the frozen Stage 2 surface: structured
   CGNS for ADflow, the same cells as <code>.su2</code> for SU2. What it is, how one is built, every check, what was
@@ -460,7 +460,7 @@ def build_page() -> tuple[str, str]:
     <div class="box verdict"><h3>Where it stands</h3><div class="big">Rule set 2: M about {gM.get('median', 0) / 1e6:.0f} M cells</div>
       <p>Rule set 1 worked but cost too much (M 20.8 M, F 45 M). Mike set the target on 9 Nov: M about 10 M, F may be
       above; and the angles: −5° to +10°. Rule set 2 (decisions 107, 111) meets it with the volume rules alone; the
-      surface, its band and the levels are unchanged. Left: the first solves (V7), the hold-outs (V8, not yet). In main
+      surface, its band and the levels are unchanged. The first solves ran on 11–13 Nov at VVC, one level under VC (the desktop has 16 GB): both solvers converge (<a href="#v7">V7</a>). Left: a solve at VC or finer, the hold-outs (V8, not yet). In main
       on GitHub since 10 Nov, with an app to load or make a wing and look at its meshes (<code>CFD_Automation/app</code>).</p></div>
     {size_glance()}
     <div class="box good"><h3>Rule set 2: the screens</h3><div class="big">{g23.get('outcomes', {}).get('passed', '—')} of {g23.get('meshes', '—')} reference · {f"{g6o.get('passed', 0)} of {g6.get('meshes', 0)} all sets" if g6 else "all sets: running"}</div>
@@ -485,7 +485,7 @@ def build_page() -> tuple[str, str]:
     <div class="box"><h3>Rules, checks, code</h3><div class="big">15 checks · {N_TESTS} tests</div>
       <p>Rules in <code>configs/volume.yaml</code> (rule set 1 kept in <code>configs/volume_rules1.yaml</code>); checks and
       limits in <code>decisions/volume_rules.md</code>; code in <code>cfdauto/volume/</code> (Stage 2's
-      <code>cfdauto/mesh/</code> untouched); decisions 84–114 in <code>OPEN_DECISIONS.md</code>.</p></div>
+      <code>cfdauto/mesh/</code> untouched); decisions 84–115 in <code>OPEN_DECISIONS.md</code>.</p></div>
   </div>
 </section>"""
 
@@ -627,7 +627,7 @@ def build_page() -> tuple[str, str]:
     <li><strong>.su2 for SU2:</strong> <code>cfdauto/volume/su2.py</code>: the blocks as hexahedra, nodes welded along every matched face by the topology, markers <code>wall</code>, <code>symmetry</code>, <code>farfield</code>. Read back: {su.get('points', 0):,} points, {su.get('cells', 0):,} hexahedra, {su.get('markers', {})}; no two points closer than 1e−12 c, no inside-out hexahedron, every boundary quad faces out ({su.get('bytes', 0) / 1e6:.0f} MB).</li>
     <li>Check 15 runs every time a mesh is written with its solver files; tests cover a two-block box with a transposed, reversed match and the VC mesh.</li>
   </ul>
-  {cbox("ADflow and SU2 get the mesh that was checked, node for node. Not yet shown: that ADflow and SU2 accept it and converge (V7).")}
+  {cbox("ADflow and SU2 get the mesh that was checked, node for node. Since 11–13 Nov: both read it and converge on it (V7, at VVC).")}
 </section>"""
 
     so, st = v6.get("screened_of", {}), v6.get("by_set", {})
@@ -682,17 +682,55 @@ def build_page() -> tuple[str, str]:
 </section>"""
 
     c5 = g5.get("cells", 0) / 1e6
+    sv = load("strip_vs_su2.json")
+    sv_rows = [[name, f"{s['separation_minus_xfoil_c']['mean']:+.3f} c ({s['separation_minus_xfoil_c']['min']:+.2f} to {s['separation_minus_xfoil_c']['max']:+.2f})".replace("-", "−"),
+                f"{s['friction_rise_minus_xfoil_transition_c']['mean']:+.3f} c ({s['friction_rise_minus_xfoil_transition_c']['min']:+.2f} to {s['friction_rise_minus_xfoil_transition_c']['max']:+.2f})".replace("-", "−")]
+               for name, s in sv.get("summary", {}).items()]
+    v7_runs = [
+        ["ADflow SA, <code>ANKUseTurbDADI=false</code>", "converged, 6 orders", "0.1907", "185.5", "67.6 / 117.8", "+0.0098", "11.0 GiB", "31 min"],
+        ["SU2 SA, incompressible recipe", "accepted, 4.8 orders", "0.1958", "167.8", "63.8 / 104.0", "+0.0070", "7.1 GiB", "1.6 h"],
+        ["SU2 SA with the ft2 term", "accepted", "0.1958", "167.8", "63.8 / 104.0", "+0.0070", "7.1 GiB", "54 min"],
+        ["SU2 SA + LM", "oscillating", "0.216–0.227", "137.4–143.2", "92 / 45", "−0.0007", "8.4 GiB", "stalled, 1.9 h"],
+        ["SU2 SA + LM on the light VC (1.48 M cells)", "oscillating", "0.219–0.226", "127.8–132.1", "80 / 48", "−0.0017", "11.3 GiB", "stalled, 2.8 h"],
+        ["SU2 SA-BCM", "accepted, 4.9 orders", "0.2061", "129.95", "76.7 / 53.3", "+0.0065", "7.1 GiB", "2.0 h"],
+        ["SU2 SST + LM", "oscillating", "0.229–0.236", "146.3–152.1", "101 / 45", "−0.0070", "9.1 GiB", "stalled, 2.2 h"],
+    ]
+    v7_read = [
+        ["SU2 works with the recipe; the ft2 term is not the gap to ADflow", "agreed", "the recipe converges from the freestream; ft2 moves CD by 0.03 counts against a gap of 17.7"],
+        ["The gap between the codes (CD 17.7 counts, 13.8 of it friction; CL 2.7 %) is unexplained", "S8 measured a likely cause", "half of ADflow's <code>vis4</code> moved drag −20.6 counts on S8's coarse level and −12.0 on its medium one: ADflow's own dissipation on a coarse mesh. Not measured here yet"],
+        ["Only SA-BCM converges, so SA-BCM for production", "not yet", "converged is not correct: its lift and moment sit near the fully turbulent ones while both LM runs change the moment's sign"],
+        ["SA + LM is the model S8 validated on E387", "does not stand", "S8's own report: neither E387 run converged (SA + LM swung over 84.7 counts; its bubble was 3.5 × too short), and they used the compressible solver. E387 is rerun on the recipe"],
+        ["ADflow for fully turbulent data, SU2 for transition", "not as a mix", "the transition effect (18 to 38 counts) is the size of the code gap: a difference must come from one code"],
+    ]
     v7 = f"""
 <section id="v7">
-  <h2>V7: the first solves (not run here)</h2>
+  <h2>V7: the first solves (11–13 Nov, Mike's desktop, at VVC only)</h2>
+  <p>Run and recorded by the Claude Code agent on Mike's desktop: <code>data/v7/night_11nov/REPORT.md</code> (the night
+  run), <code>data/v7/su2_transition/REPORT.md</code> (the SU2 study), <code>data/v7/DECISIONS.html</code> (who decided
+  what). One wing: BWB reference wing 0, Re 3 × 10⁵, Mach 0.1, α 4°, the band on. <strong>The desktop has 16 GB</strong>
+  (14 GB for WSL) and 6 cores, so only VVC ran: today's rules one level under VC, 1,075,074 cells, past the hard
+  minimums (y⁺ 1.3, wall growth 1.34). The plan's VC mesh ({c5:.2f} M cells) needs about 22 GiB.</p>
+  {table(["Solver, model", "Verdict", "CL", "CD (counts)", "pressure / friction", "CMy", "Peak RAM", "Time"], v7_runs, "wide")}
   <ul>
-    <li>The case: BWB reference wing 0, VC, Re 3 × 10⁵, α 4°, Mach 0.1, band on. ADflow SA; SU2 SA; SU2 SST + LM (8.6.0).</li>
-    <li>This session has no ADflow and no SU2, 2 cores and 7 GB. The mesh (rule set 2) has {c5:.2f} M cells and needs about {2.69 + 7.23 * c5:.0f}–{1.51 + 9.46 * c5:.0f} GiB for ADflow (S8's two laws): more than the 16 GB desktop, inside 48 GB. Ready: <code>solve/case.py</code> (conditions, reference area and moment point from the mesh, ADflow options, two SU2 configs), <code>solve/run_adflow.py</code> (S8's safeguards: the lift axis read back before the solve, the true residual, implausible forces refused; the peak memory of every rank), <code>solve/read_results.py</code> (the acceptance rule, written before any run), <code>solve/RUNBOOK.md</code>.</li>
-    <li><strong>V7 also measures the memory (decision 113).</strong> The plan assumed 10 M cells in 48 GB; S8's laws (two-point fits at 0.57 and 1.11 M cells) say 48 GB holds 4.6–5.9 M. The runbook measures ADflow as run, ADflow with a leaner preconditioner, and SU2. Until then: VC and C on the desktop, M and F on the HPC.</li>
-    <li><strong>V7 also checks where the wake goes (decision 111):</strong> two more points, α −5° and +10°, with the volume solution kept. The script that reads the wake against the fan's edges is not written: it needs a real solution file.</li>
-    <li>Known risk from S8: on E387, SST + LM gave no laminar bubble and drag 37 counts high, where SA + LM matched. The brief fixes SST + LM, so this is a flag, not a change.</li>
+    <li><strong>ADflow</strong> as written stalled on its SA residual; with <code>ANKUseTurbDADI=false</code> it converges to 6 orders at −5°, 4° and +10° (CL −0.448, 0.191, 0.625), 29 min per million cells on 6 cores.</li>
+    <li><strong>SU2</strong> never converged with the compressible case files, and without a low-Mach correction its pressure field was wrong (a negative pressure drag). It converges with the incompressible solver, the limiter frozen after the start-up and the CFL capped at 50.</li>
+    <li><strong>The acceptance rule changed</strong> (Mike, 13 Nov; <code>solve/read_results.py</code>): the continuity residual 4 orders down, the momentum residuals 2, turbulence residuals not rising, and flat forces (CD 0.5 counts, CL 0.1 %, CMy 0.0005 over the last 20 %); oscillating forces never pass. Measured: at 4 orders CD was 0.07 counts from its final value. The first rule (6 orders, a 200-iteration window) could not judge a converged ADflow run (136–239 iterations).</li>
+    <li><strong>The wake stays inside the fan</strong> at −5° and +10°: at least 0.067 local chords from its edges (one station; decision 111 holds).</li>
+    <li><strong>The first cell is taller than designed:</strong> y⁺ median 1.39–1.48 against 1.3; about 2 × at the nose, 2.5 × on the tip cap.</li>
+    <li><strong>The pyGeo meshes are the numpy meshes:</strong> 20 of 20 reference wings at VC, nodes 4 × 10⁻¹¹ apart.</li>
+    <li><strong>Memory:</strong> ADflow 10.2 GiB per million cells (S8's ANK-only law within 5 %); SU2 SA 6.6, SA + LM 7.8. On 16 GB: about 1.1 M cells for ADflow, 1.5 M for SU2 SA. M (9.5 M) needs 76–97 GiB for ADflow, the light M (5.5 M) 45–56.</li>
+    <li><strong>Two leading-edge corners hold SU2's residual</strong> while the limiter is live: 90 % of it on about 100 points, at the root on the symmetry plane and at the planform kink (y/s 0.525), where the loft has a sharp kink with a station on it. The frozen limiter hides this; the corner stays.</li>
   </ul>
-  <div class="cbox warn"><span class="ctag">Conclusion</span>Not done. Where the solves run: Mike (decision 103).</div>
+  {figc("v7_walls_all_models.png", "Pressure (top) and streamwise wall friction (bottom) at four stations, SU2 on the VVC mesh: fully turbulent SA and the three transition models; solid: upper side, dashed: lower side. The agent's figure.", "Every transition model shows the same flow: a laminar separation bubble on the upper side (the pressure plateau, the friction below zero, then the turbulent rise), longer outboard, and a lower side that stays laminar to the trailing edge. They differ in where the bubble ends: SA-BCM earliest, SST + LM latest; that sets the pressure drag and the moment. Transition takes 18 to 38 counts off the fully turbulent drag.")}
+  <h3>Stage 1's 2-D strips against the 3-D runs</h3>
+  <p>The refine map's strips (XFOIL e^N, N_crit 9, a uniform induced angle) for this wing at Re 3 × 10⁵ and 4°, against
+  where SU2's wall friction first turns negative (separation) and where it rises steeply (the flow turns turbulent), at
+  six stations (<code>scripts/strip_vs_su2.py</code>).</p>
+  {table(["SU2 run", "Separation, 3-D minus strips: mean (range)", "Turbulent rise minus the strips' transition: mean (range)"], sv_rows)}
+  {figc("strip_vs_su2.png", "Along the semi-span, on the upper side: where the flow separates laminar (left) and where it turns turbulent (right). The line is the strips; the grey band is the strips' bubble; the markers are the four SU2 runs.", "Stage 1's strips put the upper transition where SA + LM puts it: within 0.03 c at every station on VVC, 0.01 c apart on average. The 3-D separation starts 0.03 c earlier on average. SST + LM turns turbulent 0.10 c later. The first 3-D check of the Stage 1 flow maps and of the refine map (decision 65 waited on one), and it supports them. Limits: one wing, one Re, one angle; two models, not a measurement; no crossflow transition in either; the LM runs were oscillating.")}
+  <h3>How the agent's conclusions are read here</h3>
+  {table(["Conclusion of the reports", "Here", "Why"], v7_read)}
+  {cbox("The first solves support the mesh: both solvers converge on it, the wake fan holds, the pyGeo meshes are the same, and Stage 1's transition prediction agrees with SA + LM to about 0.02 c. Four things to act on: the machine (16 GB: only VVC fits), the first cell (7–14 % too tall), the two leading-edge corners, and a gap between the codes as large as the transition effect. No grid convergence yet: one level, past the hard minimums. Next: <code>solve/DESKTOP_13NOV.md</code> (what each light rule changes in the answer, ADflow's dissipation, the other wing types and Re levels, the far field, E387 on the recipe).", cls="warn")}
 </section>"""
 
     v8 = """
@@ -732,10 +770,12 @@ def build_page() -> tuple[str, str]:
     <li><strong>The mesh grows with Re, and the tip gap is why</strong> (11 Nov, <a href="#size">The size</a>): M is 9.1 M at Re 3 × 10⁵ and 13.5 M at 4 × 10⁶ on wing 0 of each type. The last station gap at the tip is 2 × the first wall cell (36–1,100 × finer than DPW's guide), because the tip cap is a wall reached along the stations; with the gap at 100 × the first wall cell a third of the cells go. A lighter rule set is proposed, not decided (decision 114).</li>
     <li><strong>The tip cap is fragile to any change of the ring:</strong> with the band off, a coarser trailing-edge cell or a faster growth around the section, the BWB or flying-wing cap falls below its limit (0.05).</li>
     <li><strong>The count runs one layer high</strong> on about a fifth of the meshes (<code>count_volume</code> against the built mesh: 1.5–1.8 % more cells, never fewer); the counted M and F cells can be that much high. Not fixed.</li>
-    <li><strong>The fan ends at +10°</strong> (decision 111). Above it the wake leaves the fine cells; post-stall needs its own mesh. Where the wake really goes at −5° and +10° is not measured (V7).</li>
+    <li><strong>The fan ends at +10°</strong> (decision 111). Above it the wake leaves the fine cells; post-stall needs its own mesh. Measured at −5° and +10° (V7): the wake is inside, at least 0.067 local chords from the fan's edges, at one station.</li>
     <li><strong>Very close stations with fast-changing chords sit nearest the cell-quality limit</strong> (decision 110): steep BWB centre bodies, kinks, corner wings. One wing is refused: BWB corner2 wing 6 (0.032; limit 0.05), whose chord halves within 0.14 c of the semi-span; a fix would space the far wake by x for every station at once (a redesign, not built). {q_txt}</li>
-    <li><strong>No solve yet</strong> on a Stage 3 mesh (V7 needs Mike's machine). Accepting the files is shown; converging is not.</li>
-    <li><strong>Built here on the numpy twin of the loft.</strong> Every Stage 3 mesh here sits on surfaces from the numpy loft; the production loft is pyGeo. On the 20 reference wings the two give the same surface meshes to round-off (Stage 2, 8 Nov), and the pyGeo build of 11 Nov (Mike's machine, 722 of 722) has the same input hashes, pass flags and labels. No volume mesh has been built on pyGeo yet: V7 on Mike's machine will be the first.</li>
+    <li><strong>Solved at VVC only</strong> (V7, 11–13 Nov): one wing, one Re, one level under VC and past the hard minimums. No solve at VC or finer (the desktop has 16 GB), no grid convergence.</li>
+    <li><strong>The two codes differ on the same mesh and model:</strong> CD by 17.7 counts, CL by 2.7 % (above the Stage 0 targets of 3 counts and 1 %); the likely cause, ADflow's dissipation on a coarse mesh, is not measured yet. The transition models differ by 20 counts and in the sign of the moment, and no measurement says which is right.</li>
+    <li><strong>The first cell is 7–14 % taller than designed</strong> (y⁺ median; about 2 × at the nose, 2.5 × on the tip cap), and two leading-edge corners (the root on the symmetry plane, the planform kink) hold SU2's residual under a live limiter.</li>
+    <li><strong>Built here on the numpy twin of the loft.</strong> Checked on 11 Nov on Mike's machine: the 20 reference wings at VC give the same volume meshes on the pyGeo loft (nodes 4 × 10⁻¹¹ apart). The other 702 wings are not compared.</li>
     <li><strong>Planar stations</strong>: square in the plane, sheared in 3-D at swept noses: up to {v2.get('wall_angle_3d_max_deg', {}).get('max', 0):.0f}° on the reference wings, {g6.get('wall_angle_3d_max_deg', {}).get('max', 0):.0f}° on the most swept corner wing (reported, no limit; y⁺ only falls; a 3-D march would cross near the tip).</li>
     <li><strong>The cap cells</strong> are the worst of most meshes ({v3.get('cap_min_sj', {}).get('min', 0):.3f}–{v3.get('cap_min_sj', {}).get('max', 0):.3f} on the reference wings; limit 0.05), set by the frozen surface.</li>
     <li><strong>The base is not at y⁺ 1</strong> in rule set 2 (its first cell is the wing's last chordwise cell); in exchange the spacing jump across the trailing-edge line fell from up to {v2.get('te_jump_ratio', {}).get('Re 4e6', {}).get('max', 0):.0f} to about 1.03.</li>
@@ -751,10 +791,10 @@ def build_page() -> tuple[str, str]:
 <section id="handover">
   <h2>Next, and the handover to Stage 4</h2>
   <ul>
-    <li><strong>Next:</strong> Mike's word on the lighter rule set (decision 114); V7 on Mike's machine: the three solves, the memory (decision 113), the wake at −5° and +10° (decision 111) and, if rule set 3 is built, the same wing on both meshes. Then the hold-outs (V8) when Mike says, with the rules frozen.</li>
+    <li><strong>Next:</strong> the desktop runs of <code>solve/DESKTOP_13NOV.md</code> (VVC what-ifs: what each light rule changes in the answer, ADflow's dissipation, the band in a fully turbulent run, the other wing types and Re levels, the far field, one family step in SU2, E387 on the recipe); Mike's word on the lighter rule set (decision 114) with those numbers; a machine for VC and finer (decision 103). Then the hold-outs (V8) when Mike says, with the rules frozen.</li>
     <li><strong>Stage 4 gets:</strong> per wing, Re and level, a folder <code>volume_&lt;level&gt;_&lt;hash8&gt;_re&lt;Re&gt;/</code> with <code>blocks.npz</code>, <code>quality.json</code> (every check, the info), <code>manifest.json</code> (hashes of the code, the rules and the nodes; the BCs; the interfaces), <code>volume.cgns</code>, <code>volume.su2</code>; a refused mesh only <code>refusal.json</code>.</li>
     <li><strong>Build:</strong> <code>build_volume(surface)</code> then <code>write(vm, wing, out, formats=("npz", "cgns", "su2"))</code>; cost first with <code>count_volume(surface)</code>.</li>
-    <li><strong>First:</strong> run V7 and read it with <code>solve/read_results.py</code>; send back the memory numbers; then the hold-outs (V8) with the rules frozen.</li>
+    <li><strong>First:</strong> the desktop runs of <code>solve/DESKTOP_13NOV.md</code>; a machine for VC and finer (decision 103); then the hold-outs (V8) with the rules frozen.</li>
     <li><strong>For the solves:</strong> the semi-span along +y, lift +z (ADflow liftIndex 3); lengths in mean chords; Re on the mean chord; the band on; angles −5° to +10° on this mesh.</li>
   </ul>
 </section>"""

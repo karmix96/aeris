@@ -1,10 +1,10 @@
-# Stage 3 — status and handover (11 Nov 2026)
+# Stage 3 — status and handover (13 Nov 2026)
 
 In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stage3-volume-mesh`, which starts from
 `stage2-surface-mesh`; decision 94). Run it locally: `CFD_Automation/RUN_LOCAL.md`; look at any wing's meshes:
 `streamlit run CFD_Automation/app/app.py` (`app/README.md`). Code: `CFD_Automation/cfdauto/volume/`
 (Stage 2's `cfdauto/mesh/` untouched). Rules: `configs/volume.yaml` (rule set 2; rule set 1 kept in
-`configs/volume_rules1.yaml`). Plan, checks and results: `decisions/volume_rules.md`. Decisions 84–114 in
+`configs/volume_rules1.yaml`). Plan, checks and results: `decisions/volume_rules.md`. Decisions 84–115 in
 `CFD_Automation/OPEN_DECISIONS.md`.
 
 ## In one breath
@@ -20,7 +20,11 @@ In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stag
 - **11 Nov: the size was studied; a lighter rule set is proposed, not decided (decision 114).** Three rules are
   stricter than the published guides (the tip gap, the wall-normal growth, the station growth); loosened, M is 5.5 M
   at Re 3 × 10⁵ and 6.4 M at 4 × 10⁶ (today 9.5 and 13.5 M). Rule set 2 stands until Mike decides.
-- Not done: the first solves (V7) and the hold-outs (V8).
+- **11–13 Nov: the first solves, on Mike's desktop (16 GB, so VVC only: 1.08 M cells).** ADflow SA converges (one
+  option changed); SU2 converges with an incompressible recipe; the wake stays inside the fan; the pyGeo meshes equal
+  the numpy ones; Stage 1's transition prediction agrees with SU2's SA + LM to about 0.02 c. Open: an 18-count gap
+  between the two codes, a 20-count spread between the transition models, the first cell 7–14 % too tall.
+- Not done: a solve at VC or finer (no machine yet), the hold-outs (V8).
 
 ## Where each step stands (rule set 2 as it stands)
 
@@ -33,7 +37,7 @@ In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stag
 | V4 | done | check 13 passes on 20 of 20 families (VC/C; worst 2.0 % off); M and F built on 4 wings: flying wing 0 at M: 9.20 M, passed; cranked 0 at M: 8.70 M, passed; tapered 0 at M: 8.77 M, passed; BWB 0 at M: 10.61 M, passed; BWB 0 at F: 23.10 M, passed |
 | V5 | done | CGNS (ADF) and `.su2` read back exactly, the CGNS also by the CGNS library; check 15 on every export |
 | V6 | done | every built set at VC (702 wings) + the 20 reference wings: 721 of 722 pass; refused 1 (BWB corner2 6, cell quality 0.032); the focus set 400 of 400 |
-| V7 | written, not run | `solve/`: the case, the ADflow run with S8's safeguards and the memory record, SU2 SA and SST + LM configs, the acceptance rule, the runbook (with the memory and the wake steps) |
+| V7 | run at VVC only (11–13 Nov) | BWB 0, Re 3 × 10⁵: ADflow SA converged at −5°, 4°, +10° (CL 0.1907, CD 185.5 counts at 4°); SU2 SA accepted (0.1958, 167.8); SA-BCM accepted; SA + LM and SST + LM oscillate. VC (the plan's level) needs about 22 GiB: not run. `decisions/volume_rules.md` section 22 |
 | V8 | waits (104) | the hold-outs, once, with the rules frozen and Mike's OK |
 | V9 | done | page, summary, this file, OPEN_DECISIONS, the Approach map, the flowchart, the project docs |
 
@@ -50,6 +54,8 @@ In main since 10 Nov 2026 (Mike: everything merged; main fast-forwarded to `stag
 - Counted on 94 wings of every set (a seeded 10 % of each set and type and the 20 reference wings, Re 3 × 10⁵): M 8.2–12.8 M (median 9.6 M), F 17.7–27.8 M (median 20.7 M).
 - RAM laws: S8's two-point fits at 0.57 and 1.11 M cells (ADR-0020). ANK only (what runs here): 2.69 + 7.23 GiB per
   million cells. ANK then NK (what check 14 reports): 1.51 + 9.46. Neither is measured at these sizes (decision 112).
+  Measured on 11–12 Nov at 1.08 M cells (VVC): ADflow 11.0 GiB, 10.2 GiB per million cells (the ANK-only law within
+  5 %); SU2 SA 7.1 GiB, 6.6 per million. Scaled to VC (2.3 M cells): about 22 GiB for ADflow, 15 for SU2 SA.
 - The V7 mesh (BWB 0, VC): 2.32 M cells; 62 layers, 53 wake nodes, 335 C-line nodes, 61 + 49 stations; CGNS 59.0 MB,
   `.su2` 322.8 MB; about 20–24 GiB for ADflow.
 - Building is cheap: VC 5–15 s. The solver is the cost.
@@ -105,9 +111,33 @@ today's M the F, starting from 800 k. What-if studies on copies of the rules fil
 - Found on the way: the count runs one layer high on about a fifth of the meshes (1.5–1.8 %; not fixed); the rules
   loaders cache a file by its name (the what-if scripts now write a new name per text).
 
+## 11–13 Nov: the first solves (the record: `decisions/volume_rules.md` section 22)
+
+Run by the Claude Code agent on Mike's desktop: `data/v7/night_11nov/REPORT.md`, `data/v7/su2_transition/REPORT.md`,
+`data/v7/DECISIONS.html`. One wing (BWB reference 0), Re 3 × 10⁵, Mach 0.1, today's VVC mesh (1,075,074 cells).
+
+| | Result |
+| --- | --- |
+| ADflow SA | converges to 6 orders at −5°, 4°, +10° with `ANKUseTurbDADI=false`; 31 min and 11.0 GiB at 4° |
+| SU2 | the compressible case files never converged; the incompressible solver with the limiter frozen after the start-up and the CFL capped at 50 does |
+| ADflow against SU2, both SA, 4° | CL 0.1907 / 0.1958 (+2.7 %); CD 185.5 / 167.8 counts (−17.7, 13.8 of it friction). Not the ft2 term (0.03 counts) |
+| Transition (SU2) | every model: laminar bubbles on the upper side, a laminar lower side, 18–38 counts less drag. Only SA-BCM converges (CL 0.206, CD 130.0); SA + LM and SST + LM swing by 4–6 counts. Between models: CD 130–150, the moment changes sign |
+| Stage 1's strips against SU2 | the upper transition within 0.03 c of SA + LM at every station (0.01 c on average); SST + LM 0.10 c later |
+| The wake | inside the fan at −5° and +10°, at least 0.067 local chords from its edges |
+| y⁺ | median 1.39–1.48 against the design 1.3; about 2 × at the nose, 2.5 × on the tip cap |
+| pyGeo against numpy | the same meshes on 20 of 20 reference wings (nodes 4 × 10⁻¹¹ apart) |
+| Memory | ADflow 10.2 GiB per million cells; SU2 SA 6.6, SA + LM 7.8. The desktop has 16 GB: about 1.1 M cells (ADflow), 1.5 M (SU2 SA) |
+| The acceptance rule | changed on 13 Nov (Mike): 4 orders of the continuity residual and flat forces (`solve/read_results.py`) |
+
+Read here (section 22.4): the code gap is likely ADflow's scalar dissipation on a coarse mesh (S8 measured −20.6
+counts for half `vis4` on its coarse level); "SA-BCM because it converges" and "SA + LM is validated on E387" do not
+stand yet (S8's E387 runs were compressible and not converged); the two codes must not be mixed in one difference
+(the transition effect is the size of the gap). The next desktop runs: `solve/DESKTOP_13NOV.md`.
+
 ## Mike's calls
 
-1. **Where the solves run (103):** open. The V7 mesh needs about 20–24 GiB for ADflow: not the 16 GB desktop.
+1. **Where the solves run (103):** open, and now pressing. The desktop has 16 GB: VVC only. VC needs about 22 GiB
+   for ADflow (15 for SU2 SA); the light M 45–56 GiB.
 2. **The hold-outs (104):** not yet.
 3. **A rule set 3 with the light rules (114):** open. It needs a new Stage 2 law for the tip gap (so the frozen
    surface is reopened) and a re-screen of Stages 2 and 3.
@@ -115,11 +145,17 @@ today's M the F, starting from 800 k. What-if studies on copies of the rules fil
 
 ## Weak points (rule set 2)
 
-- **No solve yet** on a Stage 3 mesh. So the memory at these sizes and where the wake goes are not measured.
-- **Built here on the numpy twin of the loft** (the production loft is pyGeo). On the 20 reference wings the two
-  give the same surface meshes to round-off (Stage 2, 8 Nov); the pyGeo build of 11 Nov (Mike's machine, commit
-  de64aa57) has the same input hashes, pass flags and labels on all 722. No volume mesh has been built on pyGeo
-  yet: V7 on Mike's machine will be the first.
+- **Solved at VVC only**, one wing, one Re: past the hard minimums (y⁺ 1.3, wall growth 1.34), no grid convergence.
+- **The two codes differ on the same mesh and model:** CD by 17.7 counts, CL by 2.7 % (above the Stage 0 targets of
+  3 counts and 1 %). The likely cause (ADflow's dissipation on a coarse mesh) is not measured yet.
+- **The transition models disagree** (CD 130–150 counts, the moment changes sign) and no measurement says which is
+  right; two of three do not converge.
+- **The first cell is 7–14 % taller than designed** (y⁺ median; about 2 × at the nose, 2.5 × on the tip cap).
+- **Two leading-edge corners hold SU2's residual** under a live limiter: the root on the symmetry plane and the
+  planform kink (the loft's sharp kink with a station on it). The frozen limiter hides it.
+- **Built here on the numpy twin of the loft** (the production loft is pyGeo). Checked on 11 Nov on Mike's machine:
+  the 20 reference wings at VC give the same volume meshes on both lofts (nodes 4 × 10⁻¹¹ apart); the other 702
+  wings are not compared.
 - **Memory:** by S8's laws M (9.5 M cells) needs 72–92 GiB for ADflow. The plan assumed 10 M cells in 48 GB.
 - **The fan ends at +10°.** Above it the wake leaves the fine cells; post-stall needs its own mesh (decision 69).
 - **Very close stations with fast-changing chords** (steep BWB centre bodies, corner wings) sit nearest the
@@ -140,12 +176,12 @@ today's M the F, starting from 800 k. What-if studies on copies of the rules fil
 
 ## Next
 
-0. **Mike's word on decision 114** (the light rules). If yes: build rule set 3, re-screen, then V7 on both meshes.
-1. **V7 on Mike's machine** (`solve/RUNBOOK.md`): ADflow SA, SU2 SA, SU2 SST + LM on BWB 0 at VC, α 4°. The night of
-   11–12 Nov: `solve/NIGHT_11NOV.md` (also VVC, the light VC of decision 114, the wake, the pyGeo mesh check).
-2. In the same session: **the memory** (ADflow as run, ADflow with ILU fill 0, SU2) and **the wake at −5° and +10°**
-   (two more points with the volume solution kept).
-3. With those numbers: whether M can run on 48 GB, and whether the fan's top angle stays at +10°.
+0. **The desktop runs of `solve/DESKTOP_13NOV.md`** (VVC what-ifs, about 13 h of machine time): what each light rule
+   changes in the answer (decision 114), the code gap (ADflow's `vis4`), the band in a fully turbulent run, the other
+   three wing types, the four Re levels, the far field 40 / 80 / 160, one family step in SU2, and E387 on the recipe.
+1. **Mike's word on decision 114** with those numbers. If yes: build rule set 3 and re-screen Stages 2 and 3.
+2. **Where VC and finer run (103):** a machine with at least 32 GB for VC, 64 GB for the light M, or the HPC.
+3. Into `solve/case.py`, with Mike's yes: `ANKUseTurbDADI`, the SU2 recipe, Tu 0.07 %; commit the `run_adflow.py` fixes.
 4. V8, the hold-outs, when Mike says, with the rules frozen.
 
 ## Handover to Stage 4

@@ -7,7 +7,7 @@ Case: BWB reference wing 0, today's VVC mesh (`whatif_today_VVC_e32d995a_re3e5`,
 mean chord, Mach 0.1, α 4°: the case of the night's A1b (ADflow SA, converged: CL 0.1907, CD 185.5 counts) and of
 B1–B2b (SU2, none converged). SU2 8.5.0, 6 ranks under MPICH's `mpiexec.hydra`.
 
-Status at 13:13 on 13 Nov: SU2 SA converged (R1f); ft2 changes nothing (R5); SA + LM oscillates on VVC (R2) and light VC (R6); R3 (SA-BCM) running
+Status at 15:11 on 13 Nov: SU2 SA converged (R1f); ft2 changes nothing (R5); SA + LM oscillates (R2, R6); SA-BCM converged (R3); R4 (SST + LM) running
 
 ## Why these runs, in this order
 
@@ -279,3 +279,25 @@ artefact of VVC; that points to the bubbles themselves (unsteady laminar separat
 meshes that both under-resolve the bubbles could also share it. The mechanism and the lift are mesh-stable (CL means
 0.5 % apart); the drag level of a transitional solution is not (10 counts, 7 %), against about 28 counts of
 transition effect. Light VC is the largest SA + LM mesh this machine can run (1.5 GiB left at 11.27 GiB).
+
+| Run | Setup | Iterations | Wall time | Outcome | Peak memory |
+| --- | --- | --- | --- | --- | --- |
+| R3 | SA-BCM (`SA_OPTIONS= BCM`, Tu 0.1 %; one change from R1f) | 1,640 | 117.1 min | **accepted** at iteration 1,639: 4.93 orders, momentum 2.51, CD within 0.062 counts and CL within 0.09 % over 328 iterations, no drift | 7.14 GiB |
+
+**R3: SA-BCM is the first transition model to converge on this mesh.** CL 0.20611, CD 129.95 counts (pressure 76.7,
+friction 53.3), CMy 0.00649. It passed through a rough stretch first (iterations 400 to 600: CL 0.202 to 0.250, CD
+128 to 149, the SA residual rising), settled after the limiter froze, drifted slowly until about 1,300 and was flat
+from 1,400. The wall (`R3_sa_bcm/walls_sa_lm_bcm.png`, `wall_map.json`): laminar separation bubbles on the upper side
+at the same places as LM's (separation x/c 0.36 to 0.53, reattachment 0.39 to 0.92), shorter inboard, with a firmer
+turbulent reattachment (friction recovers higher); laminar lower side. BCM's intermittency is algebraic (a local
+correlation with Tu, no transport equations), so it can switch the layer to turbulent inside the separated shear
+layer without the extra equations that keep LM's bubbles breathing.
+
+| | SA, fully turbulent (R1f) | SA + LM, VVC (R2) | SA + LM, light VC (R6) | SA-BCM (R3) |
+| --- | --- | --- | --- | --- |
+| verdict | accepted | oscillating | oscillating | **accepted** |
+| CL | 0.1958 | 0.2219 (0.216–0.227) | 0.2230 (0.219–0.226) | 0.2061 |
+| CD, counts | 167.8 | 140.0 (137.4–143.2) | 130.5 (127.8–132.1) | 129.95 |
+| pressure / friction | 63.8 / 104.0 | 92.1 / 45.3 at the stop | 80.2 / 47.6 at the stop | 76.7 / 53.3 |
+| CMy | 0.0070 | −0.0007 | −0.0017 | 0.0065 |
+| peak memory | 7.14 GiB | 8.37 GiB | 11.27 GiB | 7.14 GiB |

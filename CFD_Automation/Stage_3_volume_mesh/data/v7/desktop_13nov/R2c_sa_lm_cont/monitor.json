@@ -1,0 +1,60 @@
+{
+ "folder": "/home/mike_kara/aeris/CFD_Automation/Stage_3_volume_mesh/runs/su2t_VVC_a4/R2c_sa_lm_cont",
+ "rule": "solve/read_results.py as adopted 13 Nov: continuity 4 orders, momentum 2, turbulence not rising, forces flat",
+ "accepted_at": null,
+ "stopped": null,
+ "seconds": 27020,
+ "last_state": {
+  "rows": 7110,
+  "inner_iter": 7109,
+  "residual": "rms[P]",
+  "res_first": -4.734098283,
+  "res_max": -4.734098283,
+  "res_ref": null,
+  "res_last": -8.80024601,
+  "res_min": -9.085187124,
+  "res_min_at": 6171,
+  "orders_dropped": 4.066147727000001,
+  "rate_last200_orders_per_1000": 0.9921256381384559,
+  "rate_last1000_orders_per_1000": 0.11498431215499161,
+  "converged": true,
+  "settled": false,
+  "settled_detail": {
+   "residual": "rms[P]",
+   "residual_final": -8.80024601,
+   "orders_dropped": 4.066147727000001,
+   "momentum_orders_min": 2.4485423109999997,
+   "turbulence_rising": null,
+   "window": 1422,
+   "cd_wander_counts": 1.4740283999999972,
+   "cl_wander_rel": 0.009298689780974785,
+   "cd_drift_counts": 0.07378735124782926,
+   "cmy_wander": 0.0008282169140000004,
+   "settled": false,
+   "oscillating": {
+    "cd_mean_counts": 135.15838774500705,
+    "cd_band_counts": [
+     134.5731591,
+     136.0471875
+    ]
+   },
+   "reason": "forces oscillating"
+  },
+  "cl": 0.210534876,
+  "cd_counts": 134.5731591,
+  "cmy": 0.004158144011,
+  "cd_moved_last500_counts": 1.4740283999999972,
+  "cl_moved_last500_rel": 0.008950402592680116,
+  "stalled": true,
+  "first_leg_rows": 1424,
+  "stall_rule": {
+   "window": 4000,
+   "best_in_window": -9.085187124,
+   "best_before": -8.965172387,
+   "rate_orders_per_1000": -0.05450710849225239,
+   "stalled": false
+  },
+  "cfl_avg_median_last200": 50.0,
+  "linsol_res_median_last200": -3.4668166045
+ }
+}

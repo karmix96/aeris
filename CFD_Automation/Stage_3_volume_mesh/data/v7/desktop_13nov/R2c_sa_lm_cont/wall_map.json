@@ -1,0 +1,173 @@
+{
+ "file": "runs/su2t_VVC_a4/R2c_sa_lm_cont/surface_flow.dat",
+ "fields": [
+  "x",
+  "y",
+  "z",
+  "Pressure",
+  "Velocity_x",
+  "Velocity_y",
+  "Velocity_z",
+  "Nu_Tilde",
+  "LM_gamma",
+  "LM_Re_t",
+  "Pressure_Coefficient",
+  "Density",
+  "Laminar_Viscosity",
+  "Heat_Capacity",
+  "Thermal_Conductivity",
+  "Temperature",
+  "Skin_Friction_Coefficient_x",
+  "Skin_Friction_Coefficient_y",
+  "Skin_Friction_Coefficient_z",
+  "Heat_Flux",
+  "Y_Plus",
+  "LM_gamma_sep",
+  "LM_gamma_eff",
+  "Turb_index",
+  "Eddy_Viscosity"
+ ],
+ "stations": [
+  {
+   "y_over_s": 0.08750000000000001,
+   "chord": 1.7975681000000001,
+   "upper": {
+    "nodes": 71,
+    "separation_xc": 0.35956495890197426,
+    "reattachment_xc": 0.44369879505538623,
+    "reversed_share_of_chord": 0.08413383615341197,
+    "friction_rise_at_xc": 0.44369879505538623,
+    "friction_min_before_rise_xc": 0.4016823062225014,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.05464142
+   },
+   "lower": {
+    "nodes": 72,
+    "separation_xc": 0.8508462627924916,
+    "reattachment_xc": "to the trailing edge",
+    "reversed_share_of_chord": 0.13277772341420613,
+    "friction_rise_at_xc": 0.9774105915653487,
+    "friction_min_before_rise_xc": 0.9595447872044458,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.07007472
+   }
+  },
+  {
+   "y_over_s": 0.2625,
+   "chord": 1.3604534,
+   "upper": {
+    "nodes": 71,
+    "separation_xc": 0.34365535783879114,
+    "reattachment_xc": 0.4700810773819962,
+    "reversed_share_of_chord": 0.12642571954320508,
+    "friction_rise_at_xc": 0.4700810773819962,
+    "friction_min_before_rise_xc": 0.4280193647206145,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.07331292
+   },
+   "lower": {
+    "nodes": 72,
+    "separation_xc": 0.7963568616168697,
+    "reattachment_xc": "to the trailing edge",
+    "reversed_share_of_chord": 0.187305937858658,
+    "friction_rise_at_xc": 0.0416888957754819,
+    "friction_min_before_rise_xc": 0.03156308036717758,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.07157674
+   }
+  },
+  {
+   "y_over_s": 0.48125,
+   "chord": 0.9398449999999999,
+   "upper": {
+    "nodes": 72,
+    "separation_xc": 0.446819422351558,
+    "reattachment_xc": 0.7379653027892898,
+    "reversed_share_of_chord": 0.2911458804377318,
+    "friction_rise_at_xc": 0.7102979746660355,
+    "friction_min_before_rise_xc": 0.6687943224680667,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.05076137
+   },
+   "lower": {
+    "nodes": 73,
+    "separation_xc": null,
+    "friction_rise_at_xc": 0.9199825503141478,
+    "friction_min_before_rise_xc": 0.9063271071293673,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.04602845
+   }
+  },
+  {
+   "y_over_s": 0.7102369999999999,
+   "chord": 0.6238448000000001,
+   "upper": {
+    "nodes": 72,
+    "separation_xc": 0.5033989222960581,
+    "reattachment_xc": 0.8076893483763912,
+    "reversed_share_of_chord": 0.3042904260803331,
+    "friction_rise_at_xc": 0.780041446205851,
+    "friction_min_before_rise_xc": 0.7247777011205351,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.1018009
+   },
+   "lower": {
+    "nodes": 73,
+    "separation_xc": null,
+    "friction_rise_at_xc": 0.9201003198231353,
+    "friction_min_before_rise_xc": 0.9064607094585063,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.03189618
+   }
+  },
+  {
+   "y_over_s": 0.8195306666666666,
+   "chord": 0.4870329999999998,
+   "upper": {
+    "nodes": 72,
+    "separation_xc": 0.5030583143236699,
+    "reattachment_xc": 0.8768440742208437,
+    "reversed_share_of_chord": 0.3737857598971738,
+    "friction_rise_at_xc": 0.8352781023051825,
+    "friction_min_before_rise_xc": 0.7660897721509633,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.1055585
+   },
+   "lower": {
+    "nodes": 73,
+    "separation_xc": null,
+    "friction_rise_at_xc": 0.9201368285105941,
+    "friction_min_before_rise_xc": 0.9065012021772653,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.03396955
+   }
+  },
+  {
+   "y_over_s": 0.9448276666666667,
+   "chord": 0.3301860000000001,
+   "upper": {
+    "nodes": 72,
+    "separation_xc": 0.5023199045386537,
+    "reattachment_xc": 0.9323108793225634,
+    "reversed_share_of_chord": 0.4299909747839097,
+    "friction_rise_at_xc": 0.9045235109907749,
+    "friction_min_before_rise_xc": 0.8489911746712455,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.05573754
+   },
+   "lower": {
+    "nodes": 73,
+    "separation_xc": null,
+    "friction_rise_at_xc": 0.9202176954807291,
+    "friction_min_before_rise_xc": 0.9065920420611412,
+    "gamma_eff_above_0.5_from_xc": null,
+    "gamma_eff_max": 0.04619044
+   }
+  }
+ ],
+ "wetted_area_over_sref": 2.055252810481978,
+ "flat_plate_friction_counts": {
+  "laminar": 49.83135521662942,
+  "turbulent": 122.08792696648204
+ }
+}

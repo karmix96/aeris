@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 and Q3 done (not accepted: creep; upsets); R2c (SU2 SA + LM, VVC, continued) running since 03:49.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 and Q3 done (not accepted: creep; upsets); R2c done (a ±0.4-count limit cycle); S1 running since 11:19.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -47,6 +47,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | Q1 | light, Re 10⁵ | 559,578 | ADflow SA | 118 | 6.00 | **accepted** | 16.8 min | 5.97 GiB | 0.1986 | 220.6 | 82.8 | 137.9 | 0.00553 | 1.44, 3.86 (× 2) |
 | Q2 | light, Re 10⁶ | 714,990 | ADflow SA | 99 | 6.02 | not accepted: CD moved 0.57 counts and CL 0.39 % in the last 30 iterations (the creep of block M) | 18.8 min | 7.54 GiB | 0.1874 | 162.7 | 62.6 | 100.1 | 0.01177 | 1.50, 3.23 (× 2) |
 | Q3 | light, Re 4 × 10⁶ | 772,334 | ADflow SA | 464 | 6.01 | not accepted: three solver upsets; CD moved 2.1 counts in the last 93 iterations | 96.9 min | 8.10 GiB | 0.1850 | 138.9 | 57.7 | 81.2 | 0.01344 | 1.48, 2.92 (× 2) |
+| R2c | today VVC (R2 continued) | 1,075,074 | SU2 SA + LM (recipe) | 1,424 + 5,682 | 4.0 to 4.3 | not accepted: a limit cycle, CD 135.3 ± 0.4 counts (rule 4: mean and band) | 7.5 h (+ R2's 1.9 h) | 8.45 GiB | 0.2118 (mean) | 135.3 (mean) | 85.7 (stop) | 48.9 (stop) | 0.0042 (stop) | |
 | E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 | E2 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA-BCM (recipe) | 13,077 | 6.08 | **accepted** | 51.1 min | 0.71 GiB | 0.5921 | 112.9 | 53.5 | 59.4 | CM −0.0781 (c/4) | |
 
@@ -197,6 +198,18 @@ uncertainty), about 3 % above in lift, 2 % short in moment, and separate 0.03 c 
 measured length.** Neither oscillates in 2-D, so a swing is not built into either model on the recipe. In 3-D they
 differed by about 10 counts on VVC (BCM 130.0, LM 137 to 143 while it ran): that difference belongs to the 3-D case,
 or to LM's early stop; R2c tells which. E3 (SST + LM) is queued last.
+
+**R2c: in 3-D on VVC, SA + LM ends in a small limit cycle, not in a steady state and not in R2's 6-count swing.**
+R2 (stopped by the 500-iteration rule at 1,423) continued from its restart for 5,682 more iterations. The force band,
+in 500-iteration blocks of the continuation, shrank from 3.3 counts (CD) and 2.3 % (CL) to 0.67 counts and 0.62 % by
+iterations 3,500 to 4,000, then stopped shrinking: 0.67, 0.71, 0.78, 0.91 and 1.45 counts in the next five blocks,
+while the means held at CD 135.2 to 135.4 counts and CL 0.2118 for 3,000 iterations; the residual stayed at 4.0 to
+4.3 orders. Stopped at 11:18 on that measurement (the band no longer narrowing for 2,000 iterations), not on time:
+neither the acceptance rule (CL within 0.1 %) nor the 4,000-iteration stall rule (the residual still made small new
+lows) could end it. **SA + LM on VVC: CD 135.3 ± 0.4 counts, CL 0.2118 ± 0.0007** (means and half-bands of the last
+3,000 iterations). R2's 137 to 143 counts were its transient. Against SA-BCM (R3, accepted: CD 129.95, CL 0.2061) it
+is 5.3 counts and 2.8 % higher, where on E387 the two agreed to 0.2 counts; the bubbles sit in the same places
+(separation x/c 0.34 to 0.50; `R2c_sa_lm_cont/walls_sa_lm_bcm_continued.png`, `wall_map.json`).
 
 **E1 corrects the SU2 study's verdict on SA + LM and SST + LM.** E1's residual stood still at 3.8 to 4.0 orders from
 iteration 1,000 to 4,000 while its drag moved 104 → 121 → 113 counts, then fell to 6 orders by 7,000. The stall rule

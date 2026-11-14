@@ -322,6 +322,10 @@ at 1,425. R2, R6 and R4 were stopped by that rule at 1,423 to 1,606 iterations, 
 established: they may have been in the same transient. Conclusion 4 and the recommendation below stand only as
 "SA-BCM converged within the window the rule allowed".
 
+**Update, 14 Nov 11:20 (desktop run R2c):** R2 continued for 5,682 more iterations ends in a limit cycle of ±0.4 counts:
+SA + LM on VVC is CD 135.3 ± 0.4 counts, CL 0.2118 ± 0.0007 (not R2's 137 to 143, which was its transient); SA-BCM
+(R3) is 129.95 and 0.2061. So SA-BCM converges to a steady state; SA + LM to a narrow band 5 counts above it.
+
 Case: BWB reference wing 0, VVC mesh, α 4°, Re 3 × 10⁵ on the mean chord, Tu 0.1 %. Figure of all four:
 `walls_all_models.png`.
 

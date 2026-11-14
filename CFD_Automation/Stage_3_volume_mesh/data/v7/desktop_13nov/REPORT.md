@@ -48,7 +48,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | Q2 | light, Re 10⁶ | 714,990 | ADflow SA | 99 | 6.02 | not accepted: CD moved 0.57 counts and CL 0.39 % in the last 30 iterations (the creep of block M) | 18.8 min | 7.54 GiB | 0.1874 | 162.7 | 62.6 | 100.1 | 0.01177 | 1.50, 3.23 (× 2) |
 | Q3 | light, Re 4 × 10⁶ | 772,334 | ADflow SA | 464 | 6.01 | not accepted: three solver upsets; CD moved 2.1 counts in the last 93 iterations | 96.9 min | 8.10 GiB | 0.1850 | 138.9 | 57.7 | 81.2 | 0.01344 | 1.48, 2.92 (× 2) |
 | R2c | today VVC (R2 continued) | 1,075,074 | SU2 SA + LM (recipe) | 1,424 + 5,682 | 4.0 to 4.3 | not accepted: a limit cycle, CD 135.3 ± 0.4 counts (rule 4: mean and band) | 7.5 h (+ R2's 1.9 h) | 8.45 GiB | 0.2118 (mean) | 135.3 (mean) | 85.7 (stop) | 48.9 (stop) | 0.0042 (stop) | |
-| S1 | light VVC | 700,654 | SU2 SA (recipe) | 651 | 4.03 | **accepted** | 29.0 min | 4.72 GiB | 0.1957 | 169.0 | 65.1 | 103.9 | 0.00699 | |
+| S1 | light VVC | 700,654 | SU2 SA (recipe) | 651 | 4.03 | **accepted** | 29.0 min | 4.72 GiB | 0.1957 | 169.0 | 65.1 | 103.9 | 0.00699 | 1.36, 3.27 |
 | S2 | light VC | 1,475,376 | SU2 SA (recipe) | 948 | 4.02 | **accepted** | 87.1 min | 9.60 GiB | 0.1957 | 159.9 | 56.0 | 103.9 | 0.00757 | 1.05, 2.59 |
 | E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 | E2 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA-BCM (recipe) | 13,077 | 6.08 | **accepted** | 51.1 min | 0.71 GiB | 0.5921 | 112.9 | 53.5 | 59.4 | CM −0.0781 (c/4) | |

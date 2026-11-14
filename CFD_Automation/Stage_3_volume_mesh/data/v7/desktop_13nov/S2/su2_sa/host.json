@@ -1,0 +1,19 @@
+{
+ "match": "SU2_CFD",
+ "at_start": {
+  "free_gib": 8.588,
+  "pagefile_gib": 0.708,
+  "vmmem_gib": 2.333,
+  "compression_gib": 1.01
+ },
+ "min_free_gib": 0.631,
+ "max_pagefile_gib": 1.961,
+ "max_vmmem_gib": 11.049,
+ "max_compression_gib": 1.01,
+ "killed": null,
+ "samples": 87,
+ "failed_samples": 0,
+ "stopped_from_outside": true,
+ "seconds": 5278,
+ "note": "Windows host, sampled through powershell.exe; WSL's own view is in rss.json"
+}

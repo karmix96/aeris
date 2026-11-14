@@ -1,0 +1,73 @@
+{
+ "file": "runs/d13_S2/su2_sa/surface_flow.dat",
+ "nodes": 10052,
+ "quads": 9932,
+ "area_vector_sum": [
+  7.849591435663938e-16,
+  0.3850487228675446,
+  7.783831926924732e-15
+ ],
+ "area_vector_sum_xz_over_total_area": 1.2688179304150855e-15,
+ "faces_pointing_outward_share": 0.9590389016018307,
+ "file_orientation": "outward",
+ "pressure_force": {
+  "wing surface": {
+   "faces": 8740,
+   "area": 6.155235114354076,
+   "cdp": 0.005648667429083317,
+   "clp": 0.19568025437617603,
+   "cdp_counts": 56.48667429083317
+  },
+  "trailing-edge base": {
+   "faces": 304,
+   "area": 0.006168881226318326,
+   "cdp": -5.794920986594642e-05,
+   "clp": 3.4011446575052463e-06,
+   "cdp_counts": -0.5794920986594643
+  },
+  "tip cap": {
+   "faces": 888,
+   "area": 0.0044225998173499995,
+   "cdp": 0.0,
+   "clp": 0.0,
+   "cdp_counts": 0.0
+  },
+  "all": {
+   "faces": 9932,
+   "area": 6.165826595397743,
+   "cdp": 0.0055907182192173974,
+   "clp": 0.19568365552083383,
+   "cdp_counts": 55.90718219217398
+  }
+ },
+ "yplus": {
+  "all wall nodes": {
+   "nodes": 10052,
+   "max": 39.30657,
+   "p99": 36.717213699999995,
+   "median": 1.079697,
+   "max_at_xyz": [
+    1.159464,
+    3.0,
+    0.116675
+   ],
+   "max_at_y_over_semispan": 1.0,
+   "share_above_1.3": 0.32849184241941903,
+   "share_above_1.0": 0.6049542379625945
+  },
+  "wing surface": {
+   "nodes": 8702,
+   "max": 3.144263,
+   "p99": 2.5936653199999986,
+   "median": 1.045912,
+   "max_at_xyz": [
+    1.157806,
+    2.995114,
+    0.1166749
+   ],
+   "max_at_y_over_semispan": 0.9983713333333334,
+   "share_above_1.3": 0.26131923695702136,
+   "share_above_1.0": 0.5744656400827396
+  }
+ }
+}

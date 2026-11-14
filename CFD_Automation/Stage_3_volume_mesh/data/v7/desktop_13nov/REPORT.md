@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 and Q3 done (not accepted: creep; upsets); R2c done (a ±0.4-count limit cycle); S1 done (accepted); S2 running since 11:49.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 and Q3 done (not accepted: creep; upsets); R2c done (a ±0.4-count limit cycle); S1, S2 done (accepted); R4c (SST + LM continued) running since 13:17.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -49,6 +49,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | Q3 | light, Re 4 × 10⁶ | 772,334 | ADflow SA | 464 | 6.01 | not accepted: three solver upsets; CD moved 2.1 counts in the last 93 iterations | 96.9 min | 8.10 GiB | 0.1850 | 138.9 | 57.7 | 81.2 | 0.01344 | 1.48, 2.92 (× 2) |
 | R2c | today VVC (R2 continued) | 1,075,074 | SU2 SA + LM (recipe) | 1,424 + 5,682 | 4.0 to 4.3 | not accepted: a limit cycle, CD 135.3 ± 0.4 counts (rule 4: mean and band) | 7.5 h (+ R2's 1.9 h) | 8.45 GiB | 0.2118 (mean) | 135.3 (mean) | 85.7 (stop) | 48.9 (stop) | 0.0042 (stop) | |
 | S1 | light VVC | 700,654 | SU2 SA (recipe) | 651 | 4.03 | **accepted** | 29.0 min | 4.72 GiB | 0.1957 | 169.0 | 65.1 | 103.9 | 0.00699 | |
+| S2 | light VC | 1,475,376 | SU2 SA (recipe) | 948 | 4.02 | **accepted** | 87.1 min | 9.60 GiB | 0.1957 | 159.9 | 56.0 | 103.9 | 0.00757 | 1.05, 2.59 |
 | E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 | E2 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA-BCM (recipe) | 13,077 | 6.08 | **accepted** | 51.1 min | 0.71 GiB | 0.5921 | 112.9 | 53.5 | 59.4 | CM −0.0781 (c/4) | |
 
@@ -171,6 +172,22 @@ nowhere else.** One reference wing per type, one Re, one angle.
 **S1: the code gap is the same on the second mesh (17.9 against 17.7 counts, friction 14.4 of it), and the two codes
 agree on what the light rules cost: SU2 +1.22 counts, ADflow +1.44, CL unchanged in both.** That cross-checks block M,
 which was ADflow alone. (M2 stopped at 10⁻⁶ while creeping; M2b reruns it at 10⁻⁷.)
+
+| One family step, SU2 SA (recipe) | S1 light VVC | S2 light VC | S2 − S1 |
+| --- | --- | --- | --- |
+| cells | 700,654 | 1,475,376 | × 2.11 (every spacing ÷ 1.3) |
+| CL | 0.19575 | 0.19573 | 0.0 % |
+| CD (counts) | 169.01 | 159.91 | **−9.10** |
+| pressure drag | 65.10 | 56.03 | **−9.07 (−14 %)** |
+| friction drag | 103.90 | 103.88 | −0.02 |
+| CMy | 0.00699 | 0.00757 | +0.00058 |
+| y⁺ median, 99 % (first node; design) | 1.36, 3.27 (1.3) | 1.05, 2.59 (1.0) | |
+
+**S2: one true family step leaves the lift and the friction where they are (to 0.01 % and 0.02 counts) and lowers the
+pressure drag by 9.1 counts (14 %).** So at VVC the lift and the friction are grid-converged for this case and the
+pressure drag is not; it is also the part that moves with the dissipation (G1: −4.6) and the band (M5: +4.1). Two
+levels give a trend, not an extrapolation (S8's rule: no observed order from two levels); where the pressure drag
+settles needs a third level, beyond this machine for SU2 SA + LM and for ADflow.
 
 ### E: Eppler 387 against McGhee (2-D)
 

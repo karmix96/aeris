@@ -6,7 +6,7 @@ The machine: 16 GB (WSL 13.65 GiB), 6 cores, one run at a time, `solve/rss_watch
 MPICH's `mpiexec.hydra`. Baseline for G and M: the night's A1b (today VVC: CL 0.1907, CD 185.5 counts, pressure
 67.6, friction 117.8, CMy 0.00984), not rerun.
 
-Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 done (not accepted: creep), Q3 running.
+Status: step 0 done; G1 (accepted), M1, M2 done; E1 accepted (it corrects the SU2 study's stall verdicts); E2 accepted; queue B (section 0b) running since 23:10: M5, W1–W3, Q1 done (accepted), Q2 and Q3 done (not accepted: creep; upsets); R2c (SU2 SA + LM, VVC, continued) running since 03:49.
 
 ## 0. Step 0: DECISIONS O1 to O3 (Mike's yes, 13 Nov)
 
@@ -46,6 +46,7 @@ Records: `step0/`. Since O1 every ADflow run has `ANKUseTurbDADI=False` from the
 | W3 | tapered 0, today VVC | 899,886 | ADflow SA | 157 | 6.01 | **accepted** | 32.8 min | 9.35 GiB | 0.6274 | 318.9 | 197.9 | 121.0 | −0.06995 | 1.55, 3.26 (× 2) |
 | Q1 | light, Re 10⁵ | 559,578 | ADflow SA | 118 | 6.00 | **accepted** | 16.8 min | 5.97 GiB | 0.1986 | 220.6 | 82.8 | 137.9 | 0.00553 | 1.44, 3.86 (× 2) |
 | Q2 | light, Re 10⁶ | 714,990 | ADflow SA | 99 | 6.02 | not accepted: CD moved 0.57 counts and CL 0.39 % in the last 30 iterations (the creep of block M) | 18.8 min | 7.54 GiB | 0.1874 | 162.7 | 62.6 | 100.1 | 0.01177 | 1.50, 3.23 (× 2) |
+| Q3 | light, Re 4 × 10⁶ | 772,334 | ADflow SA | 464 | 6.01 | not accepted: three solver upsets; CD moved 2.1 counts in the last 93 iterations | 96.9 min | 8.10 GiB | 0.1850 | 138.9 | 57.7 | 81.2 | 0.01344 | 1.48, 2.92 (× 2) |
 | E1 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA + LM (recipe) | 7,827 | 6.15 | **accepted** | 37.0 min | 0.85 GiB | 0.5906 | 112.8 | 51.2 | 61.5 | CM −0.0776 (c/4) | |
 | E2 | E387 2-D, S8's O-grid | 147,496 points | SU2 SA-BCM (recipe) | 13,077 | 6.08 | **accepted** | 51.1 min | 0.71 GiB | 0.5921 | 112.9 | 53.5 | 59.4 | CM −0.0781 (c/4) | |
 
@@ -117,6 +118,22 @@ height, comparable to the design 1.3), median by zone.
 | 10⁵ | Q1 | 559,578 | **accepted** | 118 | 0.1986 | 220.6 | 137.9 | 1.43 | 1.39 | 2.38 | **19.0** | 2.25 |
 | 3 × 10⁵ | M2 | 700,654 | not accepted (creep, block M) | 94 | 0.1908 | 186.9 | 118.3 | 1.48 | 1.43 | 2.13 | **32.8** | 5.04 |
 | 10⁶ | Q2 | 714,990 | not accepted (creep: CD 0.57 counts, CL 0.39 % in 30 iterations) | 99 | 0.1874 | 162.7 | 100.1 | 1.53 | 1.47 | 1.80 | **61.1** | 11.0 |
+| 4 × 10⁶ | Q3 | 772,334 | not accepted (upsets; CD 2.1 counts in 93 iterations) | 464 | 0.1850 | 138.9 | 81.2 | 1.51 | 1.46 | 1.45 | **123.5** | 23.4 |
+
+**Q3: at Re 4 × 10⁶ ADflow upsets three times on the light mesh.** At iterations 199, 295 and about 439 the ANK step
+failed (step size 0), the CFL was cut and the residual jumped, the second time from 1.4 × 10⁻⁴ to 0.62; before the
+second upset CD sat at 104 counts, after it near 139 (CL 0.1870 to 0.1850). It reached the 10⁻⁶ stop at iteration 464
+with CD still moving (2.1 counts in its last 93 iterations), so its final state is not established. Its friction at
+the stop, 81.2 counts, is near the turbulent flat plate's 73 at that Re; the 104-count state before the upset would
+have left little for the pressure drag, but which state is the converged one this run does not show. Iteration
+lines: `Q3/adflow_iteration_lines.txt`.
+
+**Block Q's answer: the first-cell rule holds its design on the wing at every Re (y⁺ median 1.43 to 1.53 on the
+upper and lower sides against the design 1.3, about 10 to 17 % above it, as the night found at 3 × 10⁵), but not on
+the tip cap of the light pack, whose y⁺ grows with Re (19, 33, 61, 124: no viscous first cell there), nor on the
+trailing-edge base (2 to 23).** ADflow converges cleanly at 10⁵ (accepted); at 3 × 10⁵ and 10⁶ its residual
+converges while the forces still creep at the 10⁻⁶ stop (block M); at 4 × 10⁶ it upsets and does not settle. One wing.
+
 
 **The tip-gap rule leaves the tip cap without a resolved first cell.** With the light pack's tip gap (DPW, 0.1 %) the
 cap's median y⁺ is 32.8 (M2) and 33.0 (M1, the tip gap alone) at Re 3 × 10⁵, 19.0 at 10⁵; with today's tip it is 3.2
